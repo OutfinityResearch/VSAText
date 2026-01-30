@@ -15,6 +15,11 @@ The SCRIPTA API provides a specification-driven workflow for creative writing, e
 - Generation Service: produce prose from plans and specs.
 - Verification Service: validate coherence and constraints.
 - Guardrail Service: bias, originality, and plagiarism checks.
+- Reverse Engineering Service: extract specs/plans from existing text artifacts.
+- Literary Review Service: automated editorial feedback and scoring.
+- Research Service: curated factual research retrieval (with provenance).
+- Explainability Service: generate justifications and evidence for agent decisions.
+- Compliance Report Service: consolidated legal/ethical compliance reports.
 - Evaluation Service: compute metrics and KPIs.
 - Audit Service: immutable logs and provenance.
 - Orchestration Service: run pipelines and manage agents.
@@ -72,11 +77,26 @@ The SCRIPTA API provides a specification-driven workflow for creative writing, e
 - POST /v1/pipelines/run (input: sop_id, spec_id)
 - GET /v1/pipelines/{run_id}
 
-### 6.9 CNL
+### 6.9 Reverse Engineering
+- POST /v1/reverse-engineer (input: artifact_ref, output=spec|plan)
+
+### 6.10 Literary Review
+- POST /v1/review (input: artifact_ref, criteria[])
+
+### 6.11 Research
+- POST /v1/research/query (input: query, constraints[])
+
+### 6.12 Explainability
+- POST /v1/explain (input: artifact_ref, question)
+
+### 6.13 Compliance Reports
+- POST /v1/reports/compliance (input: artifact_ref, policies[])
+
+### 6.14 CNL
 - POST /v1/cnl/translate (input: nl_text, context)
 - POST /v1/cnl/validate (input: cnl_text)
 
-### 6.10 VSA
+### 6.15 VSA
 - POST /v1/vsa/encode (input: text, schema)
 - POST /v1/vsa/index (input: vectors[], ids[])
 - POST /v1/vsa/search (input: query_vector, top_k)

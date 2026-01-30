@@ -8,7 +8,7 @@ const ROOT = path.resolve(__dirname, '..');
 const SCHEMA_DIR = path.join(ROOT, 'docs', 'schemas', 'api');
 const EXAMPLE_DIR = path.join(ROOT, 'docs', 'examples', 'api');
 
-const MAPPING = {
+const DEFAULT_MAPPING = {
   'create_spec_request.json': ['spec.json', 'CreateSpecRequest'],
   'create_spec_response.json': ['spec.json', 'CreateSpecResponse'],
   'get_spec_response.json': ['spec.json', 'GetSpecResponse'],
@@ -45,18 +45,28 @@ const MAPPING = {
   'vsa_search_response.json': ['vsa.json', 'VsaSearchResponse'],
   'audit_log_response.json': ['audit.json', 'AuditLogResponse'],
   'audit_log_list_response.json': ['audit.json', 'AuditLogListResponse'],
-  'error_response.json': ['common.json', 'ErrorResponse']
+  'error_response.json': ['common.json', 'ErrorResponse'],
+  'reverse_engineer_request.json': ['reverse.json', 'ReverseEngineerRequest'],
+  'reverse_engineer_response.json': ['reverse.json', 'ReverseEngineerResponse'],
+  'review_request.json': ['review.json', 'ReviewRequest'],
+  'review_response.json': ['review.json', 'ReviewResponse'],
+  'research_query_request.json': ['research.json', 'ResearchQueryRequest'],
+  'research_query_response.json': ['research.json', 'ResearchQueryResponse'],
+  'explain_request.json': ['explain.json', 'ExplainRequest'],
+  'explain_response.json': ['explain.json', 'ExplainResponse'],
+  'compliance_report_request.json': ['reports.json', 'ComplianceReportRequest'],
+  'compliance_report_response.json': ['reports.json', 'ComplianceReportResponse']
 };
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 }
 
-function loadSchemas() {
+function loadSchemas(schemaDir) {
   const store = new Map();
-  const files = fs.readdirSync(SCHEMA_DIR).filter((f) => f.endsWith('.json'));
+  const files = fs.readdirSync(schemaDir).filter((f) => f.endsWith('.json'));
   for (const file of files) {
-    const full = path.join(SCHEMA_DIR, file);
+    const full = path.join(schemaDir, file);
     const schema = readJson(full);
     store.set(full, schema);
     if (schema.$id) {
@@ -162,10 +172,13 @@ function validateSchema(schema, data, ctx, pathStack) {
 
   let schemaType = schema.type;
   if (Array.isArray(schemaType)) {
-    schemaType = schemaType.find((t) => t !== 'null') || schemaType[0];
-  }
-
-  if (schemaType && !typeMatches(schemaType, data)) {
+    const matched = schemaType.find((t) => typeMatches(t, data));
+    if (!matched) {
+      errors.push(`${pathStack}: expected type ${schemaType.join('|')}`);
+      return errors;
+    }
+    schemaType = matched;
+  } else if (schemaType && !typeMatches(schemaType, data)) {
     errors.push(`${pathStack}: expected type ${schemaType}`);
     return errors;
   }
@@ -200,24 +213,25 @@ function validateSchema(schema, data, ctx, pathStack) {
   return errors;
 }
 
-function run() {
-  const store = loadSchemas();
+export function validateExamples({ schemaDir = SCHEMA_DIR, exampleDir = EXAMPLE_DIR, mapping = DEFAULT_MAPPING } = {}) {
+  const store = loadSchemas(schemaDir);
+  const localMapping = { ...mapping };
   // auto-map *_error_*.json to ErrorResponse
-  for (const name of fs.readdirSync(EXAMPLE_DIR)) {
-    if (name.endsWith('.json') && name.includes('_error_') && !(name in MAPPING)) {
-      MAPPING[name] = ['common.json', 'ErrorResponse'];
+  for (const name of fs.readdirSync(exampleDir)) {
+    if (name.endsWith('.json') && name.includes('_error_') && !(name in localMapping)) {
+      localMapping[name] = ['common.json', 'ErrorResponse'];
     }
   }
 
   let failures = 0;
-  for (const [exampleName, [schemaFile, defName]] of Object.entries(MAPPING)) {
-    const examplePath = path.join(EXAMPLE_DIR, exampleName);
+  for (const [exampleName, [schemaFile, defName]] of Object.entries(localMapping)) {
+    const examplePath = path.join(exampleDir, exampleName);
     if (!fs.existsSync(examplePath)) {
       console.log(`Missing example: ${exampleName}`);
       failures += 1;
       continue;
     }
-    const schemaPath = path.join(SCHEMA_DIR, schemaFile);
+    const schemaPath = path.join(schemaDir, schemaFile);
     const schemaDoc = store.get(schemaPath) || readJson(schemaPath);
     store.set(schemaPath, schemaDoc);
     const defSchema = schemaDoc.$defs ? schemaDoc.$defs[defName] : undefined;
@@ -236,8 +250,10 @@ function run() {
       console.log(`OK: ${exampleName}`);
     }
   }
-
-  process.exit(failures === 0 ? 0 : 1);
+  return failures;
 }
 
-run();
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const failures = validateExamples();
+  process.exit(failures === 0 ? 0 : 1);
+}

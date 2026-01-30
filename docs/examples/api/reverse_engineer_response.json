@@ -1,0 +1,19 @@
+{
+  "spec": {
+    "id": "spec_extracted_001",
+    "title": "Extracted Spec",
+    "synopsis": "Recovered synopsis from draft.",
+    "themes": ["responsibility"],
+    "constraints": [],
+    "cnl_constraints": [],
+    "characters": [{"id": "char_anna", "name": "Anna", "traits": ["courageous"], "goals": []}],
+    "world_rules": []
+  },
+  "audit": {
+    "id": "audit_2001",
+    "event_type": "reverse_engineer.completed",
+    "actor": "agent:reverse",
+    "timestamp": "2026-01-30T10:20:00Z",
+    "payload_hash": "1111111111111111"
+  }
+}

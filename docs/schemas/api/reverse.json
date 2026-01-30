@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scripta.api.reverse",
+  "title": "SCRIPTA Reverse Engineering Schemas",
+  "type": "object",
+  "$defs": {
+    "ReverseEngineerRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_ref": { "$ref": "common.json#/$defs/ArtifactRef" },
+        "output": { "type": "string", "enum": ["spec", "plan"] },
+        "implementation_profile": { "$ref": "common.json#/$defs/ImplementationProfile" }
+      },
+      "required": ["artifact_ref", "output"]
+    },
+    "ReverseEngineerResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "spec": { "$ref": "spec.json#/$defs/NarrativeSpec" },
+        "plan": { "$ref": "plan.json#/$defs/Plan" },
+        "audit": { "$ref": "common.json#/$defs/AuditLogEntry" }
+      }
+    }
+  }
+}

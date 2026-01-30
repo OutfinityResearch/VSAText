@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scripta.api.reports",
+  "title": "SCRIPTA Reports Schemas",
+  "type": "object",
+  "$defs": {
+    "ComplianceReportRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_ref": { "$ref": "common.json#/$defs/ArtifactRef" },
+        "policies": { "type": "array", "items": { "type": "string" } },
+        "implementation_profile": { "$ref": "common.json#/$defs/ImplementationProfile" }
+      },
+      "required": ["artifact_ref"]
+    },
+    "ComplianceReportResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "report_id": { "$ref": "common.json#/$defs/Id" },
+        "status": { "type": "string", "enum": ["pass", "warn", "fail"] },
+        "summary": { "type": "string" },
+        "findings": { "type": "array", "items": { "type": "string" } },
+        "audit": { "$ref": "common.json#/$defs/AuditLogEntry" }
+      },
+      "required": ["report_id", "status"]
+    }
+  }
+}

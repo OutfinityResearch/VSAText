@@ -2,6 +2,7 @@
 
 const PREDICATE_RE = /^[A-Z][A-Z0-9_]*$/;
 const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
+const NUMBER_RE = /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/;
 
 function splitArgs(argStr) {
   const args = [];
@@ -69,6 +70,9 @@ function validateLine(line, lineNo) {
       if (!(arg.length >= 2 && arg.endsWith('"'))) {
         return { statement: null, error: { line: lineNo, message: `unterminated string at argument ${i + 1}` } };
       }
+      continue;
+    }
+    if (NUMBER_RE.test(arg)) {
       continue;
     }
     if (!IDENT_RE.test(arg)) {

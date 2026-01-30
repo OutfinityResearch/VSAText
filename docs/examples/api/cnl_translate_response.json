@@ -1,4 +1,4 @@
 {
-  "cnl_text": "CHARACTER(Anna). RULE(Scene_3, must_include, \"storm\").",
+  "cnl_text": "CHARACTER(Anna).\nRULE(Scene_3, must_include, \"storm\").",
   "confidence": 0.92
 }

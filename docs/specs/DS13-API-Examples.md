@@ -44,6 +44,16 @@ Examples are stored in `docs/examples/api/`.
 - `audit_log_response.json`
 - `audit_log_list_response.json`
 - `error_response.json`
+- `reverse_engineer_request.json`
+- `reverse_engineer_response.json`
+- `review_request.json`
+- `review_response.json`
+- `research_query_request.json`
+- `research_query_response.json`
+- `explain_request.json`
+- `explain_response.json`
+- `compliance_report_request.json`
+- `compliance_report_response.json`
 
 ## 5. Error Examples (Per Endpoint)
 Error examples use the common ErrorResponse schema and follow this pattern:

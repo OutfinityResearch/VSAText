@@ -35,9 +35,35 @@
       "additionalProperties": false,
       "properties": {
         "valid": { "type": "boolean" },
-        "errors": { "type": "array", "items": { "type": "string" } }
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "line": { "type": "integer", "minimum": 1 },
+              "message": { "type": "string" }
+            },
+            "required": ["line", "message"]
+          }
+        },
+        "statements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "predicate": { "type": "string" },
+              "args": {
+                "type": "array",
+                "items": { "type": ["string", "number"] }
+              }
+            },
+            "required": ["predicate", "args"]
+          }
+        }
       },
-      "required": ["valid"]
+      "required": ["valid", "errors", "statements"]
     }
   }
 }

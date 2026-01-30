@@ -16,6 +16,11 @@ Schemas are stored in `docs/schemas/api/`.
 - `guardrail.json` — guardrail check requests/responses.
 - `evaluate.json` — evaluation requests/responses.
 - `pipeline.json` — pipeline run requests/responses.
+- `reverse.json` — reverse engineering requests/responses.
+- `review.json` — literary review requests/responses.
+- `research.json` — research query requests/responses.
+- `explain.json` — explainability requests/responses.
+- `reports.json` — compliance report requests/responses.
 - `cnl.json` — CNL translate/validate requests/responses.
 - `vsa.json` — VSA encode/index/search requests/responses.
 - `audit.json` — audit log responses.

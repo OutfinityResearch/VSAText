@@ -1,0 +1,5 @@
+{
+  "artifact_ref": {"id": "draft_001", "type": "draft", "hash": "aa00bb"},
+  "output": "spec",
+  "implementation_profile": {"mode": "basic"}
+}

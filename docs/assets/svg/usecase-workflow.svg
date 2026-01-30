@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="340" viewBox="0 0 1200 340" role="img" aria-label="SCRIPTA use case workflow">
+  <defs>
+    <style>
+      .box { fill: #ffffff; stroke: #2b2b2b; stroke-width: 2; rx: 12; ry: 12; }
+      .soft { fill: #fffaf0; }
+      .text { font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif; font-size: 16px; fill: #1f2a30; }
+      .title { font-size: 18px; font-weight: bold; }
+      .arrow { stroke: #2b2b2b; stroke-width: 2; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2b2b2b" />
+    </marker>
+  </defs>
+
+  <text class="text title" x="24" y="32">SCRIPTA Use Case Workflow (High Level)</text>
+
+  <rect class="box soft" x="30" y="70" width="260" height="70" />
+  <text class="text" x="52" y="102">Author / Screenwriter</text>
+  <text class="text" x="52" y="124">Intent + constraints</text>
+
+  <rect class="box" x="330" y="70" width="260" height="70" />
+  <text class="text" x="352" y="102">Spec + SOP</text>
+  <text class="text" x="352" y="124">(SOP Lang orchestration)</text>
+
+  <rect class="box" x="630" y="70" width="260" height="70" />
+  <text class="text" x="652" y="102">Pipeline Run</text>
+  <text class="text" x="652" y="124">Plan → Generate → Verify</text>
+
+  <rect class="box" x="930" y="70" width="240" height="70" />
+  <text class="text" x="952" y="102">Outputs</text>
+  <text class="text" x="952" y="124">Draft + Reports</text>
+
+  <line class="arrow" x1="290" y1="105" x2="330" y2="105" />
+  <line class="arrow" x1="590" y1="105" x2="630" y2="105" />
+  <line class="arrow" x1="890" y1="105" x2="930" y2="105" />
+
+  <rect class="box" x="330" y="175" width="260" height="70" />
+  <text class="text" x="352" y="207">Guardrails</text>
+  <text class="text" x="352" y="229">Bias / originality / copyright</text>
+
+  <rect class="box" x="630" y="175" width="260" height="70" />
+  <text class="text" x="652" y="207">Review + Explain</text>
+  <text class="text" x="652" y="229">Editorial feedback + rationale</text>
+
+  <rect class="box" x="930" y="175" width="240" height="70" />
+  <text class="text" x="952" y="207">Audit Log</text>
+  <text class="text" x="952" y="229">Immutable provenance</text>
+
+  <line class="arrow" x1="760" y1="140" x2="460" y2="175" />
+  <line class="arrow" x1="760" y1="140" x2="760" y2="175" />
+  <line class="arrow" x1="1050" y1="140" x2="1050" y2="175" />
+
+  <rect class="box soft" x="30" y="260" width="1140" height="60" />
+  <text class="text" x="52" y="295">Optional: Reverse engineer existing text → reconstruct specs/plans → continue writing with verification.</text>
+</svg>

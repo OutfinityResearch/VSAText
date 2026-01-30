@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scripta.api.review",
+  "title": "SCRIPTA Literary Review Schemas",
+  "type": "object",
+  "$defs": {
+    "ReviewRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_ref": { "$ref": "common.json#/$defs/ArtifactRef" },
+        "criteria": { "type": "array", "items": { "type": "string" } },
+        "implementation_profile": { "$ref": "common.json#/$defs/ImplementationProfile" }
+      },
+      "required": ["artifact_ref"]
+    },
+    "ReviewResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "report_id": { "$ref": "common.json#/$defs/Id" },
+        "score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "findings": { "type": "array", "items": { "type": "string" } },
+        "suggestions": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["report_id", "findings"]
+    }
+  }
+}

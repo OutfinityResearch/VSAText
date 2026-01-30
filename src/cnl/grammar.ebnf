@@ -3,9 +3,10 @@
 statement  = predicate, "(", args, ")", "." ;
 predicate  = upper, { upper | digit | "_" } ;
 args       = arg, { ",", arg } ;
-arg        = identifier | string ;
+arg        = identifier | string | number ;
 identifier = letter, { letter | digit | "_" } ;
 string     = "\"", { char }, "\"" ;
+number     = ["-"], digit, { digit }, [ ".", digit, { digit } ] ;
 
 upper      = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M"
            | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" ;

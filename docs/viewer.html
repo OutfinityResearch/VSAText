@@ -64,6 +64,32 @@
     a:hover { text-decoration: underline; }
     .links { margin-top: 8px; font-size: 14px; }
     .links a { margin-right: 12px; }
+    
+    /* Table styles */
+    .doc table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1em 0;
+      font-size: 0.95em;
+    }
+    .doc th, .doc td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .doc th {
+      background: #f5f2ea;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .doc tr:nth-child(even) {
+      background: #faf9f6;
+    }
+    .doc tr:hover {
+      background: #f0efe8;
+    }
+    
     @media (min-width: 900px) {
       main { grid-template-columns: 280px 1fr; }
       .toc { position: sticky; top: 90px; align-self: start; }
@@ -128,6 +154,8 @@
       let codeBuffer = [];
       let paraBuffer = [];
       let listBuffer = [];
+      let tableBuffer = [];
+      let inTable = false;
       const headings = [];
 
       function flushParagraph() {
@@ -155,6 +183,62 @@
         }
       }
 
+      function flushTable() {
+        if (tableBuffer.length < 2) {
+          tableBuffer = [];
+          inTable = false;
+          return;
+        }
+        
+        // Parse header row
+        const headerRow = tableBuffer[0];
+        const headerCells = parseTableRow(headerRow);
+        
+        // Skip separator row (index 1)
+        // Parse data rows (index 2+)
+        const dataRows = tableBuffer.slice(2);
+        
+        let tableHtml = '<table><thead><tr>';
+        for (const cell of headerCells) {
+          tableHtml += `<th>${inline(cell.trim(), baseUrl)}</th>`;
+        }
+        tableHtml += '</tr></thead><tbody>';
+        
+        for (const row of dataRows) {
+          const cells = parseTableRow(row);
+          tableHtml += '<tr>';
+          for (let i = 0; i < headerCells.length; i++) {
+            const cellContent = cells[i] !== undefined ? cells[i].trim() : '';
+            tableHtml += `<td>${inline(cellContent, baseUrl)}</td>`;
+          }
+          tableHtml += '</tr>';
+        }
+        
+        tableHtml += '</tbody></table>';
+        html += tableHtml;
+        
+        tableBuffer = [];
+        inTable = false;
+      }
+
+      function parseTableRow(row) {
+        // Remove leading/trailing pipes and split by pipe
+        let trimmed = row.trim();
+        if (trimmed.startsWith('|')) trimmed = trimmed.slice(1);
+        if (trimmed.endsWith('|')) trimmed = trimmed.slice(0, -1);
+        return trimmed.split('|');
+      }
+
+      function isTableSeparator(line) {
+        // Matches |---|---|---| or |:---|:---:|---:|
+        return /^\|?(\s*:?-+:?\s*\|)+\s*:?-+:?\s*\|?$/.test(line.trim());
+      }
+
+      function isTableRow(line) {
+        const trimmed = line.trim();
+        return trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.includes('|');
+      }
+
       function inline(text, baseUrlLocal) {
         let t = escapeHtml(text);
         t = t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (m, alt, url) => {
@@ -172,12 +256,16 @@
         return t;
       }
 
-      for (const line of lines) {
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
         const trimmed = line.trim();
+        
+        // Code blocks
         if (trimmed.startsWith('```')) {
           if (!inCode) {
             flushParagraph();
             flushList();
+            flushTable();
             inCode = true;
             codeLang = trimmed.replace('```', '').trim();
           } else {
@@ -190,9 +278,42 @@
           codeBuffer.push(line);
           continue;
         }
+        
+        // Table detection
+        if (isTableRow(trimmed)) {
+          if (!inTable) {
+            // Check if next line is separator
+            const nextLine = lines[i + 1];
+            if (nextLine && isTableSeparator(nextLine)) {
+              flushParagraph();
+              flushList();
+              inTable = true;
+              tableBuffer.push(trimmed);
+              continue;
+            }
+          }
+          if (inTable) {
+            tableBuffer.push(trimmed);
+            continue;
+          }
+        }
+        
+        // Table separator (only when in table)
+        if (inTable && isTableSeparator(trimmed)) {
+          tableBuffer.push(trimmed);
+          continue;
+        }
+        
+        // End of table (non-table line while in table)
+        if (inTable && !isTableRow(trimmed) && !isTableSeparator(trimmed)) {
+          flushTable();
+        }
+        
+        // Headings
         if (/^#{1,6}\s/.test(trimmed)) {
           flushParagraph();
           flushList();
+          flushTable();
           const level = trimmed.match(/^#+/)[0].length;
           const text = trimmed.replace(/^#{1,6}\s+/, '').trim();
           const id = slugify(text);
@@ -200,21 +321,31 @@
           html += `<h${level} id="${id}">${inline(text, baseUrl)}</h${level}>`;
           continue;
         }
+        
+        // List items
         if (/^[-*]\s+/.test(trimmed)) {
           flushParagraph();
+          flushTable();
           listBuffer.push(trimmed.replace(/^[-*]\s+/, ''));
           continue;
         }
+        
+        // Empty line
         if (trimmed === '') {
           flushParagraph();
           flushList();
+          if (inTable) flushTable();
           continue;
         }
+        
+        // Regular paragraph text
         paraBuffer.push(trimmed);
       }
+      
       flushParagraph();
       flushList();
       flushCode();
+      flushTable();
 
       return { html, headings };
     }
@@ -242,7 +373,7 @@
           <a href="index.html">Index</a>
         `;
       } catch (err) {
-        contentEl.textContent = 'Unable to load document.';
+        contentEl.textContent = 'Unable to load document: ' + err.message;
       }
     }
 

@@ -97,11 +97,11 @@ function resolveRef(ref, basePath, store) {
     const doc = store.get(target) || readJson(target);
     store.set(target, doc);
     const pointer = fragment ? `/${fragment.replace(/^\//, '')}` : '';
-    return resolveJsonPointer(doc, pointer);
+    return { schema: resolveJsonPointer(doc, pointer), basePath: target };
   }
   const doc = store.get(basePath);
   const pointer = fragment ? `/${fragment.replace(/^\//, '')}` : '';
-  return resolveJsonPointer(doc, pointer);
+  return { schema: resolveJsonPointer(doc, pointer), basePath };
 }
 
 function typeMatches(schemaType, data) {
@@ -129,11 +129,11 @@ function validateSchema(schema, data, ctx, pathStack) {
 
   if (schema.$ref) {
     const resolved = resolveRef(schema.$ref, ctx.basePath, ctx.store);
-    if (!resolved) {
+    if (!resolved || !resolved.schema) {
       errors.push(`${pathStack}: unresolved $ref ${schema.$ref}`);
       return errors;
     }
-    return errors.concat(validateSchema(resolved, data, ctx, pathStack));
+    return errors.concat(validateSchema(resolved.schema, data, { ...ctx, basePath: resolved.basePath }, pathStack));
   }
 
   if (schema.const !== undefined && data !== schema.const) {

@@ -45,7 +45,7 @@ function parseJsonBody(req) {
   });
 }
 
-function createApiServer() {
+function createApiHandler() {
   const stores = {
     specs: new Map(),
     sops: new Map(),
@@ -79,7 +79,7 @@ function createApiServer() {
     return jsonResponse(res, 200, payload);
   }
 
-  const server = http.createServer(async (req, res) => {
+  const handler = async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
     const p = url.pathname;
 
@@ -440,9 +440,16 @@ function createApiServer() {
     }
 
     return errorResponse(res, 404, 'not_found', 'Route not found', { path: p });
-  });
+  };
 
-  return server;
+  return { handler, stores };
+}
+
+function createApiServer() {
+  const { handler } = createApiHandler();
+  return http.createServer((req, res) => {
+    handler(req, res);
+  });
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -453,4 +460,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   });
 }
 
-export { createApiServer };
+export { createApiHandler, createApiServer };

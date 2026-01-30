@@ -12,17 +12,17 @@ This document reviews the current repository artifacts against the expected "SCR
 
 | Deliverable Section | Repository Coverage | Status | Notes / Gaps |
 |---|---|---|---|
-| Executive Summary | DS01 Vision | Partial | Summary exists, but not as a single consolidated deliverable document. |
-| Introduction | DS01 Vision, DS03 Research Plan | Partial | Narrative context captured; could be consolidated into the deliverable format. |
+| Executive Summary | DS18 Deliverable Draft, DS01 Vision | Partial | Consolidated structure exists; content still needs expansion and polishing. |
+| Introduction | DS18 Deliverable Draft, DS01 Vision, DS03 Research Plan | Partial | Consolidated structure exists; add richer narrative + citations as needed. |
 | Use case definition | DS15 Use Case Definition | Partial | Defined at workflow level; still needs requirement IDs and traceability links to APIs/evals. |
-| Business and System Requirements | DS01 Vision, DS02 API, DS06 Architecture | Partial | High-level requirements exist; a structured requirement list with IDs and traceability is missing. |
-| Non-functional Requirements | DS01 Vision, DS06 Architecture | Partial | Captured conceptually; lacks measurable thresholds for latency, throughput, scalability targets. |
-| KPIs or Success Criteria | DS01 Vision, DS05 Evaluation Suite | Partial | KPIs defined; acceptance thresholds exist, but dataset + measurement protocols need expansion. |
-| AI/ML role in the system | DS03 Research Plan, DS06 Architecture | Partial | Roles described; missing detailed model selection/hosting assumptions and per-agent ML boundaries. |
-| Relevant Stakeholders and Roles | DS01 Vision | Partial | Stakeholders listed; missing explicit role-to-permission mapping in API/Auth. |
-| Data requirements | DS07 Data Governance | Partial | Categories and policies exist; missing concrete datasets and licensing decisions. |
+| Business and System Requirements | DS18 Deliverable Draft, DS01 Vision, DS02 API, DS06 Architecture, DS19 Traceability | Partial | Requirement IDs and mapping exist; deepen traceability into code-level implementations. |
+| Non-functional Requirements | DS18 Deliverable Draft, DS01 Vision, DS06 Architecture | Partial | Captured conceptually; add measurable thresholds and benchmarks. |
+| KPIs or Success Criteria | DS18 Deliverable Draft, DS01 Vision, DS05 Evaluation Suite, DS19 Traceability | Partial | KPI mapping exists; add measurement automation and benchmark datasets. |
+| AI/ML role in the system | DS18 Deliverable Draft, DS03 Research Plan, DS06 Architecture | Partial | Roles described; add detailed model hosting assumptions and per-agent ML boundaries. |
+| Relevant Stakeholders and Roles | DS18 Deliverable Draft, DS01 Vision, DS15 Use Case Definition | Partial | Stakeholders listed; missing explicit role-to-permission mapping in API/Auth. |
+| Data requirements | DS18 Deliverable Draft, DS07 Data Governance | Partial | Categories and policies exist; missing concrete datasets and licensing decisions. |
 | ACHILLES Feature Alignment | DS16 ACHILLES Feature Alignment | Partial | Alignment matrix added; still needs requirement IDs and measurable acceptance thresholds. |
-| Validation Protocol | DS08 Validation Protocol | Partial | Protocol defined; needs concrete recruitment criteria, tasks, and evaluation rubrics per role. |
+| Validation Protocol | DS18 Deliverable Draft, DS08 Validation Protocol | Partial | Protocol defined; needs concrete recruitment criteria, tasks, and evaluation rubrics per role. |
 | References | DS17 References | Partial | Initial curated list added; needs completion and consistent citation format. |
 
 ## 4. API Coverage vs Use Case Subsystems

@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "forbidden",
+    "message": "Insufficient permissions: vsa",
+    "details": {
+      "resource": "vsa",
+      "status": 403
+    },
+    "correlation_id": "corr_vsa_403"
+  }
+}

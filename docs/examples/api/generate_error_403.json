@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "forbidden",
+    "message": "Insufficient permissions: generate",
+    "details": {
+      "resource": "generate",
+      "status": 403
+    },
+    "correlation_id": "corr_generate_403"
+  }
+}

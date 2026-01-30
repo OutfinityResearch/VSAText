@@ -1,0 +1,5 @@
+# Example CNL statements
+CHARACTER(Anna).
+TRAIT(Anna, courageous).
+GOAL(Anna, protect, "brother").
+RULE(Scene_3, must_include, "storm").

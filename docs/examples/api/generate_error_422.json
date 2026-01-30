@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "invalid_request",
+    "message": "Request validation failed: generate",
+    "details": {
+      "resource": "generate",
+      "status": 422
+    },
+    "correlation_id": "corr_generate_422"
+  }
+}

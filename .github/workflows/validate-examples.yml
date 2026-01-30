@@ -1,0 +1,24 @@
+name: Validate API Examples
+
+on:
+  push:
+    paths:
+      - 'docs/examples/api/**'
+      - 'docs/schemas/api/**'
+      - 'scripts/validate_examples.py'
+  pull_request:
+    paths:
+      - 'docs/examples/api/**'
+      - 'docs/schemas/api/**'
+      - 'scripts/validate_examples.py'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate examples
+        run: node scripts/validate_examples.mjs

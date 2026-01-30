@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "unauthorized",
+    "message": "Authentication required: plan",
+    "details": {
+      "resource": "plan",
+      "status": 401
+    },
+    "correlation_id": "corr_plan_401"
+  }
+}

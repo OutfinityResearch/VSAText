@@ -1,0 +1,16 @@
+{
+  "spec": {
+    "id": "spec_001",
+    "title": "Stormbound",
+    "synopsis": "A sea captain faces a moral dilemma during a historic storm.",
+    "themes": ["responsibility", "sacrifice"],
+    "constraints": ["include a storm scene", "avoid explicit violence"],
+    "cnl_constraints": ["RULE(Scene_3, must_include, \"storm\")."],
+    "characters": [
+      {"id": "char_anna", "name": "Anna", "traits": ["courageous"], "goals": ["protect brother"]}
+    ],
+    "world_rules": [
+      {"id": "wr_01", "rule": "No supernatural elements."}
+    ]
+  }
+}

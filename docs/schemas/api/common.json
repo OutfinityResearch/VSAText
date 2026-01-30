@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scripta.api.common",
+  "title": "SCRIPTA API Common Types",
+  "type": "object",
+  "$defs": {
+    "Id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]{6,64}$"
+    },
+    "Timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "JobStatus": {
+      "type": "string",
+      "enum": ["queued", "running", "completed", "failed"]
+    },
+    "ImplementationProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "name": { "type": "string" },
+        "mode": { "type": "string", "enum": ["basic", "vsa"] },
+        "parameters": { "type": "object", "additionalProperties": true }
+      },
+      "required": ["mode"]
+    },
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "uri": { "type": "string" },
+        "type": { "type": "string" },
+        "hash": { "type": "string" }
+      },
+      "required": ["id", "type"]
+    },
+    "AuditLogEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "event_type": { "type": "string" },
+        "actor": { "type": "string" },
+        "timestamp": { "$ref": "#/$defs/Timestamp" },
+        "payload_hash": { "type": "string" }
+      },
+      "required": ["id", "event_type", "timestamp"]
+    },
+    "Error": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "details": { "type": "object", "additionalProperties": true },
+        "correlation_id": { "$ref": "#/$defs/Id" }
+      },
+      "required": ["code", "message"]
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "error": { "$ref": "#/$defs/Error" }
+      },
+      "required": ["error"]
+    }
+  }
+}

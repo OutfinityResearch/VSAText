@@ -1,0 +1,20 @@
+{
+  "plan": {
+    "id": "plan_001",
+    "spec_id": "spec_001",
+    "plot_graph": "plot_graph_ref_001",
+    "scenes": [
+      {"id": "scene_1", "summary": "Introduce the captain and the impending storm."},
+      {"id": "scene_2", "summary": "The crew debates whether to change course."},
+      {"id": "scene_3", "summary": "The storm hits and forces a decision."}
+    ],
+    "arcs": ["fall-rise", "redemption"]
+  },
+  "audit": {
+    "id": "audit_1003",
+    "event_type": "plan.created",
+    "actor": "agent:planning",
+    "timestamp": "2026-01-30T10:10:00Z",
+    "payload_hash": "4f8b42c2c8d07b6df1b68a0d0f19f6d7"
+  }
+}

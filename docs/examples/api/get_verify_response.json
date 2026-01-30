@@ -1,0 +1,8 @@
+{
+  "report_id": "verify_101",
+  "checks": [
+    {"name": "character_consistency", "status": "pass"},
+    {"name": "plot_coherence", "status": "warn", "details": {"issue": "minor inconsistency"}}
+  ],
+  "violations": ["Scene_2 missing implied foreshadowing"]
+}

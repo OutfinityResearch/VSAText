@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "unauthorized",
+    "message": "Authentication required: pipeline",
+    "details": {
+      "resource": "pipeline",
+      "status": 401
+    },
+    "correlation_id": "corr_pipeline_401"
+  }
+}

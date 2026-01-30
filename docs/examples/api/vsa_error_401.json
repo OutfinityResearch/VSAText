@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "unauthorized",
+    "message": "Authentication required: vsa",
+    "details": {
+      "resource": "vsa",
+      "status": 401
+    },
+    "correlation_id": "corr_vsa_401"
+  }
+}

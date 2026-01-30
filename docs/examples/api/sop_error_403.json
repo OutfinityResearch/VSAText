@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "forbidden",
+    "message": "Insufficient permissions: sop",
+    "details": {
+      "resource": "sop",
+      "status": 403
+    },
+    "correlation_id": "corr_sop_403"
+  }
+}

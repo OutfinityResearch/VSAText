@@ -1,0 +1,5 @@
+{
+  "text": "A storm gathers at sea",
+  "schema": "narrative",
+  "implementation_profile": {"mode": "vsa", "parameters": {"dim": 10000}}
+}

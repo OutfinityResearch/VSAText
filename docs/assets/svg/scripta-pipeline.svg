@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="260" viewBox="0 0 1200 260" role="img" aria-label="SCRIPTA pipeline">
+  <defs>
+    <style>
+      .box { fill: #f7f1e6; stroke: #2b2b2b; stroke-width: 2; rx: 10; ry: 10; }
+      .text { font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif; font-size: 16px; fill: #1e1e1e; }
+      .arrow { stroke: #2b2b2b; stroke-width: 2; marker-end: url(#arrowhead); }
+      .title { font-size: 18px; font-weight: bold; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2b2b2b" />
+    </marker>
+  </defs>
+
+  <text class="text title" x="24" y="32">SCRIPTA Specification-Driven Pipeline</text>
+
+  <rect class="box" x="30" y="70" width="140" height="60" />
+  <text class="text" x="48" y="105">Spec</text>
+
+  <rect class="box" x="200" y="70" width="140" height="60" />
+  <text class="text" x="222" y="105">Plan</text>
+
+  <rect class="box" x="370" y="70" width="140" height="60" />
+  <text class="text" x="385" y="105">Generate</text>
+
+  <rect class="box" x="540" y="70" width="140" height="60" />
+  <text class="text" x="565" y="105">Verify</text>
+
+  <rect class="box" x="710" y="70" width="140" height="60" />
+  <text class="text" x="728" y="105">Guardrail</text>
+
+  <rect class="box" x="880" y="70" width="140" height="60" />
+  <text class="text" x="910" y="105">Evaluate</text>
+
+  <rect class="box" x="1050" y="70" width="120" height="60" />
+  <text class="text" x="1080" y="105">Audit</text>
+
+  <line class="arrow" x1="170" y1="100" x2="200" y2="100" />
+  <line class="arrow" x1="340" y1="100" x2="370" y2="100" />
+  <line class="arrow" x1="510" y1="100" x2="540" y2="100" />
+  <line class="arrow" x1="680" y1="100" x2="710" y2="100" />
+  <line class="arrow" x1="850" y1="100" x2="880" y2="100" />
+  <line class="arrow" x1="1020" y1="100" x2="1050" y2="100" />
+
+  <rect class="box" x="30" y="160" width="1140" height="70" />
+  <text class="text" x="46" y="200">Orchestration via SOP Lang + MAS (controls, policies, traceability)</text>
+</svg>

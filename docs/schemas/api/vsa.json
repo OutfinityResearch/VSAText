@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scripta.api.vsa",
+  "title": "SCRIPTA VSA Schemas",
+  "type": "object",
+  "$defs": {
+    "VsaEncodeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": { "type": "string" },
+        "schema": { "type": "string" },
+        "implementation_profile": { "$ref": "common.json#/$defs/ImplementationProfile" }
+      },
+      "required": ["text"]
+    },
+    "VsaEncodeResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vector": { "type": "array", "items": { "type": "number" } },
+        "dim": { "type": "integer" }
+      },
+      "required": ["vector", "dim"]
+    },
+    "VsaIndexRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vectors": { "type": "array", "items": { "type": "array", "items": { "type": "number" } } },
+        "ids": { "type": "array", "items": { "$ref": "common.json#/$defs/Id" } }
+      },
+      "required": ["vectors", "ids"]
+    },
+    "VsaIndexResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "indexed": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["indexed"]
+    },
+    "VsaSearchRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "query_vector": { "type": "array", "items": { "type": "number" } },
+        "top_k": { "type": "integer", "minimum": 1, "maximum": 100 }
+      },
+      "required": ["query_vector", "top_k"]
+    },
+    "VsaSearchResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ids": { "type": "array", "items": { "$ref": "common.json#/$defs/Id" } },
+        "scores": { "type": "array", "items": { "type": "number" } }
+      },
+      "required": ["ids", "scores"]
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "unauthorized",
+    "message": "Authentication required: verify",
+    "details": {
+      "resource": "verify",
+      "status": 401
+    },
+    "correlation_id": "corr_verify_401"
+  }
+}

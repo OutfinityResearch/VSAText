@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "not_found",
+    "message": "Resource not found: evaluate",
+    "details": {
+      "resource": "evaluate",
+      "status": 404
+    },
+    "correlation_id": "corr_evaluate_404"
+  }
+}

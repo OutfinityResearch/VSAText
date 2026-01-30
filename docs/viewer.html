@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SCRIPTA Docs Viewer</title>
+  <style>
+    :root {
+      --ink: #1f2a30;
+      --muted: #50616b;
+      --paper: #fbf7ef;
+      --accent: #1b6a73;
+      --accent-2: #b85c38;
+      --border: #d6cfc2;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: linear-gradient(180deg, #f7efe3 0%, #f3f7f6 100%);
+      font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+    }
+    header {
+      padding: 28px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(6px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    header h1 { margin: 0 0 6px; font-size: 26px; }
+    header .meta { color: var(--muted); font-size: 14px; }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    .toc {
+      padding: 16px;
+      background: #fffaf0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .doc {
+      padding: 24px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+    }
+    .doc img { max-width: 100%; height: auto; }
+    .doc pre {
+      background: #f3f0e8;
+      padding: 12px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    .doc code { font-family: "Courier New", Courier, monospace; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .links { margin-top: 8px; font-size: 14px; }
+    .links a { margin-right: 12px; }
+    @media (min-width: 900px) {
+      main { grid-template-columns: 280px 1fr; }
+      .toc { position: sticky; top: 90px; align-self: start; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="doc-title">SCRIPTA Docs Viewer</h1>
+    <div class="meta" id="doc-meta">Load a document with ?doc=specs/DS01-Vision.md</div>
+  </header>
+
+  <main>
+    <aside class="toc" id="toc">
+      <strong>Contents</strong>
+      <div id="toc-list"></div>
+      <div class="links" id="doc-links"></div>
+    </aside>
+    <article class="doc" id="content">Select a document.</article>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const docParam = params.get('doc');
+    const contentEl = document.getElementById('content');
+    const tocListEl = document.getElementById('toc-list');
+    const titleEl = document.getElementById('doc-title');
+    const metaEl = document.getElementById('doc-meta');
+    const linksEl = document.getElementById('doc-links');
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function slugify(text) {
+      return text
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-');
+    }
+
+    function resolveUrl(url, baseUrl) {
+      if (/^(https?:|data:|mailto:|#)/.test(url)) return url;
+      try {
+        return new URL(url, baseUrl).href;
+      } catch (e) {
+        return url;
+      }
+    }
+
+    function renderMarkdown(md, baseUrl) {
+      const lines = md.replace(/\r\n/g, '\n').split('\n');
+      let html = '';
+      let inCode = false;
+      let codeLang = '';
+      let codeBuffer = [];
+      let paraBuffer = [];
+      let listBuffer = [];
+      const headings = [];
+
+      function flushParagraph() {
+        if (paraBuffer.length) {
+          const text = paraBuffer.join(' ');
+          html += `<p>${inline(text, baseUrl)}</p>`;
+          paraBuffer = [];
+        }
+      }
+
+      function flushList() {
+        if (listBuffer.length) {
+          html += '<ul>' + listBuffer.map(item => `<li>${inline(item, baseUrl)}</li>`).join('') + '</ul>';
+          listBuffer = [];
+        }
+      }
+
+      function flushCode() {
+        if (codeBuffer.length) {
+          const code = escapeHtml(codeBuffer.join('\n'));
+          const langClass = codeLang ? ` class="language-${escapeHtml(codeLang)}"` : '';
+          html += `<pre><code${langClass}>${code}</code></pre>`;
+          codeBuffer = [];
+          codeLang = '';
+        }
+      }
+
+      function inline(text, baseUrlLocal) {
+        let t = escapeHtml(text);
+        t = t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (m, alt, url) => {
+          const safeAlt = escapeHtml(alt);
+          const resolved = resolveUrl(url, baseUrlLocal);
+          return `<img src="${resolved}" alt="${safeAlt}" />`;
+        });
+        t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, label, url) => {
+          const resolved = resolveUrl(url, baseUrlLocal);
+          return `<a href="${resolved}">${label}</a>`;
+        });
+        t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+        t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        t = t.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+        return t;
+      }
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('```')) {
+          if (!inCode) {
+            flushParagraph();
+            flushList();
+            inCode = true;
+            codeLang = trimmed.replace('```', '').trim();
+          } else {
+            inCode = false;
+            flushCode();
+          }
+          continue;
+        }
+        if (inCode) {
+          codeBuffer.push(line);
+          continue;
+        }
+        if (/^#{1,6}\s/.test(trimmed)) {
+          flushParagraph();
+          flushList();
+          const level = trimmed.match(/^#+/)[0].length;
+          const text = trimmed.replace(/^#{1,6}\s+/, '').trim();
+          const id = slugify(text);
+          headings.push({ level, text, id });
+          html += `<h${level} id="${id}">${inline(text, baseUrl)}</h${level}>`;
+          continue;
+        }
+        if (/^[-*]\s+/.test(trimmed)) {
+          flushParagraph();
+          listBuffer.push(trimmed.replace(/^[-*]\s+/, ''));
+          continue;
+        }
+        if (trimmed === '') {
+          flushParagraph();
+          flushList();
+          continue;
+        }
+        paraBuffer.push(trimmed);
+      }
+      flushParagraph();
+      flushList();
+      flushCode();
+
+      return { html, headings };
+    }
+
+    async function loadDoc() {
+      if (!docParam) {
+        contentEl.textContent = 'No document specified.';
+        return;
+      }
+      try {
+        const docUrl = new URL(docParam, window.location.href);
+        const res = await fetch(docUrl);
+        if (!res.ok) throw new Error('Failed to load document');
+        const md = await res.text();
+        const { html, headings } = renderMarkdown(md, docUrl.href);
+        contentEl.innerHTML = html;
+        titleEl.textContent = docParam.split('/').pop();
+        metaEl.textContent = docParam;
+        tocListEl.innerHTML = headings.map(h => {
+          const indent = (h.level - 1) * 12;
+          return `<div style="margin-left:${indent}px"><a href="#${h.id}">${h.text}</a></div>`;
+        }).join('');
+        linksEl.innerHTML = `
+          <a href="${docUrl.href}">Raw .md</a>
+          <a href="index.html">Index</a>
+        `;
+      } catch (err) {
+        contentEl.textContent = 'Unable to load document.';
+      }
+    }
+
+    loadDoc();
+  </script>
+</body>
+</html>

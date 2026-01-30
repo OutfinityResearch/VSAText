@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="260" viewBox="0 0 1200 260" role="img" aria-label="CNL translation flow">
+  <defs>
+    <style>
+      .box { fill: #eaf2f6; stroke: #1f2a30; stroke-width: 2; rx: 10; ry: 10; }
+      .text { font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif; font-size: 16px; fill: #1f2a30; }
+      .arrow { stroke: #1f2a30; stroke-width: 2; marker-end: url(#arrowhead); }
+      .title { font-size: 18px; font-weight: bold; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#1f2a30" />
+    </marker>
+  </defs>
+
+  <text class="text title" x="24" y="32">CNL Translation and Execution Flow</text>
+
+  <rect class="box" x="30" y="70" width="200" height="60" />
+  <text class="text" x="52" y="105">Natural Language</text>
+
+  <rect class="box" x="260" y="70" width="220" height="60" />
+  <text class="text" x="285" y="105">LLM CNL Translator</text>
+
+  <rect class="box" x="510" y="70" width="220" height="60" />
+  <text class="text" x="540" y="105">CNL Validator/Parser</text>
+
+  <rect class="box" x="760" y="70" width="200" height="60" />
+  <text class="text" x="795" y="105">Algorithm Engine</text>
+
+  <rect class="box" x="990" y="70" width="180" height="60" />
+  <text class="text" x="1020" y="105">Outputs + Audit</text>
+
+  <line class="arrow" x1="230" y1="100" x2="260" y2="100" />
+  <line class="arrow" x1="480" y1="100" x2="510" y2="100" />
+  <line class="arrow" x1="730" y1="100" x2="760" y2="100" />
+  <line class="arrow" x1="960" y1="100" x2="990" y2="100" />
+
+  <rect class="box" x="30" y="160" width="1140" height="70" />
+  <text class="text" x="46" y="200">CNL reduces ambiguity; algorithms consume structured constraints directly.</text>
+</svg>

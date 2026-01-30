@@ -1,0 +1,18 @@
+{
+  "entries": [
+    {
+      "id": "audit_1001",
+      "event_type": "spec.created",
+      "actor": "author:anna",
+      "timestamp": "2026-01-30T10:05:00Z",
+      "payload_hash": "e3b0c44298fc1c149afbf4c8996fb924"
+    },
+    {
+      "id": "audit_1003",
+      "event_type": "plan.created",
+      "actor": "agent:planning",
+      "timestamp": "2026-01-30T10:10:00Z",
+      "payload_hash": "4f8b42c2c8d07b6df1b68a0d0f19f6d7"
+    }
+  ]
+}

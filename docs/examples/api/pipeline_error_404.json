@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "not_found",
+    "message": "Resource not found: pipeline",
+    "details": {
+      "resource": "pipeline",
+      "status": 404
+    },
+    "correlation_id": "corr_pipeline_404"
+  }
+}

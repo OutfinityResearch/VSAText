@@ -1,0 +1,12 @@
+{"id":"eval_001","domain":"book","nl":"Anna must stay courageous, and a storm must appear in scene 3.","cnl":"CHARACTER(Anna).\nTRAIT(Anna, courageous).\nRULE(Scene_3, must_include, \"storm\").","tags":["character","constraint","scene"]}
+{"id":"eval_002","domain":"screenplay","nl":"The protagonist should never use magic; keep the story grounded.","cnl":"CHARACTER(Protagonist).\nRULE(World, forbid, magic).","tags":["world_rule","tone"]}
+{"id":"eval_003","domain":"tutorial","nl":"Explain CRISPR in 5 steps and include a safety warning.","cnl":"FORMAT(Tutorial, steps, 5).\nRULE(Tutorial, must_include, \"safety warning\").","tags":["structure","safety"]}
+{"id":"eval_004","domain":"research","nl":"Cite at least two sources and avoid medical claims.","cnl":"RULE(Document, must_include, \"citations\").\nRULE(Document, forbid, \"medical claims\").","tags":["compliance","constraints"]}
+{"id":"eval_005","domain":"book","nl":"In chapter 2, introduce a mentor named Irina.","cnl":"CHARACTER(Irina).\nRULE(Chapter_2, must_introduce, Irina).","tags":["character","plot"]}
+{"id":"eval_006","domain":"screenplay","nl":"Scene 5 must contain a train station and no dialogue.","cnl":"RULE(Scene_5, must_include, \"train station\").\nRULE(Scene_5, forbid, \"dialogue\").","tags":["scene","style"]}
+{"id":"eval_007","domain":"book","nl":"The main character must protect their brother, and the ending should be hopeful.","cnl":"CHARACTER(Main).\nGOAL(Main, protect, brother).\nRULE(Ending, tone, hopeful).","tags":["goal","ending"]}
+{"id":"eval_008","domain":"tutorial","nl":"Use second-person voice and keep paragraphs short.","cnl":"RULE(Style, voice, second_person).\nRULE(Style, paragraphs, short).","tags":["style"]}
+{"id":"eval_009","domain":"research","nl":"The report should be neutral and avoid stereotypes.","cnl":"RULE(Document, tone, neutral).\nRULE(Document, forbid, \"stereotypes\").","tags":["ethics","bias"]}
+{"id":"eval_010","domain":"screenplay","nl":"By act 3, reveal that the ship was sabotaged.","cnl":"RULE(Act_3, must_reveal, \"ship was sabotaged\").","tags":["plot","twist"]}
+{"id":"eval_011","domain":"book","nl":"Limit the story to 3 main characters.","cnl":"RULE(Story, max_characters, 3).","tags":["constraints"]}
+{"id":"eval_012","domain":"tutorial","nl":"Include one real-world example and a short summary at the end.","cnl":"RULE(Tutorial, must_include, \"real-world example\").\nRULE(Ending, must_include, \"summary\").","tags":["structure","examples"]}

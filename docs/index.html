@@ -1,1 +1,177 @@
-Hello World!
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SCRIPTA Documentation Index</title>
+  <style>
+    :root {
+      --ink: #1f2a30;
+      --muted: #51616c;
+      --paper: #fbf7ef;
+      --accent: #1b6a73;
+      --accent-2: #b85c38;
+      --border: #d6cfc2;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: linear-gradient(180deg, #f7efe3 0%, #f2f6f5 100%);
+      font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+    }
+    header {
+      padding: 36px 20px 18px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(6px);
+    }
+    header h1 { margin: 0 0 8px; font-size: 30px; }
+    header p { margin: 0; color: var(--muted); }
+    main { max-width: 980px; margin: 0 auto; padding: 24px 20px 60px; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+    }
+    .card h3 { margin: 0 0 6px; }
+    .card p { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .links a { margin-right: 10px; font-size: 14px; }
+    .note { margin-top: 16px; padding: 12px; background: #fffaf0; border: 1px solid var(--border); border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SCRIPTA Documentation</h1>
+    <p>Design specifications and research plans for the ACHILLES SCRIPTA use case.</p>
+  </header>
+  <main>
+    <div class="grid">
+      <div class="card">
+        <h3>DS01 Vision</h3>
+        <p>Vision, goals, scope, KPIs.</p>
+        <div class="links">
+          <a href="viewer.html?doc=specs/DS01-Vision.md">View</a>
+          <a href="specs/DS01-Vision.md">Raw .md</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>DS02 API</h3>
+        <p>Endpoints, models, profiles (Basic vs VSA/HDC).</p>
+        <div class="links">
+          <a href="viewer.html?doc=specs/DS02-API.md">View</a>
+          <a href="specs/DS02-API.md">Raw .md</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>DS03 Research Plan</h3>
+        <p>Research questions, hypotheses, work packages.</p>
+        <div class="links">
+          <a href="viewer.html?doc=specs/DS03-Research-Plan.md">View</a>
+          <a href="specs/DS03-Research-Plan.md">Raw .md</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>DS04 Experiments</h3>
+        <p>Experiment matrix and protocols.</p>
+        <div class="links">
+          <a href="viewer.html?doc=specs/DS04-Experiments.md">View</a>
+          <a href="specs/DS04-Experiments.md">Raw .md</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>DS05 Evaluation Suite</h3>
+        <p>Metrics, rubrics, acceptance thresholds.</p>
+        <div class="links">
+          <a href="viewer.html?doc=specs/DS05-Evaluation-Suite.md">View</a>
+          <a href="specs/DS05-Evaluation-Suite.md">Raw .md</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>DS06 Architecture & Code Plan</h3>
+        <p>Components, repo structure, milestones.</p>
+        <div class="links">
+          <a href="viewer.html?doc=specs/DS06-Architecture-Code-Plan.md">View</a>
+          <a href="specs/DS06-Architecture-Code-Plan.md">Raw .md</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>DS07 Data Governance</h3>
+        <p>Data categories, ownership, retention.</p>
+        <div class="links">
+          <a href="viewer.html?doc=specs/DS07-Data-Governance.md">View</a>
+          <a href="specs/DS07-Data-Governance.md">Raw .md</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>DS08 Validation Protocol</h3>
+        <p>Pilot validation flow and criteria.</p>
+        <div class="links">
+          <a href="viewer.html?doc=specs/DS08-Validation-Protocol.md">View</a>
+          <a href="specs/DS08-Validation-Protocol.md">Raw .md</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>DS09 CNL Plan</h3>
+        <p>Controlled Natural Language translation and validation.</p>
+        <div class="links">
+          <a href="viewer.html?doc=specs/DS09-CNL.md">View</a>
+          <a href="specs/DS09-CNL.md">Raw .md</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>DS10 Algorithm Variants</h3>
+        <p>Basic vs VSA/HDC implementations for core algorithms.</p>
+        <div class="links">
+          <a href="viewer.html?doc=specs/DS10-Algorithm-Variants.md">View</a>
+          <a href="specs/DS10-Algorithm-Variants.md">Raw .md</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>DS11 API Schemas</h3>
+        <p>JSON Schemas for API requests and responses.</p>
+        <div class="links">
+          <a href="viewer.html?doc=specs/DS11-API-Schemas.md">View</a>
+          <a href="specs/DS11-API-Schemas.md">Raw .md</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>DS12 VSA/HDC Parameters</h3>
+        <p>Explicit VSA/HDC parameterization and sweep plan.</p>
+        <div class="links">
+          <a href="viewer.html?doc=specs/DS12-VSA-HDC-Parameters.md">View</a>
+          <a href="specs/DS12-VSA-HDC-Parameters.md">Raw .md</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>DS13 API Examples</h3>
+        <p>Concrete JSON request examples for the API.</p>
+        <div class="links">
+          <a href="viewer.html?doc=specs/DS13-API-Examples.md">View</a>
+          <a href="specs/DS13-API-Examples.md">Raw .md</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Evals Dataset</h3>
+        <p>NL to CNL evaluation pairs for SCRIPTA.</p>
+        <div class="links">
+          <a href="viewer.html?doc=evals/README.md">View</a>
+          <a href="evals/README.md">Raw .md</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      Viewer renders Markdown to HTML locally, supports SVG images referenced from docs/assets/svg.
+    </div>
+    <div class="note">
+      Scripts: schema validation and example generation are documented in scripts/README.md.
+    </div>
+  </main>
+</body>
+</html>

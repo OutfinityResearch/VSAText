@@ -1,0 +1,16 @@
+dim: 10000
+seed: 42
+representation: bipolar
+binding: multiply
+bundling: majority
+similarity: cosine
+permutation:
+  type: cyclic_shift
+  shift_k: 7
+indexing:
+  document_strategy: bundle_sentences
+  query_strategy: bundle_terms
+sweep:
+  dim: [2000, 5000, 10000, 20000]
+  binding: [multiply, xor]
+  similarity: [cosine, hamming]

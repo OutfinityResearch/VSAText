@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "unauthorized",
+    "message": "Authentication required: cnl",
+    "details": {
+      "resource": "cnl",
+      "status": 401
+    },
+    "correlation_id": "corr_cnl_401"
+  }
+}

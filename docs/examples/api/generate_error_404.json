@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "not_found",
+    "message": "Resource not found: generate",
+    "details": {
+      "resource": "generate",
+      "status": 404
+    },
+    "correlation_id": "corr_generate_404"
+  }
+}

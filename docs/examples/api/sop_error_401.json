@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "unauthorized",
+    "message": "Authentication required: sop",
+    "details": {
+      "resource": "sop",
+      "status": 401
+    },
+    "correlation_id": "corr_sop_401"
+  }
+}

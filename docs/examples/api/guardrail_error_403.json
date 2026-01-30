@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "forbidden",
+    "message": "Insufficient permissions: guardrail",
+    "details": {
+      "resource": "guardrail",
+      "status": 403
+    },
+    "correlation_id": "corr_guardrail_403"
+  }
+}

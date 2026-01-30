@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "unauthorized",
+    "message": "Authentication required: guardrail",
+    "details": {
+      "resource": "guardrail",
+      "status": 401
+    },
+    "correlation_id": "corr_guardrail_401"
+  }
+}

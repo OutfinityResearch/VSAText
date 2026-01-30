@@ -1,0 +1,30 @@
+# Data files
+data/*.json
+
+# Node modules (if added later)
+node_modules/
+
+# Environment files
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Coverage
+coverage/
+
+# Build
+dist/
+build/

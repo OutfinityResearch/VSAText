@@ -1,8 +1,35 @@
 #!/usr/bin/env node
+/**
+ * SCRIPTA API Server
+ * Full implementation with all services integrated
+ */
+
 import http from 'http';
-import { randomUUID } from 'crypto';
+import crypto from 'crypto';
+
+// Import all services
+import { stores } from './services/store.mjs';
+import { validateApiKey, generateApiKey, listApiKeys, revokeApiKey, API_KEY_HEADER } from './services/auth.mjs';
 import { validateText } from './cnl/validator.mjs';
+import { translateNlToCnl } from './services/cnl-translator.mjs';
 import { encodeText, cosine } from './vsa/encoder.mjs';
+import { generatePlan, extractCharacters } from './services/planning.mjs';
+import { verifyAgainstSpec, checkCoherence } from './services/verification.mjs';
+import { runGuardrailCheck } from './services/guardrails.mjs';
+import { runEvaluation, calculateNQS } from './services/evaluation.mjs';
+import { generateExplanation } from './services/explainability.mjs';
+import { searchKnowledgeBase } from './services/research.mjs';
+import { runLiteraryReview } from './services/literary-review.mjs';
+import { reverseEngineer } from './services/reverse-engineering.mjs';
+import { createJob, getJob, completeJob, failJob, startJob, updateJobProgress } from './services/jobs.mjs';
+import { executeSop, getDefaultSop } from './services/sop-executor.mjs';
+import { addAuditEntry, verifyChain, generateAuditReport, AUDIT_EVENTS } from './services/audit.mjs';
+
+// Check if auth is required (can be disabled for development)
+// Evaluated at request time to allow runtime override
+function isAuthRequired() {
+  return process.env.SCRIPTA_AUTH_REQUIRED !== 'false';
+}
 
 function jsonResponse(res, statusCode, payload) {
   const body = JSON.stringify(payload);
@@ -19,7 +46,7 @@ function errorResponse(res, statusCode, code, message, details = {}) {
       code,
       message,
       details,
-      correlation_id: randomUUID().replace(/-/g, '').slice(0, 12)
+      correlation_id: crypto.randomUUID().replace(/-/g, '').slice(0, 12)
     }
   });
 }
@@ -45,401 +72,478 @@ function parseJsonBody(req) {
   });
 }
 
+function makeId(prefix) {
+  return `${prefix}_${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`;
+}
+
 function createApiHandler() {
-  const stores = {
-    specs: new Map(),
-    sops: new Map(),
-    plans: new Map(),
-    generateJobs: new Map(),
-    verifyReports: new Map(),
-    guardrailReports: new Map(),
-    evaluationReports: new Map(),
-    pipelineRuns: new Map(),
-    audit: new Map(),
-    vsaIndex: new Map()
-  };
-
-  function makeId(prefix) {
-    return `${prefix}_${randomUUID().replace(/-/g, '').slice(0, 12)}`;
-  }
-
-  function addAudit(event_type, actor, payload_hash = '0000000000000000') {
-    const entry = {
-      id: `audit_${Date.now()}`,
-      event_type,
-      actor,
-      timestamp: new Date().toISOString(),
-      payload_hash
-    };
-    stores.audit.set(entry.id, entry);
-    return entry;
-  }
-
-  function ok(res, payload) {
-    return jsonResponse(res, 200, payload);
-  }
+  const ok = (res, payload) => jsonResponse(res, 200, payload);
+  const created = (res, payload) => jsonResponse(res, 201, payload);
 
   const handler = async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
     const p = url.pathname;
+    const method = req.method;
 
-    if (req.method === 'GET' && p === '/health') {
-      return ok(res, { status: 'ok' });
+    // Health check - no auth required
+    if (method === 'GET' && p === '/health') {
+      return ok(res, { status: 'ok', version: '0.1.0', timestamp: new Date().toISOString() });
     }
 
-    // ----- Specs -----
-    if (req.method === 'POST' && p === '/v1/specs') {
-      try {
-        const body = await parseJsonBody(req);
-        if (!body.spec) return errorResponse(res, 422, 'invalid_request', 'spec is required', { field: 'spec' });
+    // Auth check for all other endpoints
+    if (isAuthRequired() && !p.startsWith('/v1/auth/')) {
+      const apiKey = req.headers[API_KEY_HEADER];
+      const authResult = validateApiKey(apiKey);
+      
+      if (!authResult.valid) {
+        addAuditEntry(AUDIT_EVENTS.AUTH_FAILURE, 'unknown', { path: p }, { ip: req.socket?.remoteAddress });
+        return errorResponse(res, 401, 'unauthorized', authResult.error || 'Invalid API key');
+      }
+      
+      req.keyRecord = authResult.keyRecord;
+    }
+
+    try {
+      const body = ['POST', 'PUT', 'PATCH'].includes(method) ? await parseJsonBody(req) : {};
+
+      // ===== AUTH ENDPOINTS =====
+      if (method === 'POST' && p === '/v1/auth/keys') {
+        const { name, roles } = body;
+        if (!name) return errorResponse(res, 422, 'invalid_request', 'name is required');
+        const keyInfo = generateApiKey(name, roles);
+        addAuditEntry('auth.key_created', 'system', { key_id: keyInfo.id });
+        return created(res, { ...keyInfo, message: 'Store this key securely. It cannot be retrieved again.' });
+      }
+
+      if (method === 'GET' && p === '/v1/auth/keys') {
+        return ok(res, { keys: listApiKeys() });
+      }
+
+      if (method === 'DELETE' && p.match(/^\/v1\/auth\/keys\/([^/]+)$/)) {
+        const keyId = p.split('/').pop();
+        const revoked = revokeApiKey(keyId);
+        if (!revoked) return errorResponse(res, 404, 'not_found', 'API key not found');
+        addAuditEntry('auth.key_revoked', req.keyRecord?.name || 'system', { key_id: keyId });
+        return ok(res, { revoked: true });
+      }
+
+      // ===== SPECS ENDPOINTS =====
+      if (method === 'POST' && p === '/v1/specs') {
+        if (!body.spec) return errorResponse(res, 422, 'invalid_request', 'spec is required');
         const spec = { ...body.spec };
         if (!spec.id) spec.id = makeId('spec');
+        spec.created_at = new Date().toISOString();
         stores.specs.set(spec.id, spec);
-        return ok(res, { spec, audit: addAudit('spec.created', 'system') });
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
+        const audit = addAuditEntry(AUDIT_EVENTS.SPEC_CREATED, req.keyRecord?.name || 'system', { spec_id: spec.id });
+        return created(res, { spec, audit: { id: audit.id, signature: audit.signature } });
       }
-    }
 
-    const specMatch = p.match(/^\/v1\/specs\/([^/]+)$/);
-    if (req.method === 'GET' && specMatch) {
-      const specId = specMatch[1];
-      const spec = stores.specs.get(specId);
-      if (!spec) return errorResponse(res, 404, 'not_found', 'Spec not found', { id: specId });
-      return ok(res, { spec });
-    }
+      if (method === 'GET' && p.match(/^\/v1\/specs\/([^/]+)$/)) {
+        const specId = p.split('/').pop();
+        const spec = stores.specs.get(specId);
+        if (!spec) return errorResponse(res, 404, 'not_found', 'Spec not found');
+        return ok(res, { spec });
+      }
 
-    // ----- SOPs -----
-    if (req.method === 'POST' && p === '/v1/sops') {
-      try {
-        const body = await parseJsonBody(req);
-        if (!body.sop) return errorResponse(res, 422, 'invalid_request', 'sop is required', { field: 'sop' });
+      if (method === 'PUT' && p.match(/^\/v1\/specs\/([^/]+)$/)) {
+        const specId = p.split('/').pop();
+        const existing = stores.specs.get(specId);
+        if (!existing) return errorResponse(res, 404, 'not_found', 'Spec not found');
+        if (!body.spec) return errorResponse(res, 422, 'invalid_request', 'spec is required');
+        const spec = { ...existing, ...body.spec, id: specId, updated_at: new Date().toISOString() };
+        stores.specs.set(specId, spec);
+        const audit = addAuditEntry(AUDIT_EVENTS.SPEC_UPDATED, req.keyRecord?.name || 'system', { spec_id: specId });
+        return ok(res, { spec, audit: { id: audit.id } });
+      }
+
+      if (method === 'DELETE' && p.match(/^\/v1\/specs\/([^/]+)$/)) {
+        const specId = p.split('/').pop();
+        if (!stores.specs.has(specId)) return errorResponse(res, 404, 'not_found', 'Spec not found');
+        stores.specs.delete(specId);
+        const audit = addAuditEntry(AUDIT_EVENTS.SPEC_DELETED, req.keyRecord?.name || 'system', { spec_id: specId });
+        return ok(res, { deleted: true, audit: { id: audit.id } });
+      }
+
+      if (method === 'GET' && p === '/v1/specs') {
+        return ok(res, { specs: stores.specs.values() });
+      }
+
+      // ===== SOPS ENDPOINTS =====
+      if (method === 'POST' && p === '/v1/sops') {
+        if (!body.sop) return errorResponse(res, 422, 'invalid_request', 'sop is required');
         const sop = { ...body.sop };
         if (!sop.id) sop.id = makeId('sop');
+        sop.created_at = new Date().toISOString();
         stores.sops.set(sop.id, sop);
-        return ok(res, { sop, audit: addAudit('sop.created', 'system') });
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
+        const audit = addAuditEntry(AUDIT_EVENTS.SOP_CREATED, req.keyRecord?.name || 'system', { sop_id: sop.id });
+        return created(res, { sop, audit: { id: audit.id } });
       }
-    }
 
-    const sopMatch = p.match(/^\/v1\/sops\/([^/]+)$/);
-    if (req.method === 'GET' && sopMatch) {
-      const sopId = sopMatch[1];
-      const sop = stores.sops.get(sopId);
-      if (!sop) return errorResponse(res, 404, 'not_found', 'SOP not found', { id: sopId });
-      return ok(res, { sop });
-    }
+      if (method === 'GET' && p.match(/^\/v1\/sops\/([^/]+)$/)) {
+        const sopId = p.split('/').pop();
+        const sop = stores.sops.get(sopId);
+        if (!sop) return errorResponse(res, 404, 'not_found', 'SOP not found');
+        return ok(res, { sop });
+      }
 
-    // ----- Planning -----
-    if (req.method === 'POST' && p === '/v1/plans') {
-      try {
-        const body = await parseJsonBody(req);
-        if (!body.spec_id) return errorResponse(res, 422, 'invalid_request', 'spec_id is required', { field: 'spec_id' });
-        const plan = {
-          id: makeId('plan'),
-          spec_id: body.spec_id,
-          plot_graph: 'plot_graph_ref_stub',
-          scenes: [
-            { id: 'scene_1', summary: 'Setup' },
-            { id: 'scene_2', summary: 'Complication' },
-            { id: 'scene_3', summary: 'Decision' }
-          ],
-          arcs: []
-        };
+      if (method === 'PUT' && p.match(/^\/v1\/sops\/([^/]+)$/)) {
+        const sopId = p.split('/').pop();
+        const existing = stores.sops.get(sopId);
+        if (!existing) return errorResponse(res, 404, 'not_found', 'SOP not found');
+        if (!body.sop) return errorResponse(res, 422, 'invalid_request', 'sop is required');
+        const sop = { ...existing, ...body.sop, id: sopId, updated_at: new Date().toISOString() };
+        stores.sops.set(sopId, sop);
+        const audit = addAuditEntry(AUDIT_EVENTS.SOP_UPDATED, req.keyRecord?.name || 'system', { sop_id: sopId });
+        return ok(res, { sop, audit: { id: audit.id } });
+      }
+
+      if (method === 'DELETE' && p.match(/^\/v1\/sops\/([^/]+)$/)) {
+        const sopId = p.split('/').pop();
+        if (!stores.sops.has(sopId)) return errorResponse(res, 404, 'not_found', 'SOP not found');
+        stores.sops.delete(sopId);
+        return ok(res, { deleted: true });
+      }
+
+      if (method === 'POST' && p.match(/^\/v1\/sops\/([^/]+):validate$/)) {
+        const sopId = p.split('/')[3].replace(':validate', '');
+        const sop = stores.sops.get(sopId);
+        if (!sop) return errorResponse(res, 404, 'not_found', 'SOP not found');
+        // Basic validation
+        const valid = sop.steps && Array.isArray(sop.steps) && sop.steps.length > 0;
+        return ok(res, { valid, errors: valid ? [] : [{ message: 'SOP must have at least one step' }] });
+      }
+
+      // ===== PLANNING ENDPOINTS =====
+      if (method === 'POST' && p === '/v1/plans') {
+        if (!body.spec_id) return errorResponse(res, 422, 'invalid_request', 'spec_id is required');
+        const spec = stores.specs.get(body.spec_id);
+        if (!spec) return errorResponse(res, 404, 'not_found', 'Spec not found');
+        
+        const plan = generatePlan(spec, body.planning_params || {});
         stores.plans.set(plan.id, plan);
-        return ok(res, { plan, audit: addAudit('plan.created', 'agent:planning') });
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
+        const audit = addAuditEntry(AUDIT_EVENTS.PLAN_CREATED, 'agent:planning', { plan_id: plan.id, spec_id: body.spec_id });
+        return created(res, { plan, audit: { id: audit.id } });
       }
-    }
 
-    const planMatch = p.match(/^\/v1\/plans\/([^/]+)$/);
-    if (req.method === 'GET' && planMatch) {
-      const planId = planMatch[1];
-      const plan = stores.plans.get(planId);
-      if (!plan) return errorResponse(res, 404, 'not_found', 'Plan not found', { id: planId });
-      return ok(res, { plan });
-    }
-
-    // ----- Generation -----
-    if (req.method === 'POST' && p === '/v1/generate') {
-      try {
-        const body = await parseJsonBody(req);
-        if (!body.plan_id) return errorResponse(res, 422, 'invalid_request', 'plan_id is required', { field: 'plan_id' });
-        const job_id = makeId('job');
-        const outputRef = { id: makeId('draft'), type: 'draft', hash: 'stub' };
-        const job = { job_id, status: 'completed', output_refs: [outputRef] };
-        stores.generateJobs.set(job_id, job);
-        addAudit('generate.completed', 'agent:generation');
-        return ok(res, { job_id, status: job.status });
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
+      if (method === 'GET' && p.match(/^\/v1\/plans\/([^/]+)$/)) {
+        const planId = p.split('/').pop();
+        const plan = stores.plans.get(planId);
+        if (!plan) return errorResponse(res, 404, 'not_found', 'Plan not found');
+        return ok(res, { plan });
       }
-    }
 
-    const genMatch = p.match(/^\/v1\/generate\/([^/]+)$/);
-    if (req.method === 'GET' && genMatch) {
-      const jobId = genMatch[1];
-      const job = stores.generateJobs.get(jobId);
-      if (!job) return errorResponse(res, 404, 'not_found', 'Job not found', { id: jobId });
-      return ok(res, job);
-    }
+      // ===== GENERATION ENDPOINTS =====
+      if (method === 'POST' && p === '/v1/generate') {
+        if (!body.plan_id) return errorResponse(res, 422, 'invalid_request', 'plan_id is required');
+        const plan = stores.plans.get(body.plan_id);
+        if (!plan) return errorResponse(res, 404, 'not_found', 'Plan not found');
+        
+        // Create async job
+        const job = createJob('generate', { plan_id: body.plan_id, scene_id: body.scene_id });
+        addAuditEntry(AUDIT_EVENTS.GENERATE_STARTED, 'agent:generation', { job_id: job.job_id });
+        
+        // Simulate async processing
+        startJob(job.job_id);
+        updateJobProgress(job.job_id, 50, 'Generating content...');
+        
+        // Generate mock content
+        const draftId = makeId('draft');
+        const content = plan.scenes.map(s => `Scene ${s.number}: ${s.summary}\n\nThe story unfolds...`).join('\n\n');
+        stores.drafts.set(draftId, { id: draftId, plan_id: body.plan_id, content, created_at: new Date().toISOString() });
+        
+        completeJob(job.job_id, { message: 'Generation complete' }, [{ id: draftId, type: 'draft', hash: crypto.createHash('md5').update(content).digest('hex').slice(0, 8) }]);
+        addAuditEntry(AUDIT_EVENTS.GENERATE_COMPLETED, 'agent:generation', { job_id: job.job_id, draft_id: draftId });
+        
+        return ok(res, { job_id: job.job_id, status: 'completed' });
+      }
 
-    // ----- Verification -----
-    if (req.method === 'POST' && p === '/v1/verify') {
-      try {
-        const body = await parseJsonBody(req);
-        if (!body.spec_id) return errorResponse(res, 422, 'invalid_request', 'spec_id is required', { field: 'spec_id' });
-        if (!body.artifact_ref) return errorResponse(res, 422, 'invalid_request', 'artifact_ref is required', { field: 'artifact_ref' });
-        const report_id = makeId('verify');
-        const report = {
-          report_id,
-          checks: [{ name: 'character_consistency', status: 'pass' }],
-          violations: []
-        };
-        stores.verifyReports.set(report_id, report);
-        addAudit('verify.completed', 'agent:verification');
+      if (method === 'GET' && p.match(/^\/v1\/generate\/([^/]+)$/)) {
+        const jobId = p.split('/').pop();
+        const job = getJob(jobId);
+        if (!job) return errorResponse(res, 404, 'not_found', 'Job not found');
+        return ok(res, job);
+      }
+
+      // ===== VERIFICATION ENDPOINTS =====
+      if (method === 'POST' && p === '/v1/verify') {
+        if (!body.spec_id) return errorResponse(res, 422, 'invalid_request', 'spec_id is required');
+        if (!body.artifact_ref) return errorResponse(res, 422, 'invalid_request', 'artifact_ref is required');
+        
+        const spec = stores.specs.get(body.spec_id);
+        if (!spec) return errorResponse(res, 404, 'not_found', 'Spec not found');
+        
+        const draft = stores.drafts.get(body.artifact_ref.id);
+        const text = draft?.content || body.text || 'No content available';
+        
+        const report = verifyAgainstSpec(text, spec);
+        stores.verifyReports.set(report.report_id, report);
+        addAuditEntry(AUDIT_EVENTS.VERIFY_COMPLETED, 'agent:verification', { report_id: report.report_id });
+        
         return ok(res, report);
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
       }
-    }
 
-    const verifyMatch = p.match(/^\/v1\/verify\/([^/]+)$/);
-    if (req.method === 'GET' && verifyMatch) {
-      const reportId = verifyMatch[1];
-      const report = stores.verifyReports.get(reportId);
-      if (!report) return errorResponse(res, 404, 'not_found', 'Verification report not found', { id: reportId });
-      return ok(res, report);
-    }
-
-    // ----- Guardrails -----
-    if (req.method === 'POST' && p === '/v1/guardrail/check') {
-      try {
-        const body = await parseJsonBody(req);
-        if (!body.artifact_ref) return errorResponse(res, 422, 'invalid_request', 'artifact_ref is required', { field: 'artifact_ref' });
-        const report_id = makeId('guard');
-        const report = { report_id, findings: [], status: 'pass' };
-        stores.guardrailReports.set(report_id, report);
-        addAudit('guardrail.completed', 'agent:guardrail');
+      if (method === 'GET' && p.match(/^\/v1\/verify\/([^/]+)$/)) {
+        const reportId = p.split('/').pop();
+        const report = stores.verifyReports.get(reportId);
+        if (!report) return errorResponse(res, 404, 'not_found', 'Report not found');
         return ok(res, report);
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
       }
-    }
 
-    const guardMatch = p.match(/^\/v1\/guardrail\/report\/([^/]+)$/);
-    if (req.method === 'GET' && guardMatch) {
-      const reportId = guardMatch[1];
-      const report = stores.guardrailReports.get(reportId);
-      if (!report) return errorResponse(res, 404, 'not_found', 'Guardrail report not found', { id: reportId });
-      return ok(res, report);
-    }
-
-    // ----- Evaluation -----
-    if (req.method === 'POST' && p === '/v1/evaluate') {
-      try {
-        const body = await parseJsonBody(req);
-        if (!body.artifact_ref) return errorResponse(res, 422, 'invalid_request', 'artifact_ref is required', { field: 'artifact_ref' });
-        if (!Array.isArray(body.metrics)) return errorResponse(res, 422, 'invalid_request', 'metrics[] is required', { field: 'metrics' });
-        const report_id = makeId('eval');
-        const report = { report_id, results: body.metrics.map((m) => ({ name: m, value: 0 })) };
-        stores.evaluationReports.set(report_id, report);
-        addAudit('evaluate.completed', 'agent:evaluation');
+      // ===== GUARDRAILS ENDPOINTS =====
+      if (method === 'POST' && p === '/v1/guardrail/check') {
+        if (!body.artifact_ref) return errorResponse(res, 422, 'invalid_request', 'artifact_ref is required');
+        
+        const draft = stores.drafts.get(body.artifact_ref.id);
+        const text = draft?.content || body.text || '';
+        
+        const report = runGuardrailCheck(text, { policies: body.policies });
+        stores.guardrailReports.set(report.report_id, report);
+        addAuditEntry(AUDIT_EVENTS.GUARDRAIL_COMPLETED, 'agent:guardrail', { report_id: report.report_id });
+        
         return ok(res, report);
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
       }
-    }
 
-    const evalMatch = p.match(/^\/v1\/evaluate\/([^/]+)$/);
-    if (req.method === 'GET' && evalMatch) {
-      const reportId = evalMatch[1];
-      const report = stores.evaluationReports.get(reportId);
-      if (!report) return errorResponse(res, 404, 'not_found', 'Evaluation report not found', { id: reportId });
-      return ok(res, report);
-    }
+      if (method === 'GET' && p.match(/^\/v1\/guardrail\/report\/([^/]+)$/)) {
+        const reportId = p.split('/').pop();
+        const report = stores.guardrailReports.get(reportId);
+        if (!report) return errorResponse(res, 404, 'not_found', 'Report not found');
+        return ok(res, report);
+      }
 
-    // ----- Orchestration -----
-    if (req.method === 'POST' && p === '/v1/pipelines/run') {
-      try {
-        const body = await parseJsonBody(req);
-        if (!body.sop_id) return errorResponse(res, 422, 'invalid_request', 'sop_id is required', { field: 'sop_id' });
-        if (!body.spec_id) return errorResponse(res, 422, 'invalid_request', 'spec_id is required', { field: 'spec_id' });
-        const run_id = makeId('run');
-        const run = { run_id, status: 'completed' };
-        stores.pipelineRuns.set(run_id, run);
-        addAudit('pipeline.completed', 'system');
+      // ===== EVALUATION ENDPOINTS =====
+      if (method === 'POST' && p === '/v1/evaluate') {
+        if (!body.artifact_ref) return errorResponse(res, 422, 'invalid_request', 'artifact_ref is required');
+        if (!Array.isArray(body.metrics)) return errorResponse(res, 422, 'invalid_request', 'metrics[] is required');
+        
+        const draft = stores.drafts.get(body.artifact_ref.id);
+        const text = draft?.content || body.text || '';
+        const spec = body.spec_id ? stores.specs.get(body.spec_id) : {};
+        
+        const report = runEvaluation(text, spec, { metrics: body.metrics });
+        stores.evaluationReports.set(report.report_id, report);
+        addAuditEntry(AUDIT_EVENTS.EVALUATE_COMPLETED, 'agent:evaluation', { report_id: report.report_id });
+        
+        return ok(res, report);
+      }
+
+      if (method === 'GET' && p.match(/^\/v1\/evaluate\/([^/]+)$/)) {
+        const reportId = p.split('/').pop();
+        const report = stores.evaluationReports.get(reportId);
+        if (!report) return errorResponse(res, 404, 'not_found', 'Report not found');
+        return ok(res, report);
+      }
+
+      // ===== ORCHESTRATION ENDPOINTS =====
+      if (method === 'POST' && p === '/v1/pipelines/run') {
+        if (!body.sop_id && !body.use_default) return errorResponse(res, 422, 'invalid_request', 'sop_id is required');
+        if (!body.spec_id) return errorResponse(res, 422, 'invalid_request', 'spec_id is required');
+        
+        const sop = body.use_default ? getDefaultSop() : stores.sops.get(body.sop_id);
+        const spec = stores.specs.get(body.spec_id);
+        
+        if (!sop) return errorResponse(res, 404, 'not_found', 'SOP not found');
+        if (!spec) return errorResponse(res, 404, 'not_found', 'Spec not found');
+        
+        addAuditEntry(AUDIT_EVENTS.PIPELINE_STARTED, 'system', { sop_id: sop.id, spec_id: spec.id });
+        const run = await executeSop(sop, spec);
+        
+        const auditEvent = run.status === 'completed' ? AUDIT_EVENTS.PIPELINE_COMPLETED : AUDIT_EVENTS.PIPELINE_FAILED;
+        addAuditEntry(auditEvent, 'system', { run_id: run.run_id, status: run.status });
+        
         return ok(res, run);
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
       }
-    }
 
-    const pipeMatch = p.match(/^\/v1\/pipelines\/([^/]+)$/);
-    if (req.method === 'GET' && pipeMatch) {
-      const runId = pipeMatch[1];
-      const run = stores.pipelineRuns.get(runId);
-      if (!run) return errorResponse(res, 404, 'not_found', 'Pipeline run not found', { id: runId });
-      return ok(res, run);
-    }
-
-    // ----- Audit -----
-    if (req.method === 'GET' && p === '/v1/audit/logs') {
-      return ok(res, { entries: Array.from(stores.audit.values()) });
-    }
-
-    const auditMatch = p.match(/^\/v1\/audit\/logs\/([^/]+)$/);
-    if (req.method === 'GET' && auditMatch) {
-      const auditId = auditMatch[1];
-      const entry = stores.audit.get(auditId);
-      if (!entry) return errorResponse(res, 404, 'not_found', 'Audit entry not found', { id: auditId });
-      return ok(res, { entry });
-    }
-
-    // ----- Reverse Engineering -----
-    if (req.method === 'POST' && p === '/v1/reverse-engineer') {
-      try {
-        const body = await parseJsonBody(req);
-        if (!body.artifact_ref) return errorResponse(res, 422, 'invalid_request', 'artifact_ref is required', { field: 'artifact_ref' });
-        if (!body.output) return errorResponse(res, 422, 'invalid_request', 'output is required', { field: 'output' });
-        const audit = addAudit('reverse_engineer.completed', 'agent:reverse');
-        if (body.output === 'plan') {
-          const plan = { id: makeId('plan'), spec_id: makeId('spec'), plot_graph: 'extracted_graph', scenes: [], arcs: [] };
-          return ok(res, { plan, audit });
-        }
-        const spec = { id: makeId('spec'), title: 'Extracted Spec', synopsis: 'Recovered synopsis from artifact.', themes: [], constraints: [], cnl_constraints: [], characters: [], world_rules: [] };
-        return ok(res, { spec, audit });
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
+      if (method === 'GET' && p.match(/^\/v1\/pipelines\/([^/]+)$/)) {
+        const runId = p.split('/').pop();
+        const run = stores.pipelineRuns.get(runId);
+        if (!run) return errorResponse(res, 404, 'not_found', 'Pipeline run not found');
+        return ok(res, run);
       }
-    }
 
-    // ----- Literary Review -----
-    if (req.method === 'POST' && p === '/v1/review') {
-      try {
-        const body = await parseJsonBody(req);
-        if (!body.artifact_ref) return errorResponse(res, 422, 'invalid_request', 'artifact_ref is required', { field: 'artifact_ref' });
-        const report = { report_id: makeId('review'), score: 0.75, findings: ['Stub review finding'], suggestions: ['Stub suggestion'] };
-        addAudit('review.completed', 'agent:review');
+      // ===== AUDIT ENDPOINTS =====
+      if (method === 'GET' && p === '/v1/audit/logs') {
+        const entries = stores.audit.values().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        return ok(res, { entries: entries.slice(0, 100) });
+      }
+
+      if (method === 'GET' && p.match(/^\/v1\/audit\/logs\/([^/]+)$/)) {
+        const auditId = p.split('/').pop();
+        const entry = stores.audit.get(auditId);
+        if (!entry) return errorResponse(res, 404, 'not_found', 'Audit entry not found');
+        return ok(res, { entry });
+      }
+
+      if (method === 'GET' && p === '/v1/audit/verify') {
+        const result = verifyChain();
+        return ok(res, result);
+      }
+
+      if (method === 'POST' && p === '/v1/audit/report') {
+        const report = generateAuditReport(body);
         return ok(res, report);
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
       }
-    }
 
-    // ----- Research -----
-    if (req.method === 'POST' && p === '/v1/research/query') {
-      try {
-        const body = await parseJsonBody(req);
-        if (!body.query) return errorResponse(res, 422, 'invalid_request', 'query is required', { field: 'query' });
-        const results = [{ title: 'Stub research result', snippet: 'This is a stubbed research snippet.', source: 'internal_stub' }];
-        return ok(res, { results, audit: addAudit('research.query', 'agent:research') });
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
+      // ===== REVERSE ENGINEERING ENDPOINTS =====
+      if (method === 'POST' && p === '/v1/reverse-engineer') {
+        if (!body.artifact_ref && !body.text) return errorResponse(res, 422, 'invalid_request', 'artifact_ref or text is required');
+        if (!body.output) return errorResponse(res, 422, 'invalid_request', 'output is required (spec or plan)');
+        
+        const draft = body.artifact_ref ? stores.drafts.get(body.artifact_ref.id) : null;
+        const text = draft?.content || body.text || '';
+        
+        const result = reverseEngineer(text, body.output);
+        
+        if (result.spec) stores.specs.set(result.spec.id, result.spec);
+        if (result.plan) stores.plans.set(result.plan.id, result.plan);
+        
+        addAuditEntry(AUDIT_EVENTS.REVERSE_ENGINEER, 'agent:reverse', { output: body.output });
+        return ok(res, { ...result, audit: { event: AUDIT_EVENTS.REVERSE_ENGINEER } });
       }
-    }
 
-    // ----- Explainability -----
-    if (req.method === 'POST' && p === '/v1/explain') {
-      try {
-        const body = await parseJsonBody(req);
-        if (!body.artifact_ref) return errorResponse(res, 422, 'invalid_request', 'artifact_ref is required', { field: 'artifact_ref' });
-        if (!body.question) return errorResponse(res, 422, 'invalid_request', 'question is required', { field: 'question' });
-        return ok(res, { explanation: 'Stub explanation', evidence: ['Stub evidence'] });
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
+      // ===== LITERARY REVIEW ENDPOINTS =====
+      if (method === 'POST' && p === '/v1/review') {
+        if (!body.artifact_ref && !body.text) return errorResponse(res, 422, 'invalid_request', 'artifact_ref or text is required');
+        
+        const draft = body.artifact_ref ? stores.drafts.get(body.artifact_ref.id) : null;
+        const text = draft?.content || body.text || '';
+        
+        const report = runLiteraryReview(text, { criteria: body.criteria });
+        stores.reviews.set(report.report_id, report);
+        addAuditEntry(AUDIT_EVENTS.REVIEW_COMPLETED, 'agent:review', { report_id: report.report_id });
+        
+        return ok(res, report);
       }
-    }
 
-    // ----- Compliance Reports -----
-    if (req.method === 'POST' && p === '/v1/reports/compliance') {
-      try {
-        const body = await parseJsonBody(req);
-        if (!body.artifact_ref) return errorResponse(res, 422, 'invalid_request', 'artifact_ref is required', { field: 'artifact_ref' });
+      // ===== RESEARCH ENDPOINTS =====
+      if (method === 'POST' && p === '/v1/research/query') {
+        if (!body.query) return errorResponse(res, 422, 'invalid_request', 'query is required');
+        
+        const results = searchKnowledgeBase(body.query, { 
+          top_k: body.top_k, 
+          domains: body.constraints?.domains 
+        });
+        addAuditEntry(AUDIT_EVENTS.RESEARCH_QUERY, 'agent:research', { query: body.query.slice(0, 50) });
+        
+        return ok(res, results);
+      }
+
+      // ===== EXPLAINABILITY ENDPOINTS =====
+      if (method === 'POST' && p === '/v1/explain') {
+        if (!body.artifact_ref) return errorResponse(res, 422, 'invalid_request', 'artifact_ref is required');
+        if (!body.question) return errorResponse(res, 422, 'invalid_request', 'question is required');
+        
+        // Gather context from related reports
+        const context = {};
+        if (body.verification_report_id) {
+          context.verificationReport = stores.verifyReports.get(body.verification_report_id);
+        }
+        if (body.guardrail_report_id) {
+          context.guardrailReport = stores.guardrailReports.get(body.guardrail_report_id);
+        }
+        if (body.evaluation_report_id) {
+          context.evaluationReport = stores.evaluationReports.get(body.evaluation_report_id);
+        }
+        if (body.plan_id) {
+          context.plan = stores.plans.get(body.plan_id);
+        }
+        
+        const explanation = generateExplanation(body.artifact_ref, body.question, context);
+        return ok(res, explanation);
+      }
+
+      // ===== COMPLIANCE REPORTS ENDPOINTS =====
+      if (method === 'POST' && p === '/v1/reports/compliance') {
+        if (!body.artifact_ref) return errorResponse(res, 422, 'invalid_request', 'artifact_ref is required');
+        
+        const draft = stores.drafts.get(body.artifact_ref.id);
+        const text = draft?.content || '';
+        
+        // Gather all relevant reports
+        const guardrailReport = runGuardrailCheck(text, { policies: body.policies || ['bias', 'pii', 'harmful'] });
+        const auditVerification = verifyChain();
+        
         const report = {
           report_id: makeId('compliance'),
-          status: 'pass',
-          summary: 'Stub compliance report',
-          findings: []
+          status: guardrailReport.status === 'pass' && auditVerification.valid ? 'pass' : 'fail',
+          summary: 'Compliance check completed',
+          artifact_ref: body.artifact_ref,
+          findings: guardrailReport.findings,
+          guardrail_summary: guardrailReport.summary,
+          audit_chain_valid: auditVerification.valid,
+          generated_at: new Date().toISOString()
         };
-        return ok(res, { ...report, audit: addAudit('report.compliance', 'agent:compliance') });
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
+        
+        stores.compliance.set(report.report_id, report);
+        addAuditEntry(AUDIT_EVENTS.COMPLIANCE_REPORT, 'agent:compliance', { report_id: report.report_id });
+        
+        return ok(res, report);
       }
-    }
 
-    // ----- CNL -----
-    if (req.method === 'POST' && p === '/v1/cnl/validate') {
-      try {
-        const body = await parseJsonBody(req);
-        if (!body.cnl_text) return errorResponse(res, 422, 'invalid_request', 'cnl_text is required', { field: 'cnl_text' });
+      // ===== CNL ENDPOINTS =====
+      if (method === 'POST' && p === '/v1/cnl/validate') {
+        if (!body.cnl_text) return errorResponse(res, 422, 'invalid_request', 'cnl_text is required');
         const { statements, errors } = validateText(body.cnl_text);
         return ok(res, { valid: errors.length === 0, errors, statements });
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
       }
-    }
 
-    if (req.method === 'POST' && p === '/v1/cnl/translate') {
-      try {
-        const body = await parseJsonBody(req);
-        if (!body.nl_text) return errorResponse(res, 422, 'invalid_request', 'nl_text is required', { field: 'nl_text' });
-        // Placeholder: real implementation uses an LLM + strict validator loop.
-        return ok(res, { cnl_text: 'RULE(Document, must_include, \"constraints\").', confidence: 0.5 });
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
+      if (method === 'POST' && p === '/v1/cnl/translate') {
+        if (!body.nl_text) return errorResponse(res, 422, 'invalid_request', 'nl_text is required');
+        const result = translateNlToCnl(body.nl_text, body.context || {});
+        return ok(res, result);
       }
-    }
 
-    // ----- VSA -----
-    if (req.method === 'POST' && p === '/v1/vsa/encode') {
-      try {
-        const body = await parseJsonBody(req);
-        if (!body.text) return errorResponse(res, 422, 'invalid_request', 'text is required', { field: 'text' });
+      // ===== VSA ENDPOINTS =====
+      if (method === 'POST' && p === '/v1/vsa/encode') {
+        if (!body.text) return errorResponse(res, 422, 'invalid_request', 'text is required');
         const dim = body.dim ? Number(body.dim) : 10000;
         const seed = body.seed ? Number(body.seed) : 42;
         const vector = encodeText(body.text, dim, seed);
         return ok(res, { vector, dim });
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
       }
-    }
 
-    if (req.method === 'POST' && p === '/v1/vsa/index') {
-      try {
-        const body = await parseJsonBody(req);
+      if (method === 'POST' && p === '/v1/vsa/index') {
         const vectors = body.vectors;
         const ids = body.ids;
         if (!Array.isArray(vectors) || !Array.isArray(ids) || vectors.length !== ids.length) {
-          return errorResponse(res, 422, 'invalid_request', 'vectors and ids arrays are required and must match in length');
+          return errorResponse(res, 422, 'invalid_request', 'vectors and ids arrays are required and must match');
         }
         for (let i = 0; i < ids.length; i++) {
           stores.vsaIndex.set(ids[i], vectors[i]);
         }
         return ok(res, { indexed: ids.length });
-      } catch {
-        return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
       }
-    }
 
-    if (req.method === 'POST' && p === '/v1/vsa/search') {
-      try {
-        const body = await parseJsonBody(req);
+      if (method === 'POST' && p === '/v1/vsa/search') {
         const queryVector = body.query_vector;
         const topK = body.top_k ? Number(body.top_k) : 5;
         if (!Array.isArray(queryVector)) return errorResponse(res, 422, 'invalid_request', 'query_vector is required');
-        const results = Array.from(stores.vsaIndex.entries()).map(([id, vec]) => ({ id, score: cosine(queryVector, vec) }));
+        
+        const results = stores.vsaIndex.entries().map(([id, vec]) => ({ id, score: cosine(queryVector, vec) }));
         results.sort((a, b) => b.score - a.score);
         const sliced = results.slice(0, topK);
-        return ok(res, { ids: sliced.map((r) => r.id), scores: sliced.map((r) => r.score) });
-      } catch {
+        return ok(res, { ids: sliced.map(r => r.id), scores: sliced.map(r => r.score) });
+      }
+
+      // ===== DRAFTS ENDPOINTS =====
+      if (method === 'GET' && p.match(/^\/v1\/drafts\/([^/]+)$/)) {
+        const draftId = p.split('/').pop();
+        const draft = stores.drafts.get(draftId);
+        if (!draft) return errorResponse(res, 404, 'not_found', 'Draft not found');
+        return ok(res, { draft });
+      }
+
+      return errorResponse(res, 404, 'not_found', 'Route not found', { path: p });
+
+    } catch (err) {
+      if (err.message === 'invalid_json') {
         return errorResponse(res, 400, 'invalid_request', 'Invalid JSON payload');
       }
+      if (err.message === 'payload_too_large') {
+        return errorResponse(res, 413, 'payload_too_large', 'Request body too large');
+      }
+      console.error('Server error:', err);
+      return errorResponse(res, 500, 'internal_error', err.message);
     }
-
-    return errorResponse(res, 404, 'not_found', 'Route not found', { path: p });
   };
 
   return { handler, stores };
@@ -456,7 +560,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const port = process.env.PORT ? Number(process.env.PORT) : 3000;
   const server = createApiServer();
   server.listen(port, () => {
-    console.log(`SCRIPTA API stub listening on http://localhost:${port}`);
+    const authRequired = isAuthRequired();
+    console.log(`SCRIPTA API listening on http://localhost:${port}`);
+    console.log(`Auth required: ${authRequired}`);
+    if (!authRequired) {
+      console.log('WARNING: Authentication disabled. Set SCRIPTA_AUTH_REQUIRED=true for production.');
+    }
   });
 }
 

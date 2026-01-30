@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node src/server.mjs",
     "test": "node tests/run.mjs",
+    "demo": "node demo/server.mjs",
     "validate:examples": "node scripts/validate_examples.mjs",
     "cnl:validate": "node src/cnl/cli.mjs",
     "vsa:encode": "node src/vsa/encoder.mjs",

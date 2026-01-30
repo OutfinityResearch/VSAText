@@ -1,88 +1,340 @@
-# DS01 Vision — SCRIPTA Use Case (ACHILLES)
+# DS01 — SCRIPTA Vision & Strategic Goals
 
-## 1. Purpose
-Define the vision, scope, and success criteria for SCRIPTA: a specification-driven, trustworthy AI co-creation system for creative writing within the ACHILLES IDE.
+## Document Purpose
 
-## 2. Context
-Creative writing is impacted by LLMs but suffers from:
-- Narrative drift and weak long-range coherence.
-- Legal and ethical risks (copyright, bias, provenance).
-- Lack of transparency and controllability.
+This document defines the **vision**, **strategic goals**, and **success criteria** for SCRIPTA: a specification-driven, trustworthy AI co-creation system for creative writing within the ACHILLES IDE.
 
-SCRIPTA operationalizes a new co-creation paradigm: human-led, specification-oriented creativity with auditable workflows.
+**Audience**: Project stakeholders, developers, researchers, and evaluators who need to understand *what* SCRIPTA aims to achieve and *why*.
 
-## 3. Vision Statement
-SCRIPTA provides a trustworthy AI co-creation environment where authors define narrative intent as executable specifications, and specialized agents generate, verify, and justify outputs with full auditability and compliance safeguards.
+---
 
-## 4. Goals
-- Enable authors to define stories as structured specifications (plots, characters, rules, themes).
-- Orchestrate multi-agent workflows via SOP Lang in ACHILLES IDE.
-- Provide verification and compliance layers for narrative consistency, bias, and originality.
-- Produce higher-quality narrative output than baseline LLM prompting.
-- Provide transparent provenance and audit logs for legal and ethical assurance.
-- Support dual algorithm implementations (basic and VSA/HDC) for core services.
-- Introduce a CNL layer to reduce ambiguity in constraints.
+## 1. The Problem We Are Solving
 
-## 5. Non-Goals
-- Full automation of authorship.
-- Replacing human creative ownership or editorial judgment.
-- Training foundation models from scratch (focus on orchestration and evaluation).
+### 1.1 Current State of AI in Creative Writing
 
-## 6. Scope
-In-scope:
-- Planning and generation agents.
-- Verification, evaluation, and guardrail agents.
-- SOP Lang workflows for creative pipelines.
-- Evaluation suite for narrative quality and compliance.
-- Audit log and reporting for compliance evidence.
-- CNL translation and validation service.
-- VSA/HDC semantic indexing for retrieval and memory.
+Large Language Models (LLMs) have become powerful text generators, but their application to creative writing reveals fundamental limitations:
 
-Out-of-scope (initially):
-- Commercial UI productization beyond prototype workflows.
-- Multimodal generation beyond text (optional later extension).
+#### Narrative Drift
+LLMs struggle to maintain consistency across long texts. A character described as "shy and introverted" in chapter 1 may inexplicably become "bold and outgoing" by chapter 10. This happens because:
+- LLMs have limited context windows (typically 4K-128K tokens)
+- They lack explicit memory of character states and plot decisions
+- Each generation step is probabilistically independent
 
-## 7. Key Stakeholders
-- Authors / screenwriters (primary users).
-- AI workflow developers (SOP Lang designers).
-- Publishers / studios (risk management).
-- Legal & compliance officers.
-- ACHILLES platform owners (WP6/WP7).
+**Example of the problem:**
+```
+Chapter 1: "Elena never spoke in meetings. She preferred to observe."
+...
+Chapter 15: "Elena dominated the boardroom discussion, her voice 
+            commanding attention from everyone present."
+```
+Without explicit tracking, the LLM "forgot" Elena's defining trait.
 
-## 8. Value Proposition
-- Augmented creativity: improved productivity without loss of agency.
-- Compliance by design: auditable evidence for copyright and ethics.
-- Trustworthy AI: interpretable and controllable narrative generation.
+#### Legal and Ethical Risks
+- **Copyright**: LLMs trained on copyrighted works may reproduce protected content
+- **Bias**: Training data contains societal biases that manifest in generated text
+- **Provenance**: No audit trail exists for AI contributions vs. human authorship
 
-## 9. Success Criteria (KPIs)
-- Narrative Quality Score (NQS) +25% vs baseline LLM prompting.
-- Author Efficiency Gain (AEG) 40% reduction in time to first draft.
-- Compliance Adherence Rate (CAR) 99.9% passing simulated legal/ethical checks.
-- Character Attribute Drift (CAD) below defined threshold per 10k tokens.
-- Explainability Score >= 4/5 in pilot writer feedback.
+#### Lack of Controllability
+Current LLM tools treat creative writing as "prompt in → text out" without:
+- Explicit specifications of what the story *must* contain
+- Verification that generated content *actually* matches intent
+- Explanations of *why* certain creative choices were made
 
-## 10. Risks & Mitigations
-- Risk: insufficient coherence improvements. Mitigation: plan-and-write + formal verification.
-- Risk: compliance agents produce false positives. Mitigation: calibrated thresholds, human-in-loop review.
-- Risk: legal ambiguity. Mitigation: maintain detailed audit log and provenance metadata.
+### 1.2 Why This Matters
 
-## 11. Dependencies
-- ACHILLES IDE and SOP Lang.
-- MAS orchestration framework.
-- TAI components (bias, verification, XAI).
+For **authors**: Lost productivity fixing AI-introduced inconsistencies, legal exposure from undetected plagiarism, and frustration with uncontrollable outputs.
 
-## 12. Deliverables (Documentation Set)
-- DS01 Vision (this document).
-- DS02 API Specification.
-- DS03 Research Plan.
-- DS04 Experiments Design.
-- DS05 Evaluation Suite.
-- DS06 Architecture & Code Plan.
-- DS07 Data Governance.
-- DS08 Validation Protocol.
+For **publishers**: Financial risk from copyright claims, reputational damage from biased content, and inability to verify human authorship claims.
 
-## 13. Roadmap (High-Level)
-- Phase 1: Specification-driven planning workflows.
-- Phase 2: Generation + verification integration.
-- Phase 3: Evaluation suite and pilot validation.
-- Phase 4: Compliance reporting and auditability hardening.
+For **readers**: Lower quality narratives with plot holes, repetitive patterns, and emotionally flat arcs.
+
+---
+
+## 2. Vision Statement
+
+> SCRIPTA provides a **trustworthy AI co-creation environment** where authors define narrative intent as **executable specifications**, and specialized agents **generate, verify, and justify** outputs with **full auditability** and **compliance safeguards**.
+
+### 2.1 What This Means in Practice
+
+| Traditional LLM Approach | SCRIPTA Approach |
+|-------------------------|------------------|
+| "Write me a story about..." | Define characters, rules, constraints as formal spec |
+| Hope the output is consistent | Verify output against spec, flag violations |
+| Black box generation | Explainable decisions with audit trail |
+| Single monolithic model | Specialized agents for planning, generation, verification |
+| Trust the output | Compliance checks for bias, originality, copyright |
+
+---
+
+## 3. Strategic Goals
+
+### Goal 1: Specification-First Creativity
+
+**What**: Authors define stories as structured specifications—not just prompts—including characters, plot constraints, world rules, and thematic requirements.
+
+**Why it should work**: Research on "plan-and-write" approaches (Yao et al., 2019) demonstrates that explicit planning before generation improves narrative coherence. By formalizing the plan, we can also *verify* it.
+
+**Example**:
+```
+NarrativeSpec: "The Storm Within"
+├── Characters
+│   ├── Anna: courageous, protective, goal=save brother
+│   └── Marcus: vulnerable, hopeful
+├── Constraints
+│   ├── RULE: Scene 3 must include a storm
+│   ├── RULE: Tone must remain hopeful
+│   └── RULE: No supernatural elements
+├── Structure: three-act
+└── Themes: courage, family, redemption
+```
+
+**Limitations**:
+- Authors must learn to express intent as specifications (learning curve)
+- Over-specification may constrain creativity
+- Specifications cannot capture all nuances of artistic vision
+
+### Goal 2: Multi-Agent Orchestration
+
+**What**: Instead of one LLM doing everything, specialized agents handle planning, generation, verification, and review—orchestrated via SOP Lang.
+
+**Why it should work**: Division of labor allows each agent to be optimized for its task. A verification agent can be deterministic and rule-based, while a generation agent leverages LLM fluency. This separation also enables independent testing and improvement.
+
+**Example workflow**:
+```
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐
+│  Planning   │───▶│  Generation  │───▶│Verification │
+│   Agent     │    │    Agent     │    │    Agent    │
+└─────────────┘    └──────────────┘    └──────────────┘
+      │                   │                   │
+      ▼                   ▼                   ▼
+   [Plan]             [Draft]            [Report]
+                                              │
+                          ┌───────────────────┘
+                          ▼
+                    ┌───────────┐
+                    │ Guardrail │
+                    │   Agent   │
+                    └───────────┘
+```
+
+**Limitations**:
+- Coordination overhead between agents
+- Error propagation: a bad plan leads to bad generation
+- Complexity in debugging multi-step failures
+
+### Goal 3: Verification and Compliance
+
+**What**: Continuously check generated content against the specification, detecting:
+- Character trait drift
+- Plot contradictions
+- Bias and stereotypes
+- Originality concerns (cliché, potential plagiarism)
+
+**Why it should work**: By making constraints explicit (via CNL—Controlled Natural Language), we can programmatically verify them. Unlike LLMs that "guess" consistency, verification agents can provide mathematical certainty for specific checks.
+
+**Example verification**:
+```
+Constraint: CHARACTER(Anna). TRAIT(Anna, courageous).
+
+Generated text: "Anna cowered in the corner, too afraid to move."
+
+Verification result:
+  ⚠️ TRAIT VIOLATION: "cowered" and "afraid" contradict "courageous"
+  Semantic similarity to trait: 0.23 (threshold: 0.60)
+  Recommendation: Revise or justify temporary fear.
+```
+
+**Limitations**:
+- Semantic verification is imperfect (false positives/negatives)
+- Not all constraints are formalizable
+- May reject valid creative choices (e.g., character growth)
+
+### Goal 4: Transparent Provenance and Audit
+
+**What**: Every generation, verification, and edit is logged with immutable audit entries linking inputs → decisions → outputs.
+
+**Why it should work**: The U.S. Copyright Office requires evidence of human authorship. An audit log demonstrating human specification, human review, and human acceptance provides defensible provenance. It also enables debugging and accountability.
+
+**Example audit entry**:
+```json
+{
+  "event_type": "GENERATION_COMPLETED",
+  "timestamp": "2026-01-30T14:00:00Z",
+  "actor": "generation_agent_v1.2",
+  "inputs": {
+    "plan_id": "plan_abc123",
+    "scene_id": "scene_7"
+  },
+  "outputs": {
+    "draft_id": "draft_xyz789",
+    "token_count": 1247
+  },
+  "human_approved": false,
+  "signature": "sha256:abc123..."
+}
+```
+
+**Limitations**:
+- Log storage costs scale with usage
+- Immutability requires cryptographic infrastructure
+- Audit logs don't prove *quality*, only *process*
+
+### Goal 5: Dual Algorithm Implementations (Basic vs VSA/HDC)
+
+**What**: Core algorithms (semantic search, memory indexing, constraint matching) have two implementations:
+- **Basic**: Standard embeddings and rule-based methods
+- **VSA/HDC**: Hyperdimensional computing for potentially superior semantic operations
+
+**Why it should work**: VSA (Vector Symbolic Architectures) offer mathematically grounded operations (binding, bundling, similarity) that may outperform dense embeddings for structured semantic tasks. By implementing both, we can empirically compare.
+
+**Example**:
+```
+Task: Track character state across chapters
+
+Basic approach:
+  - Store character embedding
+  - Compute cosine similarity with new mentions
+  - Flag drift when similarity < threshold
+
+VSA approach:
+  - Encode character as hypervector
+  - Bind traits as additional hypervectors
+  - Unbind to query specific traits
+  - Measure similarity in hyperdimensional space
+```
+
+**Limitations**:
+- VSA/HDC is less mature than embedding-based approaches
+- Performance gains are not guaranteed
+- Implementation complexity is higher
+
+### Goal 6: Controlled Natural Language (CNL)
+
+**What**: A formal language layer that translates natural language constraints into unambiguous, machine-checkable statements.
+
+**Why it should work**: Natural language is ambiguous. "Anna should be brave" could mean many things. CNL provides precision:
+
+```
+Natural Language: "Anna should be brave and protect her brother"
+        ↓
+CNL: CHARACTER(Anna).
+     TRAIT(Anna, courageous).
+     GOAL(Anna, protect, "brother").
+```
+
+**Limitations**:
+- CNL cannot express all literary nuances
+- Translation from NL to CNL may hallucinate
+- Authors may resist learning CNL syntax
+
+---
+
+## 4. Non-Goals (Explicit Exclusions)
+
+To avoid scope creep, SCRIPTA explicitly does **not** aim to:
+
+1. **Replace human authorship**: SCRIPTA is a co-creation tool, not an autonomous writer
+2. **Automate editorial judgment**: Human review remains essential
+3. **Train foundation models**: Focus is on orchestration and evaluation, not model training
+4. **Produce commercial UI**: Prototype workflows only (initially)
+5. **Support multimodal generation**: Text only (images, video are future extensions)
+
+---
+
+## 5. Success Criteria (KPIs)
+
+### 5.1 Narrative Quality Score (NQS)
+**Definition**: Composite score combining automated coherence metrics with human expert ratings.
+**Target**: +25% improvement vs. baseline LLM prompting.
+**Measurement**: Automated coherence score + average of 3 expert ratings (1-5 scale).
+
+### 5.2 Author Efficiency Gain (AEG)
+**Definition**: Reduction in time to produce a publishable first draft.
+**Target**: 40% time reduction.
+**Measurement**: Timed writing tasks comparing SCRIPTA vs. traditional methods.
+
+### 5.3 Compliance Adherence Rate (CAR)
+**Definition**: Percentage of generated works passing simulated legal/ethical checks.
+**Target**: ≥99.9%.
+**Measurement**: Guardrail check pass rate across evaluation corpus.
+
+### 5.4 Character Attribute Drift (CAD)
+**Definition**: Semantic deviation of character traits from specification over long text.
+**Target**: Below threshold X per 10,000 tokens.
+**Measurement**: Cosine distance between specified and inferred trait embeddings.
+
+### 5.5 Explainability Score
+**Definition**: Author rating of system explanation quality.
+**Target**: ≥4/5 average in pilot writer feedback.
+**Measurement**: Post-task survey with Likert scale questions.
+
+---
+
+## 6. Risk Analysis
+
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| Coherence improvements insufficient | High | Medium | Plan-and-write + formal verification + iterative refinement |
+| Compliance agents produce false positives | Medium | High | Calibrated thresholds, human-in-loop review, tunable sensitivity |
+| Legal ambiguity despite audit log | High | Medium | Maintain detailed provenance metadata, consult legal counsel |
+| CNL too restrictive for creative expression | Medium | Medium | Allow freeform alongside CNL, iterative grammar expansion |
+| VSA/HDC underperforms vs. basic methods | Low | Medium | Run both in parallel, use empirical results to guide adoption |
+
+---
+
+## 7. ACHILLES Platform Alignment
+
+SCRIPTA leverages these ACHILLES platform features:
+
+| ACHILLES Feature | SCRIPTA Use |
+|------------------|-------------|
+| SOP Lang | Orchestrate multi-agent creative workflows |
+| Specification-Driven Structure | Encode narrative specs as formal artifacts |
+| MAS Orchestration | Coordinate planning, generation, verification agents |
+| Compliance Layer | Audit logging, provenance, compliance reports |
+| Formal Verification Integration | Check outputs against CNL constraints |
+| XAI Methods (WP5) | Explain agent decisions and suggestions |
+
+---
+
+## 8. Roadmap
+
+### Phase 1: Foundation (Months 1-3)
+- Specification-driven planning workflows
+- Basic generation and verification agents
+- CNL prototype
+
+### Phase 2: Integration (Months 4-6)
+- Full pipeline: plan → generate → verify → guardrail
+- VSA/HDC implementation alongside basic
+- Audit logging infrastructure
+
+### Phase 3: Evaluation (Months 7-9)
+- Evaluation suite with all metrics
+- Pilot writer studies
+- Ablation experiments (which components add value?)
+
+### Phase 4: Hardening (Months 10-12)
+- Compliance reporting and auditability
+- Performance optimization
+- Documentation and transfer
+
+---
+
+## 9. References
+
+[1] Yao, Z., et al. (2019). Plan-and-Write: Towards Better Automatic Storytelling. AAAI. https://ojs.aaai.org/index.php/AAAI/article/view/4726
+
+[2] U.S. Copyright Office. Copyright and Artificial Intelligence. https://www.copyright.gov/ai/
+
+[3] UNESCO. Recommendation on the Ethics of Artificial Intelligence. https://www.unesco.org/en/artificial-intelligence/recommendation-ethics
+
+[4] Chakrabarty, T., et al. (2024). Plot holes, repetition and sense of an ending: A qualitative analysis of common generation errors in large language models. arXiv:2402.10224.
+
+---
+
+## Document History
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0 | 2026-01-30 | SCRIPTA Team | Initial comprehensive version |

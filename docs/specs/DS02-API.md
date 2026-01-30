@@ -1,138 +1,86 @@
-# DS02 API Specification — SCRIPTA
+# DS02 — System Architecture and API Specification
 
-## 1. Overview
-The SCRIPTA API provides a specification-driven workflow for creative writing, enabling planning, generation, verification, and compliance reporting via ACHILLES multi-agent orchestration.
+## 1. Architectural Overview
 
-## 2. API Principles
-- Specification-first: all generation is tied to explicit SOPs and narrative specs.
-- Auditable: every request produces traceable execution artifacts.
-- Modular: agents are composable and replaceable.
-- Deterministic controls: verification agents enforce constraints.
+SCRIPTA is designed as a modular multi-agent system operating within the ACHILLES IDE environment. The architecture follows a pipeline flow where data passes through successive processing stages, each stage managed by a specialized agent or service.
 
-## 3. Services
-- Spec Service: manage narrative specs and SOPs.
-- Planning Service: derive story plans from user intent.
-- Generation Service: produce prose from plans and specs.
-- Verification Service: validate coherence and constraints.
-- Guardrail Service: bias, originality, and plagiarism checks.
-- Reverse Engineering Service: extract specs/plans from existing text artifacts.
-- Literary Review Service: automated editorial feedback and scoring.
-- Research Service: curated factual research retrieval (with provenance).
-- Explainability Service: generate justifications and evidence for agent decisions.
-- Compliance Report Service: consolidated legal/ethical compliance reports.
-- Evaluation Service: compute metrics and KPIs.
-- Audit Service: immutable logs and provenance.
-- Orchestration Service: run pipelines and manage agents.
-- CNL Service: convert natural language constraints into Controlled Natural Language (CNL).
-- VSA Service: hyperdimensional indexing and semantic retrieval primitives.
+The main system flow begins with the author defining a narrative specification. This specification contains characters, world rules, tone constraints, and desired narrative structure. The specification is then processed by a planning agent that generates a structured narrative plan, including the plot graph and scene list. Based on this plan, generation agents produce the actual text, scene by scene. The generated text passes through verification agents that compare it against the original specification, detecting any inconsistencies or constraint violations. Guardrail agents analyze the text for bias issues, originality, and potential plagiarism. Finally, the system produces compliance reports and records all operations in an immutable audit log.
 
-## 4. Authentication & Authorization
-- OAuth2 or API key for external clients.
-- Role-based access: Author, Workflow Developer, Compliance Reviewer, Admin.
-- All calls require tenant_id and project_id.
+This separation of responsibilities offers several advantages. Each agent can be developed, tested, and optimized independently. A verification agent can use deterministic rules, while a generation agent can use probabilistic models. Replacing an agent with an improved version does not affect the rest of the system as long as interfaces remain stable.
 
-## 5. Core Data Models (Simplified)
-- NarrativeSpec: id, title, synopsis, themes, constraints, characters, world_rules.
-- SOP: id, name, version, steps[], inputs, outputs, policy_guardrails.
-- Plan: id, spec_id, plot_graph, scenes[], goals, arcs.
-- GenerationJob: id, plan_id, status, output_refs.
-- VerificationReport: id, spec_id, checks[], violations[]
-- AuditLogEntry: id, event_type, actor, timestamp, payload_hash
-- ImplementationProfile: id, name, mode (basic|vsa), description, parameters
+The main system components are the Spec Manager for CRUD operations on specifications and SOPs, the Planning Agent for converting creative intent into plot graphs, Generation Agents for producing text scene by scene, Verification Agents for validating coherence and consistency, Guardrail Agents for bias, originality and copyright checks, the Evaluation Engine for metrics computation and dashboards, the Audit Logger for immutable storage of events and provenance, the CNL Translator for converting natural language constraints to controlled format, and the VSA/HDC Module for hyperdimensional representations and semantic search.
 
-## 6. Endpoints (REST, versioned)
-### 6.1 Specs & SOPs
-- POST /v1/specs
-- GET /v1/specs/{id}
-- PUT /v1/specs/{id}
-- POST /v1/sops
-- GET /v1/sops/{id}
-- POST /v1/sops/{id}:validate
 
-### 6.2 Planning
-- POST /v1/plans (input: spec_id, planning_params)
-- GET /v1/plans/{id}
+## 2. Data Model and Core Entities
 
-### 6.3 Generation
-- POST /v1/generate (input: plan_id, scene_id, style, constraints)
-- GET /v1/generate/{job_id}
+The system operates with a set of interconnected data entities representing the various artifacts of the creative process. Understanding these entities is essential for API usage.
 
-### 6.4 Verification
-- POST /v1/verify (input: spec_id, artifact_ref)
-- GET /v1/verify/{report_id}
+The following table presents the main entities, their role in the system, and their relationships.
 
-### 6.5 Guardrails
-- POST /v1/guardrail/check (input: artifact_ref, policies)
-- GET /v1/guardrail/report/{id}
+| Entity | Description | Relationships |
+|--------|-------------|---------------|
+| NarrativeSpec | The narrative specification containing title, synopsis, themes, characters, world rules, and CNL constraints | Referenced by Plan and verification reports |
+| SOP | Standard Operating Procedure defining workflow steps, inputs, outputs, and guardrail policies | Orchestrates pipeline execution |
+| Plan | The narrative plan generated from specification, containing plot graph, scene list, objectives, and narrative arcs | References a NarrativeSpec; used by GenerationJob |
+| GenerationJob | The generation task with status (queued, running, completed, failed) and references to results | References a Plan; produces Draft artifacts |
+| VerificationReport | The verification report containing list of checks performed and violations detected | References a NarrativeSpec and an artifact |
+| AuditLogEntry | Audit log entry with event type, actor, timestamp, and payload hash | Records all system operations |
+| ImplementationProfile | The implementation profile specifying algorithmic mode (basic or vsa) and parameters | Attached to requests for reproducibility |
 
-### 6.6 Evaluation
-- POST /v1/evaluate (input: artifact_ref, metrics[])
-- GET /v1/evaluate/{id}
+The term "CRUD" is an acronym for Create, Read, Update, Delete, representing the four fundamental data manipulation operations. "SOP" (Standard Operating Procedure) means a standardized procedure defining the exact steps to follow to accomplish a task. In SCRIPTA's context, SOPs are written in SOP Lang, a declarative language specific to ACHILLES, and define how agents collaborate to produce a result.
 
-### 6.7 Audit
-- GET /v1/audit/logs?project_id=...
-- GET /v1/audit/logs/{id}
 
-### 6.8 Orchestration
-- POST /v1/pipelines/run (input: sop_id, spec_id)
-- GET /v1/pipelines/{run_id}
+## 3. REST API Specification
 
-### 6.9 Reverse Engineering
-- POST /v1/reverse-engineer (input: artifact_ref, output=spec|plan)
+The SCRIPTA API follows REST principles and is organized by services corresponding to the main system functionalities. All endpoints use the version prefix /v1/ to allow API evolution without affecting existing clients.
 
-### 6.10 Literary Review
-- POST /v1/review (input: artifact_ref, criteria[])
+The following table presents the main endpoints grouped by service, with accepted HTTP methods and functionality description.
 
-### 6.11 Research
-- POST /v1/research/query (input: query, constraints[])
+| Service | Endpoint | Method | Functionality |
+|---------|----------|--------|---------------|
+| Specs | /v1/specs | POST | Creates a new narrative specification |
+| Specs | /v1/specs/{id} | GET, PUT | Reads or updates an existing specification |
+| Planning | /v1/plans | POST | Generates a narrative plan from a specification |
+| Planning | /v1/plans/{id} | GET | Reads an existing plan |
+| Generation | /v1/generate | POST | Starts a text generation task |
+| Generation | /v1/generate/{job_id} | GET | Checks status of a generation task |
+| Verification | /v1/verify | POST | Verifies an artifact against specification |
+| Guardrail | /v1/guardrail/check | POST | Runs compliance checks |
+| Evaluation | /v1/evaluate | POST | Computes quality metrics |
+| Review | /v1/review | POST | Gets automated editorial feedback |
+| Research | /v1/research/query | POST | Queries the knowledge base |
+| Explainability | /v1/explain | POST | Generates explanations for decisions |
+| Compliance | /v1/reports/compliance | POST | Generates compliance report |
+| Audit | /v1/audit/logs | GET | Lists audit log entries |
+| CNL | /v1/cnl/translate | POST | Translates natural language to CNL |
+| CNL | /v1/cnl/validate | POST | Validates CNL text |
+| VSA | /v1/vsa/encode | POST | Encodes text into hypervector |
+| VSA | /v1/vsa/search | POST | Searches the hyperdimensional index |
 
-### 6.12 Explainability
-- POST /v1/explain (input: artifact_ref, question)
+Long-running operations (generation, evaluation, pipelines) return a job identifier with status that can be periodically queried. Clients can use polling or subscribe to events through Server-Sent Events (SSE) for real-time notifications.
 
-### 6.13 Compliance Reports
-- POST /v1/reports/compliance (input: artifact_ref, policies[])
+The error format is standardized across all endpoints and includes an error code, descriptive message, additional details, and a correlation identifier for debugging. HTTP codes used are 200 for success, 201 for successful creation, 400 for invalid request, 401 for missing authentication, 403 for insufficient authorization, 404 for nonexistent resource, and 422 for semantically invalid data.
 
-### 6.14 CNL
-- POST /v1/cnl/translate (input: nl_text, context)
-- POST /v1/cnl/validate (input: cnl_text)
 
-### 6.15 VSA
-- POST /v1/vsa/encode (input: text, schema)
-- POST /v1/vsa/index (input: vectors[], ids[])
-- POST /v1/vsa/search (input: query_vector, top_k)
+## 4. Authentication, Implementation Profiles, and Auditability
 
-## 7. Async Job Model
-Long operations return job_id with status: queued, running, completed, failed. Clients can poll or subscribe to events (SSE/webhook).
+API security relies on authentication through API keys transmitted in the x-api-key header. The system supports four roles with different permissions: Author for creation and generation operations, Workflow Developer for defining and modifying SOPs, Compliance Reviewer for access to reports and audit logs, and Admin for system administration and API key management.
 
-## 8. Implementation Profiles (Basic vs VSA/HDC)
-All algorithmic endpoints accept an optional implementation_profile parameter:
-- basic: conventional embeddings or rule-based heuristics.
-- vsa: hyperdimensional representations (VSA/HDC) for semantic indexing, binding, and similarity.
-Default behavior is basic unless a VSA profile is specified. Reports include the profile used for reproducibility.
+All algorithmic requests accept an optional implementation_profile parameter specifying the desired implementation variant. The value "basic" selects conventional implementations based on embeddings and rules, while "vsa" selects implementations based on hyperdimensional computing. If the parameter is missing, the system uses the basic variant. The selected profile is recorded in the audit log for reproducibility.
 
-## 9. Error Model
-Standard error format:
-- code, message, details, correlation_id
+The audit log captures all significant system operations. Each entry contains the event type, actor identity (user or agent), precise timestamp, cryptographic hash of input and output data, and references to involved artifacts. The log is designed to be immutable, meaning entries once written cannot be modified or deleted. This immutability is essential for legal compliance, providing incontestable evidence of the creative process.
 
-## 10. Versioning & Compatibility
-- Semantic versioning by /v1, /v2.
-- SOP version pinning for reproducibility.
+System observability includes distributed tracing for each pipeline execution, latency and error metrics per agent, token consumption and cost tracking, and performance comparison between basic and VSA variants. This data enables identifying performance bottlenecks, optimizing resource allocation, and empirically validating different algorithmic approaches.
 
-## 11. Security & Compliance
-- Audit logs immutable and signed.
-- PII redaction hooks.
-- Provenance tags embedded in outputs.
 
-## 12. Observability
-- Tracing per pipeline run.
-- Per-agent latency, token usage, and verification outcomes.
+## 5. Repository Structure and Code Organization
 
-## 13. Open Questions
-- Final SOP Lang schema for specs and plan graphs.
-- Licensing strategy for external corpora used in guardrails.
-- Formal verification engine interface.
-- CNL grammar standardization and validation rules.
-- VSA/HDC vector dimensionality and binding operators selection.
+The SCRIPTA source code is organized to reflect the modular system architecture. The docs/specs/ directory contains design specifications (DS documents). The docs/schemas/api/ directory contains JSON schemas for validating API requests and responses. The docs/examples/api/ directory contains concrete examples of requests and responses for each endpoint.
 
-## 14. JSON Schemas
-Detailed request/response schemas are defined in docs/schemas/api/ (see DS11).
+The src/ directory contains the actual implementations. The src/services/ subdirectory includes API services for specifications, plans, verification, guardrails, and audit. The src/cnl/ subdirectory contains the CNL grammar, parser, and validator. The src/vsa/ subdirectory contains the implementation of hyperdimensional encoding and search. The src/server.mjs file is the HTTP server with no external dependencies, used for tests and demonstrations.
+
+The tests/ directory contains unit tests for each service, integration tests for complete pipelines, and regression tests for metrics and guardrails. The docs/evals/ directory contains evaluation datasets, including natural language and CNL pairs for testing translation.
+
+The testing strategy includes unit tests for each agent in isolation, integration tests for complete flows from specification to generated text, regression tests to ensure modifications do not degrade metrics, and A/B tests for comparing basic and VSA variants. All tests are automated and run on every code change to detect problems as early as possible.
+
+This organization allows teams to work independently on different components, facilitates onboarding of new developers who can quickly understand the system structure, and supports gradual evolution of each module without destabilizing the entire system.

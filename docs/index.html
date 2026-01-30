@@ -36,13 +36,101 @@
       border-radius: 12px;
       padding: 16px;
       box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
     }
+    .card { position: relative; transition: box-shadow 0.2s; }
+    .card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
     .card h3 { margin: 0 0 6px; }
     .card p { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
+    .card-link { display: block; text-decoration: none; color: inherit; }
+    .card-link:hover { text-decoration: none; }
+    .card-link:hover h3 { color: var(--accent); }
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
-    .links a { margin-right: 10px; font-size: 14px; }
-    .note { margin-top: 16px; padding: 12px; background: #fffaf0; border: 1px solid var(--border); border-radius: 10px; }
+    .links { margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border); }
+    .links a { margin-right: 10px; font-size: 13px; }
+    .footer {
+      margin-top: 32px;
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      border-top: 1px solid var(--border);
+    }
+    
+    /* Mobile responsive styles */
+    @media (max-width: 600px) {
+      header {
+        padding: 24px 16px 14px;
+        text-align: center;
+      }
+      header h1 {
+        font-size: 24px;
+        line-height: 1.2;
+      }
+      header p {
+        font-size: 14px;
+      }
+      main {
+        padding: 16px 12px 40px;
+      }
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .card {
+        padding: 14px;
+        border-radius: 10px;
+      }
+      .card h3 {
+        font-size: 16px;
+        line-height: 1.3;
+      }
+      .card p {
+        font-size: 13px;
+        line-height: 1.4;
+      }
+      .links {
+        padding-top: 10px;
+      }
+      .links a {
+        font-size: 14px;
+        padding: 4px 0;
+        display: inline-block;
+      }
+      .footer {
+        font-size: 13px;
+        padding: 16px 12px;
+        margin-top: 20px;
+      }
+    }
+    
+    /* Medium screens (tablets) */
+    @media (min-width: 601px) and (max-width: 900px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      header h1 {
+        font-size: 26px;
+      }
+    }
+    
+    /* Touch-friendly improvements */
+    @media (hover: none) and (pointer: coarse) {
+      .card {
+        -webkit-tap-highlight-color: rgba(27, 106, 115, 0.1);
+      }
+      .card-link {
+        min-height: 44px;
+      }
+      .links a {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 4px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -53,173 +141,91 @@
   <main>
     <div class="grid">
       <div class="card">
-        <h3>DS01 Vision</h3>
-        <p>Vision, goals, scope, KPIs.</p>
+        <a class="card-link" href="viewer.html?doc=specs/DS01-Vision.md">
+          <h3>DS01 Vision and Strategic Goals</h3>
+          <p>Problem context, 5 design principles, strategic goals with justification and limitations, KPIs, and risk analysis.</p>
+        </a>
         <div class="links">
-          <a href="viewer.html?doc=specs/DS01-Vision.md">View</a>
           <a href="specs/DS01-Vision.md">Raw .md</a>
         </div>
       </div>
       <div class="card">
-        <h3>DS02 API</h3>
-        <p>Endpoints, models, profiles (Basic vs VSA/HDC).</p>
+        <a class="card-link" href="viewer.html?doc=specs/DS02-API.md">
+          <h3>DS02 System Architecture and API</h3>
+          <p>Pipeline architecture, data model, REST endpoints, authentication mechanisms, and repository structure.</p>
+        </a>
         <div class="links">
-          <a href="viewer.html?doc=specs/DS02-API.md">View</a>
           <a href="specs/DS02-API.md">Raw .md</a>
         </div>
       </div>
       <div class="card">
-        <h3>DS03 Research Plan</h3>
-        <p>Research questions, hypotheses, work packages.</p>
+        <a class="card-link" href="viewer.html?doc=specs/DS03-Research-Evaluation.md">
+          <h3>DS03 Research Framework and Evaluation</h3>
+          <p>Research questions, 6 experimental variants, metrics definitions, and validation protocol.</p>
+        </a>
         <div class="links">
-          <a href="viewer.html?doc=specs/DS03-Research-Plan.md">View</a>
-          <a href="specs/DS03-Research-Plan.md">Raw .md</a>
+          <a href="specs/DS03-Research-Evaluation.md">Raw .md</a>
         </div>
       </div>
       <div class="card">
-        <h3>DS04 Experiments</h3>
-        <p>Experiment matrix and protocols.</p>
+        <a class="card-link" href="viewer.html?doc=specs/DS04-CNL-Specification.md">
+          <h3>DS04 CNL Specification</h3>
+          <p>Controlled Natural Language purpose, grammar with 10 predicates, NL-to-CNL translation, and validation rules.</p>
+        </a>
         <div class="links">
-          <a href="viewer.html?doc=specs/DS04-Experiments.md">View</a>
-          <a href="specs/DS04-Experiments.md">Raw .md</a>
+          <a href="specs/DS04-CNL-Specification.md">Raw .md</a>
         </div>
       </div>
       <div class="card">
-        <h3>DS05 Evaluation Suite</h3>
-        <p>Metrics, rubrics, acceptance thresholds.</p>
+        <a class="card-link" href="viewer.html?doc=specs/DS05-VSA-HDC-Specification.md">
+          <h3>DS05 VSA/HDC Specification</h3>
+          <p>Hyperdimensional computing theory, parameters (10K dimensions, bipolar), operations (bind/bundle/permute), and algorithms.</p>
+        </a>
         <div class="links">
-          <a href="viewer.html?doc=specs/DS05-Evaluation-Suite.md">View</a>
-          <a href="specs/DS05-Evaluation-Suite.md">Raw .md</a>
+          <a href="specs/DS05-VSA-HDC-Specification.md">Raw .md</a>
         </div>
       </div>
       <div class="card">
-        <h3>DS06 Architecture & Code Plan</h3>
-        <p>Components, repo structure, milestones.</p>
+        <a class="card-link" href="viewer.html?doc=specs/DS06-Data-Governance.md">
+          <h3>DS06 Data Governance and Security</h3>
+          <p>Data categories, ownership model, security controls, provenance tracking, and retention policies.</p>
+        </a>
         <div class="links">
-          <a href="viewer.html?doc=specs/DS06-Architecture-Code-Plan.md">View</a>
-          <a href="specs/DS06-Architecture-Code-Plan.md">Raw .md</a>
+          <a href="specs/DS06-Data-Governance.md">Raw .md</a>
         </div>
       </div>
       <div class="card">
-        <h3>DS07 Data Governance</h3>
-        <p>Data categories, ownership, retention.</p>
+        <a class="card-link" href="viewer.html?doc=specs/DS07-Use-Case-Definition.md">
+          <h3>DS07 Use Case Definition</h3>
+          <p>Problem scope, 5 actors, primary workflow, alternative workflows, and traceability requirements.</p>
+        </a>
         <div class="links">
-          <a href="viewer.html?doc=specs/DS07-Data-Governance.md">View</a>
-          <a href="specs/DS07-Data-Governance.md">Raw .md</a>
+          <a href="specs/DS07-Use-Case-Definition.md">Raw .md</a>
         </div>
       </div>
       <div class="card">
-        <h3>DS08 Validation Protocol</h3>
-        <p>Pilot validation flow and criteria.</p>
+        <a class="card-link" href="viewer.html?doc=specs/DS08-References-Index.md">
+          <h3>DS08 References and Document Index</h3>
+          <p>Document index, 15 term definitions, and 12 annotated academic references.</p>
+        </a>
         <div class="links">
-          <a href="viewer.html?doc=specs/DS08-Validation-Protocol.md">View</a>
-          <a href="specs/DS08-Validation-Protocol.md">Raw .md</a>
+          <a href="specs/DS08-References-Index.md">Raw .md</a>
         </div>
       </div>
       <div class="card">
-        <h3>DS09 CNL Plan</h3>
-        <p>Controlled Natural Language translation and validation.</p>
+        <a class="card-link" href="viewer.html?doc=evals/README.md">
+          <h3>Evals Dataset</h3>
+          <p>NL to CNL evaluation pairs for SCRIPTA testing and benchmarking.</p>
+        </a>
         <div class="links">
-          <a href="viewer.html?doc=specs/DS09-CNL.md">View</a>
-          <a href="specs/DS09-CNL.md">Raw .md</a>
-        </div>
-      </div>
-      <div class="card">
-        <h3>DS10 Algorithm Variants</h3>
-        <p>Basic vs VSA/HDC implementations for core algorithms.</p>
-        <div class="links">
-          <a href="viewer.html?doc=specs/DS10-Algorithm-Variants.md">View</a>
-          <a href="specs/DS10-Algorithm-Variants.md">Raw .md</a>
-        </div>
-      </div>
-      <div class="card">
-        <h3>DS11 API Schemas</h3>
-        <p>JSON Schemas for API requests and responses.</p>
-        <div class="links">
-          <a href="viewer.html?doc=specs/DS11-API-Schemas.md">View</a>
-          <a href="specs/DS11-API-Schemas.md">Raw .md</a>
-        </div>
-      </div>
-      <div class="card">
-        <h3>DS12 VSA/HDC Parameters</h3>
-        <p>Explicit VSA/HDC parameterization and sweep plan.</p>
-        <div class="links">
-          <a href="viewer.html?doc=specs/DS12-VSA-HDC-Parameters.md">View</a>
-          <a href="specs/DS12-VSA-HDC-Parameters.md">Raw .md</a>
-        </div>
-      </div>
-      <div class="card">
-        <h3>DS13 API Examples</h3>
-        <p>Concrete JSON request examples for the API.</p>
-        <div class="links">
-          <a href="viewer.html?doc=specs/DS13-API-Examples.md">View</a>
-          <a href="specs/DS13-API-Examples.md">Raw .md</a>
-        </div>
-      </div>
-      <div class="card">
-        <h3>DS14 Deliverable Coverage</h3>
-        <p>Gap analysis vs the SCRIPTA Use Case Deliverable outline.</p>
-        <div class="links">
-          <a href="viewer.html?doc=specs/DS14-Deliverable-Coverage.md">View</a>
-          <a href="specs/DS14-Deliverable-Coverage.md">Raw .md</a>
-        </div>
-      </div>
-      <div class="card">
-        <h3>DS15 Use Case Definition</h3>
-        <p>Actors, workflows, artifacts, and boundaries.</p>
-        <div class="links">
-          <a href="viewer.html?doc=specs/DS15-Use-Case-Definition.md">View</a>
-          <a href="specs/DS15-Use-Case-Definition.md">Raw .md</a>
-        </div>
-      </div>
-      <div class="card">
-        <h3>DS16 ACHILLES Alignment</h3>
-        <p>Traceability between SCRIPTA requirements and ACHILLES features.</p>
-        <div class="links">
-          <a href="viewer.html?doc=specs/DS16-Achilles-Feature-Alignment.md">View</a>
-          <a href="specs/DS16-Achilles-Feature-Alignment.md">Raw .md</a>
-        </div>
-      </div>
-      <div class="card">
-        <h3>DS17 References</h3>
-        <p>Curated reference list for SCRIPTA documentation.</p>
-        <div class="links">
-          <a href="viewer.html?doc=specs/DS17-References.md">View</a>
-          <a href="specs/DS17-References.md">Raw .md</a>
-        </div>
-      </div>
-      <div class="card">
-        <h3>DS18 Use Case Deliverable</h3>
-        <p>Draft deliverable document following the requested outline.</p>
-        <div class="links">
-          <a href="viewer.html?doc=specs/DS18-SCRIPTA-Use-Case-Deliverable.md">View</a>
-          <a href="specs/DS18-SCRIPTA-Use-Case-Deliverable.md">Raw .md</a>
-        </div>
-      </div>
-      <div class="card">
-        <h3>DS19 Traceability Matrix</h3>
-        <p>Requirements ↔ APIs ↔ schemas ↔ tests ↔ evals mapping.</p>
-        <div class="links">
-          <a href="viewer.html?doc=specs/DS19-Traceability-Matrix.md">View</a>
-          <a href="specs/DS19-Traceability-Matrix.md">Raw .md</a>
-        </div>
-      </div>
-      <div class="card">
-        <h3>Evals Dataset</h3>
-        <p>NL to CNL evaluation pairs for SCRIPTA.</p>
-        <div class="links">
-          <a href="viewer.html?doc=evals/README.md">View</a>
           <a href="evals/README.md">Raw .md</a>
         </div>
       </div>
     </div>
 
-    <div class="note">
-      Viewer renders Markdown to HTML locally, supports SVG images referenced from docs/assets/svg.
-    </div>
-    <div class="note">
-      Scripts: schema validation and example generation are documented in scripts/README.md.
-    </div>
+    <footer class="footer">
+      Research conducted by <a href="https://www.axiologic.net" target="_blank">Axiologic Research</a> as part of the European research project <a href="https://www.achilles-project.eu/" target="_blank">Achilles</a>.
+    </footer>
   </main>
 </body>
 </html>

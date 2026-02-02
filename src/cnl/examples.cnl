@@ -1,5 +1,55 @@
-# Example CNL statements
-CHARACTER(Anna).
-TRAIT(Anna, courageous).
-GOAL(Anna, protect, "brother").
-RULE(Scene_3, must_include, "storm").
+// SCRIPTA CNL Examples - Unified SVO Syntax
+// All constraints use natural Subject-Verb-Object structure
+
+// === Character Declarations ===
+Anna is protagonist
+Marcus is mentor
+Shadow is antagonist
+
+// === Character Traits ===
+Anna has trait courage
+Anna has trait determination
+Marcus has trait wisdom
+Shadow has trait cunning
+
+// === Relationships ===
+Anna relates to Marcus as mentor_student
+Anna relates to Shadow as rivals
+Marcus relates to Shadow as former_lovers
+
+// === Locations ===
+Village is location
+Village has geography village
+Village has era medieval
+DarkForest is location
+DarkForest has characteristic dangerous
+
+// === Objects ===
+SilverKey is artifact
+SilverKey has significance central
+Anna owns SilverKey
+
+// === Themes ===
+Story has theme redemption
+Story has theme family
+
+// === Constraints (NEW - unified syntax) ===
+Scene_3 requires "storm"
+World forbids "explicit violence"
+Story has tone hopeful
+Chapter_1 must introduce Anna
+Ending must resolve "family conflict"
+
+// === Structure with Groups ===
+Chapter1 group begin
+  Chapter1 has title "The Beginning"
+  Chapter1 has mood mysterious
+  
+  Scene1 group begin
+    Scene1 includes character Anna
+    Scene1 includes location Village
+    Anna discovers SilverKey
+    Anna meets Marcus
+  Scene1 group end
+  
+Chapter1 group end

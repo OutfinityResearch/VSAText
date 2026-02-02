@@ -1,9 +1,11 @@
 /**
- * Verification Agent Service
- * Checks generated content against CNL constraints and spec requirements
+ * Verification Agent Service v2.0
+ * 
+ * Checks generated content against CNL constraints and spec requirements.
+ * Uses unified SVO CNL parser.
  */
 
-import { parseCnlToConstraints } from './cnl-translator.mjs';
+import { parseCNL, extractConstraints, extractEntities } from '../cnl/validator.mjs';
 import { encodeText, cosine } from '../vsa/encoder.mjs';
 
 /**
@@ -28,7 +30,6 @@ function checkForbidden(text, forbidden) {
  * Check character trait consistency using VSA
  */
 function checkCharacterConsistency(text, characterName, expectedTraits, dim = 1000, seed = 42) {
-  // Extract sentences mentioning the character
   const sentences = text.split(/[.!?]+/).filter(s => 
     s.toLowerCase().includes(characterName.toLowerCase())
   );
@@ -37,15 +38,10 @@ function checkCharacterConsistency(text, characterName, expectedTraits, dim = 10
     return { consistent: true, score: 1.0, message: 'Character not mentioned' };
   }
   
-  // Encode character context
   const contextText = sentences.join(' ');
   const contextVector = encodeText(contextText, dim, seed);
-  
-  // Encode expected traits
   const traitsText = expectedTraits.join(' ');
   const traitsVector = encodeText(traitsText, dim, seed);
-  
-  // Calculate similarity
   const similarity = cosine(contextVector, traitsVector);
   
   return {
@@ -55,134 +51,6 @@ function checkCharacterConsistency(text, characterName, expectedTraits, dim = 10
       ? `Character traits appear consistent (score: ${similarity.toFixed(3)})`
       : `Potential character drift detected (score: ${similarity.toFixed(3)})`
   };
-}
-
-/**
- * Verify text against a single constraint
- */
-function verifyConstraint(text, constraint, context = {}) {
-  const result = {
-    constraint: constraint.raw,
-    type: constraint.type,
-    status: 'pass',
-    message: '',
-    severity: 'info'
-  };
-  
-  switch (constraint.type) {
-    case 'RULE': {
-      const [subject, action, value] = constraint.args;
-      
-      if (action === 'must_include') {
-        const passed = checkMustInclude(text, value);
-        result.status = passed ? 'pass' : 'fail';
-        result.message = passed 
-          ? `Text includes required element: "${value}"`
-          : `Missing required element: "${value}"`;
-        result.severity = passed ? 'info' : 'error';
-      }
-      else if (action === 'forbid') {
-        const passed = checkForbidden(text, value);
-        result.status = passed ? 'pass' : 'fail';
-        result.message = passed
-          ? `Text correctly avoids: "${value}"`
-          : `Text contains forbidden element: "${value}"`;
-        result.severity = passed ? 'info' : 'error';
-      }
-      else if (action === 'tone') {
-        // Heuristic tone check
-        const toneWords = getToneWords(value);
-        const matches = toneWords.filter(w => text.toLowerCase().includes(w)).length;
-        const passed = matches >= Math.ceil(toneWords.length * 0.2);
-        result.status = passed ? 'pass' : 'warn';
-        result.message = passed
-          ? `Tone appears to match: ${value}`
-          : `Tone may not match expected: ${value}`;
-        result.severity = passed ? 'info' : 'warning';
-      }
-      else {
-        result.status = 'skip';
-        result.message = `Unknown rule action: ${action}`;
-      }
-      break;
-    }
-    
-    case 'CHARACTER': {
-      const charName = constraint.args[0];
-      const mentioned = text.toLowerCase().includes(charName.toLowerCase());
-      result.status = mentioned ? 'pass' : 'warn';
-      result.message = mentioned
-        ? `Character "${charName}" is present in text`
-        : `Character "${charName}" not found in text`;
-      result.severity = mentioned ? 'info' : 'warning';
-      break;
-    }
-    
-    case 'TRAIT': {
-      const [charName, trait] = constraint.args;
-      if (context.characters && context.characters[charName]) {
-        const check = checkCharacterConsistency(
-          text, 
-          charName, 
-          [trait, ...context.characters[charName].traits || []]
-        );
-        result.status = check.consistent ? 'pass' : 'warn';
-        result.message = check.message;
-        result.severity = check.consistent ? 'info' : 'warning';
-        result.score = check.score;
-      } else {
-        result.status = 'skip';
-        result.message = 'Character context not available for trait verification';
-      }
-      break;
-    }
-    
-    case 'GOAL': {
-      const [charName, action, target] = constraint.args;
-      const goalPhrase = `${action} ${target}`.toLowerCase();
-      const mentioned = text.toLowerCase().includes(goalPhrase) ||
-                       (text.toLowerCase().includes(action) && 
-                        text.toLowerCase().includes(target));
-      result.status = mentioned ? 'pass' : 'warn';
-      result.message = mentioned
-        ? `Goal "${action} ${target}" appears in text`
-        : `Goal "${action} ${target}" not evident in text`;
-      result.severity = mentioned ? 'info' : 'warning';
-      break;
-    }
-    
-    case 'GUARDRAIL': {
-      // Guardrails are checked separately
-      result.status = 'skip';
-      result.message = 'Guardrails checked by guardrail service';
-      break;
-    }
-    
-    case 'FORMAT': {
-      const [docType, formatType, count] = constraint.args;
-      if (formatType === 'steps' || formatType === 'bullets') {
-        const bulletPatterns = /^[\s]*[-*\d.)\]]+\s+/gm;
-        const matches = text.match(bulletPatterns) || [];
-        const expected = parseInt(count);
-        const passed = matches.length >= expected;
-        result.status = passed ? 'pass' : 'fail';
-        result.message = passed
-          ? `Found ${matches.length} list items (expected: ${expected})`
-          : `Only ${matches.length} list items found (expected: ${expected})`;
-        result.severity = passed ? 'info' : 'error';
-      } else {
-        result.status = 'skip';
-        result.message = `Unknown format type: ${formatType}`;
-      }
-      break;
-    }
-    
-    default:
-      result.status = 'skip';
-      result.message = `Unknown constraint type: ${constraint.type}`;
-  }
-  
-  return result;
 }
 
 /**
@@ -196,10 +64,134 @@ function getToneWords(tone) {
     neutral: ['stated', 'according', 'research', 'data', 'analysis', 'evidence'],
     grounded: ['real', 'practical', 'everyday', 'simple', 'ordinary', 'mundane'],
     dark: ['shadow', 'fear', 'danger', 'threat', 'ominous', 'dread'],
-    light: ['joy', 'happy', 'bright', 'sunny', 'cheerful', 'warm']
+    light: ['joy', 'happy', 'bright', 'sunny', 'cheerful', 'warm'],
+    mysterious: ['unknown', 'secret', 'hidden', 'strange', 'enigma', 'puzzle'],
+    tense: ['tension', 'pressure', 'urgent', 'critical', 'desperate', 'intense']
   };
   
   return toneMap[tone.toLowerCase()] || [tone];
+}
+
+/**
+ * Verify text against AST constraints
+ */
+function verifyAgainstAST(text, ast, options = {}) {
+  const results = [];
+  const constraints = ast.constraints || {};
+  
+  // Check requires constraints
+  for (const req of constraints.requires || []) {
+    const passed = checkMustInclude(text, req.target);
+    results.push({
+      type: 'requires',
+      subject: req.subject,
+      target: req.target,
+      status: passed ? 'pass' : 'fail',
+      message: passed 
+        ? `Text includes required element: "${req.target}"`
+        : `Missing required element: "${req.target}"`,
+      severity: passed ? 'info' : 'error',
+      line: req.line
+    });
+  }
+  
+  // Check forbids constraints
+  for (const forbid of constraints.forbids || []) {
+    const passed = checkForbidden(text, forbid.target);
+    results.push({
+      type: 'forbids',
+      subject: forbid.subject,
+      target: forbid.target,
+      status: passed ? 'pass' : 'fail',
+      message: passed
+        ? `Text correctly avoids: "${forbid.target}"`
+        : `Text contains forbidden element: "${forbid.target}"`,
+      severity: passed ? 'info' : 'error',
+      line: forbid.line
+    });
+  }
+  
+  // Check must constraints
+  for (const must of constraints.must || []) {
+    // For "must introduce X" - check if X appears
+    const target = must.target;
+    let passed = false;
+    
+    if (must.action === 'introduce' || must.action === 'include') {
+      passed = checkMustInclude(text, target);
+    } else if (must.action === 'resolve') {
+      // For "must resolve" - check for resolution-related words near the target
+      const resolutionWords = ['resolved', 'solved', 'ended', 'concluded', 'settled'];
+      passed = resolutionWords.some(w => text.toLowerCase().includes(w)) && 
+               text.toLowerCase().includes(target.toLowerCase());
+    } else {
+      passed = checkMustInclude(text, target);
+    }
+    
+    results.push({
+      type: 'must',
+      subject: must.subject,
+      action: must.action,
+      target: must.target,
+      status: passed ? 'pass' : 'fail',
+      message: passed
+        ? `Constraint satisfied: ${must.subject} ${must.action} ${must.target}`
+        : `Constraint violated: ${must.subject} must ${must.action} ${must.target}`,
+      severity: passed ? 'info' : 'error',
+      line: must.line
+    });
+  }
+  
+  // Check tone constraints
+  for (const tone of constraints.tone || []) {
+    const toneWords = getToneWords(tone.value);
+    const matches = toneWords.filter(w => text.toLowerCase().includes(w)).length;
+    const passed = matches >= Math.ceil(toneWords.length * 0.2);
+    
+    results.push({
+      type: 'tone',
+      subject: tone.subject,
+      value: tone.value,
+      status: passed ? 'pass' : 'warn',
+      message: passed
+        ? `Tone appears to match: ${tone.value} (${matches}/${toneWords.length} indicators)`
+        : `Tone may not match expected: ${tone.value} (${matches}/${toneWords.length} indicators)`,
+      severity: passed ? 'info' : 'warning',
+      line: tone.line
+    });
+  }
+  
+  // Check entity presence
+  const entities = extractEntities(ast);
+  for (const char of entities.characters) {
+    const mentioned = text.toLowerCase().includes(char.name.toLowerCase());
+    results.push({
+      type: 'entity_presence',
+      subject: char.name,
+      entityType: 'character',
+      status: mentioned ? 'pass' : 'warn',
+      message: mentioned
+        ? `Character "${char.name}" is present in text`
+        : `Character "${char.name}" not found in text`,
+      severity: mentioned ? 'info' : 'warning'
+    });
+    
+    // Check trait consistency if character is mentioned
+    if (mentioned && char.traits.length > 0) {
+      const traitCheck = checkCharacterConsistency(text, char.name, char.traits);
+      results.push({
+        type: 'trait_consistency',
+        subject: char.name,
+        traits: char.traits,
+        status: traitCheck.consistent ? 'pass' : 'warn',
+        message: traitCheck.message,
+        severity: traitCheck.consistent ? 'info' : 'warning',
+        score: traitCheck.score
+      });
+    }
+  }
+  
+  return results;
 }
 
 /**
@@ -222,33 +214,27 @@ function verifyAgainstSpec(text, spec, options = {}) {
     }
   };
   
-  // Parse CNL constraints
-  let constraints = [];
+  // Parse CNL constraints using unified parser
+  let ast = { entities: {}, constraints: { requires: [], forbids: [], must: [], tone: [], max: [], min: [] } };
+  
   if (spec.cnl_constraints) {
-    const parsed = parseCnlToConstraints(spec.cnl_constraints);
-    constraints = parsed.constraints;
-  }
-  
-  // Add constraints from spec.constraints if present
-  if (spec.constraints && Array.isArray(spec.constraints)) {
-    for (const c of spec.constraints) {
-      if (typeof c === 'string') {
-        constraints.push({ type: 'RULE', args: ['Document', 'must_include', c], raw: c });
-      }
+    const parseResult = parseCNL(spec.cnl_constraints);
+    if (parseResult.valid) {
+      ast = parseResult.ast;
+    } else {
+      report.parse_errors = parseResult.errors;
     }
   }
   
-  // Build character context
-  const characterContext = {};
-  if (spec.characters) {
-    for (const char of spec.characters) {
-      characterContext[char.name] = char;
-    }
+  // If spec has a pre-parsed AST, use it
+  if (spec.ast) {
+    ast = spec.ast;
   }
   
-  // Verify each constraint
-  for (const constraint of constraints) {
-    const check = verifyConstraint(text, constraint, { characters: characterContext });
+  // Verify against AST
+  const checks = verifyAgainstAST(text, ast, options);
+  
+  for (const check of checks) {
     report.checks.push(check);
     report.summary.total_checks++;
     
@@ -259,7 +245,9 @@ function verifyAgainstSpec(text, spec, options = {}) {
       case 'fail':
         report.summary.failed++;
         report.violations.push({
-          constraint: check.constraint,
+          type: check.type,
+          subject: check.subject,
+          target: check.target,
           message: check.message,
           severity: check.severity
         });
@@ -280,11 +268,14 @@ function verifyAgainstSpec(text, spec, options = {}) {
     report.overall_status = 'warn';
   }
   
-  // Calculate compliance rate
+  // Calculate compliance rate (CSA - Constraint Satisfaction Accuracy)
   const totalChecked = report.summary.total_checks - report.summary.skipped;
   report.compliance_rate = totalChecked > 0 
     ? report.summary.passed / totalChecked 
     : 1.0;
+  
+  // CSA metric
+  report.csa = report.compliance_rate;
   
   return report;
 }
@@ -306,9 +297,30 @@ function checkCoherence(textA, textB, dim = 1000, seed = 42) {
   };
 }
 
+/**
+ * Verify CNL text directly
+ */
+function verifyCnl(cnlText, draftText, options = {}) {
+  const parseResult = parseCNL(cnlText);
+  
+  if (!parseResult.valid) {
+    return {
+      valid: false,
+      errors: parseResult.errors,
+      checks: [],
+      csa: 0
+    };
+  }
+  
+  return verifyAgainstSpec(draftText, { ast: parseResult.ast }, options);
+}
+
 export {
   verifyAgainstSpec,
-  verifyConstraint,
+  verifyAgainstAST,
+  verifyCnl,
   checkCoherence,
-  checkCharacterConsistency
+  checkCharacterConsistency,
+  checkMustInclude,
+  checkForbidden
 };

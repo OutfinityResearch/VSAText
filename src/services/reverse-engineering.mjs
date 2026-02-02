@@ -312,25 +312,38 @@ function extractPlan(text, specId = null) {
 }
 
 /**
- * Generate CNL statements from extracted elements
+ * Generate SVO CNL statements from extracted elements
+ * 
+ * Uses unified SVO CNL format:
+ *   Anna is protagonist
+ *   Anna has trait courage
+ *   Story requires "theme"
  */
 function generateCnlFromExtracted(characters, themes, worldRules) {
   const statements = [];
   
+  // Generate character statements
   for (const char of characters.slice(0, 5)) {
-    statements.push(`CHARACTER(${char.name}).`);
-    for (const trait of (char.traits || []).slice(0, 2)) {
-      statements.push(`TRAIT(${char.name}, ${trait}).`);
+    // First character is protagonist, others are just characters
+    const role = statements.length === 0 ? 'protagonist' : 'character';
+    statements.push(`${char.name} is ${role}`);
+    
+    for (const trait of (char.traits || []).slice(0, 3)) {
+      statements.push(`${char.name} has trait ${trait}`);
     }
   }
   
+  // Generate theme statements
   for (const theme of themes.slice(0, 3)) {
-    statements.push(`RULE(Story, theme, ${theme.theme}).`);
+    statements.push(`Story has theme ${theme.theme}`);
   }
   
+  // Generate world rule statements
   for (const rule of worldRules.slice(0, 3)) {
     if (rule.type === 'world_element') {
-      statements.push(`RULE(World, includes, "${rule.content}").`);
+      statements.push(`World requires "${rule.content}"`);
+    } else if (rule.type === 'explicit_rule') {
+      statements.push(`Story requires "${rule.detail || rule.content}"`);
     }
   }
   

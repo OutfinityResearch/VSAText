@@ -16,6 +16,21 @@ The following table provides an index of all DS documents with their scope and p
 | DS06 | Data Governance and Security | Data categories, ownership, security, retention | Compliance officers, administrators |
 | DS07 | Use Case Definition | Actors, workflows, boundaries, traceability | All stakeholders, UX designers |
 | DS08 | References and Document Index | Bibliography, document relationships, terminology | All readers |
+| DS09 | Story Studio Interface Specification | UI components, interactions, and data flows | UX designers, frontend developers |
+| DS10 | Visual Story Composer Specification | Visual editor paradigm and CNL generation rules | UX designers, workflow designers |
+| DS11 | CNL Unification and Migration Guide | Single dialect definition (SVO) + migration notes | Developers, maintainers |
+| DS12 | Metrics Interpreter and Evaluation Suite | Interpreter execution model + evaluation protocol | Researchers, developers |
+| DS13 | Metric: Coherence Score (CS) | Formal definition + procedure + threshold | Researchers, evaluators |
+| DS14 | Metric: Character Attribute Drift (CAD) | Formal definition + procedure + threshold | Researchers, evaluators |
+| DS15 | Metric: Compliance Adherence Rate (CAR) | Formal definition + procedure + threshold | Researchers, compliance |
+| DS16 | Metric: Originality Index (OI) | Formal definition + procedure + threshold | Researchers, evaluators |
+| DS17 | Metric: Emotional Arc Profile (EAP) | Formal definition + procedure + threshold | Researchers, evaluators |
+| DS18 | Metric: Retrieval Quality (RQ) | Formal definition + procedure + threshold | Researchers, evaluators |
+| DS19 | Traceability Matrix (reserved) | Requirements → DS/API/tests mapping | Maintainers |
+| DS20 | Metric: CNL Parse Success Rate (CPSR) | Formal definition + procedure + threshold | Researchers, evaluators |
+| DS21 | Metric: Constraint Satisfaction Accuracy (CSA) | Formal definition + procedure + threshold | Researchers, evaluators |
+| DS22 | Metric: Explainability Score (XAI) | Human survey definition + threshold | Researchers, UX |
+| DS23 | Metric: Narrative Quality Score (NQS) | Composite definition + thresholds | Researchers, evaluators |
 
 Documents are designed to be read in sequence for newcomers (DS01 through DS07 provides a complete picture) or selectively for specialists (a developer might focus on DS02 and DS04, a researcher on DS03 and DS05).
 

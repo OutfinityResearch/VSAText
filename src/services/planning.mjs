@@ -1,10 +1,12 @@
 /**
  * Planning Agent Service
  * Generates structured story plans from narrative specifications
+ * 
+ * Updated to use unified SVO CNL parser (no predicate DSL)
  */
 
 import crypto from 'crypto';
-import { parseCnlToConstraints } from './cnl-translator.mjs';
+import { parseCNL, extractEntities, extractConstraints } from '../cnl/validator.mjs';
 
 // Story structure templates
 const STORY_STRUCTURES = {
@@ -65,68 +67,162 @@ function makeId(prefix) {
 }
 
 /**
- * Extract characters from spec
+ * Extract characters from spec using SVO CNL AST
+ * 
+ * The new AST structure from extractEntities() returns:
+ * {
+ *   characters: [{ name, type, types, traits, properties, relationships }],
+ *   locations: [...],
+ *   themes: [...],
+ *   objects: [...],
+ *   other: [...]
+ * }
  */
-function extractCharacters(spec) {
-  const characters = [];
-  
+function extractCharactersFromSpec(spec) {
+  // If spec already has characters array, use it directly
   if (spec.characters && Array.isArray(spec.characters)) {
-    return spec.characters;
+    return spec.characters.map(ch => ({
+      name: ch.name,
+      traits: ch.traits || [],
+      goals: ch.goals || [],
+      role: ch.role || ch.type || 'character'
+    }));
   }
   
-  // Try to extract from CNL constraints
+  // Try to extract from CNL constraints using SVO parser
   if (spec.cnl_constraints) {
-    const { constraints } = parseCnlToConstraints(spec.cnl_constraints);
-    for (const c of constraints) {
-      if (c.type === 'CHARACTER') {
-        const name = c.args[0];
-        const existing = characters.find(ch => ch.name === name);
-        if (!existing) {
-          characters.push({ name, traits: [], goals: [] });
-        }
-      }
-      if (c.type === 'TRAIT' && c.args.length >= 2) {
-        const charName = c.args[0];
-        const trait = c.args[1];
-        const char = characters.find(ch => ch.name === charName);
-        if (char) {
-          char.traits.push(trait);
-        }
-      }
-      if (c.type === 'GOAL' && c.args.length >= 3) {
-        const charName = c.args[0];
-        const action = c.args[1];
-        const target = c.args[2];
-        const char = characters.find(ch => ch.name === charName);
-        if (char) {
-          char.goals.push({ action, target });
-        }
-      }
+    const result = parseCNL(spec.cnl_constraints);
+    if (!result.valid) {
+      console.warn('CNL parsing had errors:', result.errors);
     }
+    
+    const entities = extractEntities(result.ast);
+    
+    // Convert AST entities to planning format
+    return entities.characters.map(char => {
+      // Extract goals from relationships (e.g., "wants to", "seeks")
+      const goals = [];
+      for (const rel of char.relationships || []) {
+        if (['wants', 'seeks', 'desires', 'pursues'].includes(rel.type)) {
+          goals.push({ action: rel.type, target: rel.target });
+        }
+      }
+      
+      // Also check properties for goals
+      if (char.properties?.goal) {
+        goals.push({ action: 'achieve', target: char.properties.goal });
+      }
+      
+      return {
+        name: char.name,
+        traits: char.traits || [],
+        goals,
+        role: char.type || 'character',
+        properties: char.properties || {}
+      };
+    });
   }
   
-  return characters;
+  return [];
 }
 
 /**
- * Extract scene requirements from CNL constraints
+ * Extract scene requirements from CNL constraints using SVO AST
+ * 
+ * The new AST constraint structure:
+ * {
+ *   requires: [{ subject, target, scope, line }],   // "Scene_3 requires storm"
+ *   forbids: [{ subject, target, scope, line }],    // "Scene_3 forbids violence"
+ *   must: [{ subject, action, target, scope, line }], // "Scene_3 must introduce villain"
+ *   tone: [{ subject, value, line }],               // "Scene_3 has tone tense"
+ *   max: [{ subject, property, value, line }],      // "Scene_3 has max words 1000"
+ *   min: [{ subject, property, value, line }]       // "Scene_3 has min tension 5"
+ * }
  */
-function extractSceneRequirements(spec) {
+function extractSceneRequirementsFromSpec(spec) {
   const requirements = {};
   
-  if (spec.cnl_constraints) {
-    const { constraints } = parseCnlToConstraints(spec.cnl_constraints);
-    for (const c of constraints) {
-      if (c.type === 'RULE' && c.args[0]?.startsWith('Scene_')) {
-        const sceneNum = parseInt(c.args[0].replace('Scene_', ''));
-        if (!requirements[sceneNum]) {
-          requirements[sceneNum] = [];
-        }
-        requirements[sceneNum].push({
-          type: c.args[1],
-          value: c.args[2]
-        });
-      }
+  if (!spec.cnl_constraints) {
+    return requirements;
+  }
+  
+  const result = parseCNL(spec.cnl_constraints);
+  const constraints = extractConstraints(result.ast);
+  
+  // Helper to extract scene number from subject (e.g., "Scene_3" -> 3)
+  function getSceneNumber(subject) {
+    const match = subject?.match(/Scene_(\d+)/i);
+    return match ? parseInt(match[1]) : null;
+  }
+  
+  // Helper to ensure scene entry exists
+  function ensureScene(num) {
+    if (num !== null && !requirements[num]) {
+      requirements[num] = {
+        must_include: [],
+        must_exclude: [],
+        must_actions: [],
+        tone: null,
+        max: {},
+        min: {}
+      };
+    }
+  }
+  
+  // Process 'requires' constraints
+  for (const req of constraints.requires || []) {
+    const sceneNum = getSceneNumber(req.subject);
+    if (sceneNum !== null) {
+      ensureScene(sceneNum);
+      requirements[sceneNum].must_include.push(req.target);
+    }
+  }
+  
+  // Process 'forbids' constraints
+  for (const forbid of constraints.forbids || []) {
+    const sceneNum = getSceneNumber(forbid.subject);
+    if (sceneNum !== null) {
+      ensureScene(sceneNum);
+      requirements[sceneNum].must_exclude.push(forbid.target);
+    }
+  }
+  
+  // Process 'must' constraints (actions like introduce, resolve, reveal)
+  for (const must of constraints.must || []) {
+    const sceneNum = getSceneNumber(must.subject);
+    if (sceneNum !== null) {
+      ensureScene(sceneNum);
+      requirements[sceneNum].must_actions.push({
+        action: must.action,  // e.g., 'introduce', 'resolve', 'reveal'
+        target: must.target
+      });
+    }
+  }
+  
+  // Process 'tone' constraints
+  for (const tone of constraints.tone || []) {
+    const sceneNum = getSceneNumber(tone.subject);
+    if (sceneNum !== null) {
+      ensureScene(sceneNum);
+      requirements[sceneNum].tone = tone.value;
+    }
+  }
+  
+  // Process 'max' constraints
+  for (const max of constraints.max || []) {
+    const sceneNum = getSceneNumber(max.subject);
+    if (sceneNum !== null) {
+      ensureScene(sceneNum);
+      requirements[sceneNum].max[max.property] = max.value;
+    }
+  }
+  
+  // Process 'min' constraints
+  for (const min of constraints.min || []) {
+    const sceneNum = getSceneNumber(min.subject);
+    if (sceneNum !== null) {
+      ensureScene(sceneNum);
+      requirements[sceneNum].min[min.property] = min.value;
     }
   }
   
@@ -160,7 +256,7 @@ function generatePlotGraph(spec, scenes) {
   });
   
   // Add character arcs as additional edges
-  const characters = extractCharacters(spec);
+  const characters = extractCharactersFromSpec(spec);
   characters.forEach(char => {
     if (char.goals && char.goals.length > 0) {
       // Character goal introduction
@@ -184,8 +280,8 @@ function generatePlotGraph(spec, scenes) {
  */
 function generateScenes(spec, structure, sceneCount) {
   const scenes = [];
-  const requirements = extractSceneRequirements(spec);
-  const characters = extractCharacters(spec);
+  const requirements = extractSceneRequirementsFromSpec(spec);
+  const characters = extractCharactersFromSpec(spec);
   
   const structureDef = STORY_STRUCTURES[structure] || STORY_STRUCTURES.three_act;
   let currentScene = 1;
@@ -209,6 +305,7 @@ function generateScenes(spec, structure, sceneCount) {
       const template = templatePool[i % templatePool.length];
       
       // Build scene
+      const sceneReqs = requirements[currentScene] || { must_include: [], must_exclude: [], must_actions: [] };
       const scene = {
         id: sceneId,
         number: currentScene,
@@ -217,7 +314,7 @@ function generateScenes(spec, structure, sceneCount) {
         type: template.type,
         summary: template.summary,
         characters: [],
-        requirements: requirements[currentScene] || [],
+        requirements: sceneReqs,
         estimated_words: 500 + Math.floor(Math.random() * 500)
       };
       
@@ -231,15 +328,21 @@ function generateScenes(spec, structure, sceneCount) {
         }
       }
       
-      // Apply specific requirements
-      if (requirements[currentScene]) {
-        for (const req of requirements[currentScene]) {
-          if (req.type === 'must_include') {
-            scene.must_include = scene.must_include || [];
-            scene.must_include.push(req.value);
-            scene.summary += ` (must include: ${req.value})`;
-          }
+      // Apply specific requirements from SVO AST format
+      if (sceneReqs.must_include && sceneReqs.must_include.length > 0) {
+        scene.must_include = sceneReqs.must_include;
+        scene.summary += ` (must include: ${sceneReqs.must_include.join(', ')})`;
+      }
+      
+      if (sceneReqs.must_actions && sceneReqs.must_actions.length > 0) {
+        scene.must_actions = sceneReqs.must_actions;
+        for (const action of sceneReqs.must_actions) {
+          scene.summary += ` (must ${action.action}: ${action.target})`;
         }
+      }
+      
+      if (sceneReqs.tone) {
+        scene.tone = sceneReqs.tone;
       }
       
       scenes.push(scene);
@@ -255,7 +358,7 @@ function generateScenes(spec, structure, sceneCount) {
  */
 function generateArcs(spec, scenes) {
   const arcs = [];
-  const characters = extractCharacters(spec);
+  const characters = extractCharactersFromSpec(spec);
   
   for (const char of characters) {
     const arc = {
@@ -365,11 +468,11 @@ function generatePlan(spec, options = {}) {
     plot_graph: plotGraph,
     scenes: scenes,
     arcs: [...arcs, emotionalArc],
-    goals: extractCharacters(spec).flatMap(c => c.goals || []),
+    goals: extractCharactersFromSpec(spec).flatMap(c => c.goals || []),
     metadata: {
       total_scenes: scenes.length,
       estimated_words: scenes.reduce((sum, s) => sum + s.estimated_words, 0),
-      character_count: extractCharacters(spec).length
+      character_count: extractCharactersFromSpec(spec).length
     }
   };
   
@@ -378,8 +481,8 @@ function generatePlan(spec, options = {}) {
 
 export {
   generatePlan,
-  extractCharacters,
-  extractSceneRequirements,
+  extractCharactersFromSpec,
+  extractSceneRequirementsFromSpec,
   STORY_STRUCTURES,
   SCENE_TEMPLATES
 };

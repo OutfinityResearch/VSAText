@@ -1,132 +1,128 @@
 /**
- * CNL Translator Service
- * Rule-based translation from natural language to CNL
- * For research phase - deterministic patterns without LLM dependency
+ * CNL Translator Service v2.0
+ * 
+ * Rule-based translation from natural language to SVO CNL.
+ * Unified CNL - no more predicate DSL.
+ * 
+ * Output format: Subject-Verb-Object statements
+ *   Anna is protagonist
+ *   Story requires "happy ending"
+ *   World forbids "violence"
  */
 
-import { validateText } from '../cnl/validator.mjs';
+import { parseCNL, extractConstraints } from '../cnl/validator.mjs';
 
-// Pattern definitions for common narrative constraints
+// Helper functions
+function capitalize(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+function sanitizeId(str) {
+  return str.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+}
+
+// Pattern definitions - now output SVO CNL
 const PATTERNS = [
   // Character patterns
   {
     regex: /(?:the\s+)?character\s+(?:named\s+)?["']?(\w+)["']?\s+(?:must\s+be|is|should\s+be)\s+([\w\s]+)/gi,
-    handler: (m) => `CHARACTER(${capitalize(m[1])}).\nTRAIT(${capitalize(m[1])}, ${m[2].trim().replace(/\s+/g, '_')}).`
+    handler: (m) => `${capitalize(m[1])} is character\n${capitalize(m[1])} has trait ${m[2].trim().replace(/\s+/g, '_')}`
   },
   {
     regex: /(?:introduce|create)\s+(?:a\s+)?character\s+(?:named\s+)?["']?(\w+)["']?/gi,
-    handler: (m) => `CHARACTER(${capitalize(m[1])}).`
+    handler: (m) => `${capitalize(m[1])} is character`
   },
   {
     regex: /["']?(\w+)["']?\s+must\s+(?:stay|remain|be)\s+([\w\s]+)/gi,
-    handler: (m) => `CHARACTER(${capitalize(m[1])}).\nTRAIT(${capitalize(m[1])}, ${m[2].trim().replace(/\s+/g, '_')}).`
+    handler: (m) => `${capitalize(m[1])} is character\n${capitalize(m[1])} has trait ${m[2].trim().replace(/\s+/g, '_')}`
   },
   
   // Goal patterns
   {
     regex: /(?:the\s+)?(?:main\s+)?character\s+(?:must|should|wants\s+to)\s+(protect|save|find|destroy|help)\s+(?:their\s+|the\s+)?["']?([\w\s]+)["']?/gi,
-    handler: (m) => `CHARACTER(Main).\nGOAL(Main, ${m[1]}, "${m[2].trim()}").`
+    handler: (m) => `Protagonist is character\nProtagonist wants "${m[1]} ${m[2].trim()}"`
   },
   {
     regex: /["']?(\w+)["']?\s+(?:must|should|wants\s+to)\s+(protect|save|find|destroy|help)\s+(?:their\s+|the\s+)?["']?([\w\s]+)["']?/gi,
-    handler: (m) => `GOAL(${capitalize(m[1])}, ${m[2]}, "${m[3].trim()}").`
+    handler: (m) => `${capitalize(m[1])} wants "${m[2]} ${m[3].trim()}"`
   },
   
-  // Scene/chapter patterns
+  // Scene/chapter patterns - now use SVO requires/must
   {
     regex: /(?:in\s+)?scene\s+(\d+)\s+(?:must\s+)?(?:include|contain|have|show)\s+["']?([\w\s]+)["']?/gi,
-    handler: (m) => `RULE(Scene_${m[1]}, must_include, "${m[2].trim()}").`
+    handler: (m) => `Scene_${m[1]} requires "${m[2].trim()}"`
   },
   {
     regex: /(?:in\s+)?chapter\s+(\d+)\s+(?:must\s+)?(?:include|contain|have|introduce)\s+["']?([\w\s]+)["']?/gi,
-    handler: (m) => `RULE(Chapter_${m[1]}, must_include, "${m[2].trim()}").`
+    handler: (m) => `Chapter_${m[1]} requires "${m[2].trim()}"`
   },
   {
     regex: /(?:by\s+)?act\s+(\d+)\s+(?:must\s+)?reveal\s+(?:that\s+)?["']?([\w\s]+)["']?/gi,
-    handler: (m) => `RULE(Act_${m[1]}, must_reveal, "${m[2].trim()}").`
+    handler: (m) => `Act_${m[1]} must reveal "${m[2].trim()}"`
   },
   
-  // Forbid patterns
+  // Forbid patterns - now use SVO forbids
   {
     regex: /(?:no|never|avoid|forbid|don't\s+use)\s+["']?([\w\s]+)["']?\s+(?:in\s+the\s+)?(?:story|narrative|world)?/gi,
-    handler: (m) => `RULE(World, forbid, "${m[1].trim()}").`
+    handler: (m) => `World forbids "${m[1].trim()}"`
   },
   {
     regex: /keep\s+(?:the\s+)?story\s+["']?([\w\s]+)["']?/gi,
-    handler: (m) => `RULE(Story, tone, ${m[1].trim().replace(/\s+/g, '_')}).`
+    handler: (m) => `Story has tone ${m[1].trim().replace(/\s+/g, '_')}`
   },
   {
     regex: /the\s+(?:protagonist|main\s+character)\s+should\s+never\s+([\w\s]+)/gi,
-    handler: (m) => `CHARACTER(Protagonist).\nRULE(Protagonist, forbid, "${m[1].trim()}").`
+    handler: (m) => `Protagonist is character\nProtagonist forbids "${m[1].trim()}"`
   },
   
   // Structure patterns
   {
     regex: /(?:write|create)\s+(?:a\s+)?(\d+)[\s-]act\s+structure/gi,
-    handler: (m) => `FORMAT(Screenplay, acts, ${m[1]}).`
+    handler: (m) => `Story has format screenplay\nStory has acts ${m[1]}`
   },
   {
     regex: /(?:limit|keep)\s+(?:to\s+)?(\d+)\s+(?:main\s+)?characters/gi,
-    handler: (m) => `RULE(Story, max_characters, ${m[1]}).`
-  },
-  {
-    regex: /explain\s+["']?([\w\s]+)["']?\s+in\s+(\d+)\s+(steps|bullets|points)/gi,
-    handler: (m) => `FORMAT(Tutorial, ${m[3]}, ${m[2]}).\nRULE(Tutorial, topic, "${m[1].trim()}").`
+    handler: (m) => `Story has max characters ${m[1]}`
   },
   
   // Style patterns
   {
     regex: /use\s+(first|second|third)[\s-]person\s+(?:voice|pov|perspective)/gi,
-    handler: (m) => `RULE(Style, pov, ${m[1]}_person).`
+    handler: (m) => `Story has pov ${m[1]}_person`
   },
   {
     regex: /(?:the\s+)?tone\s+(?:should\s+be|must\s+be|is)\s+["']?([\w\s]+)["']?/gi,
-    handler: (m) => `RULE(Story, tone, ${m[1].trim().replace(/\s+/g, '_')}).`
+    handler: (m) => `Story has tone ${m[1].trim().replace(/\s+/g, '_')}`
   },
   {
     regex: /ending\s+(?:should\s+be|must\s+be|is)\s+["']?([\w\s]+)["']?/gi,
-    handler: (m) => `RULE(Ending, tone, ${m[1].trim().replace(/\s+/g, '_')}).`
+    handler: (m) => `Ending has tone ${m[1].trim().replace(/\s+/g, '_')}`
   },
   
-  // Compliance patterns
-  {
-    regex: /cite\s+(?:at\s+least\s+)?(\d+)\s+sources/gi,
-    handler: (m) => `RULE(Document, min_citations, ${m[1]}).`
-  },
-  {
-    regex: /avoid\s+(?:any\s+)?(?:medical|legal)\s+claims/gi,
-    handler: (m) => `RULE(Document, forbid, "medical claims").`
-  },
-  {
-    regex: /include\s+(?:a\s+)?safety\s+warning/gi,
-    handler: () => `RULE(Document, must_include, "safety warning").`
-  },
-  
-  // Guardrail patterns
+  // Guardrail patterns - now use SVO forbids
   {
     regex: /avoid\s+(?:clich[eé]s?\s+like\s+)?["']([^"']+)["']/gi,
-    handler: (m) => `GUARDRAIL(Text, forbid_phrase, "${m[1]}").`
+    handler: (m) => `Story forbids "${m[1]}"`
   },
   {
     regex: /detect\s+(?:and\s+flag\s+)?(?:any\s+)?stereotypes/gi,
-    handler: () => `GUARDRAIL(Text, detect, stereotypes).\nGUARDRAIL(Text, action, flag).`
+    handler: () => `Story forbids "stereotypes"`
   },
   {
     regex: /flag\s+(?:any\s+)?(?:personally\s+)?identifying\s+information/gi,
-    handler: () => `GUARDRAIL(Text, detect, PII).\nGUARDRAIL(Text, action, redact).`
+    handler: () => `Story forbids "PII"`
   }
 ];
 
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-}
-
 /**
- * Translate natural language to CNL using rule-based patterns
+ * Translate natural language to SVO CNL using rule-based patterns
+ * @param {string} nlText - Natural language text
+ * @param {Object} context - Optional context
+ * @returns {Object} Translation result
  */
 function translateNlToCnl(nlText, context = {}) {
   const results = [];
-  let remainingText = nlText;
   let matchCount = 0;
 
   // Split by sentence-like boundaries
@@ -141,11 +137,14 @@ function translateNlToCnl(nlText, context = {}) {
       
       if (match) {
         const cnl = pattern.handler(match);
-        if (cnl && !results.includes(cnl)) {
-          results.push(cnl);
-          matchCount++;
-          matched = true;
+        // Split multi-line results and add each
+        for (const line of cnl.split('\n')) {
+          if (line.trim() && !results.includes(line.trim())) {
+            results.push(line.trim());
+          }
         }
+        matchCount++;
+        matched = true;
       }
     }
     
@@ -162,13 +161,13 @@ function translateNlToCnl(nlText, context = {}) {
   const confidence = Math.min(0.95, 0.3 + (matchCount * 0.15));
   
   // Validate the generated CNL
-  const { statements, errors } = validateText(cnlText);
+  const parseResult = parseCNL(cnlText);
   
   return {
     cnl_text: cnlText,
-    confidence: errors.length === 0 ? confidence : confidence * 0.5,
-    statements,
-    errors,
+    confidence: parseResult.valid ? confidence : confidence * 0.5,
+    ast: parseResult.ast,
+    errors: parseResult.errors,
     matched_patterns: matchCount,
     source_sentences: sentences.length
   };
@@ -184,7 +183,7 @@ function extractGenericConstraint(sentence) {
   if (lower.includes('must include') || lower.includes('should include')) {
     const match = sentence.match(/(?:must|should)\s+include\s+["']?([\w\s]+)["']?/i);
     if (match) {
-      return `RULE(Document, must_include, "${match[1].trim()}").`;
+      return `Story requires "${match[1].trim()}"`;
     }
   }
   
@@ -192,7 +191,7 @@ function extractGenericConstraint(sentence) {
   if (lower.includes('must have') || lower.includes('should have')) {
     const match = sentence.match(/(?:must|should)\s+have\s+["']?([\w\s]+)["']?/i);
     if (match) {
-      return `RULE(Document, must_include, "${match[1].trim()}").`;
+      return `Story requires "${match[1].trim()}"`;
     }
   }
   
@@ -200,41 +199,153 @@ function extractGenericConstraint(sentence) {
 }
 
 /**
- * Validate existing CNL text
+ * Validate CNL text
+ * @param {string} cnlText - CNL text to validate
+ * @returns {Object} Validation result with AST
  */
 function validateCnl(cnlText) {
-  return validateText(cnlText);
+  return parseCNL(cnlText);
 }
 
 /**
- * Parse CNL statements into structured constraints
+ * Parse CNL text into structured constraints
+ * Uses the unified AST from parseCNL
+ * @param {string} cnlText - CNL text to parse
+ * @returns {Object} Parsed constraints
  */
 function parseCnlToConstraints(cnlText) {
-  const { statements, errors } = validateText(cnlText);
+  const result = parseCNL(cnlText);
   
-  if (errors.length > 0) {
-    return { constraints: [], errors };
+  if (!result.valid) {
+    return { constraints: extractConstraints(result.ast), errors: result.errors };
   }
   
-  const constraints = statements.map(stmt => {
-    const predicate = stmt.predicate;
-    const args = stmt.args.map(a => 
-      typeof a === 'string' && a.startsWith('"') ? a.slice(1, -1) : a
-    );
-    
-    return {
-      type: predicate,
-      args,
-      raw: `${predicate}(${stmt.args.join(', ')}).`
-    };
-  });
+  return { 
+    constraints: extractConstraints(result.ast), 
+    errors: [] 
+  };
+}
+
+/**
+ * Generate SVO CNL from a spec object
+ * Useful for converting UI state to CNL
+ * @param {Object} spec - Specification object
+ * @returns {string} Generated CNL text
+ */
+function generateCnlFromSpec(spec) {
+  const lines = [];
   
-  return { constraints, errors: [] };
+  // Project metadata
+  if (spec.title) {
+    lines.push(`Project has title "${spec.title}"`);
+  }
+  if (spec.format || spec.genre) {
+    lines.push(`Project has genre ${spec.format || spec.genre}`);
+  }
+  
+  // Characters
+  if (spec.characters) {
+    for (const char of spec.characters) {
+      const name = typeof char === 'string' ? char : char.name;
+      const role = typeof char === 'string' ? 'character' : (char.role || char.archetype || 'character');
+      lines.push(`${capitalize(name)} is ${role}`);
+      
+      if (char.traits) {
+        for (const trait of char.traits) {
+          lines.push(`${capitalize(name)} has trait ${trait}`);
+        }
+      }
+    }
+  }
+  
+  // Locations
+  if (spec.locations) {
+    for (const loc of spec.locations) {
+      const name = typeof loc === 'string' ? loc : loc.name;
+      lines.push(`${capitalize(sanitizeId(name))} is location`);
+    }
+  }
+  
+  // Tone
+  if (spec.tone) {
+    lines.push(`Story has tone ${spec.tone}`);
+  }
+  
+  // Themes
+  if (spec.themes) {
+    for (const theme of spec.themes) {
+      lines.push(`Story has theme ${theme}`);
+    }
+  }
+  
+  // Constraints from cnl_constraints (legacy predicate format)
+  if (spec.cnl_constraints && typeof spec.cnl_constraints === 'string') {
+    const migrated = migratePredicate(spec.cnl_constraints);
+    lines.push(migrated);
+  }
+  
+  return lines.join('\n');
+}
+
+/**
+ * Migrate predicate-style CNL to SVO format
+ * @param {string} predicateCnl - Old predicate format
+ * @returns {string} SVO format
+ */
+function migratePredicate(predicateCnl) {
+  const lines = predicateCnl.split('\n');
+  const svoLines = [];
+  
+  for (const line of lines) {
+    const match = line.match(/^(\w+)\(([^)]+)\)\.$/);
+    if (!match) continue;
+    
+    const [, pred, argsStr] = match;
+    const args = argsStr.split(',').map(a => a.trim().replace(/^"|"$/g, ''));
+    
+    switch (pred.toUpperCase()) {
+      case 'CHARACTER':
+        svoLines.push(`${args[0]} is character`);
+        break;
+      case 'TRAIT':
+        svoLines.push(`${args[0]} has trait ${args[1]}`);
+        break;
+      case 'GOAL':
+        svoLines.push(`${args[0]} wants "${args[1]} ${args[2] || ''}".trim()`);
+        break;
+      case 'RULE':
+        if (args[1] === 'must_include') {
+          svoLines.push(`${args[0]} requires "${args[2]}"`);
+        } else if (args[1] === 'forbid') {
+          svoLines.push(`${args[0]} forbids "${args[2]}"`);
+        } else if (args[1] === 'tone') {
+          svoLines.push(`${args[0]} has tone ${args[2]}`);
+        } else if (args[1] === 'max_characters') {
+          svoLines.push(`${args[0]} has max characters ${args[2]}`);
+        }
+        break;
+      case 'TONE':
+        svoLines.push(`${args[0]} has tone ${args[1]}`);
+        break;
+      case 'FORMAT':
+        svoLines.push(`${args[0]} has format ${args[1]}`);
+        break;
+      case 'GUARDRAIL':
+        if (args[1] === 'forbid_phrase') {
+          svoLines.push(`Story forbids "${args[2]}"`);
+        }
+        break;
+    }
+  }
+  
+  return svoLines.join('\n');
 }
 
 export {
   translateNlToCnl,
   validateCnl,
   parseCnlToConstraints,
+  generateCnlFromSpec,
+  migratePredicate,
   PATTERNS
 };

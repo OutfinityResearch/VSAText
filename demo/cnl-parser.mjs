@@ -26,6 +26,7 @@ import {
   tokenizeLine,
   extractEntities,
   extractConstraints,
+  extractOwnership,
   countGroups,
   ENTITY_TYPES
 } from './cnl-parser-core.mjs';
@@ -51,6 +52,7 @@ export {
   tokenizeLine,
   extractEntities,
   extractConstraints,
+  extractOwnership,
   countGroups,
   generateMarkdown,
   generateSkeleton,
@@ -63,6 +65,7 @@ export default {
   validateText,
   extractEntities,
   extractConstraints,
+  extractOwnership,
   countGroups,
   generateMarkdown,
   generateSkeleton

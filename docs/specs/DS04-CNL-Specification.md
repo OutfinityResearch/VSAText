@@ -72,7 +72,7 @@ Anna has trait "inner strength"
 
 ### 2.3 Reserved Keywords
 
-**Verbs:** `is`, `has`, `relates`, `requires`, `forbids`, `includes`, `references`, `describes`, `targets`, `discovers`, `enters`, `meets`, `travels`, `decides`, `faces`, `threatens`, `arrives`, `confronts`, `reveals`, `transforms`
+**Verbs:** `is`, `has`, `relates`, `requires`, `forbids`, `must`, `owns`, `includes`, `references`, `describes`, `targets`, `discovers`, `enters`, `meets`, `travels`, `decides`, `faces`, `threatens`, `arrives`, `confronts`, `reveals`, `transforms`, `applies`
 
 **Structure:** `group`, `begin`, `end`
 
@@ -101,13 +101,18 @@ Subject Verb "quoted value"
 ### 3.2 Statement Types
 
 | Pattern | Meaning | Example |
-|---------|---------|---------|
+|---------|---------|---------| 
 | `X is Y` | Type declaration | `Anna is protagonist` |
 | `X has Y Z` | Property assignment | `Anna has trait courage` |
 | `X has Y "Z"` | Property with quoted value | `Anna has trait "inner strength"` |
 | `X relates to Y as Z` | Relationship | `Anna relates to Marcus as sibling` |
 | `X requires Y` | Constraint (must have) | `Story requires "happy ending"` |
 | `X forbids Y` | Constraint (must not have) | `Story forbids "explicit violence"` |
+| `X must Y Z` | Must constraint | `Chapter_1 must introduce Anna` |
+| `X owns Y` | Ownership | `Anna owns SilverKey` |
+| `X has tone Y` | Tone constraint | `Story has tone hopeful` |
+| `X has max Y Z` | Maximum constraint | `Story has max characters 10` |
+| `X has min Y Z` | Minimum constraint | `Story has min scenes 5` |
 | `X includes Y` | Inclusion | `Scene1 includes character Anna` |
 | `X includes Y Z` | Typed inclusion | `Scene1 includes location Village` |
 | `X references @Y` | Cross-reference | `Chapter2 references @Chapter1` |
@@ -287,6 +292,7 @@ Story requires character Anna
 Story requires theme Redemption
 Story requires "happy ending"
 Chapter1 requires location Village
+Scene_3 requires "storm"
 ```
 
 ### 7.2 Prohibitions
@@ -295,9 +301,43 @@ Chapter1 requires location Village
 Story forbids "explicit violence"
 Story forbids "modern technology"
 Scene2 forbids character Marcus
+World forbids "magic without cost"
 ```
 
-### 7.3 Constraint Evaluation
+### 7.3 Must Constraints
+
+The `must` verb expresses obligations with specific actions:
+
+```
+Chapter_1 must introduce Anna
+Ending must resolve "family conflict"
+Act2 must reveal "villain's identity"
+Scene5 must include "confrontation"
+```
+
+**Supported actions:** `introduce`, `resolve`, `reveal`, `include`, `contain`
+
+### 7.4 Ownership
+
+```
+Anna owns SilverKey
+Marcus owns "ancient map"
+Villain owns "dark artifact"
+```
+
+Ownership creates implicit relationships and enables continuity tracking.
+
+### 7.5 Tone and Limits
+
+```
+Story has tone hopeful
+Story has tone dark
+Story has max characters 10
+Story has min scenes 5
+Chapter1 has max words 5000
+```
+
+### 7.6 Constraint Evaluation
 
 Constraints are evaluated during **interpretation** (metrics calculation):
 - **Satisfied**: All requirements met, no forbids violated
@@ -439,6 +479,7 @@ Anna has trait "inner strength"
 Anna describes "A young woman from the coastal village"
 Anna relates to Marcus as sibling
 Anna wants "save her brother"
+Anna owns SilverKey
 
 Marcus is character
 Marcus has role brother
@@ -472,6 +513,11 @@ Story has theme family
 // Constraints
 Story requires "happy ending"
 Story forbids "explicit violence"
+Story has tone hopeful
+Story has max characters 10
+Chapter1 must introduce Anna
+Chapter2 must introduce "The Dark Forest"
+Ending must resolve "brother's rescue"
 
 // Structure
 Book group begin

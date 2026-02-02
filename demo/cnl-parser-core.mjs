@@ -7,15 +7,26 @@
 
 // Reserved verbs in the CNL grammar
 const VERBS = new Set([
-  'is', 'has', 'relates', 'requires', 'forbids', 'includes',
-  'references', 'describes', 'targets', 'meets', 'discovers',
-  'enters', 'travels', 'decides', 'faces', 'threatens',
-  'destroys', 'disappears', 'approaches', 'continues', 'resolves',
-  'foreshadows', 'remembers', 'interacts', 'arrives', 'wants',
-  'fears', 'loves', 'hates', 'seeks', 'avoids', 'confronts',
-  'escapes', 'returns', 'transforms', 'reveals', 'hides',
-  'promises', 'betrays', 'saves', 'abandons', 'creates',
-  'destroys', 'begins', 'ends', 'causes', 'prevents'
+  // Core verbs
+  'is', 'has', 'relates', 'includes', 'references', 'describes',
+  
+  // Constraint verbs (unified CNL - replaces predicate DSL)
+  'requires', 'forbids', 'must', 'owns', 'applies',
+  
+  // Action verbs
+  'targets', 'meets', 'discovers', 'enters', 'travels', 
+  'decides', 'faces', 'threatens', 'destroys', 'disappears', 
+  'approaches', 'continues', 'resolves', 'foreshadows', 
+  'remembers', 'interacts', 'arrives',
+  
+  // Emotional/cognitive verbs
+  'wants', 'fears', 'loves', 'hates', 'seeks', 'avoids', 
+  'confronts', 'escapes', 'returns', 'transforms', 'reveals', 
+  'hides', 'promises', 'betrays', 'saves', 'abandons', 
+  'creates', 'begins', 'ends', 'causes', 'prevents',
+  
+  // Screenplay verbs
+  'enters', 'exits', 'speaks', 'reacts', 'observes'
 ]);
 
 // Modifiers that connect parts of statements
@@ -195,7 +206,15 @@ export function parseCNL(text) {
     statements: [],
     relationships: [],
     references: [],
-    constraints: { requires: [], forbids: [] }
+    ownership: [],      // X owns Y
+    constraints: { 
+      requires: [],     // X requires "Y"
+      forbids: [],      // X forbids "Y"  
+      must: [],         // X must introduce/resolve Y
+      tone: [],         // X has tone Y
+      max: [],          // X has max Y Z
+      min: []           // X has min Y Z
+    }
   };
   
   const groupStack = [];
@@ -343,12 +362,87 @@ function processStatement(statement, ast, groupStack, lineNo) {
     ast.relationships.push({ from, to, type: statement.verb, line: lineNo });
   }
   
-  // Constraints
+  // Constraints: requires/forbids
   if (statement.verb === 'requires') {
-    ast.constraints.requires.push({ subject: statement.subject, target: statement.objects.join(' '), line: lineNo });
+    ast.constraints.requires.push({ 
+      subject: statement.subject, 
+      target: statement.objects.join(' '), 
+      scope: currentScope?.name || 'global',
+      line: lineNo 
+    });
   }
   if (statement.verb === 'forbids') {
-    ast.constraints.forbids.push({ subject: statement.subject, target: statement.objects.join(' '), line: lineNo });
+    ast.constraints.forbids.push({ 
+      subject: statement.subject, 
+      target: statement.objects.join(' '), 
+      scope: currentScope?.name || 'global',
+      line: lineNo 
+    });
+  }
+  
+  // Constraints: must (introduce/resolve/etc)
+  if (statement.verb === 'must' && statement.objects.length >= 2) {
+    const action = statement.objects[0].toLowerCase();
+    const target = statement.objects.slice(1).join(' ');
+    ast.constraints.must.push({
+      subject: statement.subject,
+      action: action,
+      target: target,
+      scope: currentScope?.name || 'global',
+      line: lineNo
+    });
+  }
+  
+  // Ownership: X owns Y
+  if (statement.verb === 'owns' && statement.objects.length > 0) {
+    const owner = statement.subject;
+    const owned = statement.objects[0];
+    ast.ownership.push({ owner, owned, line: lineNo });
+    
+    // Also create implicit relationship
+    if (!ast.entities[owner]) {
+      ast.entities[owner] = {
+        name: owner, type: 'unknown', types: [],
+        properties: {}, traits: [], relationships: [], line: lineNo
+      };
+    }
+    ast.entities[owner].relationships.push({ target: owned, type: 'owns', line: lineNo });
+    ast.relationships.push({ from: owner, to: owned, type: 'owns', line: lineNo });
+  }
+  
+  // Special properties: tone, max, min
+  if (statement.verb === 'has' && statement.objects.length >= 2) {
+    const propType = statement.objects[0].toLowerCase();
+    const propValue = statement.objects.slice(1).join(' ');
+    
+    if (propType === 'tone') {
+      ast.constraints.tone.push({
+        subject: statement.subject,
+        value: propValue,
+        scope: currentScope?.name || 'global',
+        line: lineNo
+      });
+    } else if (propType === 'max') {
+      const [what, ...rest] = statement.objects.slice(1);
+      const count = parseInt(rest.join(' ')) || parseInt(what);
+      ast.constraints.max.push({
+        subject: statement.subject,
+        what: isNaN(parseInt(what)) ? what : 'items',
+        count: count,
+        scope: currentScope?.name || 'global',
+        line: lineNo
+      });
+    } else if (propType === 'min') {
+      const [what, ...rest] = statement.objects.slice(1);
+      const count = parseInt(rest.join(' ')) || parseInt(what);
+      ast.constraints.min.push({
+        subject: statement.subject,
+        what: isNaN(parseInt(what)) ? what : 'items',
+        count: count,
+        scope: currentScope?.name || 'global',
+        line: lineNo
+      });
+    }
   }
   
   // References (@notation)
@@ -408,7 +502,21 @@ export function extractEntities(ast) {
  * Extract constraints from AST
  */
 export function extractConstraints(ast) {
-  return ast.constraints || { requires: [], forbids: [] };
+  return ast.constraints || { 
+    requires: [], 
+    forbids: [], 
+    must: [], 
+    tone: [], 
+    max: [], 
+    min: [] 
+  };
+}
+
+/**
+ * Extract ownership relations from AST
+ */
+export function extractOwnership(ast) {
+  return ast.ownership || [];
 }
 
 /**

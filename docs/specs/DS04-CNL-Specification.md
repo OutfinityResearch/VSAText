@@ -1,96 +1,518 @@
 # DS04 — Controlled Natural Language (CNL) Specification
 
-## 1. Purpose and Rationale
+## 1. Purpose and Design Philosophy
 
-Natural language is inherently ambiguous. When an author writes "Anna should be brave," this could mean many things: Anna must never show fear, Anna should eventually become brave, Anna's bravery is her defining trait, or simply that bravery is preferred but not required. This ambiguity creates problems for automated systems that must verify whether generated content satisfies the author's intent.
+The SCRIPTA CNL provides a **human-readable, machine-parseable** language for defining narrative specifications. CNL functions as a **programming language for narratives** - it is not written directly by authors but is **auto-generated** from a visual editor.
 
-Controlled Natural Language (CNL) is a restricted subset of natural language designed to eliminate ambiguity while remaining readable by humans. CNL uses a limited vocabulary, strict grammatical rules, and explicit logical operators to express constraints that can be unambiguously parsed and verified by machines. The key insight is that we sacrifice some expressiveness in exchange for precision—a worthwhile trade when we need guaranteed verification.
+### 1.1 CNL as Programming Language
 
-In SCRIPTA, CNL serves as the bridge between human creative intent and machine verification. Authors can express constraints in natural language, which the system translates to CNL. The CNL is then validated for grammatical correctness and used by verification agents to check generated content. This three-step process (express → translate → verify) provides both human readability and machine precision.
+| Concept | Programming Analog |
+|---------|-------------------|
+| CNL text | Source code |
+| Entities | Object instances |
+| Groups | Scopes / Namespaces |
+| Statements | Instructions |
+| Relationships | References / Pointers |
+| Patterns | Functions / Templates |
+| Constraints | Assertions / Contracts |
+| Metrics | Program execution / Tests |
 
-The design philosophy prioritizes simplicity and learnability over comprehensive expressiveness. We aim for a CNL that an author can learn in under an hour and that covers the most common narrative constraints, rather than a complex logical formalism that could theoretically express anything but that nobody would actually use. Experience with formal specification languages shows that adoption depends critically on perceived simplicity.
+**Workflow:**
+```
+Visual Editor → Auto-generated CNL → Parser → AST → Interpreter (Metrics) → Results
+```
 
+### 1.2 Core Principles
 
-## 2. CNL Grammar and Syntax
-
-The SCRIPTA CNL uses a predicate-based syntax inspired by logic programming languages like Prolog, but simplified for readability. Each statement consists of a predicate name followed by arguments in parentheses, terminated by a period. Arguments can be identifiers (like character names) or quoted strings (for arbitrary text).
-
-The following table presents the core predicates supported in SCRIPTA CNL version 1.0.
-
-| Predicate | Syntax | Meaning | Example |
-|-----------|--------|---------|---------|
-| CHARACTER | CHARACTER(Name) | Declares a named character | CHARACTER(Anna). |
-| TRAIT | TRAIT(Name, Trait) | Assigns a persistent trait to a character | TRAIT(Anna, courageous). |
-| GOAL | GOAL(Name, Action, Target) | Defines a character's objective | GOAL(Anna, protect, "brother"). |
-| RELATIONSHIP | RELATIONSHIP(Name1, Relation, Name2) | Defines relationship between characters | RELATIONSHIP(Anna, sister_of, Marcus). |
-| RULE | RULE(Scope, Operator, Value) | Defines a constraint on narrative element | RULE(Scene_3, must_include, "storm"). |
-| TONE | TONE(Scope, Value) | Sets emotional tone for a scope | TONE(Story, hopeful). |
-| SETTING | SETTING(Scope, Location, Time) | Defines setting parameters | SETTING(Act_1, "coastal village", "modern"). |
-| THEME | THEME(Value) | Declares a story theme | THEME(redemption). |
-| FORBID | FORBID(Element) | Explicitly prohibits an element | FORBID(supernatural_elements). |
-| REQUIRE | REQUIRE(Scope, Element) | Requires element to appear | REQUIRE(Climax, confrontation). |
-
-The scope argument can be "Story" for the entire narrative, "Act_N" for a specific act, "Scene_N" for a specific scene, or "Chapter_N" for a specific chapter. This allows constraints to be global or localized to specific portions of the narrative.
-
-Identifiers follow standard programming conventions: they start with a letter and contain only letters, numbers, and underscores. They are case-sensitive, so "Anna" and "anna" are different identifiers. Quoted strings can contain any text and are used for values that need spaces or special characters.
-
-Comments are supported using double slashes. Everything after // until the end of line is ignored by the parser. This allows authors to annotate their constraints with explanations or notes.
+1. **Auto-generated**: CNL is produced by the Visual Story Composer, not written manually
+2. **Natural Syntax**: `subject verb object` pattern mirrors natural language
+3. **Quoted Identifiers**: Multi-word names use quotes: `"The Dark Forest"`
+4. **Proper Nouns**: Capitalized per Indo-European convention: `Anna`, `Marcus`
+5. **Recursive Groups**: Hierarchical structure through named groups
+6. **Reference System**: Cross-references using `@name` notation
+7. **Pattern Variables**: Templates with `$variable` placeholders
 
 
-## 3. Translation from Natural Language
+## 2. Lexical Rules
 
-Most authors will not write CNL directly. Instead, they express constraints in natural language, and the system translates these to CNL. This translation uses a combination of rule-based pattern matching and language model assistance, with post-translation validation to catch errors.
+### 2.1 Identifiers
 
-The translation pipeline has three stages. First, natural language input is segmented into individual constraint statements using sentence boundary detection. Second, each statement is analyzed using pattern matching for common formulations and LLM-based translation for complex or ambiguous cases. Third, the generated CNL is validated against the grammar, and any errors trigger a clarification loop asking the author to rephrase.
+**Simple Identifiers:**
+- Start with uppercase letter (proper nouns/entities) or lowercase (keywords/types)
+- Contain letters, digits, underscores
+- Examples: `Anna`, `Village`, `Chapter1`, `protagonist`, `courage`
 
-The following table shows examples of natural language to CNL translation.
+**Quoted Identifiers:**
+- Enclosed in double quotes
+- Can contain any characters except unescaped quotes
+- Behave as a single identifier token
+- Examples: `"The Dark Forest"`, `"inner strength"`, `"Hero's Journey"`
 
-| Natural Language | Generated CNL | Translation Rule |
-|------------------|---------------|------------------|
-| "Anna must be courageous" | CHARACTER(Anna). TRAIT(Anna, courageous). | Pattern: "{Name} must be {Trait}" |
-| "The story should have a hopeful ending" | TONE(Story, hopeful). | Pattern: "story should be/have {Tone}" |
-| "A storm must appear in scene 3" | RULE(Scene_3, must_include, "storm"). | Pattern: "{Element} must appear in {Scope}" |
-| "Anna wants to protect her brother" | GOAL(Anna, protect, "brother"). | Pattern: "{Name} wants to {Action} {Target}" |
-| "No magic or supernatural elements" | FORBID(magic). FORBID(supernatural_elements). | Pattern: "No {Element}" |
-| "The setting is a small coastal village in modern times" | SETTING(Story, "small coastal village", "modern"). | Pattern: "setting is {Location} in {Time}" |
+```
+// Simple identifiers
+Anna is protagonist
+Village is location
 
-Rule-based translation handles common patterns with high accuracy and speed. The system includes over 50 patterns covering typical constraint formulations. When no pattern matches, the system falls back to LLM translation, which is more flexible but may require validation.
+// Quoted identifiers for multi-word names
+"The Dark Forest" is location
+Anna has trait "inner strength"
+"Chapter One" group begin
+```
 
-Translation confidence is reported to the author. High-confidence translations (pattern match or high LLM confidence) are shown without warning. Medium-confidence translations include a note suggesting the author verify the interpretation. Low-confidence translations trigger a clarification dialog where the author can rephrase or manually edit the CNL.
+### 2.2 Naming Conventions
+
+| Type | Convention | Examples |
+|------|------------|----------|
+| Characters | Capitalized | `Anna`, `Marcus`, `"The Stranger"` |
+| Locations | Capitalized | `Village`, `Forest`, `"The Dark Tower"` |
+| Groups | Capitalized | `Chapter1`, `Scene2`, `"Act One"` |
+| Types | Lowercase | `protagonist`, `location`, `mood` |
+| Traits | Lowercase or quoted | `courage`, `"inner strength"` |
+| Keywords | Lowercase | `is`, `has`, `group`, `begin` |
+
+### 2.3 Reserved Keywords
+
+**Verbs:** `is`, `has`, `relates`, `requires`, `forbids`, `includes`, `references`, `describes`, `targets`, `discovers`, `enters`, `meets`, `travels`, `decides`, `faces`, `threatens`, `arrives`, `confronts`, `reveals`, `transforms`
+
+**Structure:** `group`, `begin`, `end`
+
+**Modifiers:** `as`, `to`, `at`, `from`, `with`, `about`, `during`, `because`
+
+### 2.4 Comments
+
+```
+// Single line comment
+
+/* Multi-line
+   comment */
+```
 
 
-## 4. Validation and Error Handling
+## 3. Statement Syntax
 
-Generated CNL must be validated before use. Validation checks both syntactic correctness (does the text follow the grammar?) and semantic consistency (do the constraints make sense together?).
+### 3.1 Basic Statement Format
 
-Syntactic validation uses a parser generated from the formal grammar defined in src/cnl/grammar.ebnf. The parser produces structured output containing the list of successfully parsed statements and any syntax errors with line numbers and descriptions. A statement like "CHARACTER Anna." (missing parentheses) would produce a syntax error indicating the expected format.
+```
+Subject Verb Object
+Subject Verb Object Modifier ModifierValue
+Subject Verb "quoted value"
+```
 
-Semantic validation checks for logical consistency between statements. For example, if two TRAIT statements assign contradictory traits to the same character, this is flagged as a potential conflict. If a GOAL references a character not declared with CHARACTER, this is flagged as an undefined reference. If a RULE references a scope that does not exist in the narrative structure, this is flagged as an invalid scope.
+### 3.2 Statement Types
 
-The following table describes the validation checks and their severity levels.
+| Pattern | Meaning | Example |
+|---------|---------|---------|
+| `X is Y` | Type declaration | `Anna is protagonist` |
+| `X has Y Z` | Property assignment | `Anna has trait courage` |
+| `X has Y "Z"` | Property with quoted value | `Anna has trait "inner strength"` |
+| `X relates to Y as Z` | Relationship | `Anna relates to Marcus as sibling` |
+| `X requires Y` | Constraint (must have) | `Story requires "happy ending"` |
+| `X forbids Y` | Constraint (must not have) | `Story forbids "explicit violence"` |
+| `X includes Y` | Inclusion | `Scene1 includes character Anna` |
+| `X includes Y Z` | Typed inclusion | `Scene1 includes location Village` |
+| `X references @Y` | Cross-reference | `Chapter2 references @Chapter1` |
+| `X describes "text"` | Description | `Anna describes "brave young woman"` |
+| `X has mood Y` | Mood assignment | `Scene1 has mood Mysterious` |
 
-| Check | Severity | Description | Example |
-|-------|----------|-------------|---------|
-| Syntax error | Error | Statement does not follow grammar | "TRAIT Anna courageous" (missing punctuation) |
-| Undefined character | Error | Reference to undeclared character | GOAL(Bob, escape, "prison"). without CHARACTER(Bob). |
-| Invalid scope | Warning | Scope does not exist in plan | RULE(Scene_20, ...) when plan has only 10 scenes |
-| Contradictory traits | Warning | Same character has conflicting traits | TRAIT(Anna, cowardly). after TRAIT(Anna, courageous). |
-| Redundant statement | Info | Statement is already implied by another | Duplicate THEME statements |
-| Unbound variable | Error | Predicate argument is empty or malformed | TRAIT(, courageous). |
 
-Error severity determines system behavior. Errors prevent further processing until corrected. Warnings allow processing but are reported to the author for review. Info messages are logged but do not require action.
+## 4. Group Syntax (Recursive Structure)
 
-Error messages are designed to be actionable. Instead of just reporting "syntax error at line 5," the system provides specific guidance: "Line 5: Expected closing parenthesis after trait name. Did you mean: TRAIT(Anna, courageous).?" This approach significantly reduces author frustration and improves adoption.
+### 4.1 Basic Group
+
+```
+GroupName group begin
+  ... statements ...
+  ... nested groups ...
+GroupName group end
+```
+
+### 4.2 Group with Quoted Name
+
+```
+"Chapter One" group begin
+  "Chapter One" has title "The Beginning"
+  ...
+"Chapter One" group end
+```
+
+### 4.3 Nested Groups
+
+```
+Book group begin
+  Story has title "The Storm Within"
+  
+  Chapter1 group begin
+    Chapter1 has title "The Beginning"
+    
+    Scene1 group begin
+      Scene1 has type introduction
+      Anna discovers artifact
+    Scene1 group end
+  Chapter1 group end
+Book group end
+```
+
+### 4.4 Group Types
+
+| Type | Typical Use | Contains |
+|------|-------------|----------|
+| `book` | Top-level | Parts, Chapters |
+| `part` | Major division | Chapters |
+| `chapter` | Standard unit | Scenes |
+| `scene` | Action unit | Beats, Events |
+| `beat` | Micro-unit | Events |
 
 
-## 5. Integration with Verification and Evaluation
+## 5. Entity Types
 
-Once validated, CNL constraints are stored in the constraint store associated with the narrative specification. Verification agents query this store to check generated content against the defined constraints.
+### 5.1 Characters
 
-For each constraint type, there is a corresponding verification procedure. TRAIT constraints are verified by extracting character mentions from generated text, computing trait embeddings for each mention, and measuring semantic similarity to the specified trait. If similarity falls below a threshold, a trait drift violation is flagged. RULE constraints with "must_include" are verified by checking whether the specified element appears in the target scope. FORBID constraints are verified by checking that the forbidden element does not appear anywhere in the narrative.
+```
+Anna is protagonist
+Anna has trait courage
+Anna has trait "inner strength"
+Anna has archetype Hero
+Anna describes "A young woman from the coast"
+Anna relates to Marcus as sibling
+Anna wants "save her brother"
+Anna fears "losing family"
+```
 
-Verification produces a structured report linking each constraint to its verification result. The report includes the constraint CNL, whether it passed or failed, the evidence (specific text passages that support the conclusion), and confidence level. This report feeds into the compliance report and is stored in the audit log for traceability.
+**Character Types:** `protagonist`, `antagonist`, `character`, `mentor`, `ally`, `enemy`
 
-The system tracks two key metrics for CNL effectiveness. CNL Parse Success Rate (CPSR) measures what percentage of natural language inputs are successfully converted to valid CNL. The target is 95% or higher. Constraint Satisfaction Accuracy (CSA) measures what percentage of generated outputs satisfy the CNL constraints. The target is 98% or higher. These metrics are computed on the evaluation corpus stored in docs/evals/scripta_nl_cnl.jsonl, which contains over 100 paired examples of natural language inputs and their expected CNL outputs.
+### 5.2 Locations
 
-Future development will expand the CNL grammar to support more complex constraints, including temporal relationships (X must happen before Y), quantified constraints (at least 3 scenes must include conflict), and conditional constraints (if X happens, then Y must follow). Each expansion will be carefully validated to ensure it does not compromise the simplicity and learnability that are essential to adoption.
+```
+Village is location
+Village has atmosphere peaceful
+Village describes "Small fishing village on rocky coast"
+Village connects to Forest
+```
+
+### 5.3 Moods (Affective Registers)
+
+In literary theory, **mood** (or atmosphere) is the emotional quality evoked in the reader.
+
+```
+Mysterious is mood
+Mysterious has emotion curiosity
+Mysterious has emotion unease
+Mysterious has intensity medium
+```
+
+**Applying moods:**
+```
+Scene1 has mood Mysterious
+Chapter2 has mood Dread
+```
+
+### 5.4 Props (Significant Objects)
+
+```
+Amulet is prop
+Amulet has type artifact
+Amulet has significance "key to the mystery"
+Amulet belongs to Anna
+```
+
+### 5.5 Themes
+
+```
+Redemption is theme
+Redemption describes "The journey from guilt to forgiveness"
+Story has theme Redemption
+```
+
+
+## 6. Pattern System
+
+### 6.1 Pattern Definition
+
+Patterns are reusable story structures with **free variables** (placeholders):
+
+```
+"Hero's Call" is pattern
+"Hero's Call" has variable $hero as character
+"Hero's Call" has variable $catalyst as event
+"Hero's Call" has variable $location as location
+"Hero's Call" has variable $mood as mood
+
+"Hero's Call" has template begin
+  $hero is at $location
+  $catalyst arrives at $location
+  $hero discovers "call to adventure"
+  $hero has mood $mood
+  $hero decides "answer the call"
+"Hero's Call" has template end
+```
+
+### 6.2 Pattern Instantiation
+
+```
+Scene1 uses pattern "Hero's Call"
+  $hero binds to Anna
+  $catalyst binds to Storm
+  $location binds to Village
+  $mood binds to Mysterious
+Scene1 pattern end
+```
+
+**Generated CNL:**
+```
+Anna is at Village
+Storm arrives at Village
+Anna discovers "call to adventure"
+Anna has mood Mysterious
+Anna decides "answer the call"
+```
+
+### 6.3 Variable Types
+
+| Type | Binds To |
+|------|----------|
+| `character` | Character entities |
+| `location` | Location entities |
+| `mood` | Mood entities |
+| `prop` | Prop entities |
+| `event` | Event descriptions (quoted) |
+| `trait` | Trait values |
+
+
+## 7. Constraint System
+
+### 7.1 Requirements
+
+```
+Story requires character Anna
+Story requires theme Redemption
+Story requires "happy ending"
+Chapter1 requires location Village
+```
+
+### 7.2 Prohibitions
+
+```
+Story forbids "explicit violence"
+Story forbids "modern technology"
+Scene2 forbids character Marcus
+```
+
+### 7.3 Constraint Evaluation
+
+Constraints are evaluated during **interpretation** (metrics calculation):
+- **Satisfied**: All requirements met, no forbids violated
+- **Violated**: Requirements missing or forbids present in output
+- **CSA Metric**: Constraint Satisfaction Accuracy = satisfied / total
+
+
+## 8. Reference System
+
+### 8.1 Reference Syntax
+
+```
+@EntityName           // Reference to entity
+@GroupName            // Reference to group
+@Group.SubGroup       // Nested reference
+@Group.property       // Reference to property
+```
+
+### 8.2 Reference Usage
+
+```
+Chapter2 references @Chapter1
+Scene3 resolves @Chapter1.conflict
+Anna remembers @Prologue.promise
+Chapter3 continues from @Chapter2
+```
+
+### 8.3 Reference Resolution
+
+1. Check current group scope
+2. Check parent group scopes (ascending)
+3. Check global scope
+4. Error if not found
+
+
+## 9. CNL Generation from Visual Editor
+
+### 9.1 Structure Tree → CNL
+
+The Visual Story Composer generates CNL from tree nodes:
+
+**Tree Node:**
+```
+📑 Chapter1 "The Beginning"
+  ├── → Anna [character]
+  ├── → Village [location]
+  ├── ♪ Mysterious [mood]
+  └── ⚡ "Hero's Call" [pattern: $hero=Anna, ...]
+```
+
+**Generated CNL:**
+```
+Chapter1 group begin
+  Chapter1 has title "The Beginning"
+  Chapter1 includes character Anna
+  Chapter1 includes location Village
+  Chapter1 has mood Mysterious
+  // Pattern expansion
+  Anna is at Village
+  ...
+Chapter1 group end
+```
+
+### 9.2 Entity Editors → CNL
+
+**Character Editor → CNL:**
+```
+Anna is protagonist
+Anna has archetype Hero
+Anna has trait courage
+Anna has trait determination
+Anna describes "A young woman from the coast"
+Anna relates to Marcus as sibling
+```
+
+**Location Editor → CNL:**
+```
+Village is location
+Village has atmosphere peaceful
+Village describes "Small fishing village"
+```
+
+### 9.3 Generation Order
+
+1. Project metadata
+2. Entity declarations (characters, locations, moods, props, themes)
+3. Structure (groups with nested content)
+4. Constraints (requires, forbids)
+
+
+## 10. Interpretation and Metrics
+
+### 10.1 Parsing (Syntax Check)
+
+- Tokenization
+- Statement parsing
+- Group matching
+- Reference extraction
+- **Output**: AST or syntax errors
+
+### 10.2 Semantic Analysis
+
+- Entity resolution
+- Reference validation
+- Type checking
+- **Output**: Validated AST or semantic errors
+
+### 10.3 Constraint Evaluation
+
+- Check all `requires` statements
+- Check all `forbids` statements
+- **Output**: Constraint satisfaction report
+
+### 10.4 Metric Calculation
+
+| Metric | Formula |
+|--------|---------|
+| **CPSR** | Parse Success Rate = valid_lines / total_lines |
+| **CSA** | Constraint Satisfaction = satisfied / total_constraints |
+| **Coherence** | Entity consistency = mentioned / declared |
+| **CAD** | Character Attribute Drift = trait_violations / total_traits |
+| **CAR** | Compliance Adherence Rate = 1 - forbid_violations |
+| **NQS** | Narrative Quality Score = weighted(CSA, Coherence, Structure) |
+
+
+## 11. Example Complete CNL
+
+```
+// Project metadata
+Project has title "The Storm Within"
+Project has genre fantasy
+Project has author "Jane Doe"
+
+// Characters
+Anna is protagonist
+Anna has archetype Hero
+Anna has trait courage
+Anna has trait "inner strength"
+Anna describes "A young woman from the coastal village"
+Anna relates to Marcus as sibling
+Anna wants "save her brother"
+
+Marcus is character
+Marcus has role brother
+Marcus has trait vulnerability
+Marcus describes "Anna's younger brother"
+
+// Locations
+Village is location
+Village has atmosphere peaceful
+Village describes "Small fishing village on rocky coast"
+
+"The Dark Forest" is location
+"The Dark Forest" has atmosphere menacing
+"The Dark Forest" describes "Ancient woodland, dark and mysterious"
+
+// Moods
+Mysterious is mood
+Mysterious has emotion curiosity
+Mysterious has emotion unease
+Mysterious has intensity medium
+
+Hopeful is mood
+Hopeful has emotion hope
+Hopeful has emotion determination
+Hopeful has intensity high
+
+// Themes
+Story has theme courage
+Story has theme family
+
+// Constraints
+Story requires "happy ending"
+Story forbids "explicit violence"
+
+// Structure
+Book group begin
+  
+  Chapter1 group begin
+    Chapter1 has title "The Beginning"
+    Chapter1 includes character Anna
+    Chapter1 includes character Marcus
+    Chapter1 includes location Village
+    Chapter1 has mood Mysterious
+    
+    Anna is at Village
+    Anna interacts with Marcus
+    Storm arrives at Village
+    Marcus disappears during storm
+    Anna decides "find Marcus"
+  Chapter1 group end
+  
+  Chapter2 group begin
+    Chapter2 has title "Into the Unknown"
+    Chapter2 includes location "The Dark Forest"
+    Chapter2 references @Chapter1
+    
+    Anna enters "The Dark Forest"
+    Anna faces fear
+    Anna discovers clue
+    Anna has mood Hopeful
+  Chapter2 group end
+  
+Book group end
+```
+
+
+## 12. Error Types
+
+| Type | Severity | Example |
+|------|----------|---------|
+| `syntax_error` | Error | Missing `group end` |
+| `undefined_reference` | Error | `@Unknown` entity |
+| `type_mismatch` | Warning | Character used as location |
+| `unbound_variable` | Error | Pattern variable not bound |
+| `constraint_violation` | Warning | Forbids violated |
+| `unused_entity` | Info | Declared but never used |
+| `duplicate_declaration` | Warning | Same entity declared twice |

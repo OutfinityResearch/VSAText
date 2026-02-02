@@ -1,86 +1,420 @@
 # DS02 — System Architecture and API Specification
 
-## 1. Architectural Overview
+## 1. Architectural Philosophy
 
-SCRIPTA is designed as a modular multi-agent system operating within the ACHILLES IDE environment. The architecture follows a pipeline flow where data passes through successive processing stages, each stage managed by a specialized agent or service.
+SCRIPTA follows a **browser-first architecture** where:
 
-The main system flow begins with the author defining a narrative specification. This specification contains characters, world rules, tone constraints, and desired narrative structure. The specification is then processed by a planning agent that generates a structured narrative plan, including the plot graph and scene list. Based on this plan, generation agents produce the actual text, scene by scene. The generated text passes through verification agents that compare it against the original specification, detecting any inconsistencies or constraint violations. Guardrail agents analyze the text for bias issues, originality, and potential plagiarism. Finally, the system produces compliance reports and records all operations in an immutable audit log.
+- **All processing happens in the browser** (CNL parsing, validation, metrics calculation)
+- **Server is minimal** - only provides persistence (save/load projects)
+- **API is high-level** - focused on projects and quality metrics, not implementation details
 
-This separation of responsibilities offers several advantages. Each agent can be developed, tested, and optimized independently. A verification agent can use deterministic rules, while a generation agent can use probabilistic models. Replacing an agent with an improved version does not affect the rest of the system as long as interfaces remain stable.
-
-The main system components are the Spec Manager for CRUD operations on specifications and SOPs, the Planning Agent for converting creative intent into plot graphs, Generation Agents for producing text scene by scene, Verification Agents for validating coherence and consistency, Guardrail Agents for bias, originality and copyright checks, the Evaluation Engine for metrics computation and dashboards, the Audit Logger for immutable storage of events and provenance, the CNL Translator for converting natural language constraints to controlled format, and the VSA/HDC Module for hyperdimensional representations and semantic search.
-
-
-## 2. Data Model and Core Entities
-
-The system operates with a set of interconnected data entities representing the various artifacts of the creative process. Understanding these entities is essential for API usage.
-
-The following table presents the main entities, their role in the system, and their relationships.
-
-| Entity | Description | Relationships |
-|--------|-------------|---------------|
-| NarrativeSpec | The narrative specification containing title, synopsis, themes, characters, world rules, and CNL constraints | Referenced by Plan and verification reports |
-| SOP | Standard Operating Procedure defining workflow steps, inputs, outputs, and guardrail policies | Orchestrates pipeline execution |
-| Plan | The narrative plan generated from specification, containing plot graph, scene list, objectives, and narrative arcs | References a NarrativeSpec; used by GenerationJob |
-| GenerationJob | The generation task with status (queued, running, completed, failed) and references to results | References a Plan; produces Draft artifacts |
-| VerificationReport | The verification report containing list of checks performed and violations detected | References a NarrativeSpec and an artifact |
-| AuditLogEntry | Audit log entry with event type, actor, timestamp, and payload hash | Records all system operations |
-| ImplementationProfile | The implementation profile specifying algorithmic mode (basic or vsa) and parameters | Attached to requests for reproducibility |
-
-The term "CRUD" is an acronym for Create, Read, Update, Delete, representing the four fundamental data manipulation operations. "SOP" (Standard Operating Procedure) means a standardized procedure defining the exact steps to follow to accomplish a task. In SCRIPTA's context, SOPs are written in SOP Lang, a declarative language specific to ACHILLES, and define how agents collaborate to produce a result.
+This design enables offline-capable editing, reduces server complexity, and keeps the author's creative data local.
 
 
-## 3. REST API Specification
+## 2. System Architecture
 
-The SCRIPTA API follows REST principles and is organized by services corresponding to the main system functionalities. All endpoints use the version prefix /v1/ to allow API evolution without affecting existing clients.
-
-The following table presents the main endpoints grouped by service, with accepted HTTP methods and functionality description.
-
-| Service | Endpoint | Method | Functionality |
-|---------|----------|--------|---------------|
-| Specs | /v1/specs | POST | Creates a new narrative specification |
-| Specs | /v1/specs/{id} | GET, PUT | Reads or updates an existing specification |
-| Planning | /v1/plans | POST | Generates a narrative plan from a specification |
-| Planning | /v1/plans/{id} | GET | Reads an existing plan |
-| Generation | /v1/generate | POST | Starts a text generation task |
-| Generation | /v1/generate/{job_id} | GET | Checks status of a generation task |
-| Verification | /v1/verify | POST | Verifies an artifact against specification |
-| Guardrail | /v1/guardrail/check | POST | Runs compliance checks |
-| Evaluation | /v1/evaluate | POST | Computes quality metrics |
-| Review | /v1/review | POST | Gets automated editorial feedback |
-| Research | /v1/research/query | POST | Queries the knowledge base |
-| Explainability | /v1/explain | POST | Generates explanations for decisions |
-| Compliance | /v1/reports/compliance | POST | Generates compliance report |
-| Audit | /v1/audit/logs | GET | Lists audit log entries |
-| CNL | /v1/cnl/translate | POST | Translates natural language to CNL |
-| CNL | /v1/cnl/validate | POST | Validates CNL text |
-| VSA | /v1/vsa/encode | POST | Encodes text into hypervector |
-| VSA | /v1/vsa/search | POST | Searches the hyperdimensional index |
-
-Long-running operations (generation, evaluation, pipelines) return a job identifier with status that can be periodically queried. Clients can use polling or subscribe to events through Server-Sent Events (SSE) for real-time notifications.
-
-The error format is standardized across all endpoints and includes an error code, descriptive message, additional details, and a correlation identifier for debugging. HTTP codes used are 200 for success, 201 for successful creation, 400 for invalid request, 401 for missing authentication, 403 for insufficient authorization, 404 for nonexistent resource, and 422 for semantically invalid data.
-
-
-## 4. Authentication, Implementation Profiles, and Auditability
-
-API security relies on authentication through API keys transmitted in the x-api-key header. The system supports four roles with different permissions: Author for creation and generation operations, Workflow Developer for defining and modifying SOPs, Compliance Reviewer for access to reports and audit logs, and Admin for system administration and API key management.
-
-All algorithmic requests accept an optional implementation_profile parameter specifying the desired implementation variant. The value "basic" selects conventional implementations based on embeddings and rules, while "vsa" selects implementations based on hyperdimensional computing. If the parameter is missing, the system uses the basic variant. The selected profile is recorded in the audit log for reproducibility.
-
-The audit log captures all significant system operations. Each entry contains the event type, actor identity (user or agent), precise timestamp, cryptographic hash of input and output data, and references to involved artifacts. The log is designed to be immutable, meaning entries once written cannot be modified or deleted. This immutability is essential for legal compliance, providing incontestable evidence of the creative process.
-
-System observability includes distributed tracing for each pipeline execution, latency and error metrics per agent, token consumption and cost tracking, and performance comparison between basic and VSA variants. This data enables identifying performance bottlenecks, optimizing resource allocation, and empirically validating different algorithmic approaches.
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         BROWSER                                      │
+│  ┌─────────────────────────────────────────────────────────────────┐│
+│  │                    Story Forge UI                                ││
+│  │  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐       ││
+│  │  │   CNL     │ │  Metrics  │ │ Validator │ │  Editor   │       ││
+│  │  │  Parser   │ │  Engine   │ │           │ │           │       ││
+│  │  └───────────┘ └───────────┘ └───────────┘ └───────────┘       ││
+│  │                         │                                        ││
+│  │  ┌─────────────────────────────────────────────────────────────┐││
+│  │  │              Project State (JSON)                           │││
+│  │  │  { cnl_text, ast, entities, groups, metrics, generated }    │││
+│  │  └─────────────────────────────────────────────────────────────┘││
+│  └─────────────────────────────────────────────────────────────────┘│
+└────────────────────────────────────┬────────────────────────────────┘
+                                     │ Save/Load only
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                         SERVER                                       │
+│  ┌─────────────────────────────────────────────────────────────────┐│
+│  │                 Persistence Layer                                ││
+│  │  POST /v1/projects      - Save project                          ││
+│  │  GET  /v1/projects      - List projects                         ││
+│  │  GET  /v1/projects/:id  - Load project                          ││
+│  │  DELETE /v1/projects/:id - Delete project                       ││
+│  └─────────────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────────────────────────────┐│
+│  │              JSON File Storage (/data)                          ││
+│  └─────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────┘
+```
 
 
-## 5. Repository Structure and Code Organization
+## 3. Project Data Model
 
-The SCRIPTA source code is organized to reflect the modular system architecture. The docs/specs/ directory contains design specifications (DS documents). The docs/schemas/api/ directory contains JSON schemas for validating API requests and responses. The docs/examples/api/ directory contains concrete examples of requests and responses for each endpoint.
+A project is a single JSON document containing everything:
 
-The src/ directory contains the actual implementations. The src/services/ subdirectory includes API services for specifications, plans, verification, guardrails, and audit. The src/cnl/ subdirectory contains the CNL grammar, parser, and validator. The src/vsa/ subdirectory contains the implementation of hyperdimensional encoding and search. The src/server.mjs file is the HTTP server with no external dependencies, used for tests and demonstrations.
+```json
+{
+  "id": "proj_abc123",
+  "name": "The Storm Within",
+  "created_at": "2024-01-15T10:00:00Z",
+  "modified_at": "2024-01-15T12:00:00Z",
+  
+  "metadata": {
+    "author": "Jane Doe",
+    "genre": "Fantasy",
+    "target_words": 80000,
+    "themes": ["courage", "family", "redemption"],
+    "tone": "hopeful"
+  },
+  
+  "cnl": {
+    "version": "1.0",
+    "text": "... raw CNL text ...",
+    "ast": { ... parsed AST ... }
+  },
+  
+  "entities": {
+    "characters": [...],
+    "locations": [...],
+    "objects": [...],
+    "themes": [...]
+  },
+  
+  "structure": {
+    "groups": [...],
+    "references": [...]
+  },
+  
+  "generated": {
+    "content": { ... generated text by group ... },
+    "last_generated": "2024-01-15T11:00:00Z"
+  },
+  
+  "metrics": {
+    "last_evaluated": "2024-01-15T11:30:00Z",
+    "scores": {
+      "nqs": 0.78,
+      "coherence": 0.85,
+      "cad": 0.12,
+      "car": 0.99,
+      "originality": 0.82,
+      "cpsr": 0.96,
+      "csa": 0.98
+    },
+    "details": { ... }
+  }
+}
+```
 
-The tests/ directory contains unit tests for each service, integration tests for complete pipelines, and regression tests for metrics and guardrails. The docs/evals/ directory contains evaluation datasets, including natural language and CNL pairs for testing translation.
 
-The testing strategy includes unit tests for each agent in isolation, integration tests for complete flows from specification to generated text, regression tests to ensure modifications do not degrade metrics, and A/B tests for comparing basic and VSA variants. All tests are automated and run on every code change to detect problems as early as possible.
+## 4. Quality Metrics
 
-This organization allows teams to work independently on different components, facilitates onboarding of new developers who can quickly understand the system structure, and supports gradual evolution of each module without destabilizing the entire system.
+### 4.1 Core Metrics
+
+| Metric | Code | Range | Target | Description |
+|--------|------|-------|--------|-------------|
+| **Narrative Quality Score** | NQS | 0-1 | >0.75 | Composite quality score combining coherence, constraints, and structure |
+| **Coherence Score** | CS | 0-1 | >0.75 | Entity-based coherence + causal chain verification |
+| **Character Attribute Drift** | CAD | 0-1 | <0.15 | Cosine distance between defined and inferred traits |
+| **Compliance Adherence Rate** | CAR | 0-1 | >0.99 | Percentage passing ethical/legal guardrails |
+| **Originality Index** | OI | 0-1 | >0.80 | Semantic distance from known tropes |
+| **Emotional Arc Profile** | EAP | 0-1 | >0.70 | Correlation with target emotional trajectory |
+| **Retrieval Quality** | RQ | 0-1 | >0.60 | Mean reciprocal rank for semantic search |
+| **CNL Parse Success Rate** | CPSR | 0-1 | >0.95 | Parser success rate on input |
+| **Constraint Satisfaction Accuracy** | CSA | 0-1 | >0.98 | Percentage of CNL constraints satisfied |
+
+### 4.2 Metric Calculation (Browser-side)
+
+All metrics are calculated in the browser using the project's CNL AST and generated content:
+
+```javascript
+// Example: Calculate CAD
+function calculateCAD(entities, generatedContent) {
+  let totalDrift = 0;
+  let count = 0;
+  
+  for (const char of entities.characters) {
+    const definedTraits = char.traits;
+    const inferredTraits = extractTraitsFromText(generatedContent, char.name);
+    const drift = cosineDrift(definedTraits, inferredTraits);
+    totalDrift += drift;
+    count++;
+  }
+  
+  return count > 0 ? totalDrift / count : 0;
+}
+```
+
+
+## 5. REST API Specification
+
+### 5.1 Design Principles
+
+- **Minimal endpoints** - only what server must do (persistence)
+- **Project-centric** - projects are atomic units, no sub-resource endpoints
+- **No authentication** - handled at infrastructure layer
+- **Stateless** - no sessions
+
+### 5.2 Endpoints
+
+#### Projects (Persistence)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/v1/projects` | List all projects (metadata only) |
+| `POST` | `/v1/projects` | Create/save project |
+| `GET` | `/v1/projects/:id` | Load full project |
+| `PUT` | `/v1/projects/:id` | Update project |
+| `DELETE` | `/v1/projects/:id` | Delete project |
+
+#### Health
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Server health check |
+
+
+### 5.3 Request/Response Examples
+
+#### List Projects
+
+```http
+GET /v1/projects
+```
+
+```json
+{
+  "projects": [
+    {
+      "id": "proj_abc123",
+      "name": "The Storm Within",
+      "genre": "Fantasy",
+      "modified_at": "2024-01-15T12:00:00Z",
+      "metrics_summary": { "nqs": 0.78 }
+    },
+    {
+      "id": "proj_def456",
+      "name": "Murder at Midnight",
+      "genre": "Mystery",
+      "modified_at": "2024-01-14T09:00:00Z",
+      "metrics_summary": { "nqs": 0.82 }
+    }
+  ]
+}
+```
+
+#### Save Project
+
+```http
+POST /v1/projects
+Content-Type: application/json
+
+{
+  "name": "The Storm Within",
+  "metadata": { ... },
+  "cnl": { "text": "...", "ast": {...} },
+  "entities": { ... },
+  "structure": { ... },
+  "generated": { ... },
+  "metrics": { ... }
+}
+```
+
+```json
+{
+  "id": "proj_abc123",
+  "saved_at": "2024-01-15T12:00:00Z"
+}
+```
+
+#### Load Project
+
+```http
+GET /v1/projects/proj_abc123
+```
+
+```json
+{
+  "project": {
+    "id": "proj_abc123",
+    "name": "The Storm Within",
+    ... full project data ...
+  }
+}
+```
+
+
+## 6. Browser-Side Components
+
+### 6.1 CNL Parser
+
+Parses CNL text into AST:
+
+```javascript
+class CNLParser {
+  parse(text) → { entities, groups, statements, errors }
+  validate(ast) → { valid, errors, warnings }
+  serialize(ast) → string
+}
+```
+
+### 6.2 Metrics Engine
+
+Calculates all quality metrics:
+
+```javascript
+class MetricsEngine {
+  calculateAll(project) → MetricsReport
+  calculateNQS(project) → number
+  calculateCoherence(project) → number
+  calculateCAD(project) → number
+  calculateCAR(project) → number
+  calculateOriginality(project) → number
+  calculateEAP(project) → number
+  calculateCSPR(project) → number
+  calculateCSA(project) → number
+}
+```
+
+### 6.3 Content Generator
+
+Generates narrative content from CNL spec:
+
+```javascript
+class ContentGenerator {
+  generateGroup(group, context) → string
+  generateAll(project) → { [groupId]: string }
+}
+```
+
+### 6.4 Reference Resolver
+
+Resolves cross-references in CNL:
+
+```javascript
+class ReferenceResolver {
+  resolve(reference, scope, project) → Entity | Group | null
+  validateReferences(project) → { valid, unresolved }
+}
+```
+
+
+## 7. Data Flow
+
+### 7.1 Editing Flow
+
+```
+User edits CNL text
+       ↓
+CNL Parser validates & builds AST
+       ↓
+Reference Resolver checks @references
+       ↓
+UI updates entity/group views
+       ↓
+Auto-save to local storage (optional)
+```
+
+### 7.2 Generation Flow
+
+```
+User clicks "Generate"
+       ↓
+Content Generator processes groups
+       ↓
+Generated content stored in project.generated
+       ↓
+Metrics Engine calculates scores
+       ↓
+UI displays content + metrics
+```
+
+### 7.3 Save/Load Flow
+
+```
+User clicks "Save"
+       ↓
+Browser serializes full project JSON
+       ↓
+POST /v1/projects → Server
+       ↓
+Server stores in /data/projects.json
+       ↓
+Response with project ID
+```
+
+
+## 8. Error Handling
+
+### 8.1 API Errors
+
+```json
+{
+  "error": {
+    "code": "not_found",
+    "message": "Project not found",
+    "details": { "id": "proj_invalid" }
+  }
+}
+```
+
+| Code | HTTP | Description |
+|------|------|-------------|
+| `not_found` | 404 | Resource doesn't exist |
+| `invalid_data` | 422 | Malformed project data |
+| `storage_error` | 500 | Failed to persist |
+
+### 8.2 CNL Parsing Errors
+
+Returned in AST, not via API:
+
+```json
+{
+  "ast": null,
+  "errors": [
+    { "line": 5, "message": "Unclosed group: Chapter1", "severity": "error" },
+    { "line": 12, "message": "Unknown reference: @Chapter3", "severity": "warning" }
+  ]
+}
+```
+
+
+## 9. Storage Format
+
+### 9.1 Server Storage
+
+Single JSON file per project in `/data/`:
+
+```
+/data/
+  projects/
+    proj_abc123.json
+    proj_def456.json
+  index.json  (project list with metadata only)
+```
+
+### 9.2 Browser Storage
+
+Projects can be cached in localStorage for offline work:
+
+```javascript
+localStorage.setItem('scripta_project_abc123', JSON.stringify(project));
+localStorage.setItem('scripta_current', 'proj_abc123');
+```
+
+
+## 10. Future Considerations
+
+### 10.1 Potential Additions
+
+- WebSocket for real-time collaboration
+- Export to various formats (Markdown, DOCX, Fountain)
+- Import from existing manuscripts
+- Version history / undo stack
+- Project templates
+
+### 10.2 Scaling Path
+
+For larger deployments:
+- Replace file storage with database
+- Add CDN for static assets
+- Implement proper backup/restore

@@ -107,21 +107,33 @@ class JsonStore {
 
 // Singleton stores for each entity type
 const stores = {
+  // Core project entities
+  projects: new JsonStore('projects'),
+  characters: new JsonStore('characters'),
+  locations: new JsonStore('locations'),
+  patterns: new JsonStore('patterns'),
+  
+  // Legacy spec support (for backward compatibility)
   specs: new JsonStore('specs'),
-  sops: new JsonStore('sops'),
   plans: new JsonStore('plans'),
+  drafts: new JsonStore('drafts'),
+  
+  // Evaluation and reports
   generateJobs: new JsonStore('generate_jobs'),
   verifyReports: new JsonStore('verify_reports'),
   guardrailReports: new JsonStore('guardrail_reports'),
   evaluationReports: new JsonStore('evaluation_reports'),
-  pipelineRuns: new JsonStore('pipeline_runs'),
-  audit: new JsonStore('audit'),
-  vsaIndex: new JsonStore('vsa_index'),
-  apiKeys: new JsonStore('api_keys'),
-  drafts: new JsonStore('drafts'),
   reviews: new JsonStore('reviews'),
+  compliance: new JsonStore('compliance'),
+  
+  // VSA index
+  vsaIndex: new JsonStore('vsa_index'),
+  
+  // Research
   research: new JsonStore('research'),
-  compliance: new JsonStore('compliance')
+  
+  // Audit log
+  audit: new JsonStore('audit')
 };
 
 export { JsonStore, stores, DATA_DIR };

@@ -2,92 +2,287 @@
 
 ## 1. Problem Statement and Scope
 
-SCRIPTA addresses a fundamental challenge in AI-assisted creative writing: current LLM tools behave as opaque "magic boxes" that produce fluent text but suffer from three critical problems. First, they drift from long-range narrative intent because their context windows cannot encompass entire novels or screenplays. Second, they introduce legal and ethical risks through potential copyright infringement, embedded biases, and lack of provenance documentation. Third, they offer no transparency or control over the creative process, leaving authors unable to specify requirements formally or understand why certain outputs were generated.
+SCRIPTA Story Studio addresses a fundamental challenge in AI-assisted creative writing: the lack of structured, measurable, and iterative approaches to narrative generation. Current tools treat story creation as a one-shot prompt exercise, leaving authors without:
 
-The scope of SCRIPTA is professional creative writing assistance. This includes short stories, novels, screenplays, and narrative-driven content where coherence, character consistency, and compliance matter. The system is designed for authors who want to leverage AI capabilities while maintaining creative control and producing work that meets professional and legal standards.
+- Reusable building blocks for characters, settings, and patterns
+- Visual tools for composing and arranging story elements
+- Structured planning before content generation
+- Quality metrics for evaluating generated content
+- Comparison tools for different approaches
 
-SCRIPTA is explicitly not autonomous authorship. The human remains the creative director at all times. The system proposes, the human disposes. Every significant output requires human review before it becomes part of the work. This distinction is essential both ethically and legally, as it preserves human authorship claims under current copyright frameworks.
-
-The system operates within the ACHILLES IDE, leveraging its specification-driven development paradigm. This means creative work is treated similarly to software development: requirements are specified formally, implementations are generated, outputs are verified against specifications, and the entire process is logged for auditability.
+The scope is professional and hobbyist creative writing including short stories, novellas, novels, screenplays, and scripts. The system is designed for authors who want control over the creative process while leveraging AI capabilities.
 
 
 ## 2. Actors and Their Roles
 
-The SCRIPTA system involves five distinct actor types, each with specific responsibilities and interactions with the system.
+### 2.1 Primary Actor: Author
 
-The Author or Screenwriter is the primary user and creative director. Authors define the narrative intent by specifying characters, plot constraints, world rules, and thematic requirements. They review generated content, accepting, rejecting, or modifying proposals. They make final editorial decisions and own the resulting work. Authors interact primarily through the specification and review interfaces, and their actions are logged as evidence of human creative control.
+The Author is the creative director using the Story Studio to:
+- Create and manage writing projects
+- Define custom characters and locations
+- Select story patterns and themes
+- Generate and evaluate content
+- Iterate on specifications and regenerate
 
-The AI Workflow Developer designs and maintains the SOP templates that orchestrate agent collaboration. This role requires understanding both the creative domain and the technical capabilities of each agent. Workflow Developers do not access author content directly; they work with abstract workflow definitions that authors then instantiate with their specific content.
+### 2.2 System Agents
 
-The Publisher or Content Studio is the commercial entity that may commission or acquire the resulting work. Publishers rely on SCRIPTA's compliance reports for due diligence, verifying that content meets legal and ethical standards before publication. They may define additional constraints or policies that authors must satisfy.
-
-The Legal and Compliance Officer reviews audit logs and compliance reports to assess risk. This role has read access to all audit records but cannot modify content. Compliance Officers use the system's outputs to prepare legal documentation and respond to potential claims.
-
-System Agents are the AI components that perform the actual work of planning, generation, verification, and review. While not human actors, they are logged as actors in the audit trail, with their versions and parameters recorded for reproducibility.
-
-The following table summarizes actor interactions with the system.
-
-| Actor | Primary Actions | System Access | Audit Role |
-|-------|-----------------|---------------|------------|
-| Author | Define specs, review outputs, make editorial decisions | Full access to own projects | Actions logged as evidence of human authorship |
-| Workflow Developer | Design SOPs, configure agent parameters | SOP definitions only, no author content | Configuration changes logged |
-| Publisher | Review compliance, define policies | Reports and policies only | Report access logged |
-| Compliance Officer | Audit review, risk assessment | Read-only access to all audit data | All access logged |
-| System Agents | Plan, generate, verify, review | Processing access during execution | All operations logged with parameters |
+AI components that perform automated tasks:
+- **Planning Agent**: Generates story structure from specifications
+- **Generation Agent**: Produces narrative content
+- **Evaluation Agent**: Computes quality metrics
+- **Verification Agent**: Checks content against specifications
 
 
-## 3. Primary Workflow
+## 3. Primary Workflow: Story Studio Session
 
-The primary workflow represents the happy path through SCRIPTA, where an author moves from initial concept to completed, verified narrative.
+### 3.1 Overview
 
-The workflow begins with the author creating a NarrativeSpec. This specification captures the essential elements of the intended story: title, synopsis, themes, characters with their traits and goals, world rules that constrain what is possible in the fictional universe, and CNL constraints that formalize specific requirements. The specification serves as the contract between human intent and machine execution.
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  1. Create  │───▶│ 2. Compose  │───▶│ 3. Generate │───▶│ 4. Evaluate │
+│   Project   │    │  Elements   │    │   Content   │    │   Quality   │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+                                              ▲                  │
+                                              └──────────────────┘
+                                                   Iterate
+```
 
-Next, the author selects or creates an SOP that defines the workflow steps. Standard SOPs are provided for common use cases (short story, novel chapter, screenplay scene), but authors can customize or create new SOPs for specific needs. The SOP specifies which agents participate, in what order, and what policies govern their operation.
+### 3.2 Step 1: Create Project
 
-The planning agent then generates a Plan from the specification. The plan includes a plot graph showing the structure of the narrative, a list of scenes with their objectives and constraints, and character arcs showing how characters develop through the story. The author reviews and may modify this plan before proceeding.
+**Goal**: Initialize a new creative writing project
 
-Generation agents produce text scene by scene according to the plan. Each scene is generated in context of previously generated scenes, and outputs are bounded by the plan and specification. Generation is iterative: the author can accept a scene, request regeneration with different parameters, or manually edit.
+**Actions**:
+1. Author opens Story Studio
+2. Author clicks "New Project"
+3. Author enters project details:
+   - Title
+   - Format (novel, screenplay, short story, etc.)
+   - Synopsis
+4. System creates project with unique ID
+5. Author sees empty project canvas
 
-Verification agents check each generated scene against the specification. They detect trait violations (characters acting against their defined nature), plot inconsistencies (events contradicting established facts), and constraint violations (missing required elements or including forbidden ones). Violations are reported to the author for resolution.
+**Artifacts**: Project record
 
-Guardrail agents analyze content for bias, stereotypes, cliché overuse, and potential copyright issues. Findings are reported with severity levels and specific text citations. Authors can address findings or accept them with documented justification.
+### 3.3 Step 2: Compose Elements
 
-Finally, the system produces a compliance report summarizing the entire process. This report documents human specification, human review, verification outcomes, and editorial decisions. It serves as evidence of human authorship and due diligence for legal purposes.
+**Goal**: Assemble the building blocks for the story
+
+**Actions**:
+1. Author opens Element Palette
+2. Author browses or searches for elements:
+   - **Characters**: Select archetypes or create custom
+   - **Locations**: Choose settings from library or create custom
+   - **Patterns**: Select story structure (three-act, hero's journey, etc.)
+   - **Themes**: Add thematic elements
+   - **Tone**: Set narrative voice
+3. Author drags elements to project canvas
+4. Author configures each element:
+   - Character traits and goals
+   - Location atmosphere and rules
+   - Pattern customization
+5. Author defines relationships between elements
+6. System generates CNL constraints automatically
+
+**Artifacts**: Character definitions, Location definitions, Pattern selection, CNL constraints
+
+### 3.4 Step 3: Generate Content
+
+**Goal**: Produce narrative content based on specifications
+
+**Actions**:
+1. Author clicks "Generate Plan"
+2. Planning Agent analyzes project elements
+3. Planning Agent generates structured plan:
+   - Scene breakdown
+   - Character arcs
+   - Plot graph
+4. Author reviews plan, optionally modifies
+5. Author clicks "Generate Content" (full or scene-by-scene)
+6. Generation Agent produces narrative text
+7. Author reviews generated content
+8. Author can regenerate specific scenes with modified parameters
+
+**Artifacts**: Plan, Draft scenes
+
+### 3.5 Step 4: Evaluate Quality
+
+**Goal**: Measure and understand generated content quality
+
+**Actions**:
+1. Author clicks "Evaluate"
+2. Author selects metrics to compute:
+   - Narrative Quality Score (NQS)
+   - Coherence
+   - Character Consistency (CAD)
+   - Readability
+3. Evaluation Agent analyzes content
+4. System displays metric results with explanations
+5. Author identifies areas for improvement
+6. Author modifies specifications or parameters
+7. Author regenerates and re-evaluates
+
+**Artifacts**: Evaluation report
+
+### 3.6 Iteration Loop
+
+The author can iterate at any step:
+- Modify characters/locations → regenerate plan → regenerate content
+- Adjust pattern parameters → regenerate plan
+- Tweak CNL constraints → regenerate specific scenes
+- Compare different approaches side by side
 
 
 ## 4. Alternative Workflows
 
-Beyond the primary workflow, SCRIPTA supports several alternative paths that address common creative scenarios.
+### 4.1 Quick Start with Templates
 
-The Reverse Engineering workflow starts with existing text rather than a specification. An author may have a draft from another source, a partially completed manuscript, or published work they want to continue. The reverse engineering agent analyzes this text to extract an implied specification: what characters exist and what are their traits, what world rules are established, what plot structure is evident. The author reviews and corrects this extracted specification, which then becomes the basis for continued generation or revision.
+For rapid creation:
+1. Author selects pre-made project template
+2. Template includes pre-configured elements
+3. Author customizes as needed
+4. Generation proceeds immediately
 
-The Research-Assisted workflow integrates factual research into the creative process. For historical fiction, technical thrillers, or content requiring accuracy, the research agent queries curated knowledge bases and returns relevant information with provenance. This information can be incorporated into generated text with citations tracking back to sources, providing accountability for factual claims.
+### 4.2 Reverse Engineering
 
-The Human-in-the-Loop Editing workflow emphasizes iterative refinement. Rather than generating complete scenes and reviewing them, the author works interactively: generating a paragraph, editing it, generating the next paragraph with the edit in context, and so on. This workflow is slower but provides finer control and is useful for critical scenes or stylistically demanding passages.
+Start from existing text:
+1. Author pastes existing draft or excerpt
+2. System analyzes text
+3. System extracts implied specification:
+   - Characters and traits
+   - Setting details
+   - Themes and tone
+4. Author reviews and corrects extracted spec
+5. Author can continue generation from this point
 
-The Policy-Constrained workflow adds publisher or institutional constraints to the author's specification. A children's book publisher might require certain content policies; an educational institution might require accessibility standards. These policies are defined separately from author specifications and are enforced by guardrail agents configured for the specific policy set.
+### 4.3 Comparison Mode
+
+Compare different approaches:
+1. Author creates project with elements
+2. Author generates content with approach A
+3. Author generates content with approach B (different pattern, parameters)
+4. System displays side-by-side comparison
+5. System shows metric comparison
+6. Author selects preferred version
+
+### 4.4 Research-Assisted
+
+For historically or technically accurate content:
+1. Author enables research mode
+2. During generation, system queries knowledge base
+3. System incorporates relevant facts
+4. Generated content includes research notes
+5. Author can trace claims to sources
 
 
-## 5. Boundaries, Assumptions, and Traceability
+## 5. Element Library Details
 
-SCRIPTA operates within defined boundaries that scope what the system attempts to do.
+### 5.1 Character Archetypes
 
-The system assumes that authors have legitimate creative intent. It does not attempt to detect or prevent malicious use of AI for generating harmful content at scale. Guardrails catch obvious problems (explicit bias, harmful stereotypes) but do not substitute for human judgment about appropriateness.
+| Archetype | Description | Typical Traits |
+|-----------|-------------|----------------|
+| Hero | Protagonist who grows through challenges | brave, determined, flawed |
+| Mentor | Guide who provides wisdom | wise, mysterious, experienced |
+| Shadow | Antagonist or dark reflection | ambitious, ruthless, complex |
+| Trickster | Agent of chaos and humor | clever, unpredictable, loyal |
+| Herald | Brings the call to adventure | urgent, compelling, fateful |
+| Shapeshifter | Ally of uncertain loyalty | adaptable, ambiguous, surprising |
+| Threshold Guardian | Tests the hero's commitment | challenging, protective, revelatory |
 
-External web research is optional and policy-controlled. When enabled, the research agent can access curated external sources, but all such access is logged and sources are cited. Authors can disable external research entirely for projects that must be self-contained.
+### 5.2 Story Patterns
 
-Formal verification starts with heuristic methods. The verification agents use semantic similarity and pattern matching rather than mathematical proof. Interfaces are designed to support formal proof artifacts in the future, but initial implementation prioritizes practical effectiveness over theoretical completeness.
+| Pattern | Description | Typical Scenes |
+|---------|-------------|----------------|
+| Three-Act | Classic setup-confrontation-resolution | 8-12 scenes |
+| Hero's Journey | Monomyth structure | 12-17 scenes |
+| Five-Act | Shakespeare structure | 10-15 scenes |
+| Save the Cat | Blake Snyder beats | 15 scenes |
+| Kishotenketsu | Four-act non-conflict structure | 4-8 scenes |
+| In Medias Res | Start in the middle | Variable |
 
-Every pipeline run produces a complete traceability record. This record includes the selected SOP version with all parameters, agent versions and configurations, input hashes for all specification and plan elements, output artifact references with hashes, and audit log linkage. This traceability enables reproduction of any run and investigation of any output.
+### 5.3 Location Types
 
-The following table summarizes the artifacts produced by a complete workflow.
+| Type | Atmosphere | Common Uses |
+|------|------------|-------------|
+| Safe Haven | Comfort, normalcy | Character origin, return |
+| Dangerous Terrain | Threat, challenge | Trials, growth |
+| Threshold | Transition, uncertainty | Decision points |
+| Innermost Cave | Confrontation, truth | Climax, revelation |
+| Road/Journey | Change, discovery | Character development |
 
-| Artifact | Description | Storage | Traceability |
-|----------|-------------|---------|--------------|
-| NarrativeSpec | Author's specification of intent | Spec store, linked to project | spec_id in all downstream artifacts |
-| Plan | Structured narrative outline | Plan store, versioned | plan_id links to spec_id and generated content |
-| Draft scenes | Generated text content | Artifact store | draft_id links to plan_id and scene_id |
-| Verification Report | Constraint checking results | Report store | Links to spec_id and artifact_id |
-| Guardrail Report | Bias/originality/copyright findings | Report store | Links to artifact_id and policy set |
-| Compliance Report | Consolidated process documentation | Report store | Links all components, signed |
-| Audit Log | Immutable operation record | Audit archive | Chain of all operations with hashes |
+
+## 6. Metrics and Evaluation
+
+### 6.1 Available Metrics
+
+| Metric | Description | Range | Good Threshold |
+|--------|-------------|-------|----------------|
+| NQS | Narrative Quality Score (composite) | 0-1 | >0.7 |
+| Coherence | Story consistency and flow | 0-1 | >0.8 |
+| CAD | Character Attribute Drift | 0-1 | <0.15 |
+| Readability | Flesch-Kincaid grade level | 0-18 | 8-12 |
+| Originality | Non-cliché language use | 0-1 | >0.6 |
+
+### 6.2 Evaluation Workflow
+
+1. Select draft to evaluate
+2. Choose metrics
+3. System computes scores
+4. View detailed breakdown
+5. See specific issues highlighted
+6. Compare with previous versions
+
+
+## 7. CNL Integration
+
+### 7.1 Automatic CNL Generation
+
+When author adds elements to project, system generates CNL:
+
+```
+CHARACTER(Anna).
+TRAIT(Anna, courageous).
+TRAIT(Anna, protective).
+GOAL(Anna, protect, "brother").
+RELATIONSHIP(Anna, sibling, Marcus).
+
+SETTING(Story, "coastal village", "modern").
+TONE(Story, hopeful).
+THEME(courage).
+THEME(family).
+```
+
+### 7.2 Manual CNL Editing
+
+Author can edit CNL directly for fine control:
+- Add specific scene requirements
+- Define complex constraints
+- Specify narrative rules
+
+### 7.3 CNL Validation
+
+System validates CNL before generation:
+- Syntax checking
+- Semantic consistency
+- Conflict detection
+
+
+## 8. Output Formats
+
+### 8.1 Export Options
+
+| Format | Use Case |
+|--------|----------|
+| Plain Text | General purpose |
+| Markdown | Formatted manuscript |
+| Fountain | Screenplay format |
+| DOCX | Word processing |
+| JSON | Data interchange |
+
+### 8.2 Project Artifacts
+
+Each project produces:
+- Specification file (elements + CNL)
+- Plan file (structure + scenes)
+- Draft files (generated content)
+- Evaluation reports
+- Comparison reports (if applicable)

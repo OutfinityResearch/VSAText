@@ -1,79 +1,262 @@
-# DS01 — SCRIPTA Vision and Strategic Goals
+# DS01 — SCRIPTA Vision Document
 
-## 1. Context and Problem Statement
+## 1. Executive Summary
 
-Large Language Models (LLMs) have radically transformed text generation capabilities. These systems, trained on billions of documents, can produce fluent prose, natural dialogues, and elaborate descriptions. However, their application to professional creative writing reveals fundamental limitations affecting quality, ethical integrity, and legal compliance of generated content.
+**SCRIPTA** (Structured Creative Writing Intelligent Platform for Textual Authoring) is a **Visual Story Composer** that enables authors to create structured narrative specifications through an intuitive visual interface. The system auto-generates a Controlled Natural Language (CNL) representation that functions as a **programming language for narratives**.
 
-The first major problem is narrative drift. An LLM processes text within limited context windows, typically between 4,000 and 128,000 tokens (words or word fragments). When a story exceeds this limit, the model "forgets" previously established details. A character described as shy in chapter one may inexplicably become confident by chapter ten, not because the author planned such transformation, but because the model no longer "sees" the initial description. Recent studies show that LLM-generated texts tend to be "homogeneously positive and lack tension," missing the emotional complexity of human writing.
+### 1.1 Core Innovation
 
-The second problem concerns legal and ethical risks. LLMs are trained on massive corpora that often include copyrighted works, creating risk of involuntary reproduction of protected content. Additionally, the U.S. Copyright Office has established that mere prompting of an AI system does not confer authorship, creating legal uncertainty for purely machine-generated content. These models also absorb and perpetuate biases present in training data, potentially amplifying harmful stereotypes.
+Instead of writing specifications manually, authors:
+1. **Build visually**: Create story structure through an interactive tree editor
+2. **Compose from libraries**: Select characters, locations, moods, and patterns from reusable libraries
+3. **Instantiate patterns**: Apply story templates with bound variables
+4. **Evaluate automatically**: Receive real-time quality metrics
 
-The third problem is lack of transparency and control. Current LLM tools operate on a "prompt in, text out" paradigm without explicit specifications of what the story must contain, without verification that output actually matches intent, and without explanations of why certain creative choices were made.
-
-SCRIPTA (Scripts Certification and Review, Integrity of Processes and Trust Assurance) addresses these challenges by introducing a new human-AI co-creation model based on formal specifications, continuous verification, and complete traceability.
-
-
-## 2. Vision and Design Principles
-
-The SCRIPTA vision can be synthesized as follows: a trustworthy AI co-creation environment where authors define narrative intent as executable specifications, and specialized agents generate, verify, and justify outputs with full auditability and compliance safeguards.
-
-This vision translates into five design principles that guide the entire system architecture.
-
-The specification-first principle means that any text generation starts from a formal specification, not a simple prompt. The author defines characters, world rules, tone constraints, and themes before the system generates any sentence. This approach builds on research about "plan-and-write" methods that demonstrate explicit planning improves narrative coherence.
-
-The multi-agent orchestration principle means that instead of a single model doing everything, SCRIPTA uses specialized agents for planning, generation, verification, and review. Each agent can be independently optimized for its specific task. A verification agent can be deterministic and rule-based, while a generation agent leverages LLM fluency.
-
-The continuous verification principle means that generated text is constantly checked against the specification. The system detects character trait drift, plot contradictions, biases, and originality issues in real-time, not after completing the entire work.
-
-The complete traceability principle ensures that every generation, verification, and edit is recorded in an immutable audit log linking inputs to decisions and outputs. This provides provenance evidence for legal compliance and enables problem debugging.
-
-The dual implementation principle means that fundamental algorithms have two implementations: one based on conventional methods (standard embeddings, rules) and one based on hyperdimensional computing (VSA/HDC). Empirical comparison determines which approach offers superior results for each task.
+The CNL serves as an **Intermediate Representation (IR)** - machine-readable output that captures the cognitive and emotional structure of the narrative.
 
 
-## 3. Strategic Goals and Their Justification
+## 2. Problem Statement
 
-The following table presents SCRIPTA's five strategic goals along with their scientific justification and anticipated limitations. The justification explains why we expect the approach to work, based on previous research or solid theoretical principles. The limitations acknowledge potential problems we anticipate.
+### 2.1 Current Challenges
 
-| Goal | Justification | Anticipated Limitations |
-|------|---------------|------------------------|
-| Specification-based creativity | Research on "plan-and-write" methods demonstrates that explicit planning before generation improves coherence by 25-40%. Formalizing the plan also enables verification. | Authors must learn to express intent as specifications. Over-specification may constrain creativity. Not all artistic nuances can be formalized. |
-| Multi-agent orchestration | Division of labor allows optimizing each agent for its task. Separating generation from verification enables independent testing and improvement. | Coordination overhead between agents. Error propagation: a bad plan leads to bad generation. Complexity in debugging multi-step failures. |
-| Verification and compliance | Explicit constraints in CNL enable programmatic verification. Unlike LLMs that "guess" consistency, verification agents offer certainty for specific checks. | Semantic verification is imperfect and produces false positives/negatives. Not all constraints are formalizable. May reject valid creative choices. |
-| Audit and provenance | The Copyright Office requires evidence of human authorship. A log demonstrating human specification, human review, and human acceptance provides defensible provenance. | Storage costs grow with usage. Immutability requires cryptographic infrastructure. Logs prove process, not quality. |
-| Controlled Natural Language (CNL) | Natural language is ambiguous. CNL provides precision by translating constraints into machine-verifiable statements, eliminating multiple interpretations. | CNL cannot express all literary nuances. Translation from natural language may produce errors. Authors may resist formal syntax. |
+1. **Manual specification is tedious**: Authors don't want to write code or formal languages
+2. **Structure is hard to visualize**: Hierarchical story structures are complex
+3. **Reusability is limited**: Character archetypes, story patterns are recreated constantly
+4. **Quality is subjective**: No objective metrics for narrative structure
 
-The term "embedding" refers to numerical representation of words or phrases as vectors (lists of numbers) in a mathematical space, enabling similarity computation between concepts. "CNL" (Controlled Natural Language) means a restricted subset of natural language with strict grammatical rules, simple enough to be automatically processed but expressive enough to be read by humans. "VSA/HDC" (Vector Symbolic Architectures / Hyperdimensional Computing) represents a computing paradigm using very high-dimensional vectors (10,000+ elements) for representing and manipulating symbols and relations.
+### 2.2 Our Solution
 
-
-## 4. Success Criteria and Measurement
-
-SCRIPTA success will be evaluated through five key performance indicators. Each indicator has a precise definition, a numerical target, and a measurement method, ensuring objective and reproducible evaluation.
-
-| Indicator | Definition | Target | Measurement Method |
-|-----------|------------|--------|-------------------|
-| Narrative Quality Score (NQS) | Composite score combining automated coherence metrics with expert human evaluations | +25% vs baseline LLM | Automated coherence score plus average of 3 expert ratings on 1-5 scale |
-| Author Efficiency Gain (AEG) | Reduction in time needed to produce a publishable first draft | 40% reduction | Timed writing tasks comparing SCRIPTA with traditional methods |
-| Compliance Adherence Rate (CAR) | Percentage of generated works passing simulated legal and ethical checks | ≥99.9% | Guardrail check pass rate across evaluation corpus |
-| Character Attribute Drift (CAD) | Semantic deviation of character traits from specification across long text | Below threshold X per 10,000 tokens | Cosine distance between specified and inferred trait embeddings |
-| Explainability Score | Author rating of system explanation quality | ≥4/5 average | Post-task survey with Likert scale questions |
-
-The cosine distance mentioned in the table measures the angle between two vectors in a mathematical space. When two vectors are identical, the distance is 0; when completely different, the distance is 1. In our context, we measure how much a character has "drifted" from their initially defined traits. The Likert scale is an evaluation method where respondents indicate agreement with a statement on a numerical scale (for example, 1="strongly disagree" to 5="strongly agree").
+| Challenge | SCRIPTA Solution |
+|-----------|------------------|
+| Manual specification | Visual tree editor with drag-and-drop |
+| Structure visualization | Hierarchical tree with icons and colors |
+| Reusability | Entity libraries + pattern templates |
+| Quality measurement | CNL interpretation → metrics |
 
 
-## 5. Risks, Limitations, and Outlook
+## 3. System Architecture
 
-Any complex system involves risks that must be acknowledged and proactively managed. The following table presents the main risks identified for SCRIPTA, their potential impact, and planned mitigation strategies.
+### 3.1 Conceptual Model
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Coherence improvements are insufficient | High | Plan-and-write method combined with formal verification and iterative refinement |
-| Compliance agents produce false positives | Medium | Calibrated thresholds, human-in-loop review, adjustable sensitivity |
-| Legal ambiguity despite audit log | High | Maintain detailed provenance metadata, consult legal counsel |
-| CNL too restrictive for creative expression | Medium | Allow freeform text alongside CNL, iterative grammar expansion |
-| VSA/HDC underperforms vs basic methods | Low | Run both in parallel, use empirical results for decision |
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    VISUAL STORY COMPOSER                        │
+│  ┌─────────────┐  ┌─────────────────────┐  ┌─────────────────┐  │
+│  │ Structure   │  │  Entity Libraries   │  │   Patterns      │  │
+│  │ Tree        │  │  - Characters       │  │   with free     │  │
+│  │ (chapters,  │  │  - Locations        │  │   variables     │  │
+│  │  scenes)    │  │  - Moods            │  │                 │  │
+│  │             │  │  - Props, Themes    │  │                 │  │
+│  └──────┬──────┘  └──────────┬──────────┘  └────────┬────────┘  │
+│         │                    │                      │           │
+│         └────────────────────┼──────────────────────┘           │
+│                              ▼                                  │
+│                    ┌─────────────────────┐                      │
+│                    │  CNL GENERATOR      │                      │
+│                    │  (auto-generates    │                      │
+│                    │   from visual)      │                      │
+│                    └──────────┬──────────┘                      │
+└───────────────────────────────┼─────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                         CNL (IR)                                │
+│  Controlled Natural Language - The "Source Code" of narrative   │
+└───────────────────────────────┬─────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                       INTERPRETER                               │
+│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐    │
+│  │ Parser       │  │ Semantic     │  │ Metric Calculator  │    │
+│  │ (syntax)     │  │ Analyzer     │  │ (execution)        │    │
+│  └──────────────┘  └──────────────┘  └────────────────────┘    │
+└───────────────────────────────┬─────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        OUTPUTS                                  │
+│  - Quality Metrics (CPSR, CSA, NQS, Coherence)                  │
+│  - Constraint Validation                                        │
+│  - Narrative Skeleton                                           │
+│  - Markdown Export                                              │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-SCRIPTA does not aim to replace the human author. The system is designed as a co-creation tool where the human remains the creative director and AI serves as an intelligent assistant. We do not automate editorial judgment, do not train foundation models (focusing on orchestration and evaluation), and do not produce commercial interfaces in the initial phase.
+### 3.2 CNL as Programming Language
 
-The roadmap envisions four phases over twelve months: foundation (specifications and planning), integration (complete pipeline with verification and guardrails), evaluation (pilot studies and ablation experiments), and hardening (compliance reporting and performance optimization).
+The CNL functions as a programming language where:
 
-Through this approach, SCRIPTA aims to transform the conversation about AI in creative arts, shifting the narrative from fear of obsolescence toward a vision of sophisticated human-machine partnership where trust, transparency, and compliance are guaranteed by design.
+| Programming | Narrative Equivalent |
+|-------------|---------------------|
+| Source code | CNL specification |
+| Compilation | Parsing → AST |
+| Execution | Metric calculation |
+| Runtime errors | Constraint violations |
+| Unit tests | Coherence checks |
+| Functions | Reusable patterns |
+| Variables | Pattern placeholders ($hero, $location) |
+| Type system | Entity types (character, location, mood) |
+
+
+## 4. Entity Libraries
+
+### 4.1 Library Types
+
+| Library | Contents | Scope |
+|---------|----------|-------|
+| **Characters** | Named characters with traits, archetypes | Project |
+| **Locations** | Places with atmosphere, connections | Project |
+| **Moods** | Emotional registers (term from literary theory) | Project/Global |
+| **Patterns** | Story templates with free variables | Global |
+| **Props** | Significant objects | Project |
+| **Themes** | Abstract themes | Project |
+| **Archetypes** | Character templates (Hero, Mentor, Shadow) | Global |
+| **Conflicts** | Conflict types (man vs nature, etc.) | Global |
+| **Motifs** | Recurring literary motifs | Global |
+
+### 4.2 Pattern System
+
+Patterns are reusable story structures with **free variables**:
+
+```
+Pattern: "Hero's Call"
+Variables:
+  $hero: character (protagonist)
+  $catalyst: character | event
+  $location: location
+  $mood: mood
+
+Template:
+  $hero is at $location
+  $catalyst arrives
+  $hero discovers "call to adventure"
+  $hero has mood $mood
+  $hero decides "answer call"
+```
+
+**Instantiation** binds variables to concrete entities from libraries.
+
+
+## 5. Visual Interface
+
+### 5.1 Layout
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  HEADER: Project | Save | Load | Export | Evaluate              │
+├──────────────┬──────────────────────────────┬───────────────────┤
+│              │                              │                   │
+│  STRUCTURE   │  CENTER TABS                 │  METRICS          │
+│  TREE        │  ┌────────────────────────┐  │                   │
+│              │  │ CNL | Characters |     │  │  Quality scores   │
+│  📖 Book     │  │ Locations | Moods |    │  │  Validation       │
+│  ├─📑 Ch1    │  │ Patterns | Props |     │  │  Constraints      │
+│  │ ├─🎬 Sc1  │  │ Themes | Archetypes    │  │                   │
+│  │ └─🎬 Sc2  │  └────────────────────────┘  │                   │
+│  └─📑 Ch2    │                              │                   │
+│              │  [Tab content area]          │                   │
+│              │                              │                   │
+├──────────────┴──────────────────────────────┴───────────────────┤
+│  FOOTER: Counts | Status | Version                              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 5.2 Color Scheme
+
+**Luminous Mystical** - bright but atmospheric:
+
+- **Backgrounds**: Deep night blue (#1a1a2e) → violet (#242442)
+- **Accents**: Gold (#ffd166), Rose (#ef476f), Emerald (#06d6a0), Sky (#118ab2), Violet (#9d4edd)
+- **Entity colors**: Characters=emerald, Locations=sky, Moods=violet, Patterns=amber
+
+### 5.3 Tree Interactions
+
+- **Add child**: Right-click → Add Chapter/Scene/Beat
+- **Add reference**: Drag entity from library to node
+- **Instantiate pattern**: Right-click → Add Pattern → Select → Bind variables
+- **Edit properties**: Click node → Edit panel
+- **Reorder**: Drag and drop within tree
+
+
+## 6. Quality Metrics
+
+### 6.1 Metric Definitions
+
+| Metric | Description | Target |
+|--------|-------------|--------|
+| **CPSR** | CNL Parse Success Rate | > 95% |
+| **CSA** | Constraint Satisfaction Accuracy | > 98% |
+| **Coherence** | Entity consistency (declared vs used) | > 75% |
+| **CAD** | Character Attribute Drift | < 15% |
+| **NQS** | Narrative Quality Score (composite) | > 75% |
+
+### 6.2 Interpretation as Execution
+
+"Running" the CNL means:
+1. Parse syntax → AST
+2. Validate semantics (references, types)
+3. Evaluate constraints (requires/forbids)
+4. Calculate metrics
+5. Generate skeleton narrative
+
+
+## 7. Target Users
+
+### 7.1 Primary: Authors & Writers
+
+- Create story structures visually
+- Use pattern libraries for common story beats
+- Get feedback on structural quality
+- Export for further development
+
+### 7.2 Secondary: Writing Educators
+
+- Teach story structure
+- Analyze existing works (reverse engineer to CNL)
+- Compare student work against patterns
+
+### 7.3 Tertiary: AI/LLM Integration
+
+- Use CNL as structured prompt
+- Feed skeleton to LLM for prose generation
+- Maintain story coherence through constraints
+
+
+## 8. Technology Stack
+
+- **Frontend**: Single HTML file, vanilla JavaScript, ES6 modules
+- **Backend**: Node.js minimal persistence server
+- **Storage**: JSON files (projects, libraries)
+- **No external dependencies** for core functionality
+
+
+## 9. Success Criteria
+
+1. **Usability**: Author can create complete story structure in < 30 minutes
+2. **Learnability**: New user productive within 1 hour
+3. **Quality**: Generated CNL parses with 100% success rate
+4. **Reusability**: Patterns can be shared across projects
+5. **Integration**: Markdown export works correctly
+
+
+## 10. Roadmap
+
+### Phase 1: Core Composer (Current)
+- Visual tree editor
+- Entity editors (characters, locations, moods)
+- CNL auto-generation
+- Basic metrics
+
+### Phase 2: Pattern System
+- Pattern definition interface
+- Variable binding UI
+- Pattern library management
+
+### Phase 3: Advanced Features
+- Library import/export
+- Collaborative editing
+- Version history
+- Advanced metrics (emotional arc, pacing)
+
+### Phase 4: Integration
+- LLM integration for prose generation
+- Reverse engineering (text → CNL)
+- Publishing workflows

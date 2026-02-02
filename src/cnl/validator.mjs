@@ -1,113 +1,127 @@
 #!/usr/bin/env node
+/**
+ * SCRIPTA CNL Validator (Node.js CLI wrapper)
+ * 
+ * This module re-exports the unified parser from demo/cnl-parser.mjs
+ * and provides a CLI interface for validation.
+ */
 
-const PREDICATE_RE = /^[A-Z][A-Z0-9_]*$/;
-const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
-const NUMBER_RE = /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/;
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-function splitArgs(argStr) {
-  const args = [];
-  let current = '';
-  let inString = false;
-  let escape = false;
+// Import from unified parser
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const parserPath = join(__dirname, '..', '..', 'demo', 'cnl-parser.mjs');
 
-  for (const ch of argStr) {
-    if (inString) {
-      current += ch;
-      if (escape) {
-        escape = false;
-        continue;
-      }
-      if (ch === '\\') {
-        escape = true;
-        continue;
-      }
-      if (ch === '"') {
-        inString = false;
-      }
-      continue;
-    }
-    if (ch === '"') {
-      inString = true;
-      current += ch;
-      continue;
-    }
-    if (ch === ',') {
-      args.push(current.trim());
-      current = '';
-      continue;
-    }
-    current += ch;
-  }
+// Dynamic import to get the unified parser
+const parser = await import(parserPath);
 
-  if (inString) return { args: [], error: 'unterminated string' };
-  if (current || argStr.trim() === '') args.push(current.trim());
-  return { args, error: '' };
-}
+// Re-export all functions
+export const parseCNL = parser.parseCNL;
+export const validateText = parser.validateText;
+export const extractEntities = parser.extractEntities;
+export const extractConstraints = parser.extractConstraints;
+export const countGroups = parser.countGroups;
+export const generateMarkdown = parser.generateMarkdown;
+export const generateSkeleton = parser.generateSkeleton;
 
-function validateLine(line, lineNo) {
-  const stripped = line.trim();
-  if (!stripped || stripped.startsWith('#') || stripped.startsWith('//')) return { statement: null, error: null };
-  if (!stripped.endsWith('.')) {
-    return { statement: null, error: { line: lineNo, message: "statement must end with '.'" } };
-  }
-  const body = stripped.slice(0, -1).trim();
-  if (!body.includes('(') || !body.endsWith(')')) {
-    return { statement: null, error: { line: lineNo, message: 'statement must be predicate(args)' } };
-  }
-  const idx = body.indexOf('(');
-  const predicate = body.slice(0, idx).trim();
-  if (!predicate || !PREDICATE_RE.test(predicate)) {
-    return { statement: null, error: { line: lineNo, message: 'predicate must be uppercase with underscores' } };
-  }
-  const argsBody = body.slice(idx + 1, -1).trim();
-  const { args, error } = splitArgs(argsBody);
-  if (error) return { statement: null, error: { line: lineNo, message: error } };
-  const argList = argsBody === '' ? [] : args;
-  for (let i = 0; i < argList.length; i++) {
-    const arg = argList[i];
-    if (!arg) return { statement: null, error: { line: lineNo, message: `empty argument at position ${i + 1}` } };
-    if (arg.startsWith('"')) {
-      if (!(arg.length >= 2 && arg.endsWith('"'))) {
-        return { statement: null, error: { line: lineNo, message: `unterminated string at argument ${i + 1}` } };
-      }
-      continue;
-    }
-    if (NUMBER_RE.test(arg)) {
-      continue;
-    }
-    if (!IDENT_RE.test(arg)) {
-      return { statement: null, error: { line: lineNo, message: `invalid identifier: ${arg}` } };
-    }
-  }
-  return { statement: { predicate, args: argList }, error: null };
-}
-
-export function validateText(text) {
-  const statements = [];
-  const errors = [];
-  const lines = text.split(/\r?\n/);
-  lines.forEach((line, index) => {
-    const { statement, error } = validateLine(line, index + 1);
-    if (error) errors.push(error);
-    if (statement) statements.push(statement);
-  });
-  return { statements, errors };
-}
-
+// CLI interface
 if (import.meta.url === `file://${process.argv[1]}`) {
   const fs = await import('fs');
   const filePath = process.argv[2];
+  const outputFormat = process.argv[3] || 'json'; // json, markdown, skeleton
+  
   if (!filePath) {
-    console.log('usage: validator.mjs <file.cnl>');
+    console.log(`SCRIPTA CNL Validator v2.0
+
+Usage: validator.mjs <file.cnl> [format]
+
+Formats:
+  json      - Full AST output (default)
+  markdown  - Export as Markdown
+  skeleton  - Generate narrative skeleton
+  summary   - Brief summary
+
+Example CNL syntax:
+  Anna is protagonist
+  Anna has trait courage
+  Anna relates to Marcus as sibling
+  
+  Chapter1 group begin
+    Chapter1 has title "The Beginning"
+    Anna discovers artifact
+  Chapter1 group end
+`);
     process.exit(1);
   }
-  const text = fs.readFileSync(filePath, 'utf-8');
-  const { statements, errors } = validateText(text);
-  const output = {
-    valid: errors.length === 0,
-    errors,
-    statements
-  };
-  console.log(JSON.stringify(output, null, 2));
-  process.exit(output.valid ? 0 : 2);
+  
+  try {
+    const text = fs.readFileSync(filePath, 'utf-8');
+    const result = parseCNL(text);
+    
+    switch (outputFormat) {
+      case 'markdown':
+      case 'md':
+        console.log(generateMarkdown(result.ast));
+        break;
+        
+      case 'skeleton':
+        console.log(generateSkeleton(result.ast));
+        break;
+        
+      case 'summary':
+        const entities = extractEntities(result.ast);
+        console.log(`CNL Validation Summary
+======================
+Valid: ${result.valid ? 'Yes' : 'No'}
+Errors: ${result.errors.length}
+Warnings: ${result.warnings.length}
+
+Entities:
+  Characters: ${entities.characters.length}
+  Locations: ${entities.locations.length}
+  Themes: ${entities.themes.length}
+  Objects: ${entities.objects.length}
+
+Groups: ${countGroups(result.ast.groups)}
+Relationships: ${result.ast.relationships.length}
+References: ${result.ast.references.length}
+
+Constraints:
+  Requires: ${result.ast.constraints.requires.length}
+  Forbids: ${result.ast.constraints.forbids.length}
+`);
+        if (result.errors.length > 0) {
+          console.log('Errors:');
+          for (const err of result.errors) {
+            console.log(`  Line ${err.line}: ${err.message}`);
+          }
+        }
+        break;
+        
+      case 'json':
+      default:
+        console.log(JSON.stringify({
+          valid: result.valid,
+          errors: result.errors,
+          warnings: result.warnings,
+          entities: result.ast.entities,
+          groups: result.ast.groups.map(g => ({
+            name: g.name,
+            properties: g.properties,
+            statementCount: g.statements.length,
+            childCount: g.children?.length || 0
+          })),
+          relationships: result.ast.relationships,
+          references: result.ast.references,
+          constraints: result.ast.constraints
+        }, null, 2));
+        break;
+    }
+    
+    process.exit(result.valid ? 0 : 2);
+  } catch (err) {
+    console.error('Error:', err.message);
+    process.exit(1);
+  }
 }

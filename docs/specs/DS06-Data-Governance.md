@@ -1,90 +1,239 @@
-# DS06 — Data Governance and Security
+# DS06 — Data Governance and Storage
 
 ## 1. Data Categories and Ownership
 
-The SCRIPTA system handles multiple categories of data with different ownership, sensitivity levels, and retention requirements. Clear categorization is essential for compliance with data protection regulations and for maintaining trust with users who entrust their creative work to the system.
+The SCRIPTA system handles multiple categories of data with different storage requirements. Clear categorization is essential for maintaining data integrity and providing a consistent user experience.
 
-Narrative Input Data encompasses all content provided by the author during the creative process. This includes prompts, character sheets, plot outlines, CNL specifications, and draft revisions. Ownership of this data rests entirely with the author. The system processes this data to provide services but does not claim any rights over it. Authors can export their data at any time and can request deletion, which will be executed according to the retention policy.
+### 1.1 Data Categories
 
-System-Generated Output Data includes all artifacts produced by the system in response to author inputs. This encompasses generated prose, verification reports, guardrail findings, evaluation metrics, and compliance reports. Ownership follows the author's relationship with the content: generated text that the author accepts and edits becomes part of their work, while reports and metrics are system documentation that authors can access but that the system retains for audit purposes.
-
-Audit Data comprises the immutable log of all system operations, including who did what, when, with what inputs, and producing what outputs. This data is jointly owned by the system operator and the author, as it serves both operational needs and legal evidence of the creative process. Audit data cannot be deleted by authors because its integrity is essential for compliance claims, but authors can access their own audit records.
-
-Model Training Data refers to the corpora used to train the underlying language models and verification classifiers. SCRIPTA does not train foundation models, but it does use pre-trained models whose training data provenance is documented. This documentation is essential for copyright compliance, as claims against the system may require demonstrating what data influenced outputs.
-
-The following table summarizes data categories and their governance attributes.
-
-| Category | Owner | Access | Retention | Deletion Rights |
-|----------|-------|--------|-----------|-----------------|
-| Narrative Input | Author | Author, System (processing only) | Configurable per author preference | Full deletion on request |
-| Generated Output | Author (for accepted content) | Author, System (for reports) | Until author deletes or project closes | Partial (content yes, reports no) |
-| Audit Data | Joint (Author + Operator) | Author (own records), Operator (all), Compliance (all) | Minimum 7 years for legal compliance | None (immutable by design) |
-| Model Training Data | Original IP holders | Documented in provenance records | Permanent (part of model weights) | Not applicable (already embedded) |
-| CNL Constraints | Author | Author, System (processing only) | With associated specification | Deleted with specification |
-| VSA Indices | System | System (operational use) | Until index rebuild or project deletion | Automatic with source data |
+| Category | Description | Owner | Storage |
+|----------|-------------|-------|---------|
+| Projects | Story project configurations | Author | projects.json |
+| Characters | Character definitions with traits, goals | Author | characters.json |
+| Locations | Setting/place definitions | Author | locations.json |
+| Specifications | Narrative specs (legacy format) | Author | specs.json |
+| Plans | Generated story structures | System | plans.json |
+| Drafts | Generated text content | Author | drafts.json |
+| Evaluation Reports | Quality metric results | System | evaluation_reports.json |
+| Verification Reports | Constraint check results | System | verify_reports.json |
+| Guardrail Reports | Content safety checks | System | guardrail_reports.json |
+| Reviews | Literary review feedback | System | reviews.json |
+| Audit Log | Operation history | System | audit.json |
+| VSA Index | Semantic vectors | System | vsa_index.json |
 
 
-## 2. Data Handling and Security
+## 2. Storage Architecture
 
-All data in SCRIPTA is handled according to principles of data minimization and purpose limitation. The system collects only what is necessary for the requested service and uses it only for that purpose. Data is not repurposed for training, marketing, or any purpose beyond the explicit service request without informed consent.
+### 2.1 File-Based Persistence
 
-Encryption protects data at rest and in transit. Storage uses AES-256 encryption with keys managed through a secure key management service. Transport uses TLS 1.3 for all API communications. Keys are rotated according to a defined schedule, and key access is logged for audit purposes.
+SCRIPTA uses a simple JSON file-based storage system for maximum portability and zero external dependencies. All data is stored in the `/data` directory.
 
-PII (Personally Identifiable Information) detection is applied to all narrative input before storage. The system scans for patterns matching names, addresses, phone numbers, email addresses, and identification numbers. Detected PII is flagged for author review, and authors can choose to redact, pseudonymize, or retain the information. This protects authors from inadvertently including sensitive information in content that may be shared or published.
+```
+data/
+├── projects.json       # Story projects
+├── characters.json     # Character library
+├── locations.json      # Location library
+├── specs.json          # Narrative specifications
+├── plans.json          # Generated plans
+├── drafts.json         # Generated content
+├── evaluation_reports.json
+├── verify_reports.json
+├── guardrail_reports.json
+├── reviews.json
+├── audit.json          # Immutable audit log
+└── vsa_index.json      # Semantic search index
+```
 
-Access control uses role-based permissions with four defined roles. Authors can access their own data and request services. Workflow Developers can create and modify SOPs but cannot access author content. Compliance Reviewers can access audit logs and reports but cannot modify content. Administrators can manage users and system configuration but have no special access to content. All access is logged in the audit trail.
+### 2.2 JsonStore Implementation
 
-The following table describes security controls by data category.
+Each store provides:
+- **get(id)**: Retrieve item by ID
+- **set(id, value)**: Create or update item
+- **delete(id)**: Remove item
+- **values()**: Get all items
+- **filter(predicate)**: Query items
+- **find(predicate)**: Find single item
 
-| Category | Encryption | Access Control | PII Handling | Audit Logging |
-|----------|------------|----------------|--------------|---------------|
-| Narrative Input | AES-256 at rest, TLS in transit | Author only + System processing | Detected and flagged | All access logged |
-| Generated Output | AES-256 at rest, TLS in transit | Author + authorized reviewers | Inherited from input | All access logged |
-| Audit Data | AES-256 at rest, cryptographic signing | Compliance + Admin | Minimized (hashes, not raw data) | Self-logging (part of audit) |
-| CNL Constraints | AES-256 at rest | Author + System processing | Not applicable (structured data) | Logged as spec modifications |
-| VSA Indices | AES-256 at rest | System only | Not applicable (vectors only) | Index operations logged |
-
-
-## 3. Provenance and Auditability
-
-Provenance tracks the origin and transformation of every artifact in the system. This is essential for two purposes: debugging and improvement (understanding what went wrong when outputs are unsatisfactory) and legal compliance (demonstrating human authorship and due diligence).
-
-Every output artifact is linked to its provenance chain. This chain includes the specification ID that defined the creative constraints, the SOP ID that orchestrated the workflow, the versions of all agents involved in production, the hashes of all inputs consumed, the timestamps of all operations, and the implementation profile (basic or VSA) used for algorithmic operations. This information is stored in the audit log and can be retrieved for any artifact.
-
-Audit log entries are designed to be immutable. Once written, an entry cannot be modified or deleted. This is enforced through cryptographic chaining: each entry includes a hash of the previous entry, creating a chain where any modification would break the hash linkage and be detectable. The audit log is also signed with the system's private key, providing non-repudiation.
-
-Compliance reports aggregate provenance information into human-readable documents. These reports summarize the creative process for a given artifact, listing all inputs, decisions, and transformations. They are designed to serve as evidence in copyright proceedings, demonstrating that a human author specified the creative intent, reviewed the outputs, and exercised editorial judgment. The report format aligns with guidance from the U.S. Copyright Office on AI-assisted works.
-
-
-## 4. Retention and Deletion
-
-Retention policies balance legal requirements, operational needs, and user rights. Different data categories have different retention requirements, and the system enforces these automatically.
-
-Audit data has the longest retention requirement: a minimum of seven years to satisfy potential legal discovery needs. This period may be extended if litigation is pending or reasonably anticipated. Audit data is stored in a separate archive with higher durability guarantees than operational data.
-
-Narrative input and generated output retention is configurable by the author within system limits. Authors can choose immediate deletion upon project completion, retention for a specified period (30 days to 5 years), or indefinite retention until explicit deletion request. The system default is 1 year retention with automatic reminders before deletion.
-
-Deletion requests are processed according to data category. For narrative input and generated output, deletion removes the data from primary storage and backups within 30 days. For audit data, the content payload is removed but the metadata (timestamps, hashes, actor IDs) is retained to maintain chain integrity. VSA indices are rebuilt automatically after source data deletion, ensuring that no semantic fingerprint of deleted content remains.
-
-The following table summarizes retention policies.
-
-| Category | Default Retention | Minimum Retention | Maximum Retention | Deletion Process |
-|----------|-------------------|-------------------|-------------------|------------------|
-| Narrative Input | 1 year | None (immediate deletion allowed) | Indefinite | Full deletion including backups |
-| Generated Output | 1 year | None | Indefinite | Full deletion including backups |
-| Audit Data | 7 years | 7 years | Indefinite | Payload removal, metadata retained |
-| CNL Constraints | With specification | None | With specification | Deleted with specification |
-| VSA Indices | Until rebuild | None | Until rebuild | Automatic with source data |
+All modifications are immediately persisted to disk with in-memory caching for read performance.
 
 
-## 5. Open Issues and Future Considerations
+## 3. Data Structures
 
-Several governance questions remain open and will be resolved as the system matures and legal frameworks evolve.
+### 3.1 Project Structure
 
-Licensing terms for external corpora used in evaluation datasets need formal documentation. Currently, datasets are assembled from public domain works, licensed content, and researcher-created synthetic examples. Each source requires documented licensing terms and usage restrictions.
+```json
+{
+  "id": "proj_abc123",
+  "title": "The Storm Within",
+  "format": "novel",
+  "synopsis": "A story about courage",
+  "pattern": "three_act",
+  "elements": {
+    "characters": ["char_id1", "char_id2"],
+    "locations": ["loc_id1"],
+    "themes": ["courage", "family"],
+    "tone": "hopeful"
+  },
+  "cnl_constraints": "CHARACTER(Anna).\nTRAIT(Anna, courageous).",
+  "created_at": "2024-01-15T10:00:00Z",
+  "updated_at": "2024-01-15T12:00:00Z"
+}
+```
 
-Policies for reuse of generated text in model fine-tuning are not yet established. If authors consent to having their reviewed outputs used to improve the system, this creates value but also raises questions about ownership and compensation. This requires careful policy development with legal review.
+### 3.2 Character Structure
 
-Cross-border data handling may require additional safeguards depending on where authors are located. GDPR (European), CCPA (California), and other regulations impose specific requirements that may affect storage location, transfer mechanisms, and user rights implementation.
+```json
+{
+  "id": "char_abc123",
+  "name": "Anna",
+  "archetype": "hero",
+  "traits": ["courageous", "determined", "protective"],
+  "goals": [
+    { "action": "protect", "target": "brother" }
+  ],
+  "relationships": [
+    { "character": "char_xyz789", "type": "sibling" }
+  ],
+  "backstory": "Grew up in a coastal village...",
+  "created_at": "2024-01-15T10:00:00Z"
+}
+```
 
-The interaction between audit immutability and right-to-deletion requests presents a tension that must be carefully managed. The current approach (removing payload while retaining metadata) may not satisfy all regulatory interpretations, and this may require revisiting as case law develops.
+### 3.3 Plan Structure
+
+```json
+{
+  "id": "plan_abc123",
+  "project_id": "proj_abc123",
+  "structure": "three_act",
+  "scenes": [
+    {
+      "id": "scene_001",
+      "number": 1,
+      "act": "act_1",
+      "act_name": "Setup",
+      "type": "introduction",
+      "summary": "Introduce protagonist and their world",
+      "characters": ["Anna"],
+      "estimated_words": 750
+    }
+  ],
+  "arcs": [...],
+  "metadata": {
+    "total_scenes": 9,
+    "estimated_words": 25000,
+    "character_count": 2
+  },
+  "created_at": "2024-01-15T10:00:00Z"
+}
+```
+
+### 3.4 Draft Structure
+
+```json
+{
+  "id": "draft_abc123",
+  "plan_id": "plan_abc123",
+  "scene_id": "scene_001",
+  "content": "The salt-laden wind whipped through Anna's hair...",
+  "word_count": 847,
+  "created_at": "2024-01-15T10:00:00Z"
+}
+```
+
+
+## 4. Audit Logging
+
+### 4.1 Audit Entry Structure
+
+```json
+{
+  "id": "audit_abc123",
+  "timestamp": "2024-01-15T10:00:00Z",
+  "event": "project.created",
+  "actor": "system",
+  "payload": { "project_id": "proj_abc123" },
+  "previous_hash": "...",
+  "signature": "..."
+}
+```
+
+### 4.2 Audit Events
+
+| Event | Description |
+|-------|-------------|
+| project.created | New project created |
+| spec.created | Specification created |
+| plan.created | Plan generated |
+| generate.started | Content generation started |
+| generate.completed | Content generation finished |
+| verify.completed | Verification check completed |
+| guardrail.completed | Guardrail check completed |
+| evaluate.completed | Evaluation completed |
+| review.completed | Literary review completed |
+
+### 4.3 Chain Integrity
+
+Audit entries are cryptographically chained:
+- Each entry includes hash of previous entry
+- Chain verification detects tampering
+- API endpoint `/v1/audit/verify` checks chain integrity
+
+
+## 5. Data Retention
+
+### 5.1 Retention Policy
+
+| Category | Default Retention | Notes |
+|----------|-------------------|-------|
+| Projects | Indefinite | Until author deletes |
+| Characters | Indefinite | Reusable across projects |
+| Locations | Indefinite | Reusable across projects |
+| Plans | With project | Deleted when project deleted |
+| Drafts | With project | Deleted when project deleted |
+| Reports | 90 days | Auto-cleanup after period |
+| Audit Logs | 1 year | Required for compliance |
+
+### 5.2 Deletion Behavior
+
+When a project is deleted:
+1. Project record is removed
+2. Associated plans are deleted
+3. Associated drafts are deleted
+4. Reports referencing project are marked for cleanup
+5. Audit entries are preserved (payload anonymized)
+
+
+## 6. Configuration
+
+### 6.1 Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| SCRIPTA_DATA_DIR | ./data | Storage directory path |
+
+### 6.2 Customization
+
+The storage directory can be changed by setting the `SCRIPTA_DATA_DIR` environment variable:
+
+```bash
+SCRIPTA_DATA_DIR=/path/to/storage node demo/server.mjs
+```
+
+
+## 7. Future Considerations
+
+### 7.1 Potential Enhancements
+
+- SQLite backend option for larger datasets
+- Cloud storage integration (S3, GCS)
+- Backup and restore utilities
+- Data export in standard formats
+- Encryption at rest option
+
+### 7.2 Migration Path
+
+The file-based storage can be migrated to other backends by:
+1. Implementing the JsonStore interface for new backend
+2. Running migration script to transfer data
+3. Updating configuration to use new backend

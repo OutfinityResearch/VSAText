@@ -466,9 +466,7 @@ function testExamplesValidatorCli() {
 }
 
 function testEvalExamplesCnl() {
-  // Note: The eval JSONL still contains legacy predicate CNL format
-  // This test is temporarily relaxed until full migration is complete
-  // TODO: Update docs/evals/scripta_nl_cnl.jsonl to SVO format
+  // Eval JSONL has been migrated to SVO CNL format
   const evalPath = path.join(ROOT, 'docs', 'evals', 'scripta_nl_cnl.jsonl');
   const lines = fs.readFileSync(evalPath, 'utf-8').trim().split(/\r?\n/);
   let validCount = 0;
@@ -477,9 +475,7 @@ function testEvalExamplesCnl() {
     const { errors } = validateText(item.cnl);
     if (errors.length === 0) validCount++;
   }
-  // Relaxed: predicate format won't validate with SVO parser
-  // Original threshold was 0.95, now we just check the test runs
-  assert.ok(lines.length > 0, 'Should have eval examples');
+  assert.ok(validCount / lines.length >= 0.95, 'At least 95% of eval CNL should be valid');
 }
 
 export const tests = [

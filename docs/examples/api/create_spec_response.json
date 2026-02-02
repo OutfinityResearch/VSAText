@@ -5,7 +5,7 @@
     "synopsis": "A sea captain faces a moral dilemma during a historic storm.",
     "themes": ["responsibility", "sacrifice"],
     "constraints": ["include a storm scene", "avoid explicit violence"],
-    "cnl_constraints": ["RULE(Scene_3, must_include, \"storm\")."],
+    "cnl_constraints": ["Anna is protagonist", "Anna has trait courageous", "Scene_3 requires \"storm\""],
     "characters": [
       {"id": "char_anna", "name": "Anna", "traits": ["courageous"], "goals": ["protect brother"]}
     ],

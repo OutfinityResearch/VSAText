@@ -31,6 +31,7 @@ The following table provides an index of all DS documents with their scope and p
 | DS21 | Metric: Constraint Satisfaction Accuracy (CSA) | Formal definition + procedure + threshold | Researchers, evaluators |
 | DS22 | Metric: Explainability Score (XAI) | Human survey definition + threshold | Researchers, UX |
 | DS23 | Metric: Narrative Quality Score (NQS) | Composite definition + thresholds | Researchers, evaluators |
+| DS24 | Architecture Overview | Browser-first architecture, persistence-only server, and module tiering | Developers, maintainers |
 
 Documents are designed to be read in sequence for newcomers (DS01 through DS07 provides a complete picture) or selectively for specialists (a developer might focus on DS02 and DS04, a researcher on DS03 and DS05).
 
@@ -123,7 +124,7 @@ The DS documents have logical dependencies that determine reading order for diff
 
 For understanding the overall vision and goals, read DS01 first. It provides context for all other documents and can be read standalone by non-technical stakeholders.
 
-For implementing the API and services, read DS02 after DS01. DS02 depends on DS01 for understanding the goals that the API must support.
+For implementing the persistence API, read DS02 after DS01. For authoritative architecture decisions (browser-first, persistence-only), read DS24.
 
 For designing experiments or evaluations, read DS03 after DS01 and DS02. DS03 references metrics defined conceptually in DS01 and operationalized through the API in DS02.
 

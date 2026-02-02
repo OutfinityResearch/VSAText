@@ -1,102 +1,93 @@
 #!/usr/bin/env node
 /**
- * SCRIPTA CNL CLI
+ * SCRIPTA CNL CLI Tool
  * 
- * Command-line interface for parsing and validating CNL files.
- * Uses the unified SVO parser from demo/cnl-parser.mjs
+ * Command-line interface for CNL validation and processing.
  */
 
 import fs from 'fs';
-import { parseCNL, extractEntities, generateMarkdown, generateSkeleton, countGroups } from './validator.mjs';
+import {
+  parseCNL,
+  extractEntities,
+  countGroups,
+  generateMarkdown,
+  generateSkeleton
+} from './validator.mjs';
 
-function printUsage() {
-  console.log(`
-SCRIPTA CNL CLI v2.0
+const filePath = process.argv[2];
+const outputFormat = process.argv[3] || 'json';
 
-Usage: node cli.mjs <file.cnl> [format]
+if (!filePath) {
+  console.log(`SCRIPTA CNL CLI v2.0
+
+Usage: cli.mjs <file.cnl> [format]
 
 Formats:
   json      - Full AST output (default)
-  summary   - Brief summary of entities and structure
-  markdown  - Export as Markdown document
+  markdown  - Export as Markdown
   skeleton  - Generate narrative skeleton
+  summary   - Brief summary
 
-Examples:
-  node cli.mjs examples.cnl
-  node cli.mjs examples.cnl summary
-  node cli.mjs examples.cnl markdown > story.md
-  echo "Anna is hero" | node cli.mjs - summary
+Example CNL syntax:
+  Anna is protagonist
+  Anna has trait courage
+  Anna relates to Marcus as sibling
+  
+  Chapter1 group begin
+    Chapter1 has title "The Beginning"
+    Anna discovers artifact
+  Chapter1 group end
 `);
+  process.exit(1);
 }
 
-function loadInput() {
-  const arg = process.argv[2];
+try {
+  const text = fs.readFileSync(filePath, 'utf-8');
+  const result = parseCNL(text);
   
-  if (!arg || arg === '--help' || arg === '-h') {
-    printUsage();
-    process.exit(0);
-  }
-  
-  if (arg === '-') {
-    // Read from stdin
-    return fs.readFileSync(0, 'utf-8');
-  }
-  
-  if (!fs.existsSync(arg)) {
-    console.error(`Error: File not found: ${arg}`);
-    process.exit(1);
-  }
-  
-  return fs.readFileSync(arg, 'utf-8');
-}
-
-function formatOutput(result, format) {
-  switch (format) {
+  switch (outputFormat) {
     case 'markdown':
     case 'md':
-      return generateMarkdown(result.ast);
+      console.log(generateMarkdown(result.ast));
+      break;
       
     case 'skeleton':
-      return generateSkeleton(result.ast);
+      console.log(generateSkeleton(result.ast));
+      break;
       
-    case 'summary': {
+    case 'summary':
       const entities = extractEntities(result.ast);
-      const lines = [
-        'CNL Validation Summary',
-        '======================',
-        `Valid: ${result.valid ? 'Yes' : 'No'}`,
-        `Errors: ${result.errors.length}`,
-        `Warnings: ${result.warnings.length}`,
-        '',
-        'Entities:',
-        `  Characters: ${entities.characters.length}`,
-        `  Locations: ${entities.locations.length}`,
-        `  Themes: ${entities.themes.length}`,
-        `  Objects: ${entities.objects.length}`,
-        `  Other: ${entities.other.length}`,
-        '',
-        `Groups: ${countGroups(result.ast.groups)}`,
-        `Relationships: ${result.ast.relationships.length}`,
-        `References: ${result.ast.references.length}`,
-        '',
-        'Constraints:',
-        `  Requires: ${result.ast.constraints.requires.length}`,
-        `  Forbids: ${result.ast.constraints.forbids.length}`
-      ];
-      
+      console.log(`CNL Validation Summary
+======================
+Valid: ${result.valid ? 'Yes' : 'No'}
+Errors: ${result.errors.length}
+Warnings: ${result.warnings.length}
+
+Entities:
+  Characters: ${entities.characters.length}
+  Locations: ${entities.locations.length}
+  Themes: ${entities.themes.length}
+  Objects: ${entities.objects.length}
+
+Groups: ${countGroups(result.ast.groups)}
+Relationships: ${result.ast.relationships.length}
+References: ${result.ast.references.length}
+
+Constraints:
+  Requires: ${result.ast.constraints.requires.length}
+  Forbids: ${result.ast.constraints.forbids.length}
+`);
       if (result.errors.length > 0) {
-        lines.push('', 'Errors:');
+        console.log('Errors:');
         for (const err of result.errors) {
-          lines.push(`  Line ${err.line}: ${err.message}`);
+          console.log(`  Line ${err.line}: ${err.message}`);
         }
       }
-      
-      return lines.join('\n');
-    }
+      break;
       
     case 'json':
     default:
-      return JSON.stringify({
+      console.log(JSON.stringify({
         valid: result.valid,
         errors: result.errors,
         warnings: result.warnings,
@@ -110,14 +101,12 @@ function formatOutput(result, format) {
         relationships: result.ast.relationships,
         references: result.ast.references,
         constraints: result.ast.constraints
-      }, null, 2);
+      }, null, 2));
+      break;
   }
+  
+  process.exit(result.valid ? 0 : 2);
+} catch (err) {
+  console.error('Error:', err.message);
+  process.exit(1);
 }
-
-// Main execution
-const text = loadInput();
-const format = process.argv[3] || 'json';
-const result = parseCNL(text);
-
-console.log(formatOutput(result, format));
-process.exit(result.valid ? 0 : 2);

@@ -1,33 +1,31 @@
 #!/usr/bin/env node
 /**
- * SCRIPTA Story Forge - Minimal Persistence Server
+ * SCRIPTA Persistence Server
  * 
- * This server ONLY handles persistence (save/load projects).
+ * Minimal HTTP server for project persistence only.
  * All processing (CNL parsing, metrics, generation) happens in the browser.
  */
 
 import http from 'http';
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import crypto from 'crypto';
+import {
+  initStorage,
+  listProjects,
+  loadProject,
+  saveProject,
+  deleteProject
+} from './storage/projects.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = process.env.SCRIPTA_DATA_DIR || path.join(__dirname, '..', 'data');
-const PROJECTS_DIR = path.join(DATA_DIR, 'projects');
 
-// Ensure directories exist
-[DATA_DIR, PROJECTS_DIR].forEach(dir => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-});
+// Initialize storage
+initStorage(DATA_DIR);
 
 // ============================================
-// UTILITY FUNCTIONS
+// HTTP UTILITIES
 // ============================================
-
-function generateId() {
-  return `proj_${Date.now().toString(36)}_${crypto.randomBytes(4).toString('hex')}`;
-}
 
 function jsonResponse(res, statusCode, data) {
   const body = JSON.stringify(data);
@@ -62,61 +60,6 @@ async function parseBody(req, maxSize = 10_000_000) {
       }
     });
   });
-}
-
-// ============================================
-// PROJECT STORAGE
-// ============================================
-
-function getProjectPath(id) {
-  return path.join(PROJECTS_DIR, `${id}.json`);
-}
-
-function listProjects() {
-  const files = fs.readdirSync(PROJECTS_DIR).filter(f => f.endsWith('.json'));
-  return files.map(f => {
-    try {
-      const data = JSON.parse(fs.readFileSync(path.join(PROJECTS_DIR, f), 'utf-8'));
-      return {
-        id: data.id,
-        name: data.name || 'Untitled',
-        genre: data.metadata?.genre || '',
-        modified_at: data.modified_at || data.created_at,
-        metrics_summary: data.metrics?.scores ? { nqs: data.metrics.scores.nqs } : null,
-        group_count: data.structure?.groups?.length || 0,
-        entity_count: Object.values(data.entities || {}).flat().length
-      };
-    } catch {
-      return null;
-    }
-  }).filter(Boolean);
-}
-
-function loadProject(id) {
-  const filepath = getProjectPath(id);
-  if (!fs.existsSync(filepath)) return null;
-  try {
-    return JSON.parse(fs.readFileSync(filepath, 'utf-8'));
-  } catch {
-    return null;
-  }
-}
-
-function saveProject(project) {
-  if (!project.id) project.id = generateId();
-  project.modified_at = new Date().toISOString();
-  if (!project.created_at) project.created_at = project.modified_at;
-  
-  const filepath = getProjectPath(project.id);
-  fs.writeFileSync(filepath, JSON.stringify(project, null, 2), 'utf-8');
-  return project.id;
-}
-
-function deleteProject(id) {
-  const filepath = getProjectPath(id);
-  if (!fs.existsSync(filepath)) return false;
-  fs.unlinkSync(filepath);
-  return true;
 }
 
 // ============================================

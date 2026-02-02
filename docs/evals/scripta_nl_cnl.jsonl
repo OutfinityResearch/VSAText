@@ -1,100 +1,100 @@
-{"id":"eval_001","domain":"book","nl":"Anna must stay courageous, and a storm must appear in scene 3.","cnl":"CHARACTER(Anna).\nTRAIT(Anna, courageous).\nRULE(Scene_3, must_include, \"storm\").","tags":["character","constraint","scene"]}
-{"id":"eval_002","domain":"screenplay","nl":"The protagonist should never use magic; keep the story grounded.","cnl":"CHARACTER(Protagonist).\nRULE(World, forbid, magic).","tags":["world_rule","tone"]}
-{"id":"eval_003","domain":"tutorial","nl":"Explain CRISPR in 5 steps and include a safety warning.","cnl":"FORMAT(Tutorial, steps, 5).\nRULE(Tutorial, must_include, \"safety warning\").","tags":["structure","safety"]}
-{"id":"eval_004","domain":"research","nl":"Cite at least two sources and avoid medical claims.","cnl":"RULE(Document, must_include, \"citations\").\nRULE(Document, forbid, \"medical claims\").","tags":["compliance","constraints"]}
-{"id":"eval_005","domain":"book","nl":"In chapter 2, introduce a mentor named Irina.","cnl":"CHARACTER(Irina).\nRULE(Chapter_2, must_introduce, Irina).","tags":["character","plot"]}
-{"id":"eval_006","domain":"screenplay","nl":"Scene 5 must contain a train station and no dialogue.","cnl":"RULE(Scene_5, must_include, \"train station\").\nRULE(Scene_5, forbid, \"dialogue\").","tags":["scene","style"]}
-{"id":"eval_007","domain":"book","nl":"The main character must protect their brother, and the ending should be hopeful.","cnl":"CHARACTER(Main).\nGOAL(Main, protect, brother).\nRULE(Ending, tone, hopeful).","tags":["goal","ending"]}
-{"id":"eval_008","domain":"tutorial","nl":"Use second-person voice and keep paragraphs short.","cnl":"RULE(Style, voice, second_person).\nRULE(Style, paragraphs, short).","tags":["style"]}
-{"id":"eval_009","domain":"research","nl":"The report should be neutral and avoid stereotypes.","cnl":"RULE(Document, tone, neutral).\nRULE(Document, forbid, \"stereotypes\").","tags":["ethics","bias"]}
-{"id":"eval_010","domain":"screenplay","nl":"By act 3, reveal that the ship was sabotaged.","cnl":"RULE(Act_3, must_reveal, \"ship was sabotaged\").","tags":["plot","twist"]}
-{"id":"eval_011","domain":"book","nl":"Limit the story to 3 main characters.","cnl":"RULE(Story, max_characters, 3).","tags":["constraints"]}
-{"id":"eval_012","domain":"tutorial","nl":"Include one real-world example and a short summary at the end.","cnl":"RULE(Tutorial, must_include, \"real-world example\").\nRULE(Ending, must_include, \"summary\").","tags":["structure","examples"]}
-{"id":"eval_013","domain":"book","nl":"Keep the tone melancholic until the midpoint, then shift to determination.","cnl":"RULE(Act_1, tone, melancholic).\nRULE(Midpoint, tone, determination).","tags":["tone","arc"]}
-{"id":"eval_014","domain":"book","nl":"The antagonist must be sympathetic, not purely evil.","cnl":"CHARACTER(Antagonist).\nTRAIT(Antagonist, sympathetic).\nRULE(Antagonist, forbid, purely_evil).","tags":["character","ethics"]}
-{"id":"eval_015","domain":"book","nl":"No supernatural elements are allowed in the world.","cnl":"RULE(World, forbid, supernatural).","tags":["world_rule"]}
-{"id":"eval_016","domain":"book","nl":"Make chapter 1 end with a cliffhanger.","cnl":"RULE(Chapter_1, ending, cliffhanger).","tags":["structure","pacing"]}
-{"id":"eval_017","domain":"book","nl":"Introduce a recurring motif: the sound of bells.","cnl":"RULE(Story, must_include_motif, \"bells\").","tags":["motif"]}
-{"id":"eval_018","domain":"book","nl":"Every scene must advance either plot or character, never both missing.","cnl":"RULE(Scene, must_advance, plot_or_character).","tags":["consistency","structure"]}
-{"id":"eval_019","domain":"book","nl":"Avoid cliches like 'it was a dark and stormy night'.","cnl":"GUARDRAIL(Text, forbid_phrase, \"it was a dark and stormy night\").","tags":["originality","guardrail"]}
-{"id":"eval_020","domain":"book","nl":"Keep POV strictly first person.","cnl":"RULE(Style, pov, first_person).","tags":["style"]}
-{"id":"eval_021","domain":"screenplay","nl":"Write a 3-act structure with 12 scenes.","cnl":"FORMAT(Screenplay, acts, 3).\nFORMAT(Screenplay, scenes, 12).","tags":["structure"]}
-{"id":"eval_022","domain":"screenplay","nl":"Act 1 must establish the protagonist's flaw.","cnl":"RULE(Act_1, must_establish, \"protagonist flaw\").","tags":["structure","character"]}
-{"id":"eval_023","domain":"screenplay","nl":"Ensure the dialogue is at most 30% of scene 2.","cnl":"RULE(Scene_2, max_dialogue_ratio, 0.3).","tags":["style","constraints"]}
-{"id":"eval_024","domain":"screenplay","nl":"Scene 7 must be a silent montage.","cnl":"RULE(Scene_7, type, silent_montage).","tags":["scene","style"]}
-{"id":"eval_025","domain":"screenplay","nl":"The reveal must be foreshadowed in act 1.","cnl":"RULE(Act_1, must_foreshadow, \"reveal\").","tags":["coherence","plot"]}
-{"id":"eval_026","domain":"screenplay","nl":"Do not include any brand names.","cnl":"RULE(Document, forbid, brand_names).","tags":["compliance"]}
-{"id":"eval_027","domain":"screenplay","nl":"Keep the protagonist's name consistent: always 'Anna', never 'Ana'.","cnl":"RULE(CharacterName, must_equal, Anna).\nRULE(CharacterName, forbid, Ana).","tags":["consistency"]}
-{"id":"eval_028","domain":"screenplay","nl":"The ending must resolve the main goal and leave one open question.","cnl":"RULE(Ending, must_resolve, main_goal).\nRULE(Ending, must_leave_open, 1).","tags":["ending","structure"]}
-{"id":"eval_029","domain":"screenplay","nl":"Include a turning point at minute 30.","cnl":"RULE(Timeline, turning_point_minute, 30).","tags":["structure","timing"]}
-{"id":"eval_030","domain":"screenplay","nl":"Avoid excessive exposition in act 1.","cnl":"RULE(Act_1, max_exposition, moderate).","tags":["style","pacing"]}
-{"id":"eval_031","domain":"tutorial","nl":"Explain vector symbolic architectures in 7 bullet points.","cnl":"FORMAT(Tutorial, bullets, 7).\nRULE(Tutorial, topic, VSA).","tags":["structure","vsa"]}
-{"id":"eval_032","domain":"tutorial","nl":"Include a glossary with at least 5 terms.","cnl":"RULE(Document, must_include, glossary).\nRULE(Glossary, min_terms, 5).","tags":["structure"]}
-{"id":"eval_033","domain":"tutorial","nl":"Add one short code example and explain it.","cnl":"RULE(Tutorial, must_include, \"code example\").\nRULE(Tutorial, must_explain, \"code example\").","tags":["examples"]}
-{"id":"eval_034","domain":"tutorial","nl":"Keep the total length under 900 words.","cnl":"RULE(Document, max_words, 900).","tags":["constraints"]}
-{"id":"eval_035","domain":"tutorial","nl":"Use simple language, avoid jargon.","cnl":"RULE(Style, readability, simple).\nRULE(Style, forbid, jargon).","tags":["style"]}
-{"id":"eval_036","domain":"tutorial","nl":"Provide a checklist at the end with 6 items.","cnl":"RULE(Ending, must_include, checklist).\nRULE(Checklist, items, 6).","tags":["structure"]}
-{"id":"eval_037","domain":"tutorial","nl":"Explain the tradeoff between embeddings and VSA indexing.","cnl":"RULE(Tutorial, must_compare, embeddings_vs_vsa).","tags":["vsa","retrieval"]}
-{"id":"eval_038","domain":"tutorial","nl":"Include two common mistakes and how to avoid them.","cnl":"RULE(Tutorial, must_include, \"common mistakes\").\nRULE(Tutorial, mistakes_count, 2).","tags":["quality"]}
-{"id":"eval_039","domain":"tutorial","nl":"Include a one-paragraph TL;DR at the top.","cnl":"RULE(Document, must_include, tldr).\nRULE(TLDR, paragraphs, 1).","tags":["structure"]}
-{"id":"eval_040","domain":"tutorial","nl":"Use diagrams as SVG references, not ASCII art.","cnl":"RULE(Assets, must_use, SVG).\nRULE(Assets, forbid, ASCII_diagrams).","tags":["docs"]}
-{"id":"eval_041","domain":"research","nl":"Summarize the state of the art in narrative coherence evaluation and cite at least 3 sources.","cnl":"RULE(Document, topic, narrative_coherence).\nRULE(Document, min_citations, 3).","tags":["research","citations"]}
-{"id":"eval_042","domain":"research","nl":"Clearly separate background, method, and limitations sections.","cnl":"RULE(Document, must_include_section, background).\nRULE(Document, must_include_section, method).\nRULE(Document, must_include_section, limitations).","tags":["structure"]}
-{"id":"eval_043","domain":"research","nl":"Do not claim experimental results without stating assumptions.","cnl":"RULE(Document, forbid, \"unstated assumptions\").","tags":["integrity"]}
-{"id":"eval_044","domain":"research","nl":"Provide a threat model for prompt injection.","cnl":"RULE(Document, must_include, threat_model).\nRULE(ThreatModel, topic, prompt_injection).","tags":["security","ta"]}
-{"id":"eval_045","domain":"research","nl":"List at least 5 KPIs and define them.","cnl":"RULE(Document, min_kpis, 5).\nRULE(Document, must_define, KPIs).","tags":["kpi"]}
-{"id":"eval_046","domain":"research","nl":"Include a reproducibility checklist.","cnl":"RULE(Document, must_include, reproducibility_checklist).","tags":["reproducibility"]}
-{"id":"eval_047","domain":"research","nl":"Discuss data governance and retention policies.","cnl":"RULE(Document, must_include, data_governance).\nRULE(Document, must_include, retention_policy).","tags":["data"]}
-{"id":"eval_048","domain":"research","nl":"Avoid biased language and include fairness considerations.","cnl":"RULE(Document, forbid, biased_language).\nRULE(Document, must_include, fairness_considerations).","tags":["ethics","bias"]}
-{"id":"eval_049","domain":"research","nl":"Include a section explaining audit logs and provenance.","cnl":"RULE(Document, must_include, audit_log).\nRULE(Document, must_include, provenance).","tags":["audit"]}
-{"id":"eval_050","domain":"research","nl":"Explain how SOP Lang orchestrates multi-agent workflows.","cnl":"RULE(Document, must_include, SOP_Lang).\nRULE(Document, must_include, multi_agent_orchestration).","tags":["architecture"]}
-{"id":"eval_051","domain":"reverse_engineering","nl":"Given a draft, extract a character list and core themes.","cnl":"REVERSE_ENGINEER(Draft, extract, characters).\nREVERSE_ENGINEER(Draft, extract, themes).","tags":["reverse"]}
-{"id":"eval_052","domain":"reverse_engineering","nl":"From chapter 1 text, infer the world rules.","cnl":"REVERSE_ENGINEER(Chapter_1, infer, world_rules).","tags":["reverse","world"]}
-{"id":"eval_053","domain":"reverse_engineering","nl":"Continue a story by first reconstructing a plan.","cnl":"REVERSE_ENGINEER(Text, output, plan).\nRULE(Pipeline, order, reverse_then_generate).","tags":["reverse","planning"]}
-{"id":"eval_054","domain":"literary_review","nl":"Review the draft for pacing issues and suggest fixes.","cnl":"REVIEW(Draft, evaluate, pacing).\nREVIEW(Draft, suggest, fixes).","tags":["review"]}
-{"id":"eval_055","domain":"literary_review","nl":"Flag repeated phrases and propose alternatives.","cnl":"REVIEW(Draft, detect, repetition).\nREVIEW(Draft, suggest, alternatives).","tags":["review","style"]}
-{"id":"eval_056","domain":"compliance","nl":"Generate a compliance report covering copyright and bias risks.","cnl":"REPORT(Compliance, include, copyright).\nREPORT(Compliance, include, bias).","tags":["compliance","report"]}
-{"id":"eval_057","domain":"compliance","nl":"Ensure the audit log captures each generation step.","cnl":"AUDIT(Log, must_capture, generation_steps).","tags":["audit"]}
-{"id":"eval_058","domain":"xai","nl":"Explain why a constraint was violated and how to fix it.","cnl":"EXPLAIN(System, must_explain, violation).\nEXPLAIN(System, must_suggest, fix).","tags":["xai"]}
-{"id":"eval_059","domain":"retrieval","nl":"When asked about foreshadowing, retrieve the most relevant earlier scenes.","cnl":"VSA(Search, must_retrieve, scenes).\nRULE(Retrieval, top_k, 5).","tags":["vsa","retrieval"]}
-{"id":"eval_060","domain":"retrieval","nl":"Index character traits for long-form consistency checks.","cnl":"VSA(Index, store, character_traits).\nRULE(Verification, must_use, VSA).","tags":["vsa","consistency"]}
-{"id":"eval_061","domain":"book","nl":"Ensure character attributes do not drift across 10 chapters.","cnl":"RULE(Verification, track, character_attributes).\nRULE(Story, chapters, 10).","tags":["cad","verification"]}
-{"id":"eval_062","domain":"book","nl":"Add a scene-by-scene plan before generating prose.","cnl":"RULE(Pipeline, must_include, planning).\nRULE(Pipeline, order, plan_then_generate).","tags":["planning"]}
-{"id":"eval_063","domain":"screenplay","nl":"Reject any request to imitate a living author's unique style.","cnl":"GUARDRAIL(Style, forbid, \"living author imitation\").","tags":["ethics","copyright"]}
-{"id":"eval_064","domain":"research","nl":"Provide citations in a consistent format.","cnl":"RULE(Citations, format, consistent).","tags":["citations"]}
-{"id":"eval_065","domain":"tutorial","nl":"Ensure the tutorial is understandable for beginners.","cnl":"RULE(Style, audience, beginner).","tags":["readability"]}
-{"id":"eval_066","domain":"compliance","nl":"Detect and flag potentially harmful stereotypes in character descriptions.","cnl":"GUARDRAIL(Text, detect, stereotypes).\nGUARDRAIL(Text, action, flag).","tags":["bias","guardrail"]}
-{"id":"eval_067","domain":"screenplay","nl":"Keep action lines vivid but concise.","cnl":"RULE(Style, action_lines, vivid).\nRULE(Style, action_lines, concise).","tags":["style"]}
-{"id":"eval_068","domain":"book","nl":"Ensure the protagonist's goal is explicitly stated by scene 2.","cnl":"RULE(Scene_2, must_state, protagonist_goal).","tags":["goal","structure"]}
-{"id":"eval_069","domain":"research","nl":"Include an ablation study comparing basic vs VSA/HDC methods.","cnl":"RULE(Experiment, must_include, ablation).\nRULE(Experiment, compare, basic_vs_vsa).","tags":["experiments","vsa"]}
-{"id":"eval_070","domain":"tutorial","nl":"Provide a quick-start section.","cnl":"RULE(Document, must_include_section, quick_start).","tags":["structure"]}
-{"id":"eval_071","domain":"book","nl":"Make sure every chapter has at least one conflict.","cnl":"RULE(Chapter, min_conflicts, 1).","tags":["conflict","structure"]}
-{"id":"eval_072","domain":"screenplay","nl":"Add a compliance layer step before final export.","cnl":"RULE(Pipeline, must_include, compliance_check).\nRULE(Pipeline, order, check_then_export).","tags":["pipeline","compliance"]}
-{"id":"eval_073","domain":"book","nl":"Ensure the timeline is consistent: no time travel or paradoxes.","cnl":"RULE(World, forbid, time_travel).\nRULE(Story, forbid, paradox).","tags":["coherence","world_rule"]}
-{"id":"eval_074","domain":"screenplay","nl":"Each scene must start with a location heading.","cnl":"RULE(Scene, must_include, location_heading).","tags":["format","screenplay"]}
-{"id":"eval_075","domain":"research","nl":"Describe the validation protocol with pilot writers and include adversarial testing.","cnl":"RULE(Document, must_include, pilot_writers).\nRULE(Document, must_include, adversarial_testing).","tags":["validation","ta"]}
-{"id":"eval_076","domain":"tutorial","nl":"Add an API quickstart showing how to validate CNL.","cnl":"RULE(Document, must_include_section, API_quickstart).\nRULE(API_quickstart, must_include, cnl_validate).","tags":["api","docs"]}
-{"id":"eval_077","domain":"compliance","nl":"Provide a disclosure statement describing human vs AI contribution.","cnl":"RULE(Document, must_include, disclosure_statement).\nRULE(Disclosure, must_describe, human_ai_contribution).","tags":["compliance","provenance"]}
-{"id":"eval_078","domain":"book","nl":"Scene 4 must show the protagonist making a mistake.","cnl":"RULE(Scene_4, must_show, protagonist_mistake).","tags":["character","plot"]}
-{"id":"eval_079","domain":"screenplay","nl":"Keep the story runtime around 90 minutes.","cnl":"RULE(Timeline, target_runtime_minutes, 90).","tags":["timing"]}
-{"id":"eval_080","domain":"research","nl":"Include a section on limitations and future work.","cnl":"RULE(Document, must_include_section, limitations).\nRULE(Document, must_include_section, future_work).","tags":["structure"]}
-{"id":"eval_081","domain":"tutorial","nl":"Explain how VSA binding and bundling work with a simple example.","cnl":"RULE(Tutorial, must_include, VSA_binding).\nRULE(Tutorial, must_include, VSA_bundling).\nRULE(Tutorial, must_include, \"simple example\").","tags":["vsa","examples"]}
-{"id":"eval_082","domain":"book","nl":"Do not reuse any full sentences from a known public-domain novel.","cnl":"GUARDRAIL(Text, forbid, sentence_reuse).\nRULE(Compliance, scope, public_domain).","tags":["copyright","guardrail"]}
-{"id":"eval_083","domain":"compliance","nl":"Flag any personally identifying information.","cnl":"GUARDRAIL(Text, detect, PII).\nGUARDRAIL(Text, action, redact).","tags":["privacy","guardrail"]}
-{"id":"eval_084","domain":"xai","nl":"For each suggestion, provide at least one cited evidence item.","cnl":"EXPLAIN(System, min_evidence_items, 1).","tags":["xai"]}
-{"id":"eval_085","domain":"orchestration","nl":"Run planning, generation, verification, then guardrails, in that order.","cnl":"RULE(Pipeline, order, plan_generate_verify_guardrail).","tags":["pipeline","sop"]}
-{"id":"eval_086","domain":"orchestration","nl":"Every pipeline run must be recorded in the audit log.","cnl":"AUDIT(Log, must_capture, pipeline_runs).","tags":["audit","pipeline"]}
-{"id":"eval_087","domain":"research","nl":"Compare prompt-only baseline vs specification-driven pipeline.","cnl":"RULE(Experiment, compare, prompt_only_vs_spec).","tags":["experiments"]}
-{"id":"eval_088","domain":"book","nl":"Keep scene summaries under 40 words.","cnl":"RULE(Scene, max_summary_words, 40).","tags":["style","constraints"]}
-{"id":"eval_089","domain":"screenplay","nl":"Avoid voice-over narration.","cnl":"RULE(Screenplay, forbid, voice_over).","tags":["style"]}
-{"id":"eval_090","domain":"tutorial","nl":"Add an evaluation section explaining NQS and CAD.","cnl":"RULE(Document, must_include_section, evaluation).\nRULE(Evaluation, must_define, NQS).\nRULE(Evaluation, must_define, CAD).","tags":["kpi","evaluation"]}
-{"id":"eval_091","domain":"research","nl":"Include a table mapping KPIs to ACHILLES features.","cnl":"RULE(Document, must_include, KPI_feature_matrix).","tags":["alignment","kpi"]}
-{"id":"eval_092","domain":"book","nl":"Make the emotional arc follow fall-rise.","cnl":"RULE(Story, emotional_arc, fall_rise).","tags":["emotion","arc"]}
-{"id":"eval_093","domain":"compliance","nl":"Ensure content avoids hate speech.","cnl":"GUARDRAIL(Text, forbid, hate_speech).","tags":["safety"]}
-{"id":"eval_094","domain":"retrieval","nl":"Use semantic retrieval to recall the protagonist's stated goals.","cnl":"VSA(Search, retrieve, protagonist_goals).","tags":["vsa","memory"]}
-{"id":"eval_095","domain":"retrieval","nl":"When generating scene 6, retrieve the top 3 most relevant earlier scenes.","cnl":"RULE(Scene_6, must_use, retrieval).\nRULE(Retrieval, top_k, 3).","tags":["retrieval"]}
-{"id":"eval_096","domain":"literary_review","nl":"Review for show-don't-tell violations.","cnl":"REVIEW(Draft, detect, show_dont_tell).","tags":["review"]}
-{"id":"eval_097","domain":"reverse_engineering","nl":"Extract character relationships (friend/enemy) from the draft.","cnl":"REVERSE_ENGINEER(Draft, extract, relationships).","tags":["reverse"]}
-{"id":"eval_098","domain":"research","nl":"Provide a short bibliography section.","cnl":"RULE(Document, must_include_section, bibliography).","tags":["citations"]}
-{"id":"eval_099","domain":"tutorial","nl":"Explain how to produce a compliance report via the API.","cnl":"RULE(Tutorial, must_include, compliance_report_api).","tags":["api","compliance"]}
-{"id":"eval_100","domain":"compliance","nl":"If a violation is detected, return warn instead of pass.","cnl":"RULE(Compliance, on_violation, warn).","tags":["compliance","policy"]}
+{"id":"eval_001","domain":"book","nl":"Anna must stay courageous, and a storm must appear in scene 3.","cnl":"Anna is character\nAnna has trait courageous\nScene_3 requires \"storm\"","tags":["character","constraint","scene"]}
+{"id":"eval_002","domain":"screenplay","nl":"The protagonist should never use magic; keep the story grounded.","cnl":"Protagonist is character\nWorld forbids magic","tags":["world_rule","tone"]}
+{"id":"eval_003","domain":"tutorial","nl":"Explain CRISPR in 5 steps and include a safety warning.","cnl":"Tutorial has steps 5\nTutorial requires \"safety warning\"","tags":["structure","safety"]}
+{"id":"eval_004","domain":"research","nl":"Cite at least two sources and avoid medical claims.","cnl":"Document requires \"citations\"\nDocument forbids \"medical claims\"","tags":["compliance","constraints"]}
+{"id":"eval_005","domain":"book","nl":"In chapter 2, introduce a mentor named Irina.","cnl":"Irina is character\nChapter_2 must introduce Irina","tags":["character","plot"]}
+{"id":"eval_006","domain":"screenplay","nl":"Scene 5 must contain a train station and no dialogue.","cnl":"Scene_5 requires \"train station\"\nScene_5 forbids \"dialogue\"","tags":["scene","style"]}
+{"id":"eval_007","domain":"book","nl":"The main character must protect their brother, and the ending should be hopeful.","cnl":"Main is character\nMain wants \"protect brother\"\nEnding has tone hopeful","tags":["goal","ending"]}
+{"id":"eval_008","domain":"tutorial","nl":"Use second-person voice and keep paragraphs short.","cnl":"Style has voice second_person\nStyle has paragraphs short","tags":["style"]}
+{"id":"eval_009","domain":"research","nl":"The report should be neutral and avoid stereotypes.","cnl":"Document has tone neutral\nDocument forbids \"stereotypes\"","tags":["ethics","bias"]}
+{"id":"eval_010","domain":"screenplay","nl":"By act 3, reveal that the ship was sabotaged.","cnl":"Act_3 must reveal \"ship was sabotaged\"","tags":["plot","twist"]}
+{"id":"eval_011","domain":"book","nl":"Limit the story to 3 main characters.","cnl":"Story has max characters 3","tags":["constraints"]}
+{"id":"eval_012","domain":"tutorial","nl":"Include one real-world example and a short summary at the end.","cnl":"Tutorial requires \"real-world example\"\nEnding requires \"summary\"","tags":["structure","examples"]}
+{"id":"eval_013","domain":"book","nl":"Keep the tone melancholic until the midpoint, then shift to determination.","cnl":"Act_1 has tone melancholic\nMidpoint has tone determination","tags":["tone","arc"]}
+{"id":"eval_014","domain":"book","nl":"The antagonist must be sympathetic, not purely evil.","cnl":"Antagonist is character\nAntagonist has trait sympathetic\nAntagonist forbids purely_evil","tags":["character","ethics"]}
+{"id":"eval_015","domain":"book","nl":"No supernatural elements are allowed in the world.","cnl":"World forbids supernatural","tags":["world_rule"]}
+{"id":"eval_016","domain":"book","nl":"Make chapter 1 end with a cliffhanger.","cnl":"Chapter_1 has ending cliffhanger","tags":["structure","pacing"]}
+{"id":"eval_017","domain":"book","nl":"Introduce a recurring motif: the sound of bells.","cnl":"Story must include_motif \"bells\"","tags":["motif"]}
+{"id":"eval_018","domain":"book","nl":"Every scene must advance either plot or character, never both missing.","cnl":"Scene must advance plot_or_character","tags":["consistency","structure"]}
+{"id":"eval_019","domain":"book","nl":"Avoid cliches like 'it was a dark and stormy night'.","cnl":"Text forbids \"it was a dark and stormy night\"","tags":["originality","guardrail"]}
+{"id":"eval_020","domain":"book","nl":"Keep POV strictly first person.","cnl":"Style has pov first_person","tags":["style"]}
+{"id":"eval_021","domain":"screenplay","nl":"Write a 3-act structure with 12 scenes.","cnl":"Screenplay has acts 3\nScreenplay has scenes 12","tags":["structure"]}
+{"id":"eval_022","domain":"screenplay","nl":"Act 1 must establish the protagonist's flaw.","cnl":"Act_1 must establish \"protagonist flaw\"","tags":["structure","character"]}
+{"id":"eval_023","domain":"screenplay","nl":"Ensure the dialogue is at most 30% of scene 2.","cnl":"Scene_2 has max dialogue_ratio 0.3","tags":["style","constraints"]}
+{"id":"eval_024","domain":"screenplay","nl":"Scene 7 must be a silent montage.","cnl":"Scene_7 has type silent_montage","tags":["scene","style"]}
+{"id":"eval_025","domain":"screenplay","nl":"The reveal must be foreshadowed in act 1.","cnl":"Act_1 must foreshadow \"reveal\"","tags":["coherence","plot"]}
+{"id":"eval_026","domain":"screenplay","nl":"Do not include any brand names.","cnl":"Document forbids brand_names","tags":["compliance"]}
+{"id":"eval_027","domain":"screenplay","nl":"Keep the protagonist's name consistent: always 'Anna', never 'Ana'.","cnl":"CharacterName must equal Anna\nCharacterName forbids Ana","tags":["consistency"]}
+{"id":"eval_028","domain":"screenplay","nl":"The ending must resolve the main goal and leave one open question.","cnl":"Ending must resolve main_goal\nEnding must leave_open 1","tags":["ending","structure"]}
+{"id":"eval_029","domain":"screenplay","nl":"Include a turning point at minute 30.","cnl":"Timeline has turning_point_minute 30","tags":["structure","timing"]}
+{"id":"eval_030","domain":"screenplay","nl":"Avoid excessive exposition in act 1.","cnl":"Act_1 has max exposition moderate","tags":["style","pacing"]}
+{"id":"eval_031","domain":"tutorial","nl":"Explain vector symbolic architectures in 7 bullet points.","cnl":"Tutorial has bullets 7\nTutorial has topic VSA","tags":["structure","vsa"]}
+{"id":"eval_032","domain":"tutorial","nl":"Include a glossary with at least 5 terms.","cnl":"Document requires glossary\nGlossary has min terms 5","tags":["structure"]}
+{"id":"eval_033","domain":"tutorial","nl":"Add one short code example and explain it.","cnl":"Tutorial requires \"code example\"\nTutorial must explain \"code example\"","tags":["examples"]}
+{"id":"eval_034","domain":"tutorial","nl":"Keep the total length under 900 words.","cnl":"Document has max words 900","tags":["constraints"]}
+{"id":"eval_035","domain":"tutorial","nl":"Use simple language, avoid jargon.","cnl":"Style has readability simple\nStyle forbids jargon","tags":["style"]}
+{"id":"eval_036","domain":"tutorial","nl":"Provide a checklist at the end with 6 items.","cnl":"Ending requires checklist\nChecklist has items 6","tags":["structure"]}
+{"id":"eval_037","domain":"tutorial","nl":"Explain the tradeoff between embeddings and VSA indexing.","cnl":"Tutorial must compare embeddings_vs_vsa","tags":["vsa","retrieval"]}
+{"id":"eval_038","domain":"tutorial","nl":"Include two common mistakes and how to avoid them.","cnl":"Tutorial requires \"common mistakes\"\nTutorial has mistakes_count 2","tags":["quality"]}
+{"id":"eval_039","domain":"tutorial","nl":"Include a one-paragraph TL;DR at the top.","cnl":"Document requires tldr\nTLDR has paragraphs 1","tags":["structure"]}
+{"id":"eval_040","domain":"tutorial","nl":"Use diagrams as SVG references, not ASCII art.","cnl":"Assets must use SVG\nAssets forbids ASCII_diagrams","tags":["docs"]}
+{"id":"eval_041","domain":"research","nl":"Summarize the state of the art in narrative coherence evaluation and cite at least 3 sources.","cnl":"Document has topic narrative_coherence\nDocument has min citations 3","tags":["research","citations"]}
+{"id":"eval_042","domain":"research","nl":"Clearly separate background, method, and limitations sections.","cnl":"Document must include_section background\nDocument must include_section method\nDocument must include_section limitations","tags":["structure"]}
+{"id":"eval_043","domain":"research","nl":"Do not claim experimental results without stating assumptions.","cnl":"Document forbids \"unstated assumptions\"","tags":["integrity"]}
+{"id":"eval_044","domain":"research","nl":"Provide a threat model for prompt injection.","cnl":"Document requires threat_model\nThreatModel has topic prompt_injection","tags":["security","ta"]}
+{"id":"eval_045","domain":"research","nl":"List at least 5 KPIs and define them.","cnl":"Document has min kpis 5\nDocument must define KPIs","tags":["kpi"]}
+{"id":"eval_046","domain":"research","nl":"Include a reproducibility checklist.","cnl":"Document requires reproducibility_checklist","tags":["reproducibility"]}
+{"id":"eval_047","domain":"research","nl":"Discuss data governance and retention policies.","cnl":"Document requires data_governance\nDocument requires retention_policy","tags":["data"]}
+{"id":"eval_048","domain":"research","nl":"Avoid biased language and include fairness considerations.","cnl":"Document forbids biased_language\nDocument requires fairness_considerations","tags":["ethics","bias"]}
+{"id":"eval_049","domain":"research","nl":"Include a section explaining audit logs and provenance.","cnl":"Document requires audit_log\nDocument requires provenance","tags":["audit"]}
+{"id":"eval_050","domain":"research","nl":"Explain how SOP Lang orchestrates multi-agent workflows.","cnl":"Document requires SOP_Lang\nDocument requires multi_agent_orchestration","tags":["architecture"]}
+{"id":"eval_051","domain":"reverse_engineering","nl":"Given a draft, extract a character list and core themes.","cnl":"Draft must extract characters\nDraft must extract themes","tags":["reverse"]}
+{"id":"eval_052","domain":"reverse_engineering","nl":"From chapter 1 text, infer the world rules.","cnl":"Chapter_1 must infer world_rules","tags":["reverse","world"]}
+{"id":"eval_053","domain":"reverse_engineering","nl":"Continue a story by first reconstructing a plan.","cnl":"Text must output plan\nPipeline has order reverse_then_generate","tags":["reverse","planning"]}
+{"id":"eval_054","domain":"literary_review","nl":"Review the draft for pacing issues and suggest fixes.","cnl":"Draft must evaluate pacing\nDraft must suggest fixes","tags":["review"]}
+{"id":"eval_055","domain":"literary_review","nl":"Flag repeated phrases and propose alternatives.","cnl":"Draft must detect repetition\nDraft must suggest alternatives","tags":["review","style"]}
+{"id":"eval_056","domain":"compliance","nl":"Generate a compliance report covering copyright and bias risks.","cnl":"Compliance requires include copyright\nCompliance requires include bias","tags":["compliance","report"]}
+{"id":"eval_057","domain":"compliance","nl":"Ensure the audit log captures each generation step.","cnl":"Log must must_capture generation_steps","tags":["audit"]}
+{"id":"eval_058","domain":"xai","nl":"Explain why a constraint was violated and how to fix it.","cnl":"System must must_explain violation\nSystem must must_suggest fix","tags":["xai"]}
+{"id":"eval_059","domain":"retrieval","nl":"When asked about foreshadowing, retrieve the most relevant earlier scenes.","cnl":"Search must must_retrieve scenes\nRetrieval has top_k 5","tags":["vsa","retrieval"]}
+{"id":"eval_060","domain":"retrieval","nl":"Index character traits for long-form consistency checks.","cnl":"Index must store character_traits\nVerification must use VSA","tags":["vsa","consistency"]}
+{"id":"eval_061","domain":"book","nl":"Ensure character attributes do not drift across 10 chapters.","cnl":"Verification has track character_attributes\nStory has chapters 10","tags":["cad","verification"]}
+{"id":"eval_062","domain":"book","nl":"Add a scene-by-scene plan before generating prose.","cnl":"Pipeline requires planning\nPipeline has order plan_then_generate","tags":["planning"]}
+{"id":"eval_063","domain":"screenplay","nl":"Reject any request to imitate a living author's unique style.","cnl":"Style forbids \"living author imitation\"","tags":["ethics","copyright"]}
+{"id":"eval_064","domain":"research","nl":"Provide citations in a consistent format.","cnl":"Citations has format consistent","tags":["citations"]}
+{"id":"eval_065","domain":"tutorial","nl":"Ensure the tutorial is understandable for beginners.","cnl":"Style has audience beginner","tags":["readability"]}
+{"id":"eval_066","domain":"compliance","nl":"Detect and flag potentially harmful stereotypes in character descriptions.","cnl":"Text must detect stereotypes\nText applies flag","tags":["bias","guardrail"]}
+{"id":"eval_067","domain":"screenplay","nl":"Keep action lines vivid but concise.","cnl":"Style has action_lines vivid\nStyle has action_lines concise","tags":["style"]}
+{"id":"eval_068","domain":"book","nl":"Ensure the protagonist's goal is explicitly stated by scene 2.","cnl":"Scene_2 must state protagonist_goal","tags":["goal","structure"]}
+{"id":"eval_069","domain":"research","nl":"Include an ablation study comparing basic vs VSA/HDC methods.","cnl":"Experiment requires ablation\nExperiment must compare basic_vs_vsa","tags":["experiments","vsa"]}
+{"id":"eval_070","domain":"tutorial","nl":"Provide a quick-start section.","cnl":"Document must include_section quick_start","tags":["structure"]}
+{"id":"eval_071","domain":"book","nl":"Make sure every chapter has at least one conflict.","cnl":"Chapter has min conflicts 1","tags":["conflict","structure"]}
+{"id":"eval_072","domain":"screenplay","nl":"Add a compliance layer step before final export.","cnl":"Pipeline requires compliance_check\nPipeline has order check_then_export","tags":["pipeline","compliance"]}
+{"id":"eval_073","domain":"book","nl":"Ensure the timeline is consistent: no time travel or paradoxes.","cnl":"World forbids time_travel\nStory forbids paradox","tags":["coherence","world_rule"]}
+{"id":"eval_074","domain":"screenplay","nl":"Each scene must start with a location heading.","cnl":"Scene requires location_heading","tags":["format","screenplay"]}
+{"id":"eval_075","domain":"research","nl":"Describe the validation protocol with pilot writers and include adversarial testing.","cnl":"Document requires pilot_writers\nDocument requires adversarial_testing","tags":["validation","ta"]}
+{"id":"eval_076","domain":"tutorial","nl":"Add an API quickstart showing how to validate CNL.","cnl":"Document must include_section API_quickstart\nAPI_quickstart requires cnl_validate","tags":["api","docs"]}
+{"id":"eval_077","domain":"compliance","nl":"Provide a disclosure statement describing human vs AI contribution.","cnl":"Document requires disclosure_statement\nDisclosure must describe human_ai_contribution","tags":["compliance","provenance"]}
+{"id":"eval_078","domain":"book","nl":"Scene 4 must show the protagonist making a mistake.","cnl":"Scene_4 must show protagonist_mistake","tags":["character","plot"]}
+{"id":"eval_079","domain":"screenplay","nl":"Keep the story runtime around 90 minutes.","cnl":"Timeline has target_runtime_minutes 90","tags":["timing"]}
+{"id":"eval_080","domain":"research","nl":"Include a section on limitations and future work.","cnl":"Document must include_section limitations\nDocument must include_section future_work","tags":["structure"]}
+{"id":"eval_081","domain":"tutorial","nl":"Explain how VSA binding and bundling work with a simple example.","cnl":"Tutorial requires VSA_binding\nTutorial requires VSA_bundling\nTutorial requires \"simple example\"","tags":["vsa","examples"]}
+{"id":"eval_082","domain":"book","nl":"Do not reuse any full sentences from a known public-domain novel.","cnl":"Text forbids sentence_reuse\nCompliance has scope public_domain","tags":["copyright","guardrail"]}
+{"id":"eval_083","domain":"compliance","nl":"Flag any personally identifying information.","cnl":"Text must detect PII\nText applies redact","tags":["privacy","guardrail"]}
+{"id":"eval_084","domain":"xai","nl":"For each suggestion, provide at least one cited evidence item.","cnl":"System must min_evidence_items 1","tags":["xai"]}
+{"id":"eval_085","domain":"orchestration","nl":"Run planning, generation, verification, then guardrails, in that order.","cnl":"Pipeline has order plan_generate_verify_guardrail","tags":["pipeline","sop"]}
+{"id":"eval_086","domain":"orchestration","nl":"Every pipeline run must be recorded in the audit log.","cnl":"Log must must_capture pipeline_runs","tags":["audit","pipeline"]}
+{"id":"eval_087","domain":"research","nl":"Compare prompt-only baseline vs specification-driven pipeline.","cnl":"Experiment must compare prompt_only_vs_spec","tags":["experiments"]}
+{"id":"eval_088","domain":"book","nl":"Keep scene summaries under 40 words.","cnl":"Scene has max summary_words 40","tags":["style","constraints"]}
+{"id":"eval_089","domain":"screenplay","nl":"Avoid voice-over narration.","cnl":"Screenplay forbids voice_over","tags":["style"]}
+{"id":"eval_090","domain":"tutorial","nl":"Add an evaluation section explaining NQS and CAD.","cnl":"Document must include_section evaluation\nEvaluation must define NQS\nEvaluation must define CAD","tags":["kpi","evaluation"]}
+{"id":"eval_091","domain":"research","nl":"Include a table mapping KPIs to ACHILLES features.","cnl":"Document requires KPI_feature_matrix","tags":["alignment","kpi"]}
+{"id":"eval_092","domain":"book","nl":"Make the emotional arc follow fall-rise.","cnl":"Story has emotional_arc fall_rise","tags":["emotion","arc"]}
+{"id":"eval_093","domain":"compliance","nl":"Ensure content avoids hate speech.","cnl":"Text forbids hate_speech","tags":["safety"]}
+{"id":"eval_094","domain":"retrieval","nl":"Use semantic retrieval to recall the protagonist's stated goals.","cnl":"Search must retrieve protagonist_goals","tags":["vsa","memory"]}
+{"id":"eval_095","domain":"retrieval","nl":"When generating scene 6, retrieve the top 3 most relevant earlier scenes.","cnl":"Scene_6 must use retrieval\nRetrieval has top_k 3","tags":["retrieval"]}
+{"id":"eval_096","domain":"literary_review","nl":"Review for show-don't-tell violations.","cnl":"Draft must detect show_dont_tell","tags":["review"]}
+{"id":"eval_097","domain":"reverse_engineering","nl":"Extract character relationships (friend/enemy) from the draft.","cnl":"Draft must extract relationships","tags":["reverse"]}
+{"id":"eval_098","domain":"research","nl":"Provide a short bibliography section.","cnl":"Document must include_section bibliography","tags":["citations"]}
+{"id":"eval_099","domain":"tutorial","nl":"Explain how to produce a compliance report via the API.","cnl":"Tutorial requires compliance_report_api","tags":["api","compliance"]}
+{"id":"eval_100","domain":"compliance","nl":"If a violation is detected, return warn instead of pass.","cnl":"Compliance on violation warn","tags":["compliance","policy"]}

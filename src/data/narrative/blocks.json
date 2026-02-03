@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "description": "Narrative blocks - story pattern templates",
+    "version": "1.0.0"
+  },
+  "blocks": {
+    "opening": {
+      "ordinary_world": { "label": "Ordinary World", "desc": "Establish the hero's normal life before adventure", "scope": "scene", "suggestedMoods": ["peaceful", "melancholic"], "themes": ["identity", "family"] },
+      "call_to_adventure": { "label": "Call to Adventure", "desc": "Something disrupts normality and invites action", "scope": "scene", "suggestedMoods": ["mysterious", "adventurous"], "themes": ["freedom", "growth"] },
+      "refusal_of_call": { "label": "Refusal of the Call", "desc": "The hero initially resists due to fear", "scope": "scene", "suggestedMoods": ["tense", "melancholic"], "themes": ["fear", "identity"] }
+    },
+    "transition": {
+      "crossing_threshold": { "label": "Crossing the Threshold", "desc": "The hero commits to the adventure", "scope": "scene", "suggestedMoods": ["adventurous", "tense"], "themes": ["freedom", "growth"] },
+      "meeting_mentor": { "label": "Meeting the Mentor", "desc": "The hero encounters a guide", "scope": "scene", "suggestedMoods": ["mysterious", "peaceful"], "themes": ["wisdom", "growth"] },
+      "tests_allies_enemies": { "label": "Tests and Alliances", "desc": "The hero faces challenges and learns trust", "scope": "chapter", "suggestedMoods": ["tense", "adventurous"], "themes": ["trust", "identity"] }
+    },
+    "confrontation": {
+      "approach_cave": { "label": "Approach to Danger", "desc": "The hero prepares for major challenge", "scope": "scene", "suggestedMoods": ["ominous", "tense"], "themes": ["fear", "courage"] },
+      "ordeal": { "label": "The Ordeal", "desc": "The hero faces their greatest fear", "scope": "chapter", "suggestedMoods": ["desperate", "epic"], "themes": ["sacrifice", "survival"] },
+      "death_rebirth": { "label": "Death and Rebirth", "desc": "Symbolic death and rebirth", "scope": "scene", "suggestedMoods": ["desperate", "revelatory"], "themes": ["identity", "redemption"] }
+    },
+    "resolution": {
+      "reward": { "label": "Seizing the Reward", "desc": "The hero claims the prize", "scope": "scene", "suggestedMoods": ["triumphant", "peaceful"], "themes": ["power", "justice"] },
+      "road_back": { "label": "The Road Back", "desc": "The hero must return", "scope": "chapter", "suggestedMoods": ["tense", "adventurous"], "themes": ["home", "identity"] },
+      "resurrection": { "label": "Resurrection", "desc": "Final test using everything learned", "scope": "scene", "suggestedMoods": ["epic", "triumphant"], "themes": ["sacrifice", "redemption"] },
+      "return_elixir": { "label": "Return with Elixir", "desc": "Hero returns home transformed", "scope": "scene", "suggestedMoods": ["peaceful", "bittersweet"], "themes": ["legacy", "growth"] }
+    },
+    "micro": {
+      "revelation": { "label": "Revelation", "desc": "A hidden truth changes everything", "scope": "scene", "suggestedMoods": ["revelatory", "mysterious"], "themes": ["truth", "betrayal"] },
+      "betrayal": { "label": "Betrayal", "desc": "A trusted ally reveals hostile nature", "scope": "scene", "suggestedMoods": ["desperate", "tense"], "themes": ["betrayal", "trust"] },
+      "sacrifice": { "label": "Sacrifice", "desc": "A character gives up something precious", "scope": "scene", "suggestedMoods": ["bittersweet", "epic"], "themes": ["sacrifice", "love"] },
+      "reunion": { "label": "Reunion", "desc": "Separated characters come back together", "scope": "scene", "suggestedMoods": ["triumphant", "intimate"], "themes": ["family", "love"] },
+      "confrontation": { "label": "Confrontation", "desc": "Two opposing forces face each other", "scope": "scene", "suggestedMoods": ["tense", "epic"], "themes": ["justice", "revenge"] },
+      "escape": { "label": "Escape", "desc": "Characters flee from danger", "scope": "scene", "suggestedMoods": ["tense", "desperate"], "themes": ["freedom", "survival"] },
+      "discovery": { "label": "Discovery", "desc": "Something new and important is found", "scope": "scene", "suggestedMoods": ["mysterious", "adventurous"], "themes": ["truth", "power"] },
+      "temptation": { "label": "Temptation", "desc": "Character faces choice testing values", "scope": "scene", "suggestedMoods": ["tense", "intimate"], "themes": ["corruption", "identity"] },
+      "rescue": { "label": "Rescue", "desc": "One character saves another", "scope": "scene", "suggestedMoods": ["epic", "triumphant"], "themes": ["sacrifice", "love"] },
+      "loss": { "label": "Loss", "desc": "Character loses something precious", "scope": "scene", "suggestedMoods": ["melancholic", "desperate"], "themes": ["mortality", "sacrifice"] },
+      "transformation": { "label": "Transformation", "desc": "Character undergoes significant change", "scope": "scene", "suggestedMoods": ["revelatory", "epic"], "themes": ["identity", "growth"] },
+      "choice": { "label": "Critical Choice", "desc": "Character must decide with major consequences", "scope": "scene", "suggestedMoods": ["tense", "intimate"], "themes": ["identity", "justice"] }
+    }
+  }
+}

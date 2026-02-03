@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "description": "Object types and significance levels",
+    "version": "1.0.0"
+  },
+  "types": {
+    "weapon": { "label": "Weapon", "desc": "Tool of combat or defense", "icon": "⚔️" },
+    "artifact": { "label": "Artifact", "desc": "Object of power or ancient origin", "icon": "🔮" },
+    "key": { "label": "Key", "desc": "Object that unlocks access", "icon": "🗝️" },
+    "gift": { "label": "Gift", "desc": "Given by mentor or ally", "icon": "🎁" },
+    "symbol": { "label": "Symbol", "desc": "Represents abstract concept", "icon": "⚜️" },
+    "container": { "label": "Container", "desc": "Holds something important", "icon": "📦" },
+    "vehicle": { "label": "Vehicle", "desc": "Means of transportation", "icon": "🚢" },
+    "document": { "label": "Document", "desc": "Written information", "icon": "📜" },
+    "clothing": { "label": "Clothing", "desc": "Wearable with significance", "icon": "👘" },
+    "jewelry": { "label": "Jewelry", "desc": "Precious ornament", "icon": "💍" }
+  },
+  "significance": {
+    "minor": { "label": "Minor", "desc": "Background detail, mentioned in passing" },
+    "important": { "label": "Important", "desc": "Affects plot, has narrative weight" },
+    "central": { "label": "Central", "desc": "Key to the story, major plot element" },
+    "macguffin": { "label": "MacGuffin", "desc": "Everyone wants it, drives the plot" }
+  }
+}

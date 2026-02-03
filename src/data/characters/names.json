@@ -1,0 +1,104 @@
+{
+  "meta": {
+    "description": "Character name lists for story generation",
+    "version": "1.0.0"
+  },
+  "fantasy": {
+    "male": [
+      "Aldric", "Bran", "Caspian", "Darius", "Elric", "Finnian", "Galen", "Hadrian",
+      "Isador", "Jareth", "Kael", "Lysander", "Magnus", "Nolan", "Orion", "Phelan",
+      "Quentin", "Rowan", "Silas", "Theron", "Ulric", "Varen", "Wylan", "Xander",
+      "Yorick", "Zephyr", "Aric", "Bastian", "Cedric", "Dorian", "Edmund", "Felix",
+      "Griffin", "Hugo", "Ivan", "Julian", "Kiran", "Leander", "Milo", "Nico",
+      "Oscar", "Phoenix", "Quinn", "Remy", "Sebastian", "Tobias", "Ulysses", "Victor",
+      "Weston", "Xavier", "Yuri", "Zander", "Alaric", "Brennan", "Corwin", "Declan",
+      "Emeric", "Florian", "Gareth", "Helios", "Ivar", "Jasper", "Kellan", "Lucian"
+    ],
+    "female": [
+      "Aria", "Brynn", "Celeste", "Dahlia", "Elowen", "Freya", "Giselle", "Helena",
+      "Iris", "Jocelyn", "Kira", "Lyra", "Morgana", "Nadia", "Ophelia", "Petra",
+      "Quinn", "Rhiannon", "Selene", "Thalia", "Una", "Vesper", "Wren", "Xyla",
+      "Yara", "Zara", "Aurora", "Briar", "Cordelia", "Daphne", "Elara", "Fiona",
+      "Guinevere", "Haven", "Isolde", "Juniper", "Katarina", "Luna", "Mira", "Nova",
+      "Odette", "Persephone", "Rosalind", "Sabrina", "Tatiana", "Ursula", "Vivienne", "Willow",
+      "Ximena", "Yseult", "Zinnia", "Astrid", "Beatrix", "Cassandra", "Diana", "Evelyn",
+      "Felicity", "Genevieve", "Honoria", "Ingrid", "Jasmine", "Kalista", "Lavinia"
+    ],
+    "neutral": [
+      "Ash", "Blair", "Casey", "Drew", "Ellis", "Finley", "Gray", "Harper",
+      "Indigo", "Jordan", "Kai", "Lark", "Morgan", "Nico", "Onyx", "Parker",
+      "Quinn", "Reese", "Sage", "Taylor", "Unity", "Vale", "Winter", "Wren",
+      "Raven", "River", "Rowan", "Sky", "Storm", "Phoenix", "Robin", "Devon"
+    ]
+  },
+  "scifi": {
+    "male": [
+      "Axel", "Blaze", "Cyrus", "Dante", "Echo", "Flynn", "Gage", "Hector",
+      "Ion", "Jax", "Knox", "Lance", "Max", "Neo", "Orion", "Pike",
+      "Quantum", "Rex", "Steel", "Titus", "Ulric", "Vex", "Wolf", "Xenon",
+      "York", "Zane", "Atlas", "Blitz", "Chrome", "Dex", "Flux", "Grit",
+      "Hex", "Ignite", "Jet", "Kade", "Laser", "Mach", "Nex", "Onyx"
+    ],
+    "female": [
+      "Astra", "Binary", "Cyra", "Delta", "Echo", "Flux", "Gamma", "Hex",
+      "Ion", "Jade", "Kira", "Luna", "Mira", "Nova", "Omega", "Pixel",
+      "Quark", "Rix", "Stella", "Terra", "Unity", "Vega", "Warp", "Xena",
+      "Yuki", "Zara", "Aurora", "Blaze", "Crystal", "Dawn", "Ember", "Frost",
+      "Glitch", "Haze", "Ivy", "Jet", "Kindle", "Lyric", "Matrix", "Neon"
+    ]
+  },
+  "medieval": {
+    "male": [
+      "Alaric", "Baldwin", "Conrad", "Dietrich", "Edmund", "Fulbert", "Gerald", "Heinrich",
+      "Ingram", "Johann", "Klaus", "Ludwig", "Manfred", "Norbert", "Otto", "Percival",
+      "Rainald", "Siegfried", "Theodoric", "Ulrich", "Volker", "Wilhelm", "Adelard", "Bernhard",
+      "Clovis", "Dagobert", "Eberhard", "Friedrich", "Gottfried", "Hartmut", "Ivo", "Karl"
+    ],
+    "female": [
+      "Adelheid", "Brunhilde", "Clothilde", "Drusilla", "Edith", "Frederica", "Gisela", "Hedwig",
+      "Ida", "Judith", "Kunigunde", "Liutgard", "Mathilde", "Nora", "Ottilie", "Petronilla",
+      "Richenza", "Sigrid", "Theodora", "Uta", "Valeria", "Willa", "Adela", "Beatrice",
+      "Cecilia", "Dorothea", "Eleanor", "Felicia", "Griselda", "Hildegard", "Irmgard", "Jacinta"
+    ]
+  },
+  "modern": {
+    "male": [
+      "Adam", "Benjamin", "Christopher", "Daniel", "Edward", "Frank", "George", "Henry",
+      "Isaac", "James", "Kevin", "Lucas", "Michael", "Nathan", "Oliver", "Patrick",
+      "Raymond", "Samuel", "Thomas", "Victor", "William", "Alexander", "Brandon", "Cameron",
+      "David", "Ethan", "Frederick", "Gabriel", "Harrison", "Ivan", "Jacob", "Kyle"
+    ],
+    "female": [
+      "Alice", "Beth", "Catherine", "Diana", "Elizabeth", "Frances", "Grace", "Hannah",
+      "Irene", "Julia", "Katherine", "Laura", "Margaret", "Nancy", "Olivia", "Patricia",
+      "Rachel", "Sarah", "Teresa", "Victoria", "Wendy", "Abigail", "Barbara", "Caroline",
+      "Dorothy", "Emily", "Florence", "Georgia", "Helen", "Isabelle", "Jennifer", "Karen"
+    ]
+  },
+  "surnames": {
+    "fantasy": [
+      "Shadowmend", "Stormweaver", "Brightbane", "Darkhollow", "Ironforge", "Silverwind",
+      "Goldenshield", "Ravencrest", "Thornwood", "Frostborn", "Sunfire", "Moonshadow",
+      "Starfall", "Nightblade", "Dawnbringer", "Winterhold", "Ashwood", "Blackthorn",
+      "Firebrand", "Stoneheart", "Swiftarrow", "Trueblade", "Whitewing", "Bloodraven"
+    ],
+    "scifi": [
+      "Nexus", "Vortex", "Quantum", "Cipher", "Vector", "Matrix", "Synth", "Chrome",
+      "Flux", "Pulse", "Nova", "Zenith", "Apex", "Core", "Grid", "Link",
+      "Node", "Prime", "Spark", "Trace", "Wave", "Zero", "Alpha", "Beta"
+    ],
+    "common": [
+      "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
+      "Martinez", "Anderson", "Taylor", "Thomas", "Moore", "Jackson", "Martin", "Lee",
+      "Thompson", "White", "Harris", "Clark", "Lewis", "Robinson", "Walker", "Hall",
+      "Allen", "Young", "King", "Wright", "Scott", "Green", "Baker", "Adams"
+    ]
+  },
+  "titles": {
+    "nobility": ["Lord", "Lady", "Duke", "Duchess", "Baron", "Baroness", "Count", "Countess", "Prince", "Princess", "King", "Queen"],
+    "military": ["Captain", "Commander", "General", "Admiral", "Marshal", "Sergeant", "Lieutenant", "Colonel"],
+    "religious": ["Father", "Mother", "Brother", "Sister", "Elder", "High Priest", "Priestess", "Oracle"],
+    "academic": ["Doctor", "Professor", "Master", "Scholar", "Sage", "Archivist"],
+    "occupational": ["Smith", "Tanner", "Miller", "Weaver", "Hunter", "Tracker", "Healer", "Merchant"]
+  }
+}

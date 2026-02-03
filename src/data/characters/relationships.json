@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "description": "Character relationship types vocabulary",
+    "version": "1.0.0"
+  },
+  "relationships": {
+    "family": {
+      "parent_child": { "label": "Parent-Child", "bidirectional": false, "color": "#06d6a0" },
+      "siblings": { "label": "Siblings", "bidirectional": true, "color": "#06d6a0" },
+      "spouses": { "label": "Spouses", "bidirectional": true, "color": "#06d6a0" },
+      "cousins": { "label": "Cousins", "bidirectional": true, "color": "#06d6a0" }
+    },
+    "social": {
+      "friends": { "label": "Friends", "bidirectional": true, "color": "#118ab2" },
+      "rivals": { "label": "Rivals", "bidirectional": true, "color": "#e63946" },
+      "enemies": { "label": "Enemies", "bidirectional": true, "color": "#9d0208" },
+      "acquaintances": { "label": "Acquaintances", "bidirectional": true, "color": "#8b949e" }
+    },
+    "hierarchy": {
+      "mentor_student": { "label": "Mentor-Student", "bidirectional": false, "color": "#9d4edd" },
+      "master_servant": { "label": "Master-Servant", "bidirectional": false, "color": "#6c757d" },
+      "ruler_subject": { "label": "Ruler-Subject", "bidirectional": false, "color": "#ffd166" },
+      "commander_soldier": { "label": "Commander-Soldier", "bidirectional": false, "color": "#fb8500" }
+    },
+    "romantic": {
+      "lovers": { "label": "Lovers", "bidirectional": true, "color": "#ef476f" },
+      "unrequited": { "label": "Unrequited Love", "bidirectional": false, "color": "#ff8fa3" },
+      "former_lovers": { "label": "Former Lovers", "bidirectional": true, "color": "#c9184a" },
+      "betrothed": { "label": "Betrothed", "bidirectional": true, "color": "#ff758f" }
+    },
+    "professional": {
+      "allies": { "label": "Allies", "bidirectional": true, "color": "#4cc9f0" },
+      "partners": { "label": "Partners", "bidirectional": true, "color": "#4895ef" },
+      "employer_employee": { "label": "Employer-Employee", "bidirectional": false, "color": "#4361ee" }
+    },
+    "secret": {
+      "secret_allies": { "label": "Secret Allies", "bidirectional": true, "color": "#7209b7", "hidden": true },
+      "blackmail": { "label": "Blackmailer-Victim", "bidirectional": false, "color": "#3a0ca3", "hidden": true },
+      "secret_identity": { "label": "Knows Secret Identity", "bidirectional": false, "color": "#560bad", "hidden": true }
+    },
+    "conflict": {
+      "betrayed_by": { "label": "Betrayed By", "bidirectional": false, "color": "#d00000" },
+      "owes_debt": { "label": "Owes Debt To", "bidirectional": false, "color": "#dc2f02" },
+      "seeks_revenge": { "label": "Seeks Revenge On", "bidirectional": false, "color": "#9d0208" }
+    }
+  }
+}

@@ -259,6 +259,7 @@ echo "--- Oversized Files ---"
 render_oversized_table "JS/MJS" "$YELLOW_THRESHOLD" jsmjs_files
 render_oversized_table "SYS2" "$YELLOW_THRESHOLD" sys2_files
 render_oversized_table "Markdown" "$YELLOW_THRESHOLD" md_files
+render_oversized_table "HTML" "$YELLOW_THRESHOLD" html_files
 
 total_all_lines=$((total_js_lines + total_mjs_lines + total_sys2_lines + total_md_lines + total_html_lines))
 total_all_size=$((total_js_size + total_mjs_size + total_sys2_size + total_md_size + total_html_size))

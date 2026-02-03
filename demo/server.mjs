@@ -17,7 +17,7 @@ import crypto from 'crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEMO_DIR = __dirname;
-const DATA_DIR = process.env.SCRIPTA_DATA_DIR || path.join(__dirname, '..', 'data');
+const DATA_DIR = process.env.SCRIPTA_DATA_DIR || '/tmp/scripta_storage';
 const PROJECTS_DIR = path.join(DATA_DIR, 'projects');
 
 // Ensure directories exist
@@ -92,16 +92,34 @@ async function parseBody(req, maxSize = 10_000_000) {
 // STATIC FILE SERVER
 // ============================================
 
+const ROOT_DIR = path.join(__dirname, '..');
+
 function serveStatic(req, res) {
   let filePath = req.url.split('?')[0]; // Remove query string
   if (filePath === '/') filePath = '/index.html';
   
   // Security: prevent directory traversal
-  filePath = path.normalize(filePath).replace(/^(\.\.[\\/])+/, '');
-  const fullPath = path.join(DEMO_DIR, filePath);
+  filePath = path.normalize(filePath).replace(/^(\.\.[\/\\])+/, '');
   
-  // Check if file exists and is within demo directory
-  if (!fullPath.startsWith(DEMO_DIR)) {
+  // Try demo directory first, then root for src/ files
+  let fullPath = path.join(DEMO_DIR, filePath);
+  
+  // If file doesn't exist in demo, check if it's a src/ request
+  if (!fs.existsSync(fullPath) && filePath.startsWith('/src/')) {
+    fullPath = path.join(ROOT_DIR, filePath);
+  }
+  
+  // Also handle ../src/ requests from modules
+  if (!fs.existsSync(fullPath) && filePath.includes('src/')) {
+    const srcPath = filePath.substring(filePath.indexOf('src/'));
+    fullPath = path.join(ROOT_DIR, srcPath);
+  }
+  
+  // Security check - must be within demo or root/src
+  const isInDemo = fullPath.startsWith(DEMO_DIR);
+  const isInSrc = fullPath.startsWith(path.join(ROOT_DIR, 'src'));
+  
+  if (!isInDemo && !isInSrc) {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('Forbidden');
     return;
@@ -110,7 +128,7 @@ function serveStatic(req, res) {
   fs.readFile(fullPath, (err, data) => {
     if (err) {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
-      res.end('Not Found');
+      res.end('Not Found: ' + filePath);
       return;
     }
     
@@ -282,18 +300,40 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const server = createDemoServer();
   
   server.listen(port, () => {
+    const W = 58; // total width including borders
+    const inner = W - 2; // inside the ║ borders
+    
+    const title = 'SCRIPTA Story Forge';
+    const urlText = `http://localhost:${port}`;
+    const storageText = PROJECTS_DIR.length > 42 ? '...' + PROJECTS_DIR.slice(-39) : PROJECTS_DIR;
+    
+    const center = (text) => {
+      const pad = inner - text.length;
+      const left = Math.floor(pad / 2);
+      const right = pad - left;
+      return '║' + ' '.repeat(left) + text + ' '.repeat(right) + '║';
+    };
+    
+    const left = (text) => '║  ' + text.padEnd(inner - 2) + '║';
+    const empty = '║' + ' '.repeat(inner) + '║';
+    const top = '╔' + '═'.repeat(inner) + '╗';
+    const mid = '╠' + '═'.repeat(inner) + '╣';
+    const bot = '╚' + '═'.repeat(inner) + '╝';
+    
     console.log(`
-  ╔═══════════════════════════════════════════════════╗
-  ║           SCRIPTA Story Forge                     ║
-  ╠═══════════════════════════════════════════════════╣
-  ║  URL:      http://localhost:${String(port).padEnd(5)}                ║
-  ║  Data:     ${PROJECTS_DIR.slice(-35).padEnd(35)}  ║
-  ║                                                   ║
-  ║  Endpoints:                                       ║
-  ║    /              - Story Forge UI                ║
-  ║    /health        - Health check                  ║
-  ║    /v1/projects   - Projects API (CRUD)           ║
-  ╚═══════════════════════════════════════════════════╝
+  ${top}
+  ${center(title)}
+  ${mid}
+  ${left('URL:      ' + urlText)}
+  ${left('Storage:  ' + storageText)}
+  ${empty}
+  ${left('Set SCRIPTA_DATA_DIR env var to change storage.')}
+  ${empty}
+  ${left('Endpoints:')}
+  ${left('  /              - Story Forge UI')}
+  ${left('  /health        - Health check')}
+  ${left('  /v1/projects   - Projects API (CRUD)')}
+  ${bot}
 `);
   });
 }

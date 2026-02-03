@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "description": "Object name lists for story generation",
+    "version": "1.0.0"
+  },
+  "prefixes": {
+    "materials": ["Golden", "Silver", "Iron", "Steel", "Bronze", "Copper", "Crystal", "Diamond", "Ruby", "Emerald", "Obsidian", "Jade", "Onyx", "Pearl", "Ivory", "Bone", "Shadow", "Light", "Frost", "Flame"],
+    "qualities": ["Ancient", "Enchanted", "Cursed", "Blessed", "Sacred", "Holy", "Unholy", "Mystic", "Arcane", "Legendary", "Fabled", "Lost", "Forgotten", "Hidden", "Royal", "Imperial"]
+  },
+  "weapons": {
+    "swords": ["Blade", "Sword", "Saber", "Rapier", "Claymore", "Katana", "Scimitar", "Falchion"],
+    "staffs": ["Staff", "Scepter", "Rod", "Wand", "Stave", "Crook"],
+    "bows": ["Bow", "Longbow", "Crossbow", "Shortbow"],
+    "other": ["Axe", "Hammer", "Mace", "Spear", "Lance", "Dagger", "Knife", "Halberd", "Flail"]
+  },
+  "artifacts": {
+    "containers": ["Chalice", "Goblet", "Grail", "Urn", "Vase", "Box", "Chest", "Coffer", "Casket"],
+    "jewelry": ["Ring", "Amulet", "Pendant", "Crown", "Tiara", "Circlet", "Bracelet", "Brooch", "Medallion"],
+    "tools": ["Key", "Mirror", "Compass", "Hourglass", "Lantern", "Orb", "Crystal", "Stone", "Gem"],
+    "documents": ["Tome", "Scroll", "Map", "Codex", "Grimoire", "Journal", "Letter", "Prophecy"]
+  },
+  "named": {
+    "legendary": [
+      "The Silver Key", "Ancient Map", "Crystal Orb", "Enchanted Blade", "Sacred Tome",
+      "Dragon Scale", "Phoenix Feather", "Shadow Cloak", "Crown of Stars", "Ring of Power",
+      "Sunstone Amulet", "Moonlight Dagger", "Stormcaller Staff", "Iron Crown", "Jade Mirror",
+      "Obsidian Compass", "Golden Chalice", "Raven Quill", "Thunder Hammer", "Frost Scepter",
+      "Heart of Fire", "Eye of the Storm", "Soul Gem", "Blood Ruby", "Starfall Pendant",
+      "Void Stone", "Time Crystal", "Fate's Thread", "Destiny's Key", "Wisdom's Tome"
+    ],
+    "weapons": [
+      "Shadowbane", "Lightbringer", "Frostmourne", "Flamestrike", "Stormblade",
+      "Dawnbreaker", "Nightfall", "Oathkeeper", "Heartseeker", "Soulreaver",
+      "Deathwhisper", "Lifebane", "Truthseeker", "Justicemaker", "Vengeance"
+    ],
+    "mundane": [
+      "Old Letter", "Worn Journal", "Faded Map", "Rusty Key", "Broken Compass",
+      "Tattered Cloak", "Dented Helm", "Cracked Mirror", "Dusty Tome", "Chipped Blade"
+    ]
+  }
+}

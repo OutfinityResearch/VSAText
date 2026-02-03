@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "description": "Emotions and mood presets for narrative",
+    "version": "1.0.0"
+  },
+  "emotions": {
+    "positive": {
+      "joy": { "label": "Joy", "desc": "Intense happiness and delight", "intensity": "high", "color": "#ffd166" },
+      "hope": { "label": "Hope", "desc": "Expectation of good things", "intensity": "medium", "color": "#06d6a0" },
+      "love": { "label": "Love", "desc": "Deep affection and connection", "intensity": "high", "color": "#ef476f" },
+      "wonder": { "label": "Wonder", "desc": "Amazement at the extraordinary", "intensity": "medium", "color": "#48cae4" },
+      "serenity": { "label": "Serenity", "desc": "Calm, peaceful contentment", "intensity": "low", "color": "#a8dadc" },
+      "gratitude": { "label": "Gratitude", "desc": "Thankfulness for blessings", "intensity": "medium", "color": "#90be6d" },
+      "pride": { "label": "Pride", "desc": "Satisfaction in achievement", "intensity": "medium", "color": "#f9c74f" },
+      "amusement": { "label": "Amusement", "desc": "Light-hearted enjoyment", "intensity": "low", "color": "#f8961e" }
+    },
+    "negative": {
+      "fear": { "label": "Fear", "desc": "Response to perceived threat", "intensity": "high", "color": "#4a1942" },
+      "sadness": { "label": "Sadness", "desc": "Grief, loss, disappointment", "intensity": "medium", "color": "#457b9d" },
+      "anger": { "label": "Anger", "desc": "Response to injustice or threat", "intensity": "high", "color": "#d00000" },
+      "disgust": { "label": "Disgust", "desc": "Revulsion, rejection", "intensity": "medium", "color": "#606c38" },
+      "anxiety": { "label": "Anxiety", "desc": "Worry about uncertain future", "intensity": "medium", "color": "#bc6c25" },
+      "despair": { "label": "Despair", "desc": "Complete loss of hope", "intensity": "high", "color": "#1d3557" },
+      "guilt": { "label": "Guilt", "desc": "Regret over wrongdoing", "intensity": "medium", "color": "#6d6875" },
+      "shame": { "label": "Shame", "desc": "Painful self-consciousness", "intensity": "high", "color": "#5f0f40" }
+    },
+    "mixed": {
+      "nostalgia": { "label": "Nostalgia", "desc": "Bittersweet longing for past", "intensity": "medium", "color": "#d4a373" },
+      "suspense": { "label": "Suspense", "desc": "Anxious anticipation", "intensity": "high", "color": "#e63946" },
+      "curiosity": { "label": "Curiosity", "desc": "Desire to know or explore", "intensity": "medium", "color": "#fb8500" },
+      "awe": { "label": "Awe", "desc": "Overwhelming wonder, sometimes fearful", "intensity": "high", "color": "#7b2cbf" },
+      "melancholy": { "label": "Melancholy", "desc": "Pensive sadness, often beautiful", "intensity": "medium", "color": "#577590" },
+      "longing": { "label": "Longing", "desc": "Deep yearning for something", "intensity": "medium", "color": "#f4a261" },
+      "unease": { "label": "Unease", "desc": "Subtle discomfort, something wrong", "intensity": "low", "color": "#6c757d" },
+      "tension": { "label": "Tension", "desc": "Strain before resolution", "intensity": "high", "color": "#9d4edd" }
+    }
+  },
+  "moodPresets": {
+    "mysterious": { "label": "Mysterious", "emotions": { "curiosity": 2, "unease": 1, "wonder": 1 }, "color": "#9d4edd" },
+    "ominous": { "label": "Ominous", "emotions": { "fear": 2, "anxiety": 2, "tension": 1 }, "color": "#4a1942" },
+    "triumphant": { "label": "Triumphant", "emotions": { "joy": 3, "pride": 2, "hope": 1 }, "color": "#ffd166" },
+    "melancholic": { "label": "Melancholic", "emotions": { "sadness": 2, "nostalgia": 2, "longing": 1 }, "color": "#457b9d" },
+    "romantic": { "label": "Romantic", "emotions": { "love": 3, "longing": 1, "hope": 1 }, "color": "#ef476f" },
+    "tense": { "label": "Tense", "emotions": { "tension": 3, "anxiety": 2, "fear": 1 }, "color": "#e63946" },
+    "peaceful": { "label": "Peaceful", "emotions": { "serenity": 3, "gratitude": 1, "hope": 1 }, "color": "#06d6a0" },
+    "adventurous": { "label": "Adventurous", "emotions": { "curiosity": 2, "wonder": 2, "hope": 1 }, "color": "#fb8500" },
+    "horrific": { "label": "Horrific", "emotions": { "fear": 3, "disgust": 2, "despair": 1 }, "color": "#1d3557" },
+    "comedic": { "label": "Comedic", "emotions": { "amusement": 3, "joy": 2, "wonder": 1 }, "color": "#a8dadc" },
+    "epic": { "label": "Epic", "emotions": { "awe": 3, "tension": 2, "hope": 1 }, "color": "#7b2cbf" },
+    "intimate": { "label": "Intimate", "emotions": { "love": 2, "serenity": 2, "longing": 1 }, "color": "#f4a261" },
+    "desperate": { "label": "Desperate", "emotions": { "despair": 2, "tension": 2, "fear": 2 }, "color": "#780000" },
+    "revelatory": { "label": "Revelatory", "emotions": { "awe": 2, "wonder": 2, "curiosity": 1 }, "color": "#48cae4" },
+    "bittersweet": { "label": "Bittersweet", "emotions": { "joy": 2, "sadness": 2, "nostalgia": 1 }, "color": "#d4a373" }
+  }
+}

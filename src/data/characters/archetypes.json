@@ -1,0 +1,20 @@
+{
+  "meta": {
+    "description": "Character archetypes vocabulary",
+    "version": "1.0.0"
+  },
+  "archetypes": {
+    "hero": { "label": "Hero", "desc": "The protagonist who undergoes transformation through trials", "suggestedTraits": ["courage", "resilient", "compassion"] },
+    "mentor": { "label": "Mentor", "desc": "Guides and teaches the hero, often with wisdom", "suggestedTraits": ["wisdom", "patient", "mysterious"] },
+    "shadow": { "label": "Shadow", "desc": "The dark reflection of the hero, embodies rejected aspects", "suggestedTraits": ["cunning", "pride", "wrath"] },
+    "herald": { "label": "Herald", "desc": "Announces the call to adventure, brings change", "suggestedTraits": ["mysterious", "charismatic"] },
+    "shapeshifter": { "label": "Shapeshifter", "desc": "Unpredictable ally/enemy, keeps others guessing", "suggestedTraits": ["deceit", "cunning", "volatile"] },
+    "trickster": { "label": "Trickster", "desc": "Provides comic relief, questions status quo", "suggestedTraits": ["cunning", "rebellious", "creativity"] },
+    "threshold_guardian": { "label": "Threshold Guardian", "desc": "Tests the hero before major transitions", "suggestedTraits": ["stoic", "strong", "justice"] },
+    "ally": { "label": "Ally", "desc": "Supports the hero, provides skills or companionship", "suggestedTraits": ["loyalty", "protective", "optimistic"] },
+    "mother": { "label": "Mother Figure", "desc": "Nurturing, protective, represents home and safety", "suggestedTraits": ["compassion", "protective", "wisdom"] },
+    "father": { "label": "Father Figure", "desc": "Authority, rules, represents order or tyranny", "suggestedTraits": ["justice", "stoic", "pride"] },
+    "innocent": { "label": "Innocent", "desc": "Pure, uncorrupted, represents hope", "suggestedTraits": ["naivety", "optimistic", "compassion"] },
+    "outcast": { "label": "Outcast", "desc": "Lives outside society, unique perspective", "suggestedTraits": ["resilient", "rebellious", "cynical"] }
+  }
+}

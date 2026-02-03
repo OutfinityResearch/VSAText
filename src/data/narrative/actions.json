@@ -1,0 +1,82 @@
+{
+  "meta": {
+    "description": "Character actions vocabulary",
+    "version": "1.0.0"
+  },
+  "actions": {
+    "communication": {
+      "speaks_to": { "label": "speaks to", "requires": ["character", "character"], "compatibleMoods": ["all"] },
+      "argues_with": { "label": "argues with", "requires": ["character", "character"], "compatibleMoods": ["tense", "desperate"] },
+      "confesses_to": { "label": "confesses to", "requires": ["character", "character"], "compatibleMoods": ["intimate", "desperate", "revelatory"] },
+      "lies_to": { "label": "lies to", "requires": ["character", "character"], "impliesTrait": "deceit" },
+      "warns": { "label": "warns", "requires": ["character", "character"], "compatibleMoods": ["ominous", "tense"] },
+      "persuades": { "label": "persuades", "requires": ["character", "character"], "impliesTrait": "charismatic" },
+      "threatens": { "label": "threatens", "requires": ["character", "character"], "compatibleMoods": ["tense", "ominous"] },
+      "comforts": { "label": "comforts", "requires": ["character", "character"], "compatibleMoods": ["intimate", "peaceful", "melancholic"] }
+    },
+    "movement": {
+      "travels_to": { "label": "travels to", "requires": ["character", "location"], "compatibleMoods": ["adventurous", "tense"] },
+      "flees_from": { "label": "flees from", "requires": ["character", "location|character"], "compatibleMoods": ["tense", "desperate", "horrific"] },
+      "arrives_at": { "label": "arrives at", "requires": ["character", "location"] },
+      "follows": { "label": "follows", "requires": ["character", "character"], "compatibleMoods": ["mysterious", "tense"] },
+      "hides_at": { "label": "hides at", "requires": ["character", "location"], "compatibleMoods": ["tense", "desperate"] },
+      "returns_to": { "label": "returns to", "requires": ["character", "location"], "compatibleMoods": ["peaceful", "melancholic", "bittersweet"] }
+    },
+    "discovery": {
+      "discovers": { "label": "discovers", "requires": ["character", "object|secret|location"], "compatibleMoods": ["mysterious", "revelatory", "adventurous"] },
+      "finds": { "label": "finds", "requires": ["character", "object|character"] },
+      "learns_about": { "label": "learns about", "requires": ["character", "secret|character"], "compatibleMoods": ["revelatory", "mysterious"] },
+      "realizes": { "label": "realizes", "requires": ["character", "truth"], "compatibleMoods": ["revelatory", "desperate"] },
+      "investigates": { "label": "investigates", "requires": ["character", "location|object"], "compatibleMoods": ["mysterious", "tense"] }
+    },
+    "combat": {
+      "fights": { "label": "fights", "requires": ["character", "character"], "compatibleMoods": ["tense", "epic", "desperate"] },
+      "defeats": { "label": "defeats", "requires": ["character", "character"], "compatibleMoods": ["triumphant", "epic"] },
+      "is_defeated_by": { "label": "is defeated by", "requires": ["character", "character"], "compatibleMoods": ["desperate", "melancholic"] },
+      "attacks": { "label": "attacks", "requires": ["character", "character|location"], "compatibleMoods": ["tense", "epic"] },
+      "defends": { "label": "defends", "requires": ["character", "character|location"], "compatibleMoods": ["tense", "epic", "desperate"] },
+      "duels": { "label": "duels", "requires": ["character", "character"], "compatibleMoods": ["tense", "epic"] }
+    },
+    "relationship": {
+      "befriends": { "label": "befriends", "requires": ["character", "character"], "createsRelationship": "friends" },
+      "betrays": { "label": "betrays", "requires": ["character", "character"], "breaksRelationship": true, "compatibleMoods": ["desperate", "tense"] },
+      "saves": { "label": "saves", "requires": ["character", "character"], "compatibleMoods": ["triumphant", "desperate", "epic"] },
+      "forgives": { "label": "forgives", "requires": ["character", "character"], "compatibleMoods": ["peaceful", "bittersweet", "intimate"] },
+      "abandons": { "label": "abandons", "requires": ["character", "character"], "breaksRelationship": true, "compatibleMoods": ["desperate", "melancholic"] },
+      "reunites_with": { "label": "reunites with", "requires": ["character", "character"], "compatibleMoods": ["triumphant", "intimate", "bittersweet"] },
+      "falls_in_love_with": { "label": "falls in love with", "requires": ["character", "character"], "createsRelationship": "lovers", "compatibleMoods": ["romantic", "intimate"] }
+    },
+    "objects": {
+      "receives": { "label": "receives", "requires": ["character", "object"], "from": "character" },
+      "gives": { "label": "gives", "requires": ["character", "object"], "to": "character" },
+      "uses": { "label": "uses", "requires": ["character", "object"] },
+      "destroys": { "label": "destroys", "requires": ["character", "object|location"], "compatibleMoods": ["desperate", "epic"] },
+      "steals": { "label": "steals", "requires": ["character", "object"], "from": "character", "impliesTrait": "deceit" },
+      "hides": { "label": "hides", "requires": ["character", "object"], "at": "location" },
+      "creates": { "label": "creates", "requires": ["character", "object"], "impliesTrait": "creativity" }
+    },
+    "mental": {
+      "remembers": { "label": "remembers", "requires": ["character", "event|character"], "compatibleMoods": ["melancholic", "nostalgic", "intimate"] },
+      "decides": { "label": "decides", "requires": ["character", "choice"], "compatibleMoods": ["tense", "revelatory"] },
+      "fears": { "label": "fears", "requires": ["character", "character|object|concept"], "compatibleMoods": ["ominous", "tense", "horrific"] },
+      "hopes_for": { "label": "hopes for", "requires": ["character", "outcome"], "compatibleMoods": ["peaceful", "adventurous"] },
+      "grieves_for": { "label": "grieves for", "requires": ["character", "character|loss"], "compatibleMoods": ["melancholic", "desperate"] }
+    },
+    "transformation": {
+      "becomes": { "label": "becomes", "requires": ["character", "state|role"], "compatibleMoods": ["revelatory", "epic"] },
+      "sacrifices": { "label": "sacrifices", "requires": ["character", "object|self"], "for": "character|cause", "compatibleMoods": ["desperate", "epic", "bittersweet"] },
+      "dies": { "label": "dies", "requires": ["character"], "compatibleMoods": ["desperate", "melancholic", "epic"] },
+      "is_reborn": { "label": "is reborn", "requires": ["character"], "compatibleMoods": ["revelatory", "triumphant"] }
+    },
+    "learning": {
+      "teaches": { "label": "teaches", "requires": ["character", "character"], "about": "skill|knowledge", "compatibleMoods": ["peaceful", "mysterious"] },
+      "trains_with": { "label": "trains with", "requires": ["character", "character"], "compatibleMoods": ["adventurous", "tense"] }
+    },
+    "social": {
+      "meets": { "label": "meets", "requires": ["character", "character"], "compatibleMoods": ["all"] },
+      "joins": { "label": "joins", "requires": ["character", "group|character"], "createsRelationship": "allies" },
+      "leads": { "label": "leads", "requires": ["character", "group|character"], "impliesTrait": "charismatic" },
+      "challenges": { "label": "challenges", "requires": ["character", "character"], "compatibleMoods": ["tense", "epic"] }
+    }
+  }
+}

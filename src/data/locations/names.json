@@ -1,0 +1,61 @@
+{
+  "meta": {
+    "description": "Location name lists and generators for story generation",
+    "version": "1.0.0"
+  },
+  "prefixes": {
+    "nature": ["Black", "White", "Silver", "Golden", "Iron", "Crystal", "Shadow", "Storm", "Moon", "Sun", "Star", "Frost", "Fire", "Thunder", "Wind", "Cloud", "Mist", "Dawn", "Dusk", "Night"],
+    "color": ["Red", "Blue", "Green", "Grey", "Dark", "Bright", "Pale", "Deep", "Crimson", "Azure", "Emerald", "Amber", "Violet", "Obsidian"],
+    "direction": ["North", "South", "East", "West", "High", "Low", "Far", "Near", "Upper", "Lower"],
+    "age": ["Old", "New", "Ancient", "Forgotten", "Lost", "Eternal", "Timeless"]
+  },
+  "suffixes": {
+    "settlements": ["ton", "ville", "burg", "ford", "haven", "hold", "keep", "dale", "vale", "holm", "wick", "shire", "borough", "bridge", "port", "gate", "wall"],
+    "natural": ["wood", "forest", "grove", "glade", "field", "meadow", "moor", "marsh", "fen", "lake", "river", "falls", "peak", "mount", "hill", "cliff", "shore", "bay", "cove", "isle"],
+    "structures": ["castle", "tower", "citadel", "fortress", "palace", "manor", "hall", "sanctum", "temple", "shrine", "crypt", "tomb", "ruins"]
+  },
+  "standalone": {
+    "fantasy": [
+      "Thornwood", "Crystalfall", "Shadowmere", "Stormhold", "Dawnshire",
+      "Nighthaven", "Irongate", "Silverpeak", "Misthollow", "Dragonspire",
+      "Ravenwatch", "Goldenvale", "Frostmoor", "Sunstone", "Darkwater",
+      "Moonridge", "Emberdale", "Starfall", "Windholm", "Ashford",
+      "Blackthorn", "Whitecrest", "Redcliff", "Greenveil", "Bluehaven",
+      "Grimhold", "Lightharbor", "Duskdale", "Flamecrest", "Icewind",
+      "Stonebridge", "Willowmere", "Ravenshollow", "Eaglepeak", "Serpentspine",
+      "Thundertop", "Whisperwood", "Gloomhaven", "Brightwater", "Shadowfen"
+    ],
+    "scifi": [
+      "Nova Prime", "Station Zero", "Omega Colony", "Nexus Hub", "Quantum Base",
+      "Sector Seven", "Outpost Alpha", "Orbital One", "Deep Core", "Sky Haven",
+      "Grid City", "Pulse Station", "Vortex Point", "Chrome Tower", "Neon Flats",
+      "Binary Falls", "Cipher City", "Matrix Prime", "Vector Station", "Flux Port"
+    ],
+    "medieval": [
+      "Kingstead", "Queensbury", "Lordsmere", "Knightfall", "Crownshold",
+      "Swordhaven", "Shieldwall", "Bannerton", "Castlerock", "Fortridge",
+      "Battleford", "Warhaven", "Ironkeep", "Steelgate", "Coppermine",
+      "Goldfield", "Silverbrook", "Markettown", "Tradehaven", "Merchantsway"
+    ],
+    "horror": [
+      "Bleakwood", "Dreadmoor", "Hallowfen", "Grimshaw", "Deadend",
+      "Corpsewater", "Bonehill", "Ghosthollow", "Wraithwood", "Shadowend",
+      "Doomvale", "Bloodmire", "Cursefield", "Hauntdale", "Terrorkeep"
+    ]
+  },
+  "descriptive": {
+    "taverns": [
+      "The Rusty Anchor", "The Golden Griffin", "The Drunken Dragon", "The Prancing Pony",
+      "The Black Swan", "The Red Lion", "The Silver Stag", "The Laughing Fox",
+      "The Weary Traveler", "The Crossed Swords", "The Broken Wheel", "The Jolly Merchant"
+    ],
+    "shops": [
+      "Grimoire & Quill", "The Enchanted Emporium", "Mystic Wares", "The Arcane Archive",
+      "Blade & Buckler", "The Gilded Gauntlet", "Potions & Poisons", "The Wanderer's Supply"
+    ],
+    "temples": [
+      "Temple of the Eternal Flame", "Sanctuary of the Moon", "Shrine of the Ancestors",
+      "Cathedral of Light", "Chapel of Shadows", "Oracle's Sanctum", "Hall of the Gods"
+    ]
+  }
+}

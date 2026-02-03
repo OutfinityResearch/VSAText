@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "description": "Story themes and conflicts",
+    "version": "1.0.0"
+  },
+  "themes": {
+    "redemption": { "label": "Redemption", "desc": "The journey from guilt to forgiveness", "suggestedBlocks": ["death_rebirth", "sacrifice", "return_elixir"], "suggestedMoods": ["bittersweet", "triumphant"] },
+    "sacrifice": { "label": "Sacrifice", "desc": "Giving up something precious", "suggestedBlocks": ["sacrifice", "ordeal", "death_rebirth"], "suggestedMoods": ["bittersweet", "epic"] },
+    "love": { "label": "Love", "desc": "The power of connection", "suggestedBlocks": ["reunion", "sacrifice", "rescue"], "suggestedMoods": ["romantic", "intimate"] },
+    "power": { "label": "Power", "desc": "Pursuit and corruption of authority", "suggestedBlocks": ["temptation", "ordeal", "confrontation"], "suggestedMoods": ["epic", "ominous"] },
+    "identity": { "label": "Identity", "desc": "Discovering who one truly is", "suggestedBlocks": ["revelation", "transformation", "choice"], "suggestedMoods": ["revelatory", "intimate"] },
+    "freedom": { "label": "Freedom", "desc": "Breaking free from constraints", "suggestedBlocks": ["escape", "crossing_threshold", "call_to_adventure"], "suggestedMoods": ["adventurous", "triumphant"] },
+    "justice": { "label": "Justice", "desc": "Pursuit of fairness", "suggestedBlocks": ["confrontation", "reward", "ordeal"], "suggestedMoods": ["epic", "triumphant"] },
+    "revenge": { "label": "Revenge", "desc": "The destructive cycle of retaliation", "suggestedBlocks": ["confrontation", "betrayal", "ordeal"], "suggestedMoods": ["tense", "desperate"] },
+    "survival": { "label": "Survival", "desc": "The struggle to exist against odds", "suggestedBlocks": ["escape", "ordeal", "tests_allies_enemies"], "suggestedMoods": ["desperate", "tense"] },
+    "growth": { "label": "Coming of Age", "desc": "Transition from innocence to experience", "suggestedBlocks": ["crossing_threshold", "meeting_mentor", "transformation"], "suggestedMoods": ["adventurous", "bittersweet"] },
+    "betrayal": { "label": "Betrayal", "desc": "Breaking of trust", "suggestedBlocks": ["betrayal", "revelation", "confrontation"], "suggestedMoods": ["tense", "desperate"] },
+    "family": { "label": "Family", "desc": "Bonds and conflicts of kinship", "suggestedBlocks": ["ordinary_world", "reunion", "loss"], "suggestedMoods": ["intimate", "bittersweet"] },
+    "legacy": { "label": "Legacy", "desc": "What we leave behind", "suggestedBlocks": ["return_elixir", "sacrifice", "death_rebirth"], "suggestedMoods": ["bittersweet", "epic"] },
+    "truth": { "label": "Truth", "desc": "Pursuit of honesty", "suggestedBlocks": ["revelation", "discovery", "confrontation"], "suggestedMoods": ["revelatory", "mysterious"] },
+    "mortality": { "label": "Mortality", "desc": "Facing death and finding meaning", "suggestedBlocks": ["ordeal", "death_rebirth", "loss"], "suggestedMoods": ["melancholic", "epic"] },
+    "corruption": { "label": "Corruption", "desc": "Decay of virtue over time", "suggestedBlocks": ["temptation", "betrayal", "transformation"], "suggestedMoods": ["ominous", "desperate"] }
+  },
+  "conflicts": {
+    "person_vs_person": { "label": "Person vs Person", "desc": "Direct conflict with another character" },
+    "person_vs_self": { "label": "Person vs Self", "desc": "Internal struggle with oneself" },
+    "person_vs_nature": { "label": "Person vs Nature", "desc": "Struggle against natural forces" },
+    "person_vs_society": { "label": "Person vs Society", "desc": "Individual against social norms" },
+    "person_vs_technology": { "label": "Person vs Technology", "desc": "Conflict with machines or progress" },
+    "person_vs_supernatural": { "label": "Person vs Supernatural", "desc": "Struggle against gods, magic, or fate" },
+    "person_vs_unknown": { "label": "Person vs Unknown", "desc": "Facing the mysterious and unexplained" }
+  }
+}

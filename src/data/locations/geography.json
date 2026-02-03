@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "description": "Location geography, time periods and characteristics",
+    "version": "1.0.0"
+  },
+  "geography": {
+    "natural": {
+      "forest": { "label": "Forest", "desc": "Dense woodland with ancient trees" },
+      "mountain": { "label": "Mountain", "desc": "High peaks reaching toward the sky" },
+      "ocean": { "label": "Ocean", "desc": "Vast body of water, mysterious depths" },
+      "desert": { "label": "Desert", "desc": "Arid wasteland of sand or rock" },
+      "river": { "label": "River", "desc": "Flowing water, often a boundary or path" },
+      "cave": { "label": "Cave", "desc": "Underground space, hidden secrets" },
+      "island": { "label": "Island", "desc": "Land surrounded by water, isolated" },
+      "swamp": { "label": "Swamp", "desc": "Murky wetland, treacherous terrain" },
+      "plains": { "label": "Plains", "desc": "Open grassland, endless horizons" },
+      "jungle": { "label": "Jungle", "desc": "Dense tropical vegetation, teeming life" },
+      "tundra": { "label": "Tundra", "desc": "Frozen wasteland, harsh conditions" },
+      "volcano": { "label": "Volcano", "desc": "Fiery mountain, destructive power" }
+    },
+    "built": {
+      "castle": { "label": "Castle", "desc": "Fortified noble residence, power center" },
+      "village": { "label": "Village", "desc": "Small rural community, simple life" },
+      "city": { "label": "City", "desc": "Large urban center, hub of activity" },
+      "temple": { "label": "Temple", "desc": "Sacred religious structure" },
+      "ruins": { "label": "Ruins", "desc": "Remnants of past civilization" },
+      "tower": { "label": "Tower", "desc": "Tall isolated structure, often magical" },
+      "prison": { "label": "Prison", "desc": "Place of confinement and punishment" },
+      "market": { "label": "Market", "desc": "Trading hub, diverse people gather" },
+      "palace": { "label": "Palace", "desc": "Grand royal residence, luxury" },
+      "tavern": { "label": "Tavern", "desc": "Place of rest, stories, and meetings" }
+    },
+    "liminal": {
+      "crossroads": { "label": "Crossroads", "desc": "Junction of paths, place of choice" },
+      "bridge": { "label": "Bridge", "desc": "Crossing between two realms" },
+      "threshold": { "label": "Threshold", "desc": "Doorway between worlds" },
+      "shore": { "label": "Shore", "desc": "Where land meets water" },
+      "borderland": { "label": "Borderland", "desc": "Edge between territories" }
+    }
+  },
+  "timePeriods": {
+    "ancient": { "label": "Ancient", "desc": "Thousands of years in the past, early civilizations" },
+    "medieval": { "label": "Medieval", "desc": "Middle ages, feudal societies" },
+    "renaissance": { "label": "Renaissance", "desc": "Period of cultural rebirth and discovery" },
+    "industrial": { "label": "Industrial", "desc": "Age of machines and factories" },
+    "modern": { "label": "Modern", "desc": "Contemporary era, current technology" },
+    "future": { "label": "Future", "desc": "Advanced technology, speculative" },
+    "timeless": { "label": "Timeless", "desc": "Outside normal time, mythic" },
+    "post_apocalyptic": { "label": "Post-Apocalyptic", "desc": "After civilization collapse" }
+  },
+  "characteristics": {
+    "atmosphere": {
+      "sacred": { "label": "Sacred", "desc": "Holy, spiritual significance" },
+      "cursed": { "label": "Cursed", "desc": "Under dark magical influence" },
+      "haunted": { "label": "Haunted", "desc": "Spirits or memories linger" },
+      "enchanted": { "label": "Enchanted", "desc": "Magical properties, wonder" },
+      "abandoned": { "label": "Abandoned", "desc": "Empty, forgotten by people" },
+      "bustling": { "label": "Bustling", "desc": "Full of activity and people" },
+      "serene": { "label": "Serene", "desc": "Peaceful, calming presence" },
+      "oppressive": { "label": "Oppressive", "desc": "Heavy, suffocating feeling" }
+    },
+    "danger": {
+      "safe": { "label": "Safe", "desc": "Protected, low threat" },
+      "dangerous": { "label": "Dangerous", "desc": "High risk of harm" },
+      "treacherous": { "label": "Treacherous", "desc": "Hidden dangers, deceptive" },
+      "forbidden": { "label": "Forbidden", "desc": "Entry prohibited, taboo" }
+    },
+    "access": {
+      "hidden": { "label": "Hidden", "desc": "Concealed, hard to find" },
+      "isolated": { "label": "Isolated", "desc": "Remote, cut off from world" },
+      "central": { "label": "Central", "desc": "Hub, many paths converge" },
+      "underground": { "label": "Underground", "desc": "Below the surface" },
+      "elevated": { "label": "Elevated", "desc": "High above ground level" }
+    },
+    "resources": {
+      "abundant": { "label": "Abundant", "desc": "Rich in resources" },
+      "barren": { "label": "Barren", "desc": "Lacking resources, sparse" },
+      "contested": { "label": "Contested", "desc": "Multiple parties claim it" }
+    }
+  }
+}

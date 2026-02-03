@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "description": "Character traits vocabulary",
+    "version": "1.0.0"
+  },
+  "traits": {
+    "moral": {
+      "courage": { "label": "Courage", "desc": "Faces danger and fear with bravery" },
+      "honesty": { "label": "Honesty", "desc": "Speaks truth even when difficult" },
+      "loyalty": { "label": "Loyalty", "desc": "Remains faithful to allies and causes" },
+      "compassion": { "label": "Compassion", "desc": "Shows deep empathy for others suffering" },
+      "integrity": { "label": "Integrity", "desc": "Acts according to strong moral principles" },
+      "selflessness": { "label": "Selflessness", "desc": "Puts others needs before own" },
+      "justice": { "label": "Justice", "desc": "Seeks fairness and right wrongs" },
+      "mercy": { "label": "Mercy", "desc": "Shows forgiveness to those who wronged" }
+    },
+    "moral-negative": {
+      "greed": { "label": "Greed", "desc": "Excessive desire for wealth or power" },
+      "cruelty": { "label": "Cruelty", "desc": "Takes pleasure in causing suffering" },
+      "deceit": { "label": "Deceit", "desc": "Habitually lies and manipulates" },
+      "cowardice": { "label": "Cowardice", "desc": "Avoids danger at any cost" },
+      "envy": { "label": "Envy", "desc": "Resents others success or possessions" },
+      "pride": { "label": "Pride", "desc": "Excessive self-importance" },
+      "wrath": { "label": "Wrath", "desc": "Prone to violent anger" }
+    },
+    "intellectual": {
+      "wisdom": { "label": "Wisdom", "desc": "Deep understanding and good judgment" },
+      "curiosity": { "label": "Curiosity", "desc": "Eager to learn and explore" },
+      "cunning": { "label": "Cunning", "desc": "Clever and strategic thinking" },
+      "creativity": { "label": "Creativity", "desc": "Innovative and imaginative" },
+      "pragmatism": { "label": "Pragmatism", "desc": "Practical, results-oriented thinking" },
+      "naivety": { "label": "Naivety", "desc": "Innocent, lacks worldly experience" }
+    },
+    "emotional": {
+      "passionate": { "label": "Passionate", "desc": "Feels and expresses emotions intensely" },
+      "stoic": { "label": "Stoic", "desc": "Endures hardship without complaint" },
+      "volatile": { "label": "Volatile", "desc": "Emotions change rapidly" },
+      "melancholic": { "label": "Melancholic", "desc": "Prone to sadness and reflection" },
+      "optimistic": { "label": "Optimistic", "desc": "Sees the positive in situations" },
+      "cynical": { "label": "Cynical", "desc": "Distrusts human motives" },
+      "empathetic": { "label": "Empathetic", "desc": "Deeply feels others emotions" }
+    },
+    "social": {
+      "charismatic": { "label": "Charismatic", "desc": "Naturally attracts and inspires others" },
+      "introverted": { "label": "Introverted", "desc": "Draws energy from solitude" },
+      "diplomatic": { "label": "Diplomatic", "desc": "Skilled at negotiation and peace" },
+      "rebellious": { "label": "Rebellious", "desc": "Resists authority and convention" },
+      "protective": { "label": "Protective", "desc": "Defends loved ones fiercely" },
+      "mysterious": { "label": "Mysterious", "desc": "Keeps secrets, hard to read" }
+    },
+    "physical": {
+      "resilient": { "label": "Resilient", "desc": "Recovers quickly from setbacks" },
+      "agile": { "label": "Agile", "desc": "Quick and nimble in movement" },
+      "strong": { "label": "Strong", "desc": "Physical power and endurance" },
+      "graceful": { "label": "Graceful", "desc": "Moves with elegance and poise" },
+      "reckless": { "label": "Reckless", "desc": "Acts without considering consequences" },
+      "patient": { "label": "Patient", "desc": "Waits calmly for the right moment" }
+    }
+  }
+}

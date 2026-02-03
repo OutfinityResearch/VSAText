@@ -2,7 +2,15 @@
 
 ## Overview
 
-Story Studio is SCRIPTA's visual interface for composing stories, generating content, and evaluating quality. This document describes the UI layout and interactions.
+Story Studio is SCRIPTA's visual interface for composing stories and evaluating quality. This document describes the high-level UI concepts and user workflows. For detailed implementation specifications, see DS10 (Visual Story Composer).
+
+## Design Philosophy
+
+**Visual-First Authoring**: Authors work with visual elements (trees, cards, graphs) rather than writing code. The system generates CNL automatically from the visual structure.
+
+**Real-Time Feedback**: Metrics update as authors make changes. No need to run separate evaluation steps.
+
+**Browser-First**: All processing happens client-side. The server only handles persistence.
 
 ## Main Layout
 
@@ -11,114 +19,153 @@ Story Studio is SCRIPTA's visual interface for composing stories, generating con
 │  Header: Project Name                           [New] [Save]        │
 ├──────────────┬────────────────────────────────┬─────────────────────┤
 │              │                                │                     │
-│   Element    │         Main Canvas            │    Context Panel    │
-│   Palette    │                                │                     │
-│              │   (Composition / Plan /        │    (Details /       │
-│ [Characters] │    Content / Compare)          │     Metrics)        │
-│ [Locations]  │                                │                     │
-│ [Patterns]   │                                │                     │
+│   Structure  │         Main Canvas            │    Metrics Panel    │
+│   Tree       │                                │                     │
+│              │   (Tabbed entity editors)      │    (Quality scores) │
+│ [Hierarchy]  │                                │                     │
 │              │                                │                     │
 ├──────────────┴────────────────────────────────┴─────────────────────┤
-│  [Generate Plan]  [Generate Content]     [Evaluate]  [Compare]      │
+│  Footer: Stats                                         Version      │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-## View Modes
+## Core Workflows
 
-| Mode | Purpose |
-|------|---------|
-| Compose | Build story elements visually |
-| Plan | Review scene breakdown and arcs |
-| Generate | View and edit generated content |
-| Evaluate | See quality metrics and issues |
-| Compare | Side-by-side version comparison |
+### 1. Start New Story
 
-## Element Palette
+**From scratch:**
+1. Click "New" to create empty project
+2. Add characters in Characters tab
+3. Add locations in Locations tab
+4. Create structure: Book → Chapters → Scenes
+5. Assign characters/locations to scenes
+6. Add narrative blocks and actions
+7. Review metrics and iterate
 
-Left sidebar with reusable building blocks. Click to view details, drag to add to project.
+**From random generation:**
+1. Click "Random" to generate complete story
+2. Review generated elements
+3. Modify characters, locations, relationships as needed
+4. Adjust structure and scenes
+5. Evaluate and refine
 
-**Characters** - Hero, Mentor, Shadow, Trickster archetypes. Create custom characters.
+### 2. Build Story Structure
 
-**Locations** - Coastal Village, Dark Forest, etc. Each has atmosphere setting.
-
-**Patterns** - Three-Act, Hero's Journey, Five-Act, Save the Cat structures.
-
-**Themes/Moods** - Abstract elements like courage, family, mystery.
-
-## Main Canvas
-
-### Composition View
-
-Shows characters as connected nodes, locations, themes, and selected pattern:
+Authors work with a tree hierarchy:
 
 ```
-    ┌─────────┐         ┌─────────┐
-    │  Anna   │─sibling─│ Marcus  │
-    │  Hero   │         │ Victim  │
-    └────┬────┘         └────┬────┘
-         └───────┬───────────┘
-                 ▼
-         ┌─────────────┐
-         │   Village   │
-         └─────────────┘
-
-  Themes: [courage] [family]   Tone: [hopeful]
+Book
+├── Chapter 1
+│   ├── Scene 1
+│   │   ├── [character references]
+│   │   ├── [location references]
+│   │   ├── [mood references]
+│   │   ├── [narrative blocks]
+│   │   └── [actions]
+│   └── Scene 2
+└── Chapter 2
 ```
 
-### Plan View
+Right-click context menu provides actions appropriate to each node type.
 
-Scene-by-scene breakdown with characters and locations per scene:
+### 3. Manage Entities
 
-```
-ACT 1: SETUP                                    25%
-├─ [1] Introduction - Anna at Village
-├─ [2] Inciting Incident - Marcus disappears
-└─ [3] Call to Action - Anna decides to search
+Each entity type has its own tab with:
+- Grid of entity cards
+- "+" card to add new entities
+- Click card to edit
+- Delete option in edit modal
 
-ACT 2: CONFRONTATION                            50%
-├─ [4] ...
-```
+Entity types:
+- **Characters**: Name, archetype, traits
+- **Locations**: Name, geography, time period, characteristics
+- **Objects**: Name, type, significance, owner
+- **Moods**: Name, emotion mix with intensities
+- **Themes**: Selected from vocabulary
 
-### Content View
+### 4. Define Relationships
 
-Generated text with regenerate option and trait verification:
+The Relations tab provides:
+- Visual graph showing character connections
+- List of defined relationships
+- Add/delete relationship controls
 
-```
-Scene 1: Introduction                [Regenerate]
+Relationship types cover familial, social, romantic, antagonistic, and power dynamics.
 
-The salt-laden wind whipped through Anna's dark hair...
+### 5. Configure Emotional Journey
 
-[Word count: 247]  [Traits: courageous ✓]
-```
+**Arc Selection**: Choose narrative arc template (Hero's Journey, Three Act, Save the Cat, etc.)
 
-## Context Panel
+**Beat Assignment**: Assign mood presets to each arc beat to define the emotional progression.
 
-Right sidebar showing details for selected element:
+### 6. Add World Rules
 
-**Character selected** - Archetype, traits, goals, relationships, backstory
+Define special rules that govern the story world:
+- Magic systems
+- Physical laws
+- Social structures
+- Technology constraints
 
-**Scene selected** - Characters involved, location, mood, summary
+These become part of the generated CNL and influence content generation.
 
-**Metrics selected** - Quality scores with bar graphs
+### 7. Evaluate Quality
 
-## Generation Panel
+Metrics panel shows real-time scores:
 
-Bottom bar with actions:
-- **Generate Plan** - Create scene structure from elements
-- **Generate Content** - Produce narrative text
-- **Settings** - Creativity level, word count targets
+| Category | Metrics |
+|----------|---------|
+| Summary | NQS, Completeness, Coherence, Emotional Arc |
+| Detailed | CAD, CAR, OI, CPSR, CSA, RQ, Explainability |
+| Structure | Counts of chapters, scenes, blocks, actions, refs |
 
-## Evaluation Panel
+Green = passes threshold, Yellow = warning, Red = fails
 
-- Select metrics to compute (NQS, Coherence, CAD)
-- View scores with pass/fail indicators
-- Highlight specific issues in content
-- Compare versions
+### 8. Export
+
+**Export CNL**: Download the auto-generated CNL as a `.cnl` file for use with other tools or for archival.
+
+## Entity Libraries
+
+| Library | Scope | Purpose |
+|---------|-------|---------|
+| Characters | Project | Named characters with archetypes and traits |
+| Locations | Project | Places with geography and atmosphere |
+| Objects | Project | Significant items with types and ownership |
+| Moods | Project | Emotional registers for scenes |
+| Themes | Project | Abstract narrative themes |
+| Relationships | Project | Connections between characters |
+| World Rules | Project | Special rules governing the story world |
+| Emotional Arc | Project | Mood assignments for arc beats |
+
+## Vocabulary Resources
+
+The UI draws from rich vocabularies (see `src/vocabularies/`):
+
+- **Character Archetypes**: Hero, Mentor, Shadow, Ally, Trickster, Herald, etc.
+- **Character Traits**: Organized by category (core, social, intellectual, emotional)
+- **Relationship Types**: Organized by category (familial, social, romantic, antagonistic, power)
+- **Location Geography**: Forest, mountain, ocean, desert, urban, village, etc.
+- **Location Time Periods**: Ancient, medieval, renaissance, industrial, modern, future
+- **Emotions**: Positive, negative, mixed with color coding
+- **Mood Presets**: Tense, Romantic, Triumphant, Melancholic, Peaceful, etc.
+- **Narrative Arcs**: Hero's Journey, Three Act, Save the Cat, Story Circle, etc.
+- **Narrative Blocks**: Organized by phase (opening, transition, confrontation, resolution, micro)
+- **Themes**: Redemption, Sacrifice, Identity, Power, Freedom, etc.
 
 ## Data Flow
 
 ```
-UI Interaction → Project State Update → CNL Regeneration → Parser Validation → Metric Recalculation
+User Action → State Update → CNL Generation → Metric Calculation → UI Refresh
+     │
+     └──────────→ [Save] ──→ Server (/v1/projects)
 ```
 
-All processing happens in browser. Server only handles save/load.
+All computation is client-side. Server is only for persistence.
+
+## Success Criteria
+
+1. New user can create a complete story structure in under 30 minutes
+2. Random generation produces coherent starting point
+3. Metrics provide actionable feedback
+4. CNL export works correctly
+5. UI is responsive and intuitive

@@ -2,13 +2,26 @@
 
 ## 1. Purpose
 
-This document specifies the **SCRIPTA Metrics Interpreter**: a deterministic interpreter that “executes” a single **SVO CNL** document and produces a machine-readable evaluation report containing the primary metrics from DS03.
+The **SCRIPTA Metrics Interpreter** takes a CNL document and calculates quality scores. Think of it like a compiler that reads source code and produces output, except here the "output" is a set of quality metrics rather than executable code.
 
-This DS is implementation-oriented:
-- Formalizes inputs/outputs
-- Defines the execution model for SVO CNL
-- Defines how metrics are computed as interpreter plugins
-- Defines the evaluation suite protocol (variants, datasets, human review, statistics)
+The interpreter is **deterministic**, meaning the same input always produces the same output. This is crucial for reproducible research and consistent evaluation.
+
+This document covers:
+- How the interpreter processes CNL documents
+- How individual metrics are computed
+- How to run evaluation experiments comparing different system variants
+
+## Key Concepts Explained
+
+Before diving into the technical details, here are the important concepts:
+
+**AST (Abstract Syntax Tree):** A tree-structured representation of the CNL document. Instead of storing raw text, the parser converts it into a hierarchy of nodes (entities, groups, statements) that the computer can analyze efficiently.
+
+**Deterministic:** Given the same input and seed value, the interpreter always produces identical output. No randomness affects the results.
+
+**Ablation Study:** An experiment where you systematically disable components to measure their individual contribution. We test variants A through F, each adding one more feature, to see which components actually improve quality.
+
+**Plugin Model:** Metrics are implemented as separate modules that plug into the interpreter. Each metric receives the parsed document and returns a score. This makes it easy to add new metrics without changing the core interpreter.
 
 ## 2. Scope and Assumptions
 
@@ -199,61 +212,76 @@ For each `case`:
 
 ## 7. Human Evaluation Protocol (for NQS and XAI)
 
-### 7.1 Rubric dimensions (1–5 scale)
+Some metrics require human judgment. This section defines how to collect and analyze human ratings consistently.
 
-Human ratings MUST use an ordinal 1–5 scale with anchors:
-- **Coherence (H_CO)**: plot consistency, causal logic
-- **Character Integrity (H_CH)**: trait/motivation consistency
-- **Style & Readability (H_ST)**: clarity, rhythm, readability
-- **Ethical Integrity (H_ET)**: bias/stereotypes/harmful content
-- **Overall (H_OV)**: overall narrative quality
+### 7.1 Rating Dimensions
 
-### 7.2 Rater assignment
+Three independent raters score each artifact on a 1-5 scale (1 = very poor, 5 = excellent):
 
-- Each artifact MUST be rated by 3 independent raters.
-- Raters MUST be blind to variant labels.
+| Dimension | What Raters Evaluate |
+|-----------|---------------------|
+| Coherence (H_CO) | Does the plot make sense? Are events logically connected? |
+| Character Integrity (H_CH) | Do characters act consistently with their established traits? |
+| Style & Readability (H_ST) | Is the writing clear and engaging? |
+| Ethical Integrity (H_ET) | Is the content free from harmful stereotypes or bias? |
+| Overall (H_OV) | Overall impression of narrative quality |
 
-### 7.3 Inter-rater reliability (weighted Cohen’s kappa)
+### 7.2 Rater Assignment Rules
 
-For each dimension, compute **quadratic weighted Cohen’s kappa** between each rater pair, then average.
+Each artifact must be rated by 3 independent raters who don't know which system variant produced the text. This "blinding" prevents bias from expectations about which variant should perform better.
 
-Definitions:
-- Ratings in `{1,2,3,4,5}`
-- Weight matrix:
-  - `w_ij = ((i - j) / (k - 1))^2`, where `k = 5`
+### 7.3 Measuring Rater Agreement (Cohen's Kappa)
 
-Weighted kappa:
+**What is Cohen's Kappa?** It measures how much two raters agree beyond what we'd expect by chance. A score of 0 means agreement equals chance; 1 means perfect agreement.
+
+**Why weighted?** Because some disagreements matter more than others. Rating something 1 vs 5 is a bigger disagreement than 3 vs 4. Quadratic weighting penalizes larger gaps more heavily.
+
+The formula calculates the ratio of actual agreement to expected agreement:
 ```text
-kappa_w = 1 - (sum_ij w_ij * O_ij) / (sum_ij w_ij * E_ij)
+kappa_w = 1 - (observed_disagreement / expected_disagreement)
 ```
-Where `O_ij` is observed agreement matrix, `E_ij` expected by chance.
 
-Acceptance recommendation:
-- `kappa_w >= 0.6` for “substantial agreement”
+We require kappa >= 0.6, which researchers consider "substantial agreement."
 
-### 7.4 Disagreement resolution
+### 7.4 Handling Disagreements
 
-If pairwise disagreement exceeds 2 points on any dimension, a moderated discussion MUST occur and produce an adjudicated note (kept separate from raw ratings).
+If two raters disagree by more than 2 points (e.g., one rates 2, another rates 5), they discuss the artifact together with a moderator. The goal isn't to change scores, but to understand why they interpreted it differently. These discussions are documented separately from the raw ratings.
 
 ## 8. Statistical Analysis
 
-### 8.1 ANOVA (one-way)
+When comparing variants, we need statistical tools to determine if differences are real or just noise.
 
-For each metric, run one-way ANOVA across variants:
-- Null hypothesis: equal means.
-- Report `F`, `p`, and effect sizes.
+### 8.1 ANOVA (Analysis of Variance)
 
-### 8.2 Effect size (Cohen’s d)
+**What is ANOVA?** A statistical test that compares the average scores of multiple groups (our variants) to see if at least one differs significantly from the others.
 
-For pairwise comparisons (Variant X vs A):
+**How it works:** ANOVA compares the variation between groups (do variants have different averages?) to variation within groups (how much do individual scores vary?). If between-group variation is much larger than within-group variation, the differences are likely real.
+
+**Output:**
+- **F-statistic:** Higher values suggest larger differences between variants
+- **p-value:** If p < 0.05, we conclude the differences are statistically significant
+
+### 8.2 Effect Size (Cohen's d)
+
+**What is effect size?** Statistical significance tells you if an effect exists; effect size tells you how big it is. A tiny improvement might be statistically significant with enough data, but not practically meaningful.
+
+**Cohen's d** measures how many standard deviations apart two groups are:
 ```text
-d = (mean_X - mean_A) / s_pooled
-s_pooled = sqrt(((n_X - 1)*s_X^2 + (n_A - 1)*s_A^2) / (n_X + n_A - 2))
+d = (mean_X - mean_A) / pooled_standard_deviation
 ```
 
-### 8.3 Confidence intervals
+**Interpretation:**
+- d = 0.2 is a "small" effect
+- d = 0.5 is a "medium" effect
+- d = 0.8+ is a "large" effect
 
-Report 95% confidence intervals for means and deltas using bootstrap resampling (recommended for non-normal distributions).
+For SCRIPTA, we want d >= 0.5 to claim meaningful improvement.
+
+### 8.3 Confidence Intervals
+
+A confidence interval gives a range where the true value probably lies. A "95% CI of [0.72, 0.81]" means we're 95% confident the true score is between 0.72 and 0.81.
+
+We use **bootstrap resampling**: randomly sample the data thousands of times with replacement, compute the statistic each time, and report the middle 95% of values. This works well even when data isn't normally distributed.
 
 ## 9. Acceptance Thresholds (from DS03)
 

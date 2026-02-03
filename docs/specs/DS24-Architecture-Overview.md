@@ -141,23 +141,6 @@ Grammar and vocabulary definitions are stored in JSON configs:
 
 This allows customization without code changes.
 
-## 7. Migration from Previous Architecture
-
-### Removed
-- HTTP APIs for CNL validation, translation, planning, verification
-- Predicate DSL (`CHARACTER(Anna).`) - replaced with SVO CNL
-- Duplicate server files
-
-### Kept
-- Persistence API (`/v1/projects`)
-- All business logic (now as browser-compatible modules)
-
-## 8. Future Considerations
-
-- **IndexedDB Storage:** Browser-native persistence without server
-- **Service Workers:** Offline-first capability
-- **WebAssembly:** VSA operations for performance
-
 ---
 
 *This document supersedes DS02-API.md for architecture decisions.*

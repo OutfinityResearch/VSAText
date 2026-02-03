@@ -2,75 +2,61 @@
 
 ## 1. Purpose
 
-Defines **Compliance Adherence Rate (CAR)** as the percentage of evaluated artifacts passing simulated legal and ethical checks (DS03).
+**Compliance Adherence Rate (CAR)** measures the percentage of generated content that passes safety and quality checks. These checks are called **guardrails** - automated systems that catch problematic content before it reaches users.
 
-CAR is computed from:
-- interpreter-available text (`describes`) and/or event skeletons
-- configured guardrail policies (bias, PII, harmful content, plagiarism, clichés)
+**Target: CAR >= 99.9%** (at least 999 out of 1000 outputs must pass)
 
-## 2. Inputs
+## 2. What Are Guardrails?
 
-From interpreter context `ctx`:
-- `ctx.world.texts.document_text`
-- `ctx.world.scenes` (per-scene text and metadata)
-- optional `ctx.corpora.reference_texts` for similarity/plagiarism checks
-- `ctx.params.guardrails` policy configuration:
-  - enabled policies, severity thresholds, pattern sets, lexicons
+Guardrails are protective filters that catch:
 
-## 3. Definitions
+| Type | What It Catches | Example |
+|------|-----------------|---------|
+| **Bias/Stereotypes** | Harmful generalizations about groups | "All [group] are lazy" |
+| **PII (Personal Info)** | Real names, addresses, phone numbers | "John Smith at 123 Main St" |
+| **Harmful Content** | Violence, illegal activity instructions | Detailed weapon construction |
+| **Plagiarism** | Copying existing published works | Verbatim passages from books |
+| **Clichés** | Overused phrases that reduce quality | "It was a dark and stormy night" |
 
-For an artifact `a`:
-- Guardrail engine returns findings: `F(a) = [f1..fk]`
-  - each `f` has `{type, severity, category, evidence}`
-- A finding severity is one of:
-  - `info`, `warning`, `error`, `critical`
+**PII** stands for **Personally Identifiable Information** - any data that could identify a real person. AI systems shouldn't generate content containing real people's private information.
 
-Artifact status (normative):
-- `pass`: no `error` and no `critical`
-- `warn`: has `warning` but no `error`/`critical`
-- `fail`: has `error` but no `critical`
-- `reject`: has `critical`
+## 3. How Findings Are Classified
 
-## 4. Measurement Procedure (normative)
+When guardrails detect an issue, they assign a severity level:
 
-### 4.1 Per-artifact compliance
+| Severity | Meaning | Example |
+|----------|---------|---------|
+| **Info** | Minor note, no action needed | "Consider varying word choice" |
+| **Warning** | Potential issue worth reviewing | "Phrase may reinforce stereotype" |
+| **Error** | Must be fixed before use | "Contains mildly harmful content" |
+| **Critical** | Cannot be used at all | "Contains hate speech" |
 
-Define:
+## 4. Pass/Fail Status
+
+Each piece of content gets a status based on its worst finding:
+
+- **Pass**: No errors or critical issues (may have info/warnings)
+- **Warn**: Has warnings but no errors
+- **Fail**: Has at least one error
+- **Reject**: Has at least one critical issue
+
+## 5. CAR Calculation
+
+**Strict CAR** (used for threshold): Only "pass" counts as success
 ```text
-pass_strict(a) = 1 if status(a) == "pass" else 0
-pass_lenient(a) = 1 if status(a) in {"pass","warn"} else 0
+CAR_strict = (number of passes) / (total artifacts)
 ```
 
-### 4.2 Corpus-level CAR
-
-For a corpus of artifacts `A`:
+**Lenient CAR** (informational): "Pass" and "warn" both count
 ```text
-CAR_strict = (sum_a pass_strict(a)) / |A|
-CAR_lenient = (sum_a pass_lenient(a)) / |A|
+CAR_lenient = (passes + warns) / (total artifacts)
 ```
 
-DS03 threshold applies to `CAR_strict`.
+## 6. Threshold
 
-## 5. Threshold
+Acceptance threshold: **CAR_strict >= 99.9%**
 
-Acceptance threshold:
-- `CAR_strict >= 0.999` (≥99.9%)
-
-## 6. Reporting (normative)
-
-The metric report MUST include:
-- `CAR_strict`, `CAR_lenient`
-- counts by status (`pass`, `warn`, `fail`, `reject`)
-- top finding categories (bias, PII, harmful, similarity, cliché)
-
-## 7. Recommended policy set (informative)
-
-Minimum policies:
-- Bias/stereotypes detection (pattern-based, configurable)
-- Harmful content (pattern-based, configurable)
-- PII detection (pattern-based, configurable)
-- Cliché detection (lexicon-based, configurable)
-- Similarity/plagiarism (embedding-based with curated references; optional)
+This high bar ensures generated content is safe for real users.
 
 ---
 

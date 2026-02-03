@@ -2,82 +2,79 @@
 
 ## 1. Purpose
 
-Defines **Narrative Quality Score (NQS)** as a composite of:
-- automated Coherence Score (CS) and
-- human expert review
+**Narrative Quality Score (NQS)** is the master metric that combines automated analysis with human judgment to measure overall story quality.
 
-This aligns with DS03: “Entity-based coherence plus average of 3 expert ratings (1–5)”.
+**Target: NQS must improve by >= 25% vs baseline**
 
-## 2. Inputs
+## 2. Why NQS Combines Human + Machine
 
-From interpreter context and evaluation suite:
-- automated `CS` result (DS13)
-- human ratings (3 raters):
-  - coherence (H_CO), character integrity (H_CH), style/readability (H_ST), ethical integrity (H_ET), overall (H_OV)
+Neither automated metrics nor human ratings alone tell the whole story:
 
-At minimum, NQS MUST include:
-- `CS`
-- `H_OV` (overall) averaged across 3 raters
+**Automated metrics (Coherence Score)**:
+- Consistent and reproducible
+- Can analyze every document
+- Misses subjective qualities like "engagement" or "beautiful prose"
 
-## 3. Definition (normative)
+**Human ratings**:
+- Capture nuanced quality judgments
+- Expensive and slow to collect
+- Can vary between raters
 
-### 3.1 Normalize human overall rating
+NQS combines both: half the score comes from automated coherence analysis, half from expert human ratings.
 
-Let `H_OV` be in `{1,2,3,4,5}`.
+## 3. The Two Components
 
-Normalize to `[0,1]`:
+### 3.1 Coherence Score (CS)
+
+Calculated automatically by the interpreter (see DS13). Measures entity tracking, causal chains, and logic violations.
+
+### 3.2 Human Overall Rating (H_OV)
+
+Three independent raters score the overall narrative quality on a 1-5 scale. We take their average and normalize to 0-1:
+
 ```text
-H = (mean(H_OV) - 1) / 4
+H = (average_rating - 1) / 4
 ```
 
-### 3.2 Composite NQS
+**Why subtract 1 and divide by 4?** To convert the 1-5 scale to 0-1:
+- Rating 1 → H = 0
+- Rating 3 → H = 0.5
+- Rating 5 → H = 1.0
 
-Recommended equal weighting:
+## 4. NQS Formula
+
 ```text
-NQS = 0.5 * CS + 0.5 * H
+NQS = 0.5 × CS + 0.5 × H
 ```
 
-Alternative weighting (if justified by experiments):
+Equal weighting ensures neither component dominates.
+
+**Example:**
+- CS = 0.82 (automated coherence score)
+- Human ratings: 4, 4, 5 → average = 4.33 → H = 0.83
+- NQS = 0.5 × 0.82 + 0.5 × 0.83 = 0.825
+
+## 5. Success Threshold
+
+The threshold is relative, not absolute. We measure improvement over the baseline (Variant A - simple prompting without specification):
+
 ```text
-NQS = alpha * CS + (1 - alpha) * H
-```
-with default `alpha = 0.5`.
-
-## 4. Measurement Procedure (normative)
-
-Per artifact:
-1) Compute `CS` via interpreter.
-2) Collect 3 independent rater overall scores.
-3) Compute `H` and `NQS`.
-
-Per variant:
-- compute mean NQS across tasks/cases:
-```text
-mean_NQS(variant) = average_case NQS(case)
+improvement = (NQS_new - NQS_baseline) / NQS_baseline
 ```
 
-## 5. Threshold (DS03) — “+25% vs Variant A”
+**Target: improvement >= 25%**
 
-Let:
-- `A` be baseline variant
-- `X` be the evaluated variant
+**Example:**
+- Baseline NQS (Variant A) = 0.60
+- Full system NQS (Variant D) = 0.78
+- Improvement = (0.78 - 0.60) / 0.60 = 0.30 = 30% (passes!)
 
-Relative improvement:
-```text
-improvement = (mean_NQS(X) - mean_NQS(A)) / mean_NQS(A)
-```
+## 6. Statistical Requirements
 
-Acceptance threshold:
-- `improvement >= 0.25`
-
-The evaluation MUST also report statistical significance and effect size (DS12).
-
-## 6. Reporting (normative)
-
-The report MUST include:
-- per-case NQS, CS, and human rating mean/std
-- per-variant mean NQS and 95% CI
-- delta vs baseline + effect size (Cohen’s d)
+We must also show the improvement is statistically significant:
+- Report 95% confidence intervals
+- Report effect size (Cohen's d)
+- A large effect (d >= 0.8) with p < 0.05 is strong evidence
 
 ---
 
@@ -86,4 +83,3 @@ The report MUST include:
 - DS03 — research goals and thresholds
 - DS12 — human evaluation protocol and statistics
 - DS13 — CS definition
-

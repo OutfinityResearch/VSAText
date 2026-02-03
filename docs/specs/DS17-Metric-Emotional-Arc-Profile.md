@@ -2,83 +2,93 @@
 
 ## 1. Purpose
 
-Defines **Emotional Arc Profile (EAP)** as similarity of the measured emotional trajectory to a target template (DS03).
+**Emotional Arc Profile (EAP)** measures how well a story's emotional journey matches its intended arc. Good stories take readers on deliberate emotional journeys - tension builds, releases, builds again toward climax.
 
-EAP must work with SVO CNL by using:
-- explicit mood/emotion statements in scenes, and/or
-- deterministic sentiment estimation from scene text
+**Target: Pearson correlation r > 0.7** (higher is better)
 
-## 2. Inputs
+## 2. What is an Emotional Arc?
 
-From interpreter context `ctx`:
-- scene list `S = [s1..sn]`
-- scene mood/emotion declarations (preferred):
-  - `Scene has mood X`
-  - `Mood has emotion E intensity I` or `Scene has emotion E intensity I`
-- scene text `scene_text(s)`
-- target arc template selection:
-  - `Story has emotional_arc <template_id>` (recommended)
-  - or a default template chosen by the host
-- `ctx.corpora.arc_templates`: map template_id → vector values in `[0,1]`
+An emotional arc is the pattern of emotional intensity across a story. Think of a graph where:
+- X-axis = story progress (0% to 100%)
+- Y-axis = emotional valence (negative to positive)
 
-## 3. Definitions
+**Classic arc patterns include:**
 
-Let:
-- `A_target = [a1..an]` target arc points (length `n`, resampled if needed)
-- `A_measured = [m1..mn]` measured arc points in `[0,1]`
+| Pattern | Shape | Example |
+|---------|-------|---------|
+| **Rags to Riches** | Steady rise | Cinderella |
+| **Tragedy** | Rise then fall | Hamlet |
+| **Man in a Hole** | Fall then rise | A Christmas Carol |
+| **Icarus** | Rise, fall, rise | Most Hollywood movies |
 
-Similarity is **Pearson correlation**:
+## 3. Key Concepts
+
+### What is Valence?
+
+**Valence** measures how positive or negative an emotion is:
+- High valence (1.0): joy, triumph, love
+- Neutral (0.5): calm, neutral, matter-of-fact
+- Low valence (0.0): fear, anger, despair
+
+Each mood in our vocabulary has a valence score.
+
+### What is Pearson Correlation?
+
+**Pearson correlation** measures how closely two sequences move together:
+- r = 1.0: Perfect match (when one goes up, the other goes up)
+- r = 0: No relationship
+- r = -1.0: Perfect inverse (when one goes up, the other goes down)
+
+We compare the target arc to the measured arc. A correlation of 0.7+ means the story follows the intended emotional journey.
+
+### What is a Sentiment Lexicon?
+
+A **sentiment lexicon** is a dictionary mapping words to valence scores:
+- "triumph" → 0.9 (very positive)
+- "walked" → 0.5 (neutral)
+- "dread" → 0.1 (very negative)
+
+When explicit mood tags aren't available, we estimate scene valence from word frequencies.
+
+## 4. How EAP is Calculated
+
+### Step 1: Build the Target Arc
+
+Author specifies an arc template (e.g., "Rags to Riches"), which provides expected valence at each story point.
+
+### Step 2: Measure the Actual Arc
+
+For each scene, calculate emotional valence:
+
+**Preferred method (explicit moods):**
 ```text
-r = cov(A_target, A_measured) / (std(A_target) * std(A_measured))
+Scene1 has mood Tense
+Scene2 has mood Triumphant
+```
+Look up valence from mood vocabulary.
+
+**Fallback method (text analysis):**
+Count positive vs negative words in scene text using the sentiment lexicon.
+
+### Step 3: Calculate Correlation
+
+Align target and measured arcs (same number of points), then compute Pearson correlation.
+
+```text
+Correlation r = covariance(target, measured) / (std(target) × std(measured))
 ```
 
-We normalize to `[0,1]` for reporting:
+### Step 4: Normalize for Reporting
+
 ```text
 EAP = (r + 1) / 2
 ```
 
-Thresholds use correlation `r` (not normalized).
-
-## 4. Measurement Procedure (normative)
-
-### 4.1 Measured arc construction
-
-Preferred: mood-based valence
-1) Map each scene’s mood to a valence score:
-   - valence lookup table is provided by config packs
-2) If a scene has multiple emotions with intensities, compute:
-```text
-m_i = (sum_e valence(e) * intensity(e)) / (sum_e intensity(e))
-```
-
-Fallback: text-based valence (deterministic lexicon)
-1) Use a fixed sentiment lexicon mapping words → valence in `[-1,1]`.
-2) For scene text tokens:
-```text
-raw = average(valence(token)) over tokens present in lexicon
-m_i = (raw + 1) / 2
-```
-
-### 4.2 Target arc alignment
-
-If template length differs from `n`, resample by linear interpolation to length `n`.
-
-### 4.3 Correlation
-
-Compute Pearson correlation `r` between the two vectors.
+This converts r from [-1, 1] to [0, 1] for consistent reporting.
 
 ## 5. Threshold
 
-Acceptance threshold:
-- correlation `r > 0.7`
-
-## 6. Reporting (normative)
-
-The metric report MUST include:
-- correlation `r`
-- normalized `EAP`
-- measured arc points and target arc points
-- method used (`mood` or `text`)
+Acceptance threshold: **Correlation r > 0.7**
 
 ---
 

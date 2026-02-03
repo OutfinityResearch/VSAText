@@ -2,42 +2,70 @@
 
 ## 1. Purpose
 
-Defines the **Coherence Score (CS)** metric as a deterministic function computed by the CNL Metrics Interpreter (DS12) over a single SVO CNL document.
+The **Coherence Score (CS)** measures how well a story holds together as a unified narrative. A coherent story has consistent characters, logical cause-and-effect chains, and no contradictions.
 
-Target property: long-range narrative coherence via entity tracking and causal chain verification (DS03).
+Target: CS > 0.75 (higher is better)
 
-## 2. Inputs
+## 2. What Makes a Story Coherent?
 
-From interpreter context `ctx`:
-- `ctx.world.scenes.ordered_ids` (timeline)
-- `ctx.world.scenes[scene_id].refs` (referenced entities)
-- `ctx.world.scenes[scene_id].events` (ordered events)
-- `ctx.world.constraints` (requires/forbids/must/max/min/tone)
-- `ctx.world.state` (derived world state if available)
+Coherence has three components:
 
-## 3. Definitions
+**Entity Continuity (EC):** Characters and locations that appear in one scene should logically connect to adjacent scenes. If Anna is in the forest in Scene 1, she shouldn't suddenly be at the castle in Scene 2 without explanation.
 
-Let:
-- Scenes `S = [s1, s2, …, sn]` in timeline order.
-- For scene `s`:
-  - `E(s)`: set of referenced entity IDs (characters, locations, objects) in `s`.
-  - `V(s)`: set of “salient event verbs” in `s` (normalized).
-  - `EV(s)`: set of normalized event tuples in `s`:
-    - `e = (subj, verb, obj?, modifiers?)`
+**Causal Chains (CC):** Events should have causes and effects. If Marcus threatens Anna in Scene 1, we expect consequences in Scene 2 (Anna confronts him, escapes, etc.). Stories without cause-effect feel random.
 
-Normalization (normative):
-- Casefold identifiers.
-- Treat quoted identifiers as atomic.
-- Resolve references (`@X`) to canonical entity name `X`.
+**Logic Violations (LVP):** Errors like referencing characters who don't exist, impossible location jumps, or contradicting established facts.
 
-## 4. Measurement Procedure (normative)
+## 3. How It's Measured
 
-### 4.1 Entity Continuity (EC)
+### 3.1 Entity Continuity (EC)
 
-For each adjacent scene pair `(s_i, s_{i+1})` compute:
+**Jaccard Similarity** measures how much two sets overlap. For two adjacent scenes, we compare which entities appear in each:
+
 ```text
-EC_i = Jaccard(E(s_i), E(s_{i+1})) = |E∩| / |E∪|
+EC = (entities in both scenes) / (entities in either scene)
 ```
+
+**Example:**
+- Scene 1 has: Anna, Marcus, Forest
+- Scene 2 has: Anna, Castle
+
+Overlap = {Anna} = 1 entity
+Combined = {Anna, Marcus, Forest, Castle} = 4 entities
+EC = 1/4 = 0.25
+
+We average EC across all scene pairs.
+
+### 3.2 Causal Chain Score (CC)
+
+We look for cause-effect patterns between scenes using verb categories:
+
+**Cause verbs:** threatens, decides, reveals, betrays, destroys
+**Effect verbs:** escapes, confronts, travels, resolves, is_defeated_by
+
+For each scene pair:
+- Full score (1.0): A character performs a cause verb, then that same character experiences an effect verb
+- Partial score (0.7): Characters overlap and at least one pattern is present
+- Minimal score (0.4): Characters overlap but no clear cause-effect
+- Zero (0.0): No character overlap at all
+
+### 3.3 Logic Violation Penalty (LVP)
+
+Count errors like:
+- Referencing undefined characters ("Marcus" used but never declared)
+- Invalid ownership ("Anna owns SilverKey" but SilverKey doesn't exist)
+- Impossible location transitions without travel events
+- Constraint violations (story "forbids violence" but contains violence)
+
+Penalty increases with more violations relative to story length.
+
+### 3.4 Final Score
+
+```text
+CS = 0.50 × EC + 0.40 × CC - 0.30 × LVP
+```
+
+The score is clamped to [0, 1].
 Then:
 ```text
 EC = average(EC_i) for i=1..n-1
@@ -97,10 +125,17 @@ Compute:
 CS = clamp(w_ec*EC + w_cc*CC - w_lvp*LVP, 0, 1)
 ```
 
+## 4. Inputs (Technical)
+
+From interpreter context `ctx`:
+- `ctx.world.scenes.ordered_ids` - list of scenes in story order
+- `ctx.world.scenes[scene_id].refs` - entities referenced in each scene
+- `ctx.world.scenes[scene_id].events` - actions that happen in each scene
+- `ctx.world.constraints` - rules the story must follow
+
 ## 5. Threshold
 
-Acceptance threshold:
-- `CS > 0.75`
+Acceptance threshold: **CS > 0.75**
 
 ## 6. Reporting (normative)
 

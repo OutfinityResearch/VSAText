@@ -2,59 +2,60 @@
 
 ## 1. Purpose
 
-Defines **Originality Index (OI)** as semantic distance from a curated trope/cliché corpus (DS03).
+**Originality Index (OI)** measures how different a story is from known clichés and tropes. Higher scores mean more original content.
 
-OI is computed deterministically using the interpreter’s canonical text:
-- preferred: scene `describes` text
-- fallback: event skeleton text
+**Target: OI > 0.8** (higher is better)
 
-## 2. Inputs
+## 2. The Problem OI Solves
 
-From interpreter context `ctx`:
-- `ctx.world.texts.document_text`
-- `ctx.corpora.tropes`: list of trope entries with stable IDs and short descriptions
-- `ctx.profile` in `{basic, vsa}`
-- `ctx.params.oi.threshold_similarity` default `0.2` (for reporting only)
+AI-generated stories often fall into predictable patterns:
+- The reluctant hero who is "the chosen one"
+- The mentor who dies to motivate the hero
+- The villain with a tragic backstory who wants to "remake the world"
 
-Trope corpus entry (normative minimum):
-```json
-{ "id": "trope_001", "title": "Chosen One", "text": "A reluctant hero learns they are destined…", "tags": ["fantasy"] }
-```
+While these tropes aren't inherently bad, over-reliance on them produces generic, forgettable stories. OI helps identify when content is too derivative.
 
-## 3. Definitions
+## 3. Key Concepts
 
-Let:
-- `T = {t1..tp}` tropes
-- `V(x)` embedding of text `x` (DS05 if `vsa`, otherwise deterministic bag-of-words)
-- `sim(x,y) = cosine(V(x), V(y))`
+### What is a Trope Corpus?
 
-Define:
+A **trope corpus** is a database of common story patterns, each with a short description. Examples:
+
+| Trope | Description |
+|-------|-------------|
+| Chosen One | A reluctant hero learns they are destined to save the world |
+| Dead Mentor | The wise guide dies, forcing the hero to continue alone |
+| Dark Lord | An ancient evil awakens and threatens civilization |
+| Love Triangle | Two characters compete for the affection of a third |
+
+We maintain a curated list of ~200 common tropes.
+
+### What is Bag-of-Words?
+
+**Bag-of-words** is a simple text representation method that counts word frequencies, ignoring order. "The brave hero fought the dragon" becomes: {the: 2, brave: 1, hero: 1, fought: 1, dragon: 1}.
+
+Despite its simplicity, bag-of-words works surprisingly well for detecting thematic similarity.
+
+## 4. How OI is Calculated
+
+1. **Encode the story** as a vector (using bag-of-words or VSA)
+2. **Encode each trope** in the corpus
+3. **Find the most similar trope** using cosine similarity
+4. **Compute originality** as the inverse:
+
 ```text
-sim_max = max_t sim(doc_text, trope_text(t))
-OI = 1 - clamp(sim_max, 0, 1)
+OI = 1 - max_similarity_to_any_trope
 ```
 
-Higher is better.
-
-## 4. Measurement Procedure (normative)
-
-1) Build `doc_text` from interpreter (DS12).
-2) Compute `V(doc_text)`.
-3) For each trope `t`, compute `V(t.text)` and similarity.
-4) Take maximum similarity and compute OI.
+**Example:**
+- Story has 0.15 similarity to "Chosen One" trope (highest match)
+- OI = 1 - 0.15 = 0.85 (passes threshold)
 
 ## 5. Threshold
 
-Acceptance threshold:
-- `OI > 0.8`
+Acceptance threshold: **OI > 0.8**
 
-## 6. Reporting (normative)
-
-The metric report MUST include:
-- `OI` value
-- `sim_max`
-- top-k most similar tropes with similarity scores
-- corpus version identifier (hash)
+This means the story should be at most 20% similar to any known trope.
 
 ---
 

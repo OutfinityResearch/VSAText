@@ -2,57 +2,57 @@
 
 ## 1. Purpose
 
-Defines **Explainability Score** as the author’s rating of explanation quality (DS03).
+**Explainability Score (XAI)** measures how well the system explains its decisions to authors. When the system rejects content or suggests changes, can authors understand why?
 
-This is a human-measured metric captured by the product UI and stored with evaluation runs.
+**Target: XAI >= 4.0 out of 5.0**
 
-## 2. Inputs
+## 2. Why Explainability Matters
 
-For each task/session:
-- explanation artifacts shown to the author (e.g., “why did this fail?”)
-- a post-task survey filled by the author
+An AI system that says "Your scene failed coherence checks" without explanation is frustrating and unhelpful. Authors need to understand:
+- What exactly failed?
+- Why is it considered a problem?
+- How can I fix it?
 
-Survey MUST record:
-- `case_id`, `variant`, `timestamp`, `author_id` (pseudonymous)
+Good explanations build trust and help authors improve their work.
 
-## 3. Survey Instrument (normative)
+## 3. This is a Human-Rated Metric
 
-Scale: Likert 1–5 (1=strongly disagree, 5=strongly agree).
+Unlike other metrics that are calculated automatically, XAI comes from author surveys after using the system. Authors rate their experience on a 1-5 scale (1 = strongly disagree, 5 = strongly agree).
 
-Minimum required items:
-1) **Clarity**: “The explanation was clear and easy to understand.”
-2) **Evidence**: “The explanation cited concrete evidence from the artifact/spec.”
-3) **Actionability**: “The explanation helped me decide what to change next.”
-4) **Trust**: “The explanation increased my trust in the system’s evaluation.”
+## 4. Survey Questions
 
-Optionally:
-5) **Conciseness**
-6) **Non-intrusiveness**
+Authors answer four core questions:
 
-## 4. Definition
+| Dimension | Question |
+|-----------|----------|
+| **Clarity** | "The explanation was clear and easy to understand." |
+| **Evidence** | "The explanation cited concrete evidence from my story/specification." |
+| **Actionability** | "The explanation helped me decide what to change next." |
+| **Trust** | "The explanation increased my trust in the system's evaluation." |
 
-Let `score_i` be the average of the required items for session `i`:
+Optional additional questions:
+- Conciseness: "The explanation was appropriately brief without losing important details."
+- Non-intrusiveness: "The explanations didn't interrupt my creative flow."
+
+## 5. How XAI is Calculated
+
+For each author session, average the four core question ratings:
+
 ```text
-score_i = average(item_1..item_4) in [1,5]
+session_score = (clarity + evidence + actionability + trust) / 4
 ```
 
-Explainability Score for a corpus:
+Overall XAI is the average across all sessions:
+
 ```text
-XAI = average_i score_i
+XAI = average(all session scores)
 ```
 
-## 5. Threshold
+## 6. Threshold
 
-Acceptance threshold:
-- `XAI >= 4.0` (average)
+Acceptance threshold: **XAI >= 4.0**
 
-## 6. Reporting (normative)
-
-The report MUST include:
-- `XAI` mean
-- distribution (histogram of 1..5)
-- confidence interval (95%)
-- per-variant breakdown
+This means authors generally agree or strongly agree that explanations are helpful.
 
 ---
 

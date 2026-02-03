@@ -2,77 +2,73 @@
 
 ## 1. Purpose
 
-Defines **Retrieval Quality (RQ)** for semantic search over project artifacts (DS03).
+**Retrieval Quality (RQ)** measures how well the system finds relevant content when you search for it. When an author searches "scenes with Anna in danger," the system should return the right scenes.
 
-RQ is measured using a held-out query set with relevance judgments.
+**Target: MRR > 0.6** (higher is better)
 
-## 2. Inputs
+## 2. Why Retrieval Matters
 
-From interpreter context `ctx`:
-- indexable items derived from the CNL document:
-  - scene texts
-  - entity descriptions
-  - world rules
-  - (optional) draft artifacts
-- `ctx.corpora.retrieval_queries`: list of queries with relevance labels
-- embedding backend:
-  - `ctx.profile` in `{basic, vsa}`
+Authors working on long narratives need to:
+- Find all scenes where a character appears
+- Locate specific plot points
+- Check for consistency across distant parts of the story
 
-Query format (normative minimum):
-```json
-{
-  "id": "q_001",
-  "query": "storm at sea moral dilemma",
-  "relevant_ids": ["scene_3", "scene_4"]
-}
-```
+Good retrieval saves time and prevents errors.
 
-## 3. Definitions
+## 3. Key Concepts
 
-Let:
-- Query set `Q = {q1..qm}`
-- For each query `q`, the system returns ranked list `R_q` of item IDs.
+### What is a Query Set?
 
-### 3.1 Recall@k
+A **query set** is a collection of test searches with known correct answers. Each query has:
+- The search text (e.g., "storm at sea moral dilemma")
+- The list of documents/scenes that should match
 
-```text
-Recall@k(q) = |top_k(R_q) ∩ Relevant(q)| / |Relevant(q)|
-Recall@k = average_q Recall@k(q)
-```
+This "ground truth" lets us measure how well the system performs.
 
-### 3.2 Mean Reciprocal Rank (MRR)
+### What is Recall@k?
 
-Let `rank_q` be the rank (1-based) of the first relevant item in `R_q` (or ∞ if none).
+**Recall@k** asks: "Of all the correct answers, what fraction did we find in the top k results?"
 
-```text
-RR(q) = 0 if no relevant item is retrieved else 1 / rank_q
-MRR = average_q RR(q)
-```
+**Example:**
+- Query: "scenes with Anna in danger"
+- Correct answers: Scene 3, Scene 4, Scene 7
+- System returns (top 5): Scene 4, Scene 8, Scene 3, Scene 1, Scene 2
 
-RQ uses MRR as the primary threshold metric.
+Recall@5 = 2/3 = 0.67 (found 2 of 3 correct answers in top 5)
 
-## 4. Measurement Procedure (normative)
+Higher recall means fewer relevant items are missed.
 
-1) Build index items deterministically from the interpreter world:
-   - `item_id`, `item_text`, `item_type`
-2) For each query `q`:
-   - embed query and item texts
-   - compute cosine similarity
-   - rank items descending by similarity
-3) Compute Recall@k and MRR.
+### What is Mean Reciprocal Rank (MRR)?
+
+**MRR** measures how quickly you find the first relevant result:
+- If the first result is relevant: score = 1.0
+- If the second result is relevant: score = 0.5
+- If the third result is relevant: score = 0.33
+- If no relevant results: score = 0
+
+**Reciprocal Rank** = 1 / position_of_first_relevant_result
+
+**Mean Reciprocal Rank** = average across all queries
+
+**Example:**
+- Query 1: First relevant result at position 1 → RR = 1.0
+- Query 2: First relevant result at position 3 → RR = 0.33
+- Query 3: First relevant result at position 2 → RR = 0.5
+
+MRR = (1.0 + 0.33 + 0.5) / 3 = 0.61
+
+## 4. How RQ is Measured
+
+1. **Build an index** from the CNL document (scenes, entities, descriptions)
+2. **Run each test query** through the search system
+3. **Compare results** to the known correct answers
+4. **Calculate MRR and Recall@k**
 
 ## 5. Threshold
 
-Acceptance threshold:
-- `MRR > 0.6`
+Acceptance threshold: **MRR > 0.6**
 
-## 6. Reporting (normative)
-
-The metric report MUST include:
-- `MRR`
-- `Recall@5`, `Recall@10`
-- per-query RR and rank of first relevant hit
-- index size and item type distribution
+This means on average, the first relevant result appears within the top 2 positions.
 
 ---
 

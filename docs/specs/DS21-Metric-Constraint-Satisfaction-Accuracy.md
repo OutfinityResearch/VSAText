@@ -2,101 +2,75 @@
 
 ## 1. Purpose
 
-Defines **Constraint Satisfaction Accuracy (CSA)** as the percentage of outputs satisfying constraints expressed in SVO CNL (DS03).
+**Constraint Satisfaction Accuracy (CSA)** measures how well generated content respects the rules specified in CNL. If the author says "Story forbids violence," does the output actually avoid violence?
 
-Constraints are first-class statements in SVO CNL (DS11):
-- `X requires "Y"`
-- `X forbids "Y"`
-- `X must <action> <target>`
-- `X has tone <value>`
-- `X has max <what> <count>`
-- `X has min <what> <count>`
+**Target: CSA >= 98%** (at least 98 out of 100 constraints must be satisfied)
 
-CSA is computed by the interpreter by evaluating these constraints against the executed world state and scene texts.
+## 2. What Are Constraints?
 
-## 2. Inputs
+Constraints are rules that content must follow. CNL supports several types:
 
-From interpreter context `ctx`:
-- `ctx.world.constraints` (typed constraints with scope resolution)
-- `ctx.world.scenes` (per-scene refs, events, text)
-- `ctx.world.entities` (declared entities)
-- `ctx.params.constraint_matching`:
-  - tokenization rules, alias maps, fuzzy matching parameters
+| Constraint | Meaning | Example |
+|------------|---------|---------|
+| `requires` | Must include this element | `Story requires "happy ending"` |
+| `forbids` | Must NOT include this element | `Scene1 forbids "violence"` |
+| `must` | Must contain this action | `Chapter1 must introduce Anna` |
+| `has tone` | Must maintain this emotional tone | `Story has tone hopeful` |
+| `has max` | Maximum count limit | `Story has max characters 10` |
+| `has min` | Minimum count limit | `Book has min chapters 3` |
 
-## 3. Definitions
+## 3. How Constraints Are Scoped
 
-Let the constraint set be `K = {k1..kn}`.
+The subject of a constraint determines where it applies:
 
-Each constraint `k` yields a boolean outcome:
-- `sat(k) = 1` if satisfied
-- `sat(k) = 0` otherwise
+| Subject | Scope | Example |
+|---------|-------|---------|
+| Scene group | Just that scene | `Scene1 forbids "weapons"` |
+| Chapter group | All scenes in chapter | `Chapter2 requires "Anna"` |
+| Story/World | Entire document | `Story has tone hopeful` |
 
-CSA:
+## 4. How Satisfaction is Checked
+
+### 4.1 `requires "X"`
+
+**Satisfied if** X appears in the scope through:
+- Token match in text (the word/phrase is present)
+- Entity reference (character/location included in scope)
+- Event description containing the element
+
+### 4.2 `forbids "X"`
+
+**Satisfied if** X does NOT appear in the scope (same detection rules as requires).
+
+### 4.3 `must action target`
+
+**Satisfied if** an event with matching verb and target exists in scope.
+
+Example: `Chapter1 must introduce Anna`
+Check: Does Chapter1 contain an event like "Anna is introduced" or "Chapter introduces Anna"?
+
+### 4.4 `has tone value`
+
+**Satisfied if**:
+- The scope explicitly declares this tone, OR
+- Text analysis detects the tone (word frequencies match tone profile)
+
+### 4.5 `has max/min count`
+
+**Satisfied if** the counted items in scope respect the limit.
+
+Example: `Story has max characters 10`
+Check: Count distinct characters in story. Pass if count <= 10.
+
+## 5. CSA Calculation
+
 ```text
-CSA = (sum_k sat(k)) / n
+CSA = (satisfied constraints) / (total constraints)
 ```
-
-## 4. Constraint Semantics (normative)
-
-### 4.1 Scope resolution
-
-Each constraint has a scope subject `X`:
-- if `X` is a scene group → evaluate on that scene only
-- if `X` is a chapter group → evaluate on all descendant scenes
-- if `X` is `Story`/`World` → evaluate globally on the whole document
-
-### 4.2 `requires "Y"`
-
-Satisfied if `Y` appears in scope by at least one of:
-- token match in scope text
-- presence as an entity referenced in scope (character/location/object includes)
-- presence as an event object/description in scope
-
-### 4.3 `forbids "Y"`
-
-Satisfied if `Y` does not appear in scope by the same detection rules.
-
-### 4.4 `must action target`
-
-Satisfied if within scope exists at least one event matching:
-- verb equals `action`
-- and (if `target` provided) object/modifier matches `target`
-
-### 4.5 `has tone value`
-
-Satisfied if:
-- the scope declares `has tone value`, OR
-- text-based tone heuristic passes (lexicon match above threshold).
-
-### 4.6 `has max/min`
-
-Example:
-- `Story has max characters 10`
-
-Satisfied if the counted items in scope respect the limit:
-- `count_characters(scope) <= 10`
-
-## 5. Measurement Procedure (normative)
-
-1) Parse constraints into typed objects.
-2) Resolve scope to a set of scenes.
-3) For each constraint, compute satisfaction and collect evidence.
-4) Compute CSA and store per-constraint results.
 
 ## 6. Threshold
 
-Acceptance threshold:
-- `CSA >= 0.98`
-
-## 7. Reporting (normative)
-
-The report MUST include:
-- CSA value
-- per-constraint outcomes:
-  - scope
-  - satisfied (boolean)
-  - evidence: scene IDs and evidence snippets (or event IDs)
-- counts by constraint type
+Acceptance threshold: **CSA >= 98%**
 
 ---
 

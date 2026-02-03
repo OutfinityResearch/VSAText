@@ -2,57 +2,49 @@
 
 ## 1. Purpose
 
-Defines **CNL Parse Success Rate (CPSR)** as the percentage of natural language (NL) inputs successfully converted to **valid SVO CNL** (DS03), validated by the unified SVO parser (DS11).
+**CNL Parse Success Rate (CPSR)** measures how reliably the system converts natural language into valid CNL. When an author writes "Anna is a brave warrior who lives in the forest," can the system produce correct CNL syntax?
 
-This metric does not require generated story quality; it measures the translation pipeline reliability.
+**Target: CPSR >= 95%** (at least 95 out of 100 translations must succeed)
 
-## 2. Inputs
+## 2. Why CPSR Matters
 
-For a translation system `Translate(nl_text) -> cnl_text`:
-- NL input corpus `NL = {u1..um}`
-- Generated outputs `CNL_i = Translate(u_i)`
-- Parser and semantic validator from the interpreter (DS12):
-  - parse errors
-  - semantic errors/warnings
-- `strict` mode flag (DS12):
-  - if true, semantic warnings count as failure
+CPSR doesn't measure story quality - it measures pipeline reliability. Before we can evaluate coherence or character drift, we need valid CNL. If translation frequently fails, authors get frustrated and the system becomes unusable.
 
-## 3. Definitions
+## 3. What Counts as Success?
 
-For each input `u_i`, define:
-- `parse_ok(i) = 1` if the SVO parser produces an AST with no parse errors.
-- `semantic_ok(i) = 1` if semantic validation has no errors (and no warnings in strict mode).
+A translation succeeds if the generated CNL:
 
-Success indicator:
+1. **Parses without errors** - No syntax problems like unclosed quotes or invalid group nesting
+2. **Validates semantically** - No references to undefined entities, no impossible constraints
+
+In **strict mode**, warnings also count as failures. This is useful for quality assurance but may be too strict for early prototypes.
+
+## 4. Common Failure Types
+
+| Category | Example Problem |
+|----------|-----------------|
+| Syntax errors | Unclosed quotes: `Anna has trait "courage` |
+| Invalid groups | Missing `group end` statement |
+| Unknown verbs | Using verbs not in the vocabulary |
+| Orphan references | `Scene includes character Bob` when Bob isn't declared |
+| Invalid constraints | `has max scenes -5` (negative numbers) |
+
+## 5. How CPSR is Calculated
+
 ```text
-success(i) = parse_ok(i) AND semantic_ok(i)
+CPSR = (successful translations) / (total attempts)
 ```
 
-CPSR:
-```text
-CPSR = (sum_i success(i)) / m
-```
+**Example:**
+- 100 natural language inputs
+- 97 produce valid CNL
+- 3 have parse or semantic errors
 
-## 4. Measurement Procedure (normative)
+CPSR = 97 / 100 = 0.97 (97%) - passes threshold
 
-1) Choose a fixed NL corpus with stable IDs and domains (book/screenplay/tutorial).
-2) Run the translator to produce `cnl_text` for each item.
-3) Parse + semantic validate each output.
-4) Compute CPSR and report common failure classes.
+## 6. Threshold
 
-## 5. Threshold
-
-Acceptance threshold:
-- `CPSR >= 0.95`
-
-## 6. Reporting (normative)
-
-The report MUST include:
-- CPSR
-- counts of failure categories:
-  - syntax errors (unterminated quotes, invalid group nesting, unknown verbs)
-  - semantic errors (orphan refs, invalid constraint shapes)
-- top 10 most frequent error messages
+Acceptance threshold: **CPSR >= 95%**
 
 ---
 

@@ -130,11 +130,17 @@ function serveStatic(req, res) {
     fullPath = path.join(ROOT_DIR, srcPath);
   }
   
-  // Security check - must be within demo or root/src
+  // Handle /docs/theory/ requests - serve from ROOT/docs/theory/
+  if (!fs.existsSync(fullPath) && filePath.startsWith('/docs/theory/')) {
+    fullPath = path.join(ROOT_DIR, filePath);
+  }
+  
+  // Security check - must be within demo, root/src, or root/docs/theory
   const isInDemo = fullPath.startsWith(DEMO_DIR);
   const isInSrc = fullPath.startsWith(path.join(ROOT_DIR, 'src'));
+  const isInDocsTheory = fullPath.startsWith(path.join(ROOT_DIR, 'docs', 'theory'));
   
-  if (!isInDemo && !isInSrc) {
+  if (!isInDemo && !isInSrc && !isInDocsTheory) {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('Forbidden');
     return;

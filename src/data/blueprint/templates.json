@@ -1,0 +1,188 @@
+{
+  "templates": {
+    "classic_hero": {
+      "label": "Classic Hero's Journey",
+      "description": "The timeless adventure structure with a clear hero arc",
+      "arc": "heros_journey",
+      "suggestedGenres": ["fantasy", "adventure", "scifi"],
+      "complexity": "medium",
+      "chapters": 5,
+      "dialogueMarkers": [
+        { "beatKey": "call_to_adventure", "purpose": "revelation", "description": "Herald announces the quest" },
+        { "beatKey": "meeting_mentor", "purpose": "exposition", "description": "Mentor shares wisdom and backstory" },
+        { "beatKey": "ordeal", "purpose": "confrontation", "description": "Hero faces the antagonist" },
+        { "beatKey": "resurrection", "purpose": "conflict", "description": "Final showdown dialogue" }
+      ],
+      "tensionPreset": [
+        { "position": 0.0, "tension": 2 },
+        { "position": 0.12, "tension": 3 },
+        { "position": 0.25, "tension": 4 },
+        { "position": 0.50, "tension": 5 },
+        { "position": 0.65, "tension": 3 },
+        { "position": 0.85, "tension": 5 },
+        { "position": 1.0, "tension": 1 }
+      ]
+    },
+    "mystery_reveal": {
+      "label": "Mystery with Twist",
+      "description": "Building suspense with a dramatic reveal",
+      "arc": "three_act",
+      "suggestedGenres": ["mystery", "horror", "drama"],
+      "complexity": "complex",
+      "chapters": 6,
+      "dialogueMarkers": [
+        { "beatKey": "hook", "purpose": "exposition", "description": "Introduce the mystery" },
+        { "beatKey": "inciting_incident", "purpose": "revelation", "description": "Discovery of first clue" },
+        { "beatKey": "midpoint", "purpose": "deception", "description": "False lead or misdirection" },
+        { "beatKey": "plot_point_2", "purpose": "revelation", "description": "The big twist reveal" },
+        { "beatKey": "climax", "purpose": "confrontation", "description": "Confronting the truth" }
+      ],
+      "tensionPreset": [
+        { "position": 0.0, "tension": 3 },
+        { "position": 0.20, "tension": 4 },
+        { "position": 0.40, "tension": 3 },
+        { "position": 0.50, "tension": 4 },
+        { "position": 0.75, "tension": 5 },
+        { "position": 0.90, "tension": 5 },
+        { "position": 1.0, "tension": 2 }
+      ]
+    },
+    "romance_obstacles": {
+      "label": "Romance with Obstacles",
+      "description": "Love story with challenges and growth",
+      "arc": "save_the_cat",
+      "suggestedGenres": ["romance", "drama", "comedy"],
+      "complexity": "medium",
+      "chapters": 4,
+      "dialogueMarkers": [
+        { "beatKey": "catalyst", "purpose": "bonding", "description": "First meaningful conversation" },
+        { "beatKey": "fun_and_games", "purpose": "bonding", "description": "Romantic development" },
+        { "beatKey": "all_is_lost", "purpose": "conflict", "description": "The breakup or misunderstanding" },
+        { "beatKey": "dark_night", "purpose": "confession", "description": "Emotional confession or realization" },
+        { "beatKey": "finale", "purpose": "bonding", "description": "Reconciliation and commitment" }
+      ],
+      "tensionPreset": [
+        { "position": 0.0, "tension": 2 },
+        { "position": 0.25, "tension": 3 },
+        { "position": 0.40, "tension": 2 },
+        { "position": 0.75, "tension": 5 },
+        { "position": 0.85, "tension": 4 },
+        { "position": 1.0, "tension": 1 }
+      ]
+    },
+    "tragic_fall": {
+      "label": "Tragic Downfall",
+      "description": "Character's descent and consequences",
+      "arc": "five_act",
+      "suggestedGenres": ["drama", "horror", "mystery"],
+      "complexity": "complex",
+      "chapters": 5,
+      "dialogueMarkers": [
+        { "beatKey": "exposition", "purpose": "exposition", "description": "Establish character's hubris" },
+        { "beatKey": "rising_action", "purpose": "negotiation", "description": "Character makes fateful deal" },
+        { "beatKey": "climax", "purpose": "confrontation", "description": "Point of no return confrontation" },
+        { "beatKey": "falling_action", "purpose": "confession", "description": "Recognition of mistake" },
+        { "beatKey": "denouement", "purpose": "farewell", "description": "Final words or legacy" }
+      ],
+      "tensionPreset": [
+        { "position": 0.0, "tension": 2 },
+        { "position": 0.30, "tension": 4 },
+        { "position": 0.50, "tension": 5 },
+        { "position": 0.70, "tension": 4 },
+        { "position": 1.0, "tension": 3 }
+      ]
+    },
+    "action_adventure": {
+      "label": "Action Adventure",
+      "description": "Fast-paced with multiple confrontations",
+      "arc": "seven_point",
+      "suggestedGenres": ["adventure", "scifi", "fantasy"],
+      "complexity": "simple",
+      "chapters": 4,
+      "dialogueMarkers": [
+        { "beatKey": "hook", "purpose": "exposition", "description": "Mission briefing" },
+        { "beatKey": "pinch_1", "purpose": "confrontation", "description": "First enemy encounter" },
+        { "beatKey": "midpoint", "purpose": "revelation", "description": "Discover true threat" },
+        { "beatKey": "pinch_2", "purpose": "confrontation", "description": "Major battle dialogue" },
+        { "beatKey": "resolution", "purpose": "comic_relief", "description": "Victory celebration" }
+      ],
+      "tensionPreset": [
+        { "position": 0.0, "tension": 3 },
+        { "position": 0.15, "tension": 4 },
+        { "position": 0.30, "tension": 5 },
+        { "position": 0.50, "tension": 4 },
+        { "position": 0.70, "tension": 5 },
+        { "position": 0.95, "tension": 5 },
+        { "position": 1.0, "tension": 2 }
+      ]
+    },
+    "coming_of_age": {
+      "label": "Coming of Age",
+      "description": "Personal growth and self-discovery",
+      "arc": "story_circle",
+      "suggestedGenres": ["drama", "fantasy", "romance"],
+      "complexity": "medium",
+      "chapters": 4,
+      "dialogueMarkers": [
+        { "beatKey": "need", "purpose": "conflict", "description": "Character expresses dissatisfaction" },
+        { "beatKey": "go", "purpose": "farewell", "description": "Leaving comfort zone" },
+        { "beatKey": "find", "purpose": "revelation", "description": "Moment of clarity" },
+        { "beatKey": "change", "purpose": "confession", "description": "Acknowledging growth" }
+      ],
+      "tensionPreset": [
+        { "position": 0.0, "tension": 2 },
+        { "position": 0.25, "tension": 3 },
+        { "position": 0.55, "tension": 4 },
+        { "position": 0.70, "tension": 3 },
+        { "position": 0.85, "tension": 4 },
+        { "position": 1.0, "tension": 2 }
+      ]
+    },
+    "ensemble_drama": {
+      "label": "Ensemble Drama",
+      "description": "Multiple character arcs interweaving",
+      "arc": "three_act",
+      "suggestedGenres": ["drama", "comedy", "mystery"],
+      "complexity": "complex",
+      "chapters": 6,
+      "hasSubplots": true,
+      "dialogueMarkers": [
+        { "beatKey": "setup", "purpose": "exposition", "description": "Character introductions" },
+        { "beatKey": "inciting_incident", "purpose": "conflict", "description": "Event that connects characters" },
+        { "beatKey": "rising_action", "purpose": "bonding", "description": "Relationships form" },
+        { "beatKey": "midpoint", "purpose": "revelation", "description": "Secrets revealed" },
+        { "beatKey": "climax", "purpose": "confrontation", "description": "All threads converge" },
+        { "beatKey": "resolution", "purpose": "bonding", "description": "New equilibrium" }
+      ],
+      "tensionPreset": [
+        { "position": 0.0, "tension": 2 },
+        { "position": 0.12, "tension": 3 },
+        { "position": 0.35, "tension": 4 },
+        { "position": 0.50, "tension": 4 },
+        { "position": 0.75, "tension": 5 },
+        { "position": 0.88, "tension": 5 },
+        { "position": 1.0, "tension": 2 }
+      ]
+    },
+    "minimal_conflict": {
+      "label": "Slice of Life (Kishotenketsu)",
+      "description": "Story without traditional conflict, focus on twist and reflection",
+      "arc": "kishotenketsu",
+      "suggestedGenres": ["drama", "comedy", "romance"],
+      "complexity": "simple",
+      "chapters": 4,
+      "dialogueMarkers": [
+        { "beatKey": "ki", "purpose": "exposition", "description": "Establish normal life" },
+        { "beatKey": "sho", "purpose": "bonding", "description": "Deepen understanding" },
+        { "beatKey": "ten", "purpose": "revelation", "description": "Unexpected perspective shift" },
+        { "beatKey": "ketsu", "purpose": "confession", "description": "Reflection and acceptance" }
+      ],
+      "tensionPreset": [
+        { "position": 0.0, "tension": 2 },
+        { "position": 0.45, "tension": 2 },
+        { "position": 0.70, "tension": 4 },
+        { "position": 1.0, "tension": 2 }
+      ]
+    }
+  }
+}

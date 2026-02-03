@@ -8,7 +8,7 @@ import { state } from './state.mjs';
 import { $, $$, genId, openModal, closeModal } from './utils.mjs';
 import { generateCNL } from './cnl.mjs';
 import { updateStats } from './metrics.mjs';
-import VOCAB from '../../src/vocabularies/vocabularies.mjs';
+import VOCAB from '/src/vocabularies/vocabularies.mjs';
 
 // ==================== RELATIONSHIPS VIEW ====================
 export function renderRelationshipsView() {

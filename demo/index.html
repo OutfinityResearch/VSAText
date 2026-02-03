@@ -3,29 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SCRIPTA - Visual Story Composer</title>
+  <title>SCRIPTA Research Studio - Visual Story Composer</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="app">
     <header>
-      <div class="logo"><h1>SCRIPTA</h1></div>
+      <div class="logo"><h1>SCRIPTA Research Studio</h1></div>
       <div class="header-center">
         <input type="text" class="project-name" id="project-name" value="Untitled Story">
       </div>
+      <div class="zoom-controls">
+        <button class="btn zoom-btn" id="btn-zoom-out" title="Decrease font size">A-</button>
+        <span class="zoom-level" id="zoom-level">100%</span>
+        <button class="btn zoom-btn" id="btn-zoom-in" title="Increase font size">A+</button>
+        <button class="btn zoom-btn" id="btn-zoom-reset" title="Reset font size">⟲</button>
+      </div>
       <div class="header-actions">
-        <button class="btn" id="btn-load" title="Load project from server">Load</button>
-        <button class="btn accent" id="btn-save" title="Save project to server">Save</button>
-        <button class="btn" id="btn-new">New</button>
-        <button class="btn success" id="btn-export">Export CNL</button>
-        <button class="btn primary" id="btn-evaluate">Evaluate</button>
+        <button class="btn" id="btn-new" title="Create new project">◇ New</button>
+        <button class="btn" id="btn-load" title="Load project from server">↥ Load</button>
+        <button class="btn accent" id="btn-save" title="Save project to server">↧ Save</button>
+        <button class="btn primary" id="btn-evaluate" title="Evaluate story quality">⚖ Evaluate</button>
+        <button class="btn" id="btn-run-eval" title="Run batch evaluation tests">🧪 Eval</button>
+        <button class="btn" id="btn-docs" title="Open Documentation">📖 Docs</button>
       </div>
     </header>
 
     <aside class="tree-panel">
       <div class="panel-header" style="flex-direction: column; gap: 0.5rem; padding: 0.8rem;">
-        <button class="btn random" id="btn-generate" style="width: 100%; font-size: 0.7rem; padding: 0.6rem;">Generate Story</button>
+        <button class="btn random" id="btn-generate" style="width: 100%; font-size: 0.7rem; padding: 0.6rem;">Create Specs</button>
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
           <span class="panel-title">Structure</span>
           <button class="tree-add" id="btn-add-root" title="Add Book">+</button>
@@ -37,29 +44,71 @@
     <main class="center-panel">
       <div class="tabs">
         <button class="tab active" data-view="cnl">CNL</button>
+        <button class="tab" data-view="nl">NL</button>
+        <button class="tab" data-view="blueprint">Blueprint</button>
+        <button class="tab" data-view="templates">Templates</button>
         <button class="tab" data-view="characters">Characters</button>
         <button class="tab" data-view="relationships">Relations</button>
         <button class="tab" data-view="locations">Locations</button>
         <button class="tab" data-view="objects">Objects</button>
         <button class="tab" data-view="moods">Moods</button>
+        <button class="tab" data-view="dialogues">Dialogues</button>
         <button class="tab" data-view="emotionalarc">Arc</button>
         <button class="tab" data-view="blocks">Blocks</button>
         <button class="tab" data-view="worldrules">World</button>
         <button class="tab" data-view="themes">Themes</button>
+        <button class="tab" data-view="wisdom">Wisdom</button>
+        <button class="tab" data-view="patterns">Patterns</button>
       </div>
       <div class="tab-content">
         <div class="view active" id="view-cnl">
+          <div class="cnl-toolbar">
+            <button class="btn" id="btn-edit-cnl" title="Toggle edit mode">Edit</button>
+            <button class="btn" id="btn-import-cnl">Import CNL</button>
+            <button class="btn success" id="btn-export-cnl">Export CNL</button>
+          </div>
           <div class="cnl-output" id="cnl-output">// CNL auto-generated from visual structure</div>
+          <textarea class="cnl-editor" id="cnl-editor" style="display: none;" placeholder="Edit CNL here..."></textarea>
+        </div>
+        <div class="view" id="view-nl">
+          <div class="nl-container">
+            <div class="nl-toolbar">
+              <button class="btn random" id="btn-nl-generate">Create Story</button>
+              <span class="nl-toolbar-spacer"></span>
+              <button class="btn" id="btn-nl-copy">Copy</button>
+              <button class="btn" id="btn-nl-export">Export</button>
+            </div>
+            <div class="nl-content" id="nl-content">
+              <div class="nl-empty-state">
+                <div class="icon">📖</div>
+                <div>No story generated yet</div>
+                <div style="font-size: 0.9rem; color: var(--text-faded);">
+                  Create your specs first, then click "Create Story" to generate prose
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="view" id="view-blueprint">
+          <div class="blueprint-container" id="blueprint-container">
+            <div class="blueprint-content" id="blueprint-content"></div>
+          </div>
+        </div>
+        <div class="view" id="view-templates">
+          <div class="templates-container" id="templates-container"></div>
         </div>
         <div class="view" id="view-characters"><div class="entity-grid" id="characters-grid"></div></div>
         <div class="view" id="view-relationships"><div class="relationships-view" id="relationships-view"></div></div>
         <div class="view" id="view-locations"><div class="entity-grid" id="locations-grid"></div></div>
         <div class="view" id="view-objects"><div class="entity-grid" id="objects-grid"></div></div>
         <div class="view" id="view-moods"><div class="entity-grid" id="moods-grid"></div></div>
+        <div class="view" id="view-dialogues"><div class="dialogues-editor-container" id="dialogues-container"></div></div>
         <div class="view" id="view-emotionalarc"><div class="emotional-arc-view" id="emotionalarc-view"></div></div>
         <div class="view" id="view-blocks"><div class="blocks-view" id="blocks-view"></div></div>
         <div class="view" id="view-worldrules"><div class="rules-grid" id="worldrules-grid"></div></div>
         <div class="view" id="view-themes"><div class="entity-grid" id="themes-grid"></div></div>
+        <div class="view" id="view-wisdom"><div class="wisdom-view" id="wisdom-view"></div></div>
+        <div class="view" id="view-patterns"><div class="patterns-view" id="patterns-view"></div></div>
       </div>
     </main>
 
@@ -125,7 +174,7 @@
   <div class="modal-overlay" id="generate-modal">
     <div class="modal wide">
       <div class="modal-header">
-        <h2 class="modal-title">Generate Story</h2>
+        <h2 class="modal-title">Create Specs</h2>
         <button class="modal-close" onclick="closeModal('generate-modal')">x</button>
       </div>
       <div class="modal-body" id="generate-modal-body">
@@ -202,10 +251,100 @@
             </div>
           </div>
         </div>
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--bg-elevated);">
+          <div class="form-group">
+            <label class="form-label">Generation Strategy</label>
+            <div class="strategy-options">
+              <label class="strategy-option">
+                <input type="radio" name="gen-strategy" value="random" checked>
+                <div class="strategy-content">
+                  <div class="strategy-title">Random (Fast)</div>
+                  <div class="strategy-desc">Quick generation using randomized templates and vocabularies. Instant results.</div>
+                </div>
+              </label>
+              <label class="strategy-option">
+                <input type="radio" name="gen-strategy" value="llm">
+                <div class="strategy-content">
+                  <div class="strategy-title">With LLM</div>
+                  <div class="strategy-desc">AI generates CNL specification. Requires API key. More creative but slower.</div>
+                </div>
+              </label>
+              <label class="strategy-option">
+                <input type="radio" name="gen-strategy" value="advanced">
+                <div class="strategy-content">
+                  <div class="strategy-title">Advanced (Optimized)</div>
+                  <div class="strategy-desc">Multi-pass generation with constraint solving and metric optimization. Best quality.</div>
+                </div>
+              </label>
+              <label class="strategy-option">
+                <input type="radio" name="gen-strategy" value="wizard">
+                <div class="strategy-content">
+                  <div class="strategy-title">Guided Wizard</div>
+                  <div class="strategy-desc">Step-by-step wizard for precise control. Choose arc, map chapters, set tension curve.</div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn" onclick="closeModal('generate-modal')">Cancel</button>
         <button class="btn primary" onclick="executeGenerate()">Generate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Improve Specs Modal -->
+  <div class="modal-overlay" id="improve-modal">
+    <div class="modal wide">
+      <div class="modal-header">
+        <h2 class="modal-title">Improve Specs</h2>
+        <button class="modal-close" onclick="closeModal('improve-modal')">x</button>
+      </div>
+      <div class="modal-body" id="improve-modal-body">
+        <div class="empty-state"><div class="empty-state-text">Analyzing changes...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm New Project Modal -->
+  <div class="modal-overlay" id="confirm-new-modal">
+    <div class="modal" style="max-width: 420px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Create New Project?</h2>
+        <button class="modal-close" onclick="closeModal('confirm-new-modal')">x</button>
+      </div>
+      <div class="modal-body" id="confirm-new-body">
+        <div style="text-align: center; padding: 1rem 0;">
+          <div style="font-size: 2.5rem; margin-bottom: 1rem;">&#128196;</div>
+          <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+            You have unsaved changes. Would you like to save your current project before creating a new one?
+          </p>
+          <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+            <button class="btn primary" id="btn-confirm-save">Save & New</button>
+            <button class="btn danger" id="btn-confirm-discard">Discard & New</button>
+            <button class="btn" onclick="closeModal('confirm-new-modal')">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Story Wizard Modal -->
+  <div class="modal-overlay" id="wizard-modal">
+    <div class="modal wizard-modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Story Wizard</h2>
+        <div class="wizard-steps-indicator" id="wizard-steps-indicator"></div>
+        <button class="modal-close" onclick="closeModal('wizard-modal')">x</button>
+      </div>
+      <div class="modal-body wizard-body" id="wizard-body">
+        <!-- Wizard steps rendered here -->
+      </div>
+      <div class="modal-footer wizard-footer">
+        <button class="btn" id="wizard-prev" onclick="wizardPrev()">Back</button>
+        <div class="wizard-step-info" id="wizard-step-info">Step 1 of 5</div>
+        <button class="btn primary" id="wizard-next" onclick="wizardNext()">Next</button>
       </div>
     </div>
   </div>

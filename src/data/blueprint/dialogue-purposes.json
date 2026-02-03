@@ -1,0 +1,160 @@
+{
+  "purposes": {
+    "revelation": {
+      "label": "Revelation",
+      "description": "Revealing hidden information, secrets, or truth",
+      "icon": "lightbulb",
+      "suggestedTones": ["serious", "tense", "intimate"],
+      "typicalTension": 4,
+      "narrativeFunction": "Information delivery that changes understanding",
+      "examples": [
+        "Mentor reveals hero's true origins",
+        "Villain explains their master plan",
+        "Character discovers a betrayal"
+      ]
+    },
+    "confrontation": {
+      "label": "Confrontation",
+      "description": "Direct conflict, challenge, or opposition between characters",
+      "icon": "swords",
+      "suggestedTones": ["tense", "angry", "determined"],
+      "typicalTension": 5,
+      "narrativeFunction": "Conflict escalation or resolution",
+      "examples": [
+        "Hero challenges the antagonist",
+        "Showdown before final battle",
+        "Calling out betrayal"
+      ]
+    },
+    "bonding": {
+      "label": "Bonding",
+      "description": "Building or strengthening relationship between characters",
+      "icon": "heart",
+      "suggestedTones": ["warm", "playful", "intimate"],
+      "typicalTension": 2,
+      "narrativeFunction": "Relationship development",
+      "examples": [
+        "First meaningful conversation",
+        "Shared vulnerability moment",
+        "Reconciliation after conflict"
+      ]
+    },
+    "exposition": {
+      "label": "Exposition",
+      "description": "Explaining world, background, or setup information",
+      "icon": "book",
+      "suggestedTones": ["neutral", "serious", "curious"],
+      "typicalTension": 2,
+      "narrativeFunction": "World-building and context",
+      "examples": [
+        "Explaining the magic system",
+        "Describing the political situation",
+        "Historical backstory"
+      ]
+    },
+    "conflict": {
+      "label": "Conflict",
+      "description": "Disagreement or tension without direct confrontation",
+      "icon": "warning",
+      "suggestedTones": ["tense", "frustrated", "hurt"],
+      "typicalTension": 4,
+      "narrativeFunction": "Relationship strain or ideological clash",
+      "examples": [
+        "Argument about the right path",
+        "Misunderstanding between allies",
+        "Value clash"
+      ]
+    },
+    "confession": {
+      "label": "Confession",
+      "description": "Character admits feelings, mistakes, or hidden truths",
+      "icon": "mask",
+      "suggestedTones": ["intimate", "vulnerable", "serious"],
+      "typicalTension": 3,
+      "narrativeFunction": "Character vulnerability and growth",
+      "examples": [
+        "Declaring love",
+        "Admitting a past mistake",
+        "Revealing true motivations"
+      ]
+    },
+    "negotiation": {
+      "label": "Negotiation",
+      "description": "Characters bargaining, making deals, or seeking compromise",
+      "icon": "handshake",
+      "suggestedTones": ["calculated", "tense", "diplomatic"],
+      "typicalTension": 3,
+      "narrativeFunction": "Alliance formation or terms establishment",
+      "examples": [
+        "Treaty discussion",
+        "Ransom negotiation",
+        "Bargaining for help"
+      ]
+    },
+    "farewell": {
+      "label": "Farewell",
+      "description": "Parting, goodbye, or ending of a relationship/chapter",
+      "icon": "wave",
+      "suggestedTones": ["melancholic", "warm", "bittersweet"],
+      "typicalTension": 2,
+      "narrativeFunction": "Transition and emotional closure",
+      "examples": [
+        "Mentor's last words",
+        "Leaving home",
+        "Saying goodbye before battle"
+      ]
+    },
+    "deception": {
+      "label": "Deception",
+      "description": "Character intentionally misleading another",
+      "icon": "mask",
+      "suggestedTones": ["false_friendly", "calculated", "nervous"],
+      "typicalTension": 4,
+      "narrativeFunction": "Plot misdirection or character betrayal setup",
+      "examples": [
+        "Spy feeding false information",
+        "Villain pretending to be ally",
+        "White lies to protect"
+      ]
+    },
+    "comic_relief": {
+      "label": "Comic Relief",
+      "description": "Lightening mood through humor or levity",
+      "icon": "smile",
+      "suggestedTones": ["playful", "sarcastic", "absurd"],
+      "typicalTension": 1,
+      "narrativeFunction": "Tension release and character charm",
+      "examples": [
+        "Banter during downtime",
+        "Joke before the storm",
+        "Absurd observations"
+      ]
+    },
+    "planning": {
+      "label": "Planning",
+      "description": "Characters strategizing or preparing for action",
+      "icon": "map",
+      "suggestedTones": ["focused", "serious", "collaborative"],
+      "typicalTension": 3,
+      "narrativeFunction": "Setup for future action",
+      "examples": [
+        "Heist planning",
+        "Battle strategy",
+        "Escape route discussion"
+      ]
+    },
+    "interrogation": {
+      "label": "Interrogation",
+      "description": "Extracting information through questioning",
+      "icon": "search",
+      "suggestedTones": ["tense", "threatening", "methodical"],
+      "typicalTension": 4,
+      "narrativeFunction": "Information extraction under pressure",
+      "examples": [
+        "Questioning a prisoner",
+        "Detective interviewing suspect",
+        "Grilling an ally for truth"
+      ]
+    }
+  }
+}

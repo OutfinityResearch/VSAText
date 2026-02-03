@@ -53,6 +53,21 @@ function generateId() {
   return `proj_${Date.now().toString(36)}_${crypto.randomBytes(4).toString('hex')}`;
 }
 
+/**
+ * Sanitize a string to be used as a filename
+ */
+function sanitizeFilename(name) {
+  if (!name || typeof name !== 'string') return null;
+  // Remove/replace invalid filename characters
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[<>:"/\\|?*]/g, '') // Remove invalid chars
+    .replace(/\s+/g, '_')          // Replace spaces with underscores
+    .replace(/[^\w\-_.]/g, '')     // Keep only word chars, dash, underscore, dot
+    .substring(0, 100);            // Limit length
+}
+
 function jsonResponse(res, statusCode, data) {
   const body = JSON.stringify(data);
   res.writeHead(statusCode, {
@@ -153,6 +168,32 @@ function getProjectPath(id) {
   return path.join(PROJECTS_DIR, `${safeId}.json`);
 }
 
+/**
+ * Get project path by name (for saving with story name)
+ */
+function getProjectPathByName(name) {
+  const safeName = sanitizeFilename(name);
+  if (!safeName) return null;
+  return path.join(PROJECTS_DIR, `${safeName}.json`);
+}
+
+/**
+ * Find project by name
+ */
+function findProjectByName(name) {
+  const safeName = sanitizeFilename(name);
+  if (!safeName) return null;
+  const filepath = path.join(PROJECTS_DIR, `${safeName}.json`);
+  if (fs.existsSync(filepath)) {
+    try {
+      return JSON.parse(fs.readFileSync(filepath, 'utf-8'));
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 function listProjects() {
   if (!fs.existsSync(PROJECTS_DIR)) return [];
   const files = fs.readdirSync(PROJECTS_DIR).filter(f => f.endsWith('.json'));
@@ -185,7 +226,25 @@ function loadProject(id) {
 }
 
 function saveProject(project) {
-  if (!project.id) project.id = generateId();
+  // Try to use project name as filename if no ID exists
+  if (!project.id) {
+    const nameBasedPath = getProjectPathByName(project.name);
+    if (nameBasedPath) {
+      // Check if a project with this name already exists
+      const existing = findProjectByName(project.name);
+      if (existing) {
+        // Use existing project's ID
+        project.id = existing.id;
+      } else {
+        // Create new ID based on sanitized name
+        const safeName = sanitizeFilename(project.name);
+        project.id = safeName || generateId();
+      }
+    } else {
+      project.id = generateId();
+    }
+  }
+  
   project.modified_at = new Date().toISOString();
   if (!project.created_at) project.created_at = project.modified_at;
   
@@ -270,6 +329,196 @@ function createDemoServer() {
         return jsonResponse(res, 200, { deleted: true });
       }
 
+      // ============================================
+      // LLM GENERATION ENDPOINTS
+      // ============================================
+      
+      // Generate story with LLM
+      if (method === 'POST' && p === '/v1/generate/llm') {
+        const body = await parseBody(req);
+        try {
+          const llmGenerator = await import('./services/llm-generator.mjs');
+          
+          if (llmGenerator.isLLMAvailable()) {
+            const result = await llmGenerator.generateStoryWithLLM(body);
+            return jsonResponse(res, 200, result);
+          } else {
+            // Fallback to structured generation without LLM
+            const result = llmGenerator.generateStoryFallback(body);
+            return jsonResponse(res, 200, { 
+              ...result, 
+              _fallback: true,
+              _message: 'Generated using fallback mode (LLM not available)'
+            });
+          }
+        } catch (err) {
+          console.error('LLM generation error:', err);
+          return errorResponse(res, 500, 'llm_error', err.message);
+        }
+      }
+      
+      // Refine story with LLM
+      if (method === 'POST' && p === '/v1/generate/refine') {
+        const body = await parseBody(req);
+        try {
+          const llmGenerator = await import('./services/llm-generator.mjs');
+          
+          if (llmGenerator.isLLMAvailable()) {
+            const result = await llmGenerator.refineStoryWithLLM(body.project, body.options);
+            return jsonResponse(res, 200, result);
+          } else {
+            // Return empty suggestions if LLM not available
+            return jsonResponse(res, 200, { 
+              suggestions: null,
+              _message: 'LLM not available for refinement'
+            });
+          }
+        } catch (err) {
+          console.error('LLM refinement error:', err);
+          return errorResponse(res, 500, 'llm_error', err.message);
+        }
+      }
+      
+      // Check LLM availability
+      if (method === 'GET' && p === '/v1/generate/status') {
+        try {
+          const llmGenerator = await import('./services/llm-generator.mjs');
+          return jsonResponse(res, 200, { 
+            llmAvailable: llmGenerator.isLLMAvailable(),
+            strategies: ['random', 'llm', 'advanced']
+          });
+        } catch (err) {
+          return jsonResponse(res, 200, { 
+            llmAvailable: false,
+            strategies: ['random', 'advanced']
+          });
+        }
+      }
+      
+      // ============================================
+      // EVALUATION ENDPOINT
+      // ============================================
+      
+      // Evaluate CNL specification
+      if (method === 'POST' && p === '/v1/evaluate') {
+        const body = await parseBody(req);
+        try {
+          const { evaluateCNL } = await import('../src/evaluate.mjs');
+          
+          const cnl = body.cnl;
+          const prose = body.prose || null;
+          const targetArc = body.targetArc || null;
+          
+          if (!cnl || cnl.trim().length < 10) {
+            return errorResponse(res, 400, 'invalid_cnl', 'CNL specification is too short or empty');
+          }
+          
+          const result = evaluateCNL(cnl, { prose, targetArc });
+          return jsonResponse(res, 200, result);
+          
+        } catch (err) {
+          console.error('Evaluation error:', err);
+          return errorResponse(res, 500, 'evaluation_error', err.message);
+        }
+      }
+      
+      // Run batch evaluation (eval runner)
+      if (method === 'GET' && p === '/v1/run-eval') {
+        try {
+          const { runEvaluation, TEST_CONFIGS, generateCNL } = await import('../eval/runEval.mjs');
+          
+          const results = [];
+          for (const config of TEST_CONFIGS) {
+            try {
+              const evalResult = await runEvaluation(config);
+              results.push({
+                id: config.id,
+                name: config.name,
+                config: {
+                  genre: config.genre,
+                  length: config.length,
+                  chars: config.chars,
+                  tone: config.tone
+                },
+                success: evalResult.result.success,
+                nqs: evalResult.result.success ? evalResult.result.summary.nqs : null,
+                interpretation: evalResult.result.success ? evalResult.result.summary.interpretation : null,
+                metrics: evalResult.result.success ? {
+                  completeness: evalResult.result.metrics.completeness?.score,
+                  coherence: evalResult.result.metrics.coherence?.score,
+                  originality: evalResult.result.metrics.originality?.score,
+                  explainability: evalResult.result.metrics.explainability?.score,
+                  characterContinuity: evalResult.result.metrics.characterContinuity?.score,
+                  locationLogic: evalResult.result.metrics.locationLogic?.score,
+                  sceneCompleteness: evalResult.result.metrics.sceneCompleteness?.score
+                } : null,
+                structure: evalResult.result.success ? evalResult.result.structure : null,
+                timeMs: evalResult.timeMs,
+                error: evalResult.result.success ? null : evalResult.result.message
+              });
+            } catch (err) {
+              results.push({
+                id: config.id,
+                name: config.name,
+                success: false,
+                error: err.message
+              });
+            }
+          }
+          
+          // Calculate summary
+          const successful = results.filter(r => r.success);
+          const nqsScores = successful.map(r => r.nqs);
+          
+          const summary = nqsScores.length > 0 ? {
+            avgNqs: nqsScores.reduce((a, b) => a + b, 0) / nqsScores.length,
+            minNqs: Math.min(...nqsScores),
+            maxNqs: Math.max(...nqsScores),
+            distribution: {
+              excellent: nqsScores.filter(s => s >= 0.85).length,
+              good: nqsScores.filter(s => s >= 0.7 && s < 0.85).length,
+              fair: nqsScores.filter(s => s >= 0.5 && s < 0.7).length,
+              poor: nqsScores.filter(s => s < 0.5).length
+            }
+          } : null;
+          
+          return jsonResponse(res, 200, {
+            evaluatedAt: new Date().toISOString(),
+            totalTests: TEST_CONFIGS.length,
+            successful: successful.length,
+            results,
+            summary
+          });
+          
+        } catch (err) {
+          console.error('Batch evaluation error:', err);
+          return errorResponse(res, 500, 'eval_error', err.message);
+        }
+      }
+      
+      // Generate NL (Natural Language) story from CNL
+      if (method === 'POST' && p === '/v1/generate/nl-story') {
+        const body = await parseBody(req);
+        try {
+          const llmGenerator = await import('./services/llm-generator.mjs');
+          
+          const cnl = body.cnl;
+          const storyName = body.storyName || 'Untitled Story';
+          const options = body.options || {};
+          
+          if (!cnl || cnl.trim().length < 50) {
+            return errorResponse(res, 400, 'invalid_cnl', 'CNL specification is too short or empty');
+          }
+          
+          const result = await llmGenerator.generateNLFromCNL(cnl, storyName, options);
+          return jsonResponse(res, 200, result);
+          
+        } catch (err) {
+          console.error('NL story generation error:', err);
+          return errorResponse(res, 500, 'generation_error', err.message);
+        }
+      }
+
       // API not found
       if (p.startsWith('/v1/')) {
         return errorResponse(res, 404, 'not_found', 'Endpoint not found');
@@ -296,7 +545,11 @@ function createDemoServer() {
 // ============================================
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const port = process.env.PORT ? Number(process.env.PORT) : 3000;
+  // Parse port from command line argument (e.g., node server.mjs 3001) or env var
+  const argPort = process.argv[2] ? Number(process.argv[2]) : null;
+  const envPort = process.env.PORT ? Number(process.env.PORT) : null;
+  const port = argPort || envPort || 3000;
+  
   const server = createDemoServer();
   
   server.listen(port, () => {
@@ -329,10 +582,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   ${empty}
   ${left('Set SCRIPTA_DATA_DIR env var to change storage.')}
   ${empty}
-  ${left('Endpoints:')}
+    ${left('Endpoints:')}
   ${left('  /              - Story Forge UI')}
   ${left('  /health        - Health check')}
   ${left('  /v1/projects   - Projects API (CRUD)')}
+  ${left('  /v1/generate/llm      - LLM story generation')}
+  ${left('  /v1/generate/nl-story - CNL to prose generation')}
+  ${left('  /v1/generate/refine   - LLM story refinement')}
+  ${left('  /v1/generate/status   - Check LLM availability')}
+  ${left('  /v1/evaluate          - Evaluate CNL specification')}
   ${bot}
 `);
   });

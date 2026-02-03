@@ -5,12 +5,14 @@
  */
 
 import { state, loadProjectState, resetProject } from './state.mjs';
-import { $, openModal, closeModal } from './utils.mjs';
+import { $, openModal, closeModal, showNotification } from './utils.mjs';
 import { renderTree } from './tree.mjs';
 import { renderEntityGrid } from './entities.mjs';
 import { renderRelationshipsView, renderEmotionalArcView, renderBlocksView, renderWorldRulesView } from './views.mjs';
-import { evaluateMetrics, renderEmptyMetrics } from './metrics.mjs';
+import { renderEmptyMetrics } from './metrics.mjs';
 import { generateCNL } from './cnl.mjs';
+import { updateGenerateButton } from './generation.mjs';
+import { resetNLState } from './nl-generation.mjs';
 
 export async function saveProject() {
   const projectData = {
@@ -38,9 +40,9 @@ export async function saveProject() {
     const result = await response.json();
     state.project.id = result.id;
     
-    alert(`Project saved! ID: ${result.id}`);
+    showNotification('Project saved successfully', 'success');
   } catch (err) {
-    alert('Error saving project: ' + err.message);
+    showNotification('Error saving project: ' + err.message, 'error');
   }
 }
 
@@ -110,11 +112,12 @@ window.loadProject = async (id) => {
     renderEmotionalArcView();
     renderBlocksView();
     renderWorldRulesView();
-    evaluateMetrics();
+    renderEmptyMetrics();
     
     closeModal('load-modal');
+    showNotification('Project loaded', 'success');
   } catch (err) {
-    alert('Error loading project: ' + err.message);
+    showNotification('Error loading project: ' + err.message, 'error');
   }
 };
 
@@ -130,13 +133,33 @@ window.deleteProjectFromServer = async (id) => {
     }
     
     loadProjectsList();
+    showNotification('Project deleted', 'success');
   } catch (err) {
-    alert('Error deleting project: ' + err.message);
+    showNotification('Error deleting project: ' + err.message, 'error');
   }
 };
 
-export function newProject() {
-  if (!confirm('Create new project? All unsaved changes will be lost.')) return;
+/**
+ * Check if current project has unsaved changes
+ */
+function hasUnsavedChanges() {
+  // If no structure and no entities, nothing to save
+  if (!state.project.structure) {
+    const libs = state.project.libraries;
+    const hasEntities = libs.characters.length > 0 || 
+                       libs.locations.length > 0 || 
+                       libs.objects.length > 0 ||
+                       libs.themes.length > 0 ||
+                       libs.worldRules.length > 0;
+    if (!hasEntities) return false;
+  }
+  return true;
+}
+
+/**
+ * Execute the actual new project reset
+ */
+function executeNewProject() {
   resetProject();
   $('#project-name').value = state.project.name;
   renderTree();
@@ -146,4 +169,41 @@ export function newProject() {
   renderBlocksView();
   renderWorldRulesView();
   renderEmptyMetrics();
+  generateCNL();
+  
+  // Reset generation state and update buttons
+  updateGenerateButton();
+  resetNLState();
+  
+  showNotification('New project created', 'success');
+}
+
+export function newProject() {
+  // Check for unsaved changes
+  if (hasUnsavedChanges()) {
+    // Show nice confirmation dialog
+    openModal('confirm-new-modal');
+    
+    // Setup button handlers
+    const btnSave = $('#btn-confirm-save');
+    const btnDiscard = $('#btn-confirm-discard');
+    
+    if (btnSave) {
+      btnSave.onclick = async () => {
+        closeModal('confirm-new-modal');
+        await saveProject();
+        executeNewProject();
+      };
+    }
+    
+    if (btnDiscard) {
+      btnDiscard.onclick = () => {
+        closeModal('confirm-new-modal');
+        executeNewProject();
+      };
+    }
+  } else {
+    // No changes, just create new
+    executeNewProject();
+  }
 }

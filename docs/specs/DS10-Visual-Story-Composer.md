@@ -234,17 +234,50 @@ Per-metric scores with thresholds:
 
 ## Random Story Generation
 
-The **Random** button generates a complete story with:
+The **Generate Story** button opens a modal with three generation strategies:
+
+### Strategy Selection
+
+| Strategy | Speed | Quality | API Required |
+|----------|-------|---------|--------------|
+| **Random** | Instant | Good | No |
+| **With LLM** | 10-30s | High | Yes |
+| **Advanced** | 5-15s | Optimized | Optional |
+
+### Random (Fast)
+Quick generation using randomized templates and vocabularies:
 
 1. **4-6 Characters** with archetypes (hero, mentor, shadow, ally, trickster)
 2. **Automatic Relationships** between hero and other characters
 3. **4-5 Locations** with geography and time periods
-4. **2-3 Objects** with types and significance
+4. **2-3 Plot Elements** with genre-specific types
 5. **3 Scene Moods** from presets
 6. **Emotional Arc** with moods for each beat
 7. **2 Themes** from vocabulary
 8. **1-2 World Rules** (e.g., "Magic requires sacrifice")
 9. **Complete Structure** with chapters, scenes, character/location refs, blocks, and actions
+
+### With LLM
+AI generates a complete CNL specification:
+- Calls `/v1/generate/llm` endpoint
+- LLM creates coherent, creative story elements
+- Result is parsed and loaded into UI
+- Requires `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`
+
+### Advanced (Optimized)
+Multi-pass generation with metric optimization:
+- Runs up to 5 iterations
+- Evaluates metrics after each pass
+- Applies constraint-based fixes (coherence, completeness, emotional arc)
+- Stops when NQS reaches 85% or best result after all passes
+- Optionally refines with LLM suggestions
+
+### Generate → Improve Transformation
+
+After first generation, the button changes to **Improve Story**:
+- Detects changes made by user since generation
+- Shows change plan organized by category
+- Allows incremental improvements or full regeneration
 
 This provides a starting point for authors to modify and expand.
 

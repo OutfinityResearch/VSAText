@@ -179,24 +179,43 @@ export const NARRATIVE_ARCS = {
 
 // ============================================
 // THEMES
+// Expanded with universal themes from literature theory
 // ============================================
 export const THEMES = {
-  redemption: { label: 'Redemption', desc: 'The journey from guilt to forgiveness', suggestedBlocks: ['death_rebirth', 'sacrifice', 'return_elixir'], suggestedMoods: ['bittersweet', 'triumphant'] },
-  sacrifice: { label: 'Sacrifice', desc: 'Giving up something precious', suggestedBlocks: ['sacrifice', 'ordeal', 'death_rebirth'], suggestedMoods: ['bittersweet', 'epic'] },
-  love: { label: 'Love', desc: 'The power of connection', suggestedBlocks: ['reunion', 'sacrifice', 'rescue'], suggestedMoods: ['romantic', 'intimate'] },
-  power: { label: 'Power', desc: 'Pursuit and corruption of authority', suggestedBlocks: ['temptation', 'ordeal', 'confrontation'], suggestedMoods: ['epic', 'ominous'] },
-  identity: { label: 'Identity', desc: 'Discovering who one truly is', suggestedBlocks: ['revelation', 'transformation', 'choice'], suggestedMoods: ['revelatory', 'intimate'] },
-  freedom: { label: 'Freedom', desc: 'Breaking free from constraints', suggestedBlocks: ['escape', 'crossing_threshold', 'call_to_adventure'], suggestedMoods: ['adventurous', 'triumphant'] },
-  justice: { label: 'Justice', desc: 'Pursuit of fairness', suggestedBlocks: ['confrontation', 'reward', 'ordeal'], suggestedMoods: ['epic', 'triumphant'] },
-  revenge: { label: 'Revenge', desc: 'The destructive cycle of retaliation', suggestedBlocks: ['confrontation', 'betrayal', 'ordeal'], suggestedMoods: ['tense', 'desperate'] },
-  survival: { label: 'Survival', desc: 'The struggle to exist against odds', suggestedBlocks: ['escape', 'ordeal', 'tests_allies_enemies'], suggestedMoods: ['desperate', 'tense'] },
-  growth: { label: 'Coming of Age', desc: 'Transition from innocence to experience', suggestedBlocks: ['crossing_threshold', 'meeting_mentor', 'transformation'], suggestedMoods: ['adventurous', 'bittersweet'] },
-  betrayal: { label: 'Betrayal', desc: 'Breaking of trust', suggestedBlocks: ['betrayal', 'revelation', 'confrontation'], suggestedMoods: ['tense', 'desperate'] },
-  family: { label: 'Family', desc: 'Bonds and conflicts of kinship', suggestedBlocks: ['ordinary_world', 'reunion', 'loss'], suggestedMoods: ['intimate', 'bittersweet'] },
-  legacy: { label: 'Legacy', desc: 'What we leave behind', suggestedBlocks: ['return_elixir', 'sacrifice', 'death_rebirth'], suggestedMoods: ['bittersweet', 'epic'] },
-  truth: { label: 'Truth', desc: 'Pursuit of honesty', suggestedBlocks: ['revelation', 'discovery', 'confrontation'], suggestedMoods: ['revelatory', 'mysterious'] },
-  mortality: { label: 'Mortality', desc: 'Facing death and finding meaning', suggestedBlocks: ['ordeal', 'death_rebirth', 'loss'], suggestedMoods: ['melancholic', 'epic'] },
-  corruption: { label: 'Corruption', desc: 'Decay of virtue over time', suggestedBlocks: ['temptation', 'betrayal', 'transformation'], suggestedMoods: ['ominous', 'desperate'] }
+  // Core Universal Themes
+  redemption: { label: 'Redemption', desc: 'The journey from guilt to forgiveness', suggestedBlocks: ['death_rebirth', 'sacrifice', 'return_elixir'], suggestedMoods: ['bittersweet', 'triumphant'], examples: 'Les Miserables, A Christmas Carol' },
+  sacrifice: { label: 'Sacrifice', desc: 'Giving up something precious for greater good', suggestedBlocks: ['sacrifice', 'ordeal', 'death_rebirth'], suggestedMoods: ['bittersweet', 'epic'], examples: 'Sydney Carton, Dobby, Harry Potter' },
+  love: { label: 'Love & Connection', desc: 'The power of human connection and belonging', suggestedBlocks: ['reunion', 'sacrifice', 'rescue'], suggestedMoods: ['romantic', 'intimate'], examples: 'Pride and Prejudice, Romeo and Juliet' },
+  power: { label: 'Power & Corruption', desc: 'How power changes people and corrupts', suggestedBlocks: ['temptation', 'ordeal', 'confrontation'], suggestedMoods: ['epic', 'ominous'], examples: 'Macbeth, Animal Farm, Lord of the Rings' },
+  identity: { label: 'Identity & Self', desc: 'Discovering who one truly is', suggestedBlocks: ['revelation', 'transformation', 'choice'], suggestedMoods: ['revelatory', 'intimate'], examples: 'Invisible Man, The Metamorphosis' },
+  freedom: { label: 'Freedom vs. Oppression', desc: 'Breaking free from constraints', suggestedBlocks: ['escape', 'crossing_threshold', 'call_to_adventure'], suggestedMoods: ['adventurous', 'triumphant'], examples: '1984, The Handmaid\'s Tale' },
+  justice: { label: 'Justice & Revenge', desc: 'Pursuit of fairness and retribution', suggestedBlocks: ['confrontation', 'reward', 'ordeal'], suggestedMoods: ['epic', 'triumphant'], examples: 'The Count of Monte Cristo, Les Miserables' },
+  revenge: { label: 'Revenge', desc: 'The destructive cycle of retaliation', suggestedBlocks: ['confrontation', 'betrayal', 'ordeal'], suggestedMoods: ['tense', 'desperate'], examples: 'Hamlet, Kill Bill, Moby Dick' },
+  survival: { label: 'Survival', desc: 'The struggle to exist against impossible odds', suggestedBlocks: ['escape', 'ordeal', 'tests_allies_enemies'], suggestedMoods: ['desperate', 'tense'], examples: 'The Road, Lord of the Flies, The Martian' },
+  growth: { label: 'Coming of Age', desc: 'Transition from innocence to experience', suggestedBlocks: ['crossing_threshold', 'meeting_mentor', 'transformation'], suggestedMoods: ['adventurous', 'bittersweet'], examples: 'To Kill a Mockingbird, Catcher in the Rye' },
+  betrayal: { label: 'Betrayal & Trust', desc: 'Breaking of sacred trust', suggestedBlocks: ['betrayal', 'revelation', 'confrontation'], suggestedMoods: ['tense', 'desperate'], examples: 'Julius Caesar, Othello, Game of Thrones' },
+  family: { label: 'Family Bonds', desc: 'Bonds and conflicts of kinship', suggestedBlocks: ['ordinary_world', 'reunion', 'loss'], suggestedMoods: ['intimate', 'bittersweet'], examples: 'The Godfather, Little Women, East of Eden' },
+  legacy: { label: 'Legacy & Memory', desc: 'What we leave behind for future generations', suggestedBlocks: ['return_elixir', 'sacrifice', 'death_rebirth'], suggestedMoods: ['bittersweet', 'epic'], examples: 'Citizen Kane, Ozymandias' },
+  truth: { label: 'Truth & Illusion', desc: 'Pursuit of truth versus comfortable lies', suggestedBlocks: ['revelation', 'discovery', 'confrontation'], suggestedMoods: ['revelatory', 'mysterious'], examples: 'The Matrix, Gone Girl' },
+  mortality: { label: 'Death & Mortality', desc: 'Facing death and finding meaning in finite life', suggestedBlocks: ['ordeal', 'death_rebirth', 'loss'], suggestedMoods: ['melancholic', 'epic'], examples: 'The Book Thief, When Breath Becomes Air' },
+  corruption: { label: 'Corruption', desc: 'Decay of virtue over time', suggestedBlocks: ['temptation', 'betrayal', 'transformation'], suggestedMoods: ['ominous', 'desperate'], examples: 'Breaking Bad, The Picture of Dorian Gray' },
+  
+  // Additional Expanded Themes
+  good_vs_evil: { label: 'Good vs. Evil', desc: 'Moral battle between light and darkness', suggestedBlocks: ['ordeal', 'confrontation', 'resurrection'], suggestedMoods: ['epic', 'triumphant'], examples: 'Lord of the Rings, Star Wars, Harry Potter' },
+  ambition: { label: 'Ambition', desc: 'The drive to achieve and its costs', suggestedBlocks: ['temptation', 'ordeal', 'climax'], suggestedMoods: ['tense', 'ominous'], examples: 'Macbeth, The Great Gatsby, Citizen Kane' },
+  isolation: { label: 'Isolation & Loneliness', desc: 'The pain of separation from others', suggestedBlocks: ['ordinary_world', 'tests_allies_enemies', 'ordeal'], suggestedMoods: ['melancholic', 'mysterious'], examples: 'Frankenstein, The Remains of the Day' },
+  nature_vs_nurture: { label: 'Nature vs. Nurture', desc: 'Are we born or made who we are?', suggestedBlocks: ['revelation', 'transformation', 'choice'], suggestedMoods: ['intimate', 'revelatory'], examples: 'Frankenstein, Oliver Twist' },
+  fate_vs_free_will: { label: 'Fate vs. Free Will', desc: 'Are our lives predetermined or chosen?', suggestedBlocks: ['prophecy', 'choice', 'ordeal'], suggestedMoods: ['mysterious', 'tense'], examples: 'Oedipus Rex, Minority Report, Macbeth' },
+  appearance_vs_reality: { label: 'Appearance vs. Reality', desc: 'Things are not what they seem', suggestedBlocks: ['revelation', 'betrayal', 'discovery'], suggestedMoods: ['mysterious', 'tense'], examples: 'Hamlet, Gone Girl, The Usual Suspects' },
+  the_outsider: { label: 'The Outsider', desc: 'Alienation from society, different perspectives', suggestedBlocks: ['ordinary_world', 'crossing_threshold', 'tests_allies_enemies'], suggestedMoods: ['melancholic', 'mysterious'], examples: 'The Stranger, Frankenstein, Edward Scissorhands' },
+  hope_vs_despair: { label: 'Hope vs. Despair', desc: 'The struggle to maintain hope in darkness', suggestedBlocks: ['all_is_lost', 'dark_night', 'resurrection'], suggestedMoods: ['desperate', 'triumphant'], examples: 'The Shawshank Redemption, Les Miserables' },
+  war_and_peace: { label: 'War & Peace', desc: 'The human cost of conflict', suggestedBlocks: ['ordeal', 'loss', 'resolution'], suggestedMoods: ['epic', 'melancholic'], examples: 'War and Peace, All Quiet on the Western Front' },
+  class_society: { label: 'Class & Social Hierarchy', desc: 'Inequality and social barriers', suggestedBlocks: ['ordinary_world', 'confrontation', 'transformation'], suggestedMoods: ['tense', 'intimate'], examples: 'Pride and Prejudice, Great Expectations, Parasite' },
+  hubris: { label: 'Hubris & Pride', desc: 'Excessive pride leading to downfall', suggestedBlocks: ['temptation', 'ordeal', 'climax'], suggestedMoods: ['ominous', 'epic'], examples: 'Oedipus Rex, Icarus, Frankenstein' },
+  forbidden_knowledge: { label: 'Forbidden Knowledge', desc: 'Dangerous pursuit of truth that should remain hidden', suggestedBlocks: ['temptation', 'ordeal', 'revelation'], suggestedMoods: ['mysterious', 'horrific'], examples: 'Frankenstein, Faustus, Lovecraft stories' },
+  innocence_lost: { label: 'Loss of Innocence', desc: 'The painful transition from naivety to experience', suggestedBlocks: ['crossing_threshold', 'ordeal', 'transformation'], suggestedMoods: ['bittersweet', 'melancholic'], examples: 'Lord of the Flies, Catcher in the Rye' },
+  nature_civilization: { label: 'Nature vs. Civilization', desc: 'Conflict between wild and tamed worlds', suggestedBlocks: ['crossing_threshold', 'tests_allies_enemies', 'choice'], suggestedMoods: ['adventurous', 'peaceful'], examples: 'Walden, Avatar, Princess Mononoke' },
+  memory_and_past: { label: 'Memory & The Past', desc: 'How past shapes present, the burden of memory', suggestedBlocks: ['ordinary_world', 'revelation', 'resolution'], suggestedMoods: ['melancholic', 'intimate'], examples: 'Great Gatsby, Remains of the Day, Beloved' }
 };
 
 // ============================================

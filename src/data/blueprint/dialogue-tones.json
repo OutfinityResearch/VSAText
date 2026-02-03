@@ -1,0 +1,121 @@
+{
+  "tones": {
+    "serious": {
+      "label": "Serious",
+      "description": "Grave, earnest communication",
+      "speechPatterns": ["formal", "direct", "measured"],
+      "suggestedEmotions": ["determined", "concerned", "focused"],
+      "pacing": "slow"
+    },
+    "playful": {
+      "label": "Playful",
+      "description": "Light-hearted, teasing, fun",
+      "speechPatterns": ["casual", "witty", "bantering"],
+      "suggestedEmotions": ["amused", "cheerful", "mischievous"],
+      "pacing": "quick"
+    },
+    "tense": {
+      "label": "Tense",
+      "description": "High stakes, pressure, urgency",
+      "speechPatterns": ["clipped", "urgent", "strained"],
+      "suggestedEmotions": ["anxious", "stressed", "wary"],
+      "pacing": "rapid"
+    },
+    "intimate": {
+      "label": "Intimate",
+      "description": "Close, personal, vulnerable",
+      "speechPatterns": ["soft", "personal", "hesitant"],
+      "suggestedEmotions": ["tender", "vulnerable", "trusting"],
+      "pacing": "slow"
+    },
+    "angry": {
+      "label": "Angry",
+      "description": "Hostile, aggressive, confrontational",
+      "speechPatterns": ["sharp", "accusatory", "loud"],
+      "suggestedEmotions": ["furious", "resentful", "bitter"],
+      "pacing": "rapid"
+    },
+    "cold": {
+      "label": "Cold",
+      "description": "Distant, detached, emotionless",
+      "speechPatterns": ["formal", "clipped", "dismissive"],
+      "suggestedEmotions": ["indifferent", "contemptuous", "calculated"],
+      "pacing": "measured"
+    },
+    "warm": {
+      "label": "Warm",
+      "description": "Friendly, caring, supportive",
+      "speechPatterns": ["encouraging", "gentle", "open"],
+      "suggestedEmotions": ["caring", "supportive", "happy"],
+      "pacing": "relaxed"
+    },
+    "nervous": {
+      "label": "Nervous",
+      "description": "Anxious, uncertain, hesitant",
+      "speechPatterns": ["stuttering", "rambling", "apologetic"],
+      "suggestedEmotions": ["anxious", "embarrassed", "uncertain"],
+      "pacing": "uneven"
+    },
+    "sarcastic": {
+      "label": "Sarcastic",
+      "description": "Ironic, mocking, sardonic",
+      "speechPatterns": ["dry", "ironic", "cutting"],
+      "suggestedEmotions": ["amused", "bitter", "dismissive"],
+      "pacing": "measured"
+    },
+    "melancholic": {
+      "label": "Melancholic",
+      "description": "Sad, reflective, wistful",
+      "speechPatterns": ["slow", "reflective", "quiet"],
+      "suggestedEmotions": ["sad", "nostalgic", "resigned"],
+      "pacing": "slow"
+    },
+    "determined": {
+      "label": "Determined",
+      "description": "Resolute, committed, unwavering",
+      "speechPatterns": ["firm", "declarative", "emphatic"],
+      "suggestedEmotions": ["resolved", "focused", "brave"],
+      "pacing": "steady"
+    },
+    "curious": {
+      "label": "Curious",
+      "description": "Inquisitive, interested, probing",
+      "speechPatterns": ["questioning", "eager", "exploratory"],
+      "suggestedEmotions": ["interested", "fascinated", "puzzled"],
+      "pacing": "moderate"
+    },
+    "threatening": {
+      "label": "Threatening",
+      "description": "Menacing, intimidating, ominous",
+      "speechPatterns": ["low", "deliberate", "menacing"],
+      "suggestedEmotions": ["dangerous", "controlled", "predatory"],
+      "pacing": "slow"
+    },
+    "vulnerable": {
+      "label": "Vulnerable",
+      "description": "Open, exposed, fragile",
+      "speechPatterns": ["soft", "broken", "honest"],
+      "suggestedEmotions": ["scared", "exposed", "truthful"],
+      "pacing": "halting"
+    },
+    "diplomatic": {
+      "label": "Diplomatic",
+      "description": "Tactful, careful, balanced",
+      "speechPatterns": ["measured", "polite", "considerate"],
+      "suggestedEmotions": ["careful", "strategic", "patient"],
+      "pacing": "measured"
+    },
+    "excited": {
+      "label": "Excited",
+      "description": "Enthusiastic, energetic, eager",
+      "speechPatterns": ["fast", "animated", "breathless"],
+      "suggestedEmotions": ["thrilled", "eager", "joyful"],
+      "pacing": "rapid"
+    }
+  },
+  "emotionTags": {
+    "positive": ["happy", "hopeful", "relieved", "grateful", "proud", "loving", "amused", "peaceful"],
+    "negative": ["angry", "sad", "scared", "disgusted", "anxious", "guilty", "jealous", "bitter"],
+    "complex": ["conflicted", "nostalgic", "bittersweet", "resigned", "wary", "curious", "surprised", "determined"]
+  }
+}

@@ -101,31 +101,131 @@ export const LOCATION_NAMES = [
 ];
 
 // ============================================
-// OBJECT TYPES (for props/items)
+// PLOT ELEMENT TYPES (expanded from 'objects')
+// Diverse elements for intrigue across genres
 // ============================================
 export const OBJECT_TYPES = {
-  weapon: { label: 'Weapon', desc: 'Tool of combat or defense', icon: '⚔️' },
-  artifact: { label: 'Artifact', desc: 'Object of power or ancient origin', icon: '🔮' },
-  key: { label: 'Key', desc: 'Object that unlocks access', icon: '🗝️' },
-  gift: { label: 'Gift', desc: 'Given by mentor or ally', icon: '🎁' },
-  symbol: { label: 'Symbol', desc: 'Represents abstract concept', icon: '⚜️' },
-  container: { label: 'Container', desc: 'Holds something important', icon: '📦' },
-  vehicle: { label: 'Vehicle', desc: 'Means of transportation', icon: '🚢' },
-  document: { label: 'Document', desc: 'Written information', icon: '📜' },
-  clothing: { label: 'Clothing', desc: 'Wearable with significance', icon: '👘' },
-  jewelry: { label: 'Jewelry', desc: 'Precious ornament', icon: '💍' }
+  // Physical Objects
+  weapon: { label: 'Weapon', desc: 'Tool of combat or defense', icon: '⚔️', category: 'physical' },
+  artifact: { label: 'Artifact', desc: 'Object of power or ancient origin', icon: '🔮', category: 'physical' },
+  key: { label: 'Key', desc: 'Object that unlocks access', icon: '🗝️', category: 'physical' },
+  document: { label: 'Document', desc: 'Written information, letter, map', icon: '📜', category: 'physical' },
+  jewelry: { label: 'Jewelry', desc: 'Precious ornament with meaning', icon: '💍', category: 'physical' },
+  clothing: { label: 'Clothing', desc: 'Wearable with significance', icon: '👘', category: 'physical' },
+  container: { label: 'Container', desc: 'Box, chest, vessel holding secrets', icon: '📦', category: 'physical' },
+  vehicle: { label: 'Vehicle', desc: 'Means of transportation', icon: '🚢', category: 'physical' },
+  tool: { label: 'Tool', desc: 'Practical instrument with narrative use', icon: '🔧', category: 'physical' },
+  substance: { label: 'Substance', desc: 'Poison, medicine, potion, drug', icon: '⚗️', category: 'physical' },
+  food_drink: { label: 'Food/Drink', desc: 'Consumable with plot significance', icon: '🍷', category: 'physical' },
+  money: { label: 'Money/Treasure', desc: 'Wealth, coins, precious materials', icon: '💰', category: 'physical' },
+  body_part: { label: 'Body Part', desc: 'Heart, hand, eye - literal or preserved', icon: '🫀', category: 'physical' },
+  
+  // Information & Secrets
+  secret: { label: 'Secret', desc: 'Hidden information that drives plot', icon: '🤫', category: 'information' },
+  rumor: { label: 'Rumor', desc: 'Unverified information spreading', icon: '💬', category: 'information' },
+  prophecy: { label: 'Prophecy', desc: 'Prediction of future events', icon: '🔮', category: 'information' },
+  memory: { label: 'Memory', desc: 'Past event affecting present', icon: '🧠', category: 'information' },
+  identity: { label: 'Hidden Identity', desc: 'True nature concealed', icon: '🎭', category: 'information' },
+  alibi: { label: 'Alibi', desc: 'Proof of innocence or guilt', icon: '⏱️', category: 'information' },
+  evidence: { label: 'Evidence', desc: 'Proof that reveals truth', icon: '🔍', category: 'information' },
+  code: { label: 'Code/Cipher', desc: 'Encrypted message to decode', icon: '🔐', category: 'information' },
+  testimony: { label: 'Testimony', desc: 'Witness account of events', icon: '📢', category: 'information' },
+  
+  // Relationships & Bonds
+  promise: { label: 'Promise', desc: 'Vow that binds characters', icon: '🤝', category: 'relationship' },
+  debt: { label: 'Debt', desc: 'Owed favor or money creating obligation', icon: '📋', category: 'relationship' },
+  inheritance: { label: 'Inheritance', desc: 'Legacy passed down', icon: '📜', category: 'relationship' },
+  marriage: { label: 'Marriage/Engagement', desc: 'Union creating alliances', icon: '💒', category: 'relationship' },
+  child: { label: 'Child', desc: 'Offspring as plot element', icon: '👶', category: 'relationship' },
+  betrayal: { label: 'Betrayal', desc: 'Past or future treachery', icon: '🗡️', category: 'relationship' },
+  rivalry: { label: 'Rivalry', desc: 'Competition between characters', icon: '⚔️', category: 'relationship' },
+  alliance: { label: 'Alliance', desc: 'Agreement between parties', icon: '🤲', category: 'relationship' },
+  
+  // Events & Circumstances
+  deadline: { label: 'Deadline', desc: 'Time pressure driving action', icon: '⏰', category: 'event' },
+  crime: { label: 'Crime', desc: 'Offense requiring resolution', icon: '🚨', category: 'event' },
+  accident: { label: 'Accident', desc: 'Unintended event with consequences', icon: '💥', category: 'event' },
+  illness: { label: 'Illness', desc: 'Disease affecting character', icon: '🤒', category: 'event' },
+  death: { label: 'Death', desc: 'Passing that affects story', icon: '⚰️', category: 'event' },
+  disappearance: { label: 'Disappearance', desc: 'Missing person or thing', icon: '❓', category: 'event' },
+  discovery: { label: 'Discovery', desc: 'Finding that changes everything', icon: '💡', category: 'event' },
+  scandal: { label: 'Scandal', desc: 'Public disgrace or revelation', icon: '📰', category: 'event' },
+  war: { label: 'War/Conflict', desc: 'Armed struggle affecting all', icon: '⚔️', category: 'event' },
+  natural_disaster: { label: 'Natural Disaster', desc: 'Storm, earthquake, flood', icon: '🌊', category: 'event' },
+  
+  // Abstract Concepts
+  power: { label: 'Power', desc: 'Authority or supernatural ability', icon: '👑', category: 'abstract' },
+  curse: { label: 'Curse', desc: 'Magical affliction or fate', icon: '💀', category: 'abstract' },
+  blessing: { label: 'Blessing', desc: 'Divine favor or gift', icon: '✨', category: 'abstract' },
+  destiny: { label: 'Destiny', desc: 'Predetermined fate', icon: '🌟', category: 'abstract' },
+  dream: { label: 'Dream/Vision', desc: 'Prophetic or meaningful dream', icon: '💭', category: 'abstract' },
+  madness: { label: 'Madness', desc: 'Mental instability as plot device', icon: '🌀', category: 'abstract' },
+  love: { label: 'Love', desc: 'Romantic or familial attachment', icon: '❤️', category: 'abstract' },
+  revenge: { label: 'Revenge', desc: 'Desire for retribution', icon: '⚡', category: 'abstract' },
+  guilt: { label: 'Guilt', desc: 'Burden of past actions', icon: '😔', category: 'abstract' },
+  ambition: { label: 'Ambition', desc: 'Driving desire for achievement', icon: '🎯', category: 'abstract' },
+  
+  // Places & Access
+  hideout: { label: 'Hideout', desc: 'Secret location', icon: '🏚️', category: 'place' },
+  passage: { label: 'Secret Passage', desc: 'Hidden route or door', icon: '🚪', category: 'place' },
+  territory: { label: 'Territory', desc: 'Land to control or protect', icon: '🗺️', category: 'place' },
+  sanctuary: { label: 'Sanctuary', desc: 'Safe haven from threats', icon: '🏛️', category: 'place' },
+  prison: { label: 'Prison/Trap', desc: 'Place of confinement', icon: '⛓️', category: 'place' },
+  
+  // Technology & Science (modern/scifi)
+  data: { label: 'Data', desc: 'Digital information', icon: '💾', category: 'technology' },
+  device: { label: 'Device', desc: 'Technological gadget', icon: '📱', category: 'technology' },
+  formula: { label: 'Formula', desc: 'Scientific recipe or equation', icon: '🧪', category: 'technology' },
+  virus: { label: 'Virus', desc: 'Biological or digital threat', icon: '🦠', category: 'technology' },
+  ai: { label: 'AI/Robot', desc: 'Artificial intelligence', icon: '🤖', category: 'technology' },
+  
+  // Supernatural (fantasy/horror)
+  spirit: { label: 'Spirit/Ghost', desc: 'Supernatural presence', icon: '👻', category: 'supernatural' },
+  portal: { label: 'Portal', desc: 'Gateway to another realm', icon: '🌀', category: 'supernatural' },
+  familiar: { label: 'Familiar', desc: 'Magical creature companion', icon: '🐈', category: 'supernatural' },
+  spell: { label: 'Spell/Ritual', desc: 'Magical procedure', icon: '✨', category: 'supernatural' },
+  relic: { label: 'Holy Relic', desc: 'Sacred object with power', icon: '⭐', category: 'supernatural' }
 };
 
 export const OBJECT_SIGNIFICANCE = {
   minor: { label: 'Minor', desc: 'Background detail, mentioned in passing' },
   important: { label: 'Important', desc: 'Affects plot, has narrative weight' },
   central: { label: 'Central', desc: 'Key to the story, major plot element' },
-  macguffin: { label: 'MacGuffin', desc: 'Everyone wants it, drives the plot' }
+  macguffin: { label: 'MacGuffin', desc: 'Everyone wants it, drives the plot' },
+  red_herring: { label: 'Red Herring', desc: 'Misleads reader, false clue' },
+  chekhov: { label: "Chekhov's Gun", desc: 'Introduced early, crucial later' }
 };
 
+// Extended names for plot elements - organized by category
 export const OBJECT_NAMES = [
+  // Fantasy artifacts
   'The Silver Key', 'Ancient Map', 'Crystal Orb', 'Enchanted Blade', 'Sacred Tome',
   'Dragon Scale', 'Phoenix Feather', 'Shadow Cloak', 'Crown of Stars', 'Ring of Power',
   'Sunstone Amulet', 'Moonlight Dagger', 'Stormcaller Staff', 'Iron Crown', 'Jade Mirror',
-  'Obsidian Compass', 'Golden Chalice', 'Raven Quill', 'Thunder Hammer', 'Frost Scepter'
+  'Obsidian Compass', 'Golden Chalice', 'Raven Quill', 'Thunder Hammer', 'Frost Scepter',
+  // Mystery/thriller items
+  'The Missing Letter', 'Bloodstained Glove', 'Forged Document', 'Hidden Diary',
+  'Encrypted USB Drive', 'Surveillance Footage', 'Anonymous Tip', 'The Murder Weapon',
+  'Alibi Photograph', 'Offshore Account', 'Burner Phone', 'Witness Statement',
+  'The Ransom Note', 'Fingerprint Evidence', 'DNA Sample', 'Security Badge',
+  // Romance elements
+  'Love Letters', 'Wedding Ring', 'Pressed Flowers', 'Childhood Photo',
+  'The Promise', 'Family Heirloom', 'Secret Admirer Note', 'Engagement Ring',
+  'Shared Memory', 'The Dance', 'First Gift', 'Anniversary Token',
+  // Drama elements
+  'The Will', 'Birth Certificate', 'Adoption Papers', 'Divorce Agreement',
+  'Business Contract', 'Medical Records', 'Prison Release Papers', 'Scholarship Offer',
+  'Eviction Notice', 'Bankruptcy Filing', 'Inheritance Dispute', 'Custody Agreement',
+  // Scifi elements
+  'Quantum Drive', 'Neural Implant', 'Clone Data', 'Terraforming Blueprint',
+  'Alien Artifact', 'Time Device', 'Dimensional Key', 'Synthetic Virus',
+  'Memory Chip', 'Holographic Message', 'Starship Codes', 'AI Core',
+  // Horror elements
+  'Cursed Object', 'Ritual Book', 'Spirit Board', 'Haunted Doll',
+  'Blood Vial', 'Bone Relic', 'Possessed Artifact', 'Demonic Contract',
+  'The Photograph', 'Strange Symbol', 'Ancient Seal', 'Nightmare Journal',
+  // Universal/abstract
+  'The Secret', 'Unspoken Promise', 'Forgotten Memory', 'Hidden Truth',
+  'The Prophecy', 'Ancient Curse', 'Family Secret', 'Buried Past',
+  'The Betrayal', 'Lost Opportunity', 'Second Chance', 'Final Hope'
 ];

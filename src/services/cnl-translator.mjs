@@ -285,23 +285,6 @@ function generateCnlFromSpec(spec) {
   
   return lines.join('\n');
 }
-        break;
-      case 'TONE':
-        svoLines.push(`${args[0]} has tone ${args[1]}`);
-        break;
-      case 'FORMAT':
-        svoLines.push(`${args[0]} has format ${args[1]}`);
-        break;
-      case 'GUARDRAIL':
-        if (args[1] === 'forbid_phrase') {
-          svoLines.push(`Story forbids "${args[2]}"`);
-        }
-        break;
-    }
-  }
-  
-  return svoLines.join('\n');
-}
 
 export {
   translateNlToCnl,

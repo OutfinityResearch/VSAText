@@ -9,7 +9,7 @@ import { $, $$, genId, openModal, closeModal, pick } from './utils.mjs';
 import { addChild, findNode, renderTree, getUsedBlocks } from './tree.mjs';
 import { generateCNL } from './cnl.mjs';
 import { renderRelationshipsView } from './views.mjs';
-import VOCAB from '../../src/vocabularies/vocabularies.mjs';
+import VOCAB from '/src/vocabularies/vocabularies.mjs';
 
 // ==================== ENTITY GRIDS ====================
 export function renderEntityGrid(type) {

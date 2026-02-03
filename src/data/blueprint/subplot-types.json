@@ -1,0 +1,183 @@
+{
+  "subplotTypes": {
+    "romance": {
+      "label": "Romance",
+      "description": "Love story running alongside main plot",
+      "icon": "heart",
+      "typicalPhases": ["meeting", "attraction", "obstacle", "resolution"],
+      "tensionPattern": "gradual_build",
+      "requiredCharacterCount": 2,
+      "commonTouchpoints": [
+        { "phase": "meeting", "event": "first_encounter", "description": "Characters meet for first time" },
+        { "phase": "attraction", "event": "first_connection", "description": "Meaningful moment together" },
+        { "phase": "obstacle", "event": "misunderstanding", "description": "Something drives them apart" },
+        { "phase": "resolution", "event": "reconciliation", "description": "They overcome the obstacle" }
+      ],
+      "compatibleMainArcs": ["heros_journey", "three_act", "save_the_cat"]
+    },
+    "rivalry": {
+      "label": "Rivalry",
+      "description": "Competition or antagonism between characters",
+      "icon": "swords",
+      "typicalPhases": ["establishment", "escalation", "climax", "resolution"],
+      "tensionPattern": "escalating",
+      "requiredCharacterCount": 2,
+      "commonTouchpoints": [
+        { "phase": "establishment", "event": "first_clash", "description": "Initial conflict or competition" },
+        { "phase": "escalation", "event": "stakes_raised", "description": "Competition intensifies" },
+        { "phase": "climax", "event": "showdown", "description": "Direct confrontation" },
+        { "phase": "resolution", "event": "outcome", "description": "Victory, defeat, or mutual respect" }
+      ],
+      "compatibleMainArcs": ["heros_journey", "three_act", "seven_point"]
+    },
+    "mystery": {
+      "label": "Mystery",
+      "description": "Uncovering hidden truth or solving a puzzle",
+      "icon": "search",
+      "typicalPhases": ["discovery", "investigation", "false_lead", "revelation"],
+      "tensionPattern": "building_to_reveal",
+      "requiredCharacterCount": 1,
+      "commonTouchpoints": [
+        { "phase": "discovery", "event": "first_clue", "description": "Something doesn't add up" },
+        { "phase": "investigation", "event": "gathering_evidence", "description": "Piecing together clues" },
+        { "phase": "false_lead", "event": "misdirection", "description": "Wrong conclusion or red herring" },
+        { "phase": "revelation", "event": "truth_revealed", "description": "The mystery is solved" }
+      ],
+      "compatibleMainArcs": ["three_act", "seven_point", "five_act"]
+    },
+    "growth": {
+      "label": "Personal Growth",
+      "description": "Character development and self-improvement arc",
+      "icon": "plant",
+      "typicalPhases": ["flaw_shown", "challenge", "failure", "breakthrough", "change"],
+      "tensionPattern": "internal_struggle",
+      "requiredCharacterCount": 1,
+      "commonTouchpoints": [
+        { "phase": "flaw_shown", "event": "weakness_evident", "description": "Character flaw impacts story" },
+        { "phase": "challenge", "event": "test_of_character", "description": "Situation demands change" },
+        { "phase": "failure", "event": "consequence", "description": "Flaw causes problem" },
+        { "phase": "breakthrough", "event": "realization", "description": "Character understands need to change" },
+        { "phase": "change", "event": "transformation", "description": "Character demonstrates growth" }
+      ],
+      "compatibleMainArcs": ["story_circle", "save_the_cat", "heros_journey"]
+    },
+    "revenge": {
+      "label": "Revenge",
+      "description": "Character seeking vengeance for a wrong",
+      "icon": "flame",
+      "typicalPhases": ["wrong", "vow", "pursuit", "confrontation", "aftermath"],
+      "tensionPattern": "escalating",
+      "requiredCharacterCount": 2,
+      "commonTouchpoints": [
+        { "phase": "wrong", "event": "the_offense", "description": "The inciting wrong occurs" },
+        { "phase": "vow", "event": "declaration", "description": "Character commits to revenge" },
+        { "phase": "pursuit", "event": "hunting", "description": "Tracking or preparing" },
+        { "phase": "confrontation", "event": "payback", "description": "Revenge is enacted" },
+        { "phase": "aftermath", "event": "consequence", "description": "Cost of revenge revealed" }
+      ],
+      "compatibleMainArcs": ["five_act", "three_act", "seven_point"]
+    },
+    "mentorship": {
+      "label": "Mentorship",
+      "description": "Teacher-student relationship development",
+      "icon": "graduation",
+      "typicalPhases": ["meeting", "training", "test", "graduation"],
+      "tensionPattern": "gradual_build",
+      "requiredCharacterCount": 2,
+      "commonTouchpoints": [
+        { "phase": "meeting", "event": "first_lesson", "description": "Mentor accepts student" },
+        { "phase": "training", "event": "learning", "description": "Skills and wisdom passed on" },
+        { "phase": "test", "event": "trial", "description": "Student must prove themselves" },
+        { "phase": "graduation", "event": "surpassing", "description": "Student equals or exceeds mentor" }
+      ],
+      "compatibleMainArcs": ["heros_journey", "story_circle", "save_the_cat"]
+    },
+    "redemption": {
+      "label": "Redemption",
+      "description": "Character seeking to atone for past wrongs",
+      "icon": "sunrise",
+      "typicalPhases": ["sin", "guilt", "atonement", "forgiveness"],
+      "tensionPattern": "internal_struggle",
+      "requiredCharacterCount": 1,
+      "commonTouchpoints": [
+        { "phase": "sin", "event": "past_revealed", "description": "The wrong is shown or revealed" },
+        { "phase": "guilt", "event": "burden", "description": "Weight of past affects present" },
+        { "phase": "atonement", "event": "sacrifice", "description": "Character tries to make amends" },
+        { "phase": "forgiveness", "event": "absolution", "description": "Redemption achieved or denied" }
+      ],
+      "compatibleMainArcs": ["heros_journey", "five_act", "three_act"]
+    },
+    "power_struggle": {
+      "label": "Power Struggle",
+      "description": "Competition for control or authority",
+      "icon": "crown",
+      "typicalPhases": ["status_quo", "challenge", "maneuvering", "resolution"],
+      "tensionPattern": "escalating",
+      "requiredCharacterCount": 2,
+      "commonTouchpoints": [
+        { "phase": "status_quo", "event": "power_shown", "description": "Current power structure established" },
+        { "phase": "challenge", "event": "threat_emerges", "description": "Challenge to authority" },
+        { "phase": "maneuvering", "event": "political_moves", "description": "Alliances and strategies" },
+        { "phase": "resolution", "event": "new_order", "description": "Power shifts or is maintained" }
+      ],
+      "compatibleMainArcs": ["three_act", "five_act", "seven_point"]
+    },
+    "survival": {
+      "label": "Survival",
+      "description": "Characters fighting to stay alive",
+      "icon": "shield",
+      "typicalPhases": ["threat", "escape", "pursuit", "safety"],
+      "tensionPattern": "high_sustained",
+      "requiredCharacterCount": 1,
+      "commonTouchpoints": [
+        { "phase": "threat", "event": "danger_appears", "description": "Lethal threat introduced" },
+        { "phase": "escape", "event": "first_survival", "description": "Narrow escape" },
+        { "phase": "pursuit", "event": "ongoing_danger", "description": "Continued threat" },
+        { "phase": "safety", "event": "rescue_or_victory", "description": "Threat eliminated or escaped" }
+      ],
+      "compatibleMainArcs": ["heros_journey", "three_act", "seven_point"]
+    },
+    "secret": {
+      "label": "Hidden Secret",
+      "description": "Character hiding something that could unravel",
+      "icon": "lock",
+      "typicalPhases": ["secret_established", "close_calls", "discovery", "aftermath"],
+      "tensionPattern": "building_to_reveal",
+      "requiredCharacterCount": 1,
+      "commonTouchpoints": [
+        { "phase": "secret_established", "event": "what_hidden", "description": "Secret and stakes shown" },
+        { "phase": "close_calls", "event": "almost_caught", "description": "Secret nearly exposed" },
+        { "phase": "discovery", "event": "revealed", "description": "Secret comes out" },
+        { "phase": "aftermath", "event": "consequences", "description": "Impact of revelation" }
+      ],
+      "compatibleMainArcs": ["three_act", "save_the_cat", "five_act"]
+    }
+  },
+  "tensionPatterns": {
+    "gradual_build": {
+      "label": "Gradual Build",
+      "curve": [0.2, 0.3, 0.4, 0.5, 0.7],
+      "description": "Slowly increasing tension"
+    },
+    "escalating": {
+      "label": "Escalating",
+      "curve": [0.3, 0.5, 0.7, 0.9, 1.0],
+      "description": "Rapidly increasing tension"
+    },
+    "building_to_reveal": {
+      "label": "Building to Reveal",
+      "curve": [0.3, 0.4, 0.5, 0.6, 1.0],
+      "description": "Steady build with climactic reveal"
+    },
+    "internal_struggle": {
+      "label": "Internal Struggle",
+      "curve": [0.4, 0.5, 0.6, 0.5, 0.7],
+      "description": "Fluctuating internal tension"
+    },
+    "high_sustained": {
+      "label": "High Sustained",
+      "curve": [0.7, 0.8, 0.8, 0.9, 0.8],
+      "description": "Consistently high tension"
+    }
+  }
+}

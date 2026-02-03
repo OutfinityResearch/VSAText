@@ -26,7 +26,10 @@ const VERBS = new Set([
   'creates', 'begins', 'ends', 'causes', 'prevents',
   
   // Screenplay verbs
-  'enters', 'exits', 'speaks', 'reacts', 'observes'
+  'enters', 'exits', 'speaks', 'reacts', 'observes',
+  
+  // Blueprint/Dialogue/Subplot verbs (NEW)
+  'uses', 'mapped', 'linked', 'involves', 'starts', 'touchpoint', 'says'
 ]);
 
 // Modifiers that connect parts of statements
@@ -38,7 +41,29 @@ export const ENTITY_TYPES = new Set([
   'location', 'place', 'setting',
   'theme', 'motif',
   'artifact', 'object', 'item',
-  'event', 'conflict', 'goal'
+  'event', 'conflict', 'goal',
+  // Blueprint/Dialogue/Subplot types (NEW)
+  'dialogue', 'subplot', 'beat', 'exchange'
+]);
+
+// Dialogue purposes
+export const DIALOGUE_PURPOSES = new Set([
+  'revelation', 'confrontation', 'bonding', 'exposition', 'conflict',
+  'confession', 'negotiation', 'farewell', 'deception', 'comic_relief',
+  'planning', 'interrogation'
+]);
+
+// Dialogue tones
+export const DIALOGUE_TONES = new Set([
+  'serious', 'playful', 'tense', 'intimate', 'angry', 'cold', 'warm',
+  'nervous', 'sarcastic', 'melancholic', 'determined', 'curious',
+  'threatening', 'vulnerable', 'diplomatic', 'excited'
+]);
+
+// Subplot types  
+export const SUBPLOT_TYPES = new Set([
+  'romance', 'rivalry', 'mystery', 'growth', 'revenge', 'mentorship',
+  'redemption', 'power_struggle', 'survival', 'secret'
 ]);
 
 /**
@@ -131,6 +156,26 @@ export function parseLine(line, lineNo) {
     };
   }
   
+  // EXCHANGE BEGIN: "DialogueId exchange begin" (NEW)
+  if (tokenWords.length >= 3 && 
+      tokenWords[tokenWords.length - 2] === 'exchange' && 
+      tokenWords[tokenWords.length - 1] === 'begin') {
+    return {
+      statement: { type: 'exchange_begin', dialogueId: tokens[0].value, line: lineNo },
+      error: null
+    };
+  }
+  
+  // EXCHANGE END: "DialogueId exchange end" (NEW)
+  if (tokenWords.length >= 3 && 
+      tokenWords[tokenWords.length - 2] === 'exchange' && 
+      tokenWords[tokenWords.length - 1] === 'end') {
+    return {
+      statement: { type: 'exchange_end', dialogueId: tokens[0].value, line: lineNo },
+      error: null
+    };
+  }
+  
   // Regular statement
   if (tokens.length < 2) {
     return { statement: null, error: { line: lineNo, message: 'Statement requires at least subject and verb' } };
@@ -214,7 +259,19 @@ export function parseCNL(text) {
       tone: [],         // X has tone Y
       max: [],          // X has max Y Z
       min: []           // X has min Y Z
-    }
+    },
+    // Blueprint structure (NEW)
+    blueprint: {
+      arc: null,           // Selected arc key
+      beatMappings: [],    // { beatKey, chapterId, sceneId, tension, notes }
+      tensionCurve: []     // { position, tension }
+    },
+    // Dialogues (NEW)
+    dialogues: {},         // { id: { purpose, participants, tone, tension, beatKey, exchanges } }
+    // Subplots (NEW)
+    subplots: {},          // { id: { type, characters, startBeat, resolveBeat, touchpoints } }
+    // Exchange context (for parsing exchange blocks)
+    _currentExchange: null
   };
   
   const groupStack = [];
@@ -267,6 +324,29 @@ export function parseCNL(text) {
       continue;
     }
     
+    // Handle exchange begin (NEW)
+    if (statement.type === 'exchange_begin') {
+      const dialogueId = statement.dialogueId;
+      if (!ast.dialogues[dialogueId]) {
+        ast.dialogues[dialogueId] = { 
+          id: dialogueId, purpose: null, participants: [], 
+          tone: null, tension: null, beatKey: null, 
+          location: null, exchanges: [], line: lineNo 
+        };
+      }
+      ast._currentExchange = dialogueId;
+      continue;
+    }
+    
+    // Handle exchange end (NEW)
+    if (statement.type === 'exchange_end') {
+      if (ast._currentExchange !== statement.dialogueId) {
+        errors.push({ line: lineNo, message: `Mismatched exchange end: expected "${ast._currentExchange}", got "${statement.dialogueId}"` });
+      }
+      ast._currentExchange = null;
+      continue;
+    }
+    
     // Regular statement processing
     if (statement.type === 'statement') {
       processStatement(statement, ast, groupStack, lineNo);
@@ -279,6 +359,132 @@ export function parseCNL(text) {
   }
   
   return { valid: errors.length === 0, errors, warnings, ast };
+}
+
+/**
+ * Process blueprint, dialogue, and subplot statements
+ * Inline helper to avoid circular imports while keeping code modular
+ */
+function processBlueprintDialogueSubplot(statement, ast, lineNo) {
+  const subjectLower = statement.subject.toLowerCase();
+  
+  // === BLUEPRINT ===
+  if (subjectLower === 'blueprint' && statement.verb === 'uses') {
+    if (statement.objects[0]?.toLowerCase() === 'arc' && statement.objects[1]) {
+      ast.blueprint.arc = statement.objects[1].toLowerCase();
+    }
+    return;
+  }
+  
+  if (subjectLower === 'beat' && statement.verb === 'mapped') {
+    const beatKey = statement.objects[0];
+    const target = statement.modifiers.to;
+    if (beatKey && target) {
+      const parts = target.split('.');
+      const mapping = { beatKey: beatKey.toLowerCase(), chapterId: parts[0], sceneId: parts[1] || null, tension: null, line: lineNo };
+      const idx = ast.blueprint.beatMappings.findIndex(b => b.beatKey === mapping.beatKey);
+      if (idx >= 0) ast.blueprint.beatMappings[idx] = { ...ast.blueprint.beatMappings[idx], ...mapping };
+      else ast.blueprint.beatMappings.push(mapping);
+    }
+    return;
+  }
+  
+  if (subjectLower === 'tension' && statement.verb === 'is') {
+    const position = parseFloat(statement.modifiers.at);
+    const tension = parseInt(statement.objects[0]);
+    if (!isNaN(position) && !isNaN(tension)) {
+      ast.blueprint.tensionCurve.push({ position, tension, line: lineNo });
+    }
+    return;
+  }
+  
+  // === DIALOGUE ===
+  const ensureDialogue = (id) => {
+    if (!ast.dialogues[id]) {
+      ast.dialogues[id] = { id, purpose: null, participants: [], tone: null, tension: null, beatKey: null, location: null, exchanges: [], line: lineNo };
+    }
+    return ast.dialogues[id];
+  };
+  
+  if (subjectLower === 'dialogue' && statement.objects.length >= 1) {
+    const dialogueId = statement.objects[0];
+    const dialogue = ensureDialogue(dialogueId);
+    if (statement.modifiers.at) {
+      const parts = statement.modifiers.at.split('.');
+      dialogue.location = { chapterId: parts[0], sceneId: parts[1] || null };
+    }
+    return;
+  }
+  
+  if (ast.dialogues[statement.subject]) {
+    const dialogue = ast.dialogues[statement.subject];
+    if (statement.verb === 'has') {
+      const prop = statement.objects[0]?.toLowerCase();
+      if (prop === 'purpose') dialogue.purpose = statement.objects[1]?.toLowerCase();
+      else if (prop === 'tone') dialogue.tone = statement.objects[1]?.toLowerCase();
+      else if (prop === 'tension') dialogue.tension = parseInt(statement.objects[1]) || null;
+    }
+    if (statement.verb === 'involves') {
+      dialogue.participants.push({ characterId: statement.objects[0], role: (statement.modifiers.as || 'participant').toLowerCase() });
+    }
+    if (statement.verb === 'linked') {
+      dialogue.beatKey = statement.objects[statement.objects.length - 1]?.toLowerCase();
+    }
+    return;
+  }
+  
+  if (ast._currentExchange && statement.verb === 'says') {
+    const dialogue = ast.dialogues[ast._currentExchange];
+    if (dialogue) {
+      const speaker = statement.subject;
+      const propType = statement.objects[0]?.toLowerCase();
+      const propValue = statement.objects.slice(1).join(' ');
+      let exchange = dialogue.exchanges.find(e => e.speakerId === speaker && !e._complete);
+      if (!exchange) {
+        exchange = { speakerId: speaker, intent: null, emotion: null, sketch: null, line: lineNo };
+        dialogue.exchanges.push(exchange);
+      }
+      if (propType === 'intent') exchange.intent = propValue;
+      else if (propType === 'emotion') exchange.emotion = propValue;
+      else if (propType === 'sketch') { exchange.sketch = propValue; exchange._complete = true; }
+    }
+    return;
+  }
+  
+  // === SUBPLOT ===
+  const ensureSubplot = (id) => {
+    if (!ast.subplots[id]) {
+      ast.subplots[id] = { id, type: null, name: id, characterIds: [], startBeat: null, resolveBeat: null, touchpoints: [], line: lineNo };
+    }
+    return ast.subplots[id];
+  };
+  
+  if (subjectLower === 'subplot' && statement.objects.length >= 1) {
+    const subplotId = statement.objects[0];
+    const subplot = ensureSubplot(subplotId);
+    if (statement.objects.length >= 2 && SUBPLOT_TYPES.has(statement.objects[1]?.toLowerCase())) {
+      subplot.type = statement.objects[1].toLowerCase();
+    }
+    return;
+  }
+  
+  if (ast.subplots[statement.subject]) {
+    const subplot = ast.subplots[statement.subject];
+    if (statement.verb === 'has' && statement.objects[0]?.toLowerCase() === 'type') {
+      subplot.type = statement.objects[1]?.toLowerCase();
+    }
+    if (statement.verb === 'involves') subplot.characterIds.push(statement.objects[0]);
+    if (statement.verb === 'starts') subplot.startBeat = statement.objects[0]?.toLowerCase();
+    if (statement.verb === 'resolves') subplot.resolveBeat = statement.objects[0]?.toLowerCase();
+    if (statement.verb === 'touchpoint') {
+      const loc = statement.objects[0];
+      if (loc) {
+        const parts = loc.split('.');
+        const eventIdx = statement.objects.findIndex(o => o.toLowerCase() === 'event');
+        subplot.touchpoints.push({ chapterId: parts[0], sceneId: parts[1] || null, event: eventIdx >= 0 ? statement.objects.slice(eventIdx + 1).join(' ') : '', line: lineNo });
+      }
+    }
+  }
 }
 
 /**
@@ -455,6 +661,10 @@ function processStatement(statement, ast, groupStack, lineNo) {
       });
     }
   }
+  
+  // Blueprint/Dialogue/Subplot processing delegated to extension module
+  // (imported dynamically to keep core parser lean)
+  processBlueprintDialogueSubplot(statement, ast, lineNo);
   
   // Add to scope
   if (currentScope) {

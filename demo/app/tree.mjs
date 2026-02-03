@@ -8,7 +8,7 @@ import { state } from './state.mjs';
 import { $, $$, genId } from './utils.mjs';
 import { updateStats } from './metrics.mjs';
 import { generateCNL } from './cnl.mjs';
-import VOCAB from '../../src/vocabularies/vocabularies.mjs';
+import VOCAB from '/src/vocabularies/vocabularies.mjs';
 
 let draggedNodeId = null;
 
@@ -28,7 +28,8 @@ function renderNode(n, d = 0) {
   const icons = {
     book: '📖', chapter: '📑', scene: '🎬',
     'character-ref': '👤', 'location-ref': '📍', 'object-ref': '🗝️',
-    'mood-ref': '🎭', 'block-ref': '✨', 'action': '⚡'
+    'mood-ref': '🎭', 'block-ref': '✨', 'action': '⚡',
+    'dialogue': '💬', 'dialogue-ref': '💬'
   };
   const sel = state.selectedNode === n.id ? 'selected' : '';
   let label = n.title || n.name || n.type;
@@ -36,6 +37,21 @@ function renderNode(n, d = 0) {
   if (n.type === 'action' && n.actionData) {
     const act = VOCAB.ACTIONS[n.actionData.action];
     label = `${n.actionData.subject} ${act?.label || n.actionData.action} ${n.actionData.target || ''}`.trim();
+  }
+  
+  // Dialogue node rendering
+  if (n.type === 'dialogue' && n.dialogueData) {
+    const purpose = n.dialogueData.purpose || 'dialogue';
+    const participants = n.dialogueData.exchanges?.map(e => e.speakerId).filter(Boolean).slice(0, 2).join(', ');
+    label = `[${purpose}] ${participants || 'dialogue'}`;
+  }
+  
+  // Dialogue reference rendering
+  if (n.type === 'dialogue-ref' && n.refId) {
+    const dialogue = state.project.libraries.dialogues.find(d => d.id === n.refId);
+    if (dialogue) {
+      label = `💬 ${dialogue.purpose || 'Dialogue'}`;
+    }
   }
   
   const canDrag = !['book'].includes(n.type);

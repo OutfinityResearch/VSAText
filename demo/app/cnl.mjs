@@ -167,7 +167,7 @@ export function generateCNL() {
     relationships.forEach(r => {
       const from = characters.find(c => c.id === r.fromId);
       const to = characters.find(c => c.id === r.toId);
-      if (from && to) cnl += `${fid(from.name)} ${r.type.replace(/_/g, ' ')} ${fid(to.name)}\n`;
+      if (from && to) cnl += `${fid(from.name)} relates to ${fid(to.name)} as ${r.type}\n`;
     });
     cnl += '\n';
   }
@@ -221,39 +221,39 @@ export function generateCNL() {
   
   // ==================== THEMES ====================
   if (themes.length) {
-    cnl += '// Themes\\n';
-    themes.forEach(t => { cnl += `Story has theme ${fid(t.name)}\\n`; });
-    cnl += '\\n';
+    cnl += '// Themes\n';
+    themes.forEach(t => { cnl += `Story has theme ${fid(t.name)}\n`; });
+    cnl += '\n';
   }
   
   // ==================== WISDOM ====================
   const { wisdom, patterns } = state.project.libraries;
   if (wisdom && wisdom.length) {
-    cnl += '// === WISDOM ===\\n';
+    cnl += '// === WISDOM ===\n';
     wisdom.forEach(w => {
-      cnl += `Story conveys wisdom ${fid(w.label)}\\n`;
-      cnl += `${fid(w.label)} has category ${w.category}\\n`;
-      cnl += `${fid(w.label)} has insight "${w.insight}"\\n`;
-      if (w.application) cnl += `${fid(w.label)} applies as "${w.application}"\\n`;
-      if (w.examples) cnl += `${fid(w.label)} examples "${w.examples}"\\n`;
+      cnl += `Story conveys wisdom ${fid(w.label)}\n`;
+      cnl += `${fid(w.label)} has category ${w.category}\n`;
+      cnl += `${fid(w.label)} has insight "${w.insight}"\n`;
+      if (w.application) cnl += `${fid(w.label)} applies as "${w.application}"\n`;
+      if (w.examples) cnl += `${fid(w.label)} examples "${w.examples}"\n`;
     });
-    cnl += '\\n';
+    cnl += '\n';
   }
   
   // ==================== PATTERNS ====================
   if (patterns && patterns.length) {
-    cnl += '// === STORY PATTERNS ===\\n';
+    cnl += '// === STORY PATTERNS ===\n';
     patterns.forEach(p => {
-      cnl += `Story uses pattern ${fid(p.label)}\\n`;
-      cnl += `${fid(p.label)} is ${p.patternType}\\n`;
-      if (p.description) cnl += `${fid(p.label)} description "${p.description}"\\n`;
+      cnl += `Story uses pattern ${fid(p.label)}\n`;
+      cnl += `${fid(p.label)} is ${p.patternType}\n`;
+      if (p.description) cnl += `${fid(p.label)} description "${p.description}"\n`;
       if (p.structure && p.structure.length) {
-        cnl += `${fid(p.label)} structure [${p.structure.join(', ')}]\\n`;
+        cnl += `${fid(p.label)} structure [${p.structure.join(', ')}]\n`;
       }
-      if (p.keyQuestion) cnl += `${fid(p.label)} key question "${p.keyQuestion}"\\n`;
-      if (p.examples) cnl += `${fid(p.label)} examples "${p.examples}"\\n`;
+      if (p.keyQuestion) cnl += `${fid(p.label)} key question "${p.keyQuestion}"\n`;
+      if (p.examples) cnl += `${fid(p.label)} examples "${p.examples}"\n`;
     });
-    cnl += '\\n';
+    cnl += '\n';
   }
   
   // ==================== STRUCTURE ====================

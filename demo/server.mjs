@@ -5,8 +5,11 @@
  * Combined server that:
  * - Serves the Story Forge UI (static files)
  * - Handles project persistence (/v1/projects)
- * 
- * All processing (CNL parsing, metrics, generation) happens in the browser.
+ *
+ * Research/demo processing endpoints are also provided:
+ * - Evaluate CNL (/v1/evaluate)
+ * - LLM-backed generation/refinement (/v1/generate/*)
+ * - Batch evaluation runner (/v1/run-eval)
  */
 
 import http from 'http';
@@ -14,6 +17,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
+import { printDemoServerBanner } from './server-banner.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEMO_DIR = __dirname;
@@ -293,7 +297,7 @@ function createDemoServer() {
         return jsonResponse(res, 200, { 
           status: 'ok', 
           service: 'scripta-story-forge',
-          version: '2.0.0',
+          version: '0.1.0',
           timestamp: new Date().toISOString()
         });
       }
@@ -669,49 +673,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const server = createDemoServer();
   
   server.listen(port, () => {
-    const W = 58; // total width including borders
-    const inner = W - 2; // inside the ║ borders
-    
-    const title = 'SCRIPTA Story Forge';
-    const urlText = `http://localhost:${port}`;
-    const storageText = PROJECTS_DIR.length > 42 ? '...' + PROJECTS_DIR.slice(-39) : PROJECTS_DIR;
-    
-    const center = (text) => {
-      const pad = inner - text.length;
-      const left = Math.floor(pad / 2);
-      const right = pad - left;
-      return '║' + ' '.repeat(left) + text + ' '.repeat(right) + '║';
-    };
-    
-    const left = (text) => '║  ' + text.padEnd(inner - 2) + '║';
-    const empty = '║' + ' '.repeat(inner) + '║';
-    const top = '╔' + '═'.repeat(inner) + '╗';
-    const mid = '╠' + '═'.repeat(inner) + '╣';
-    const bot = '╚' + '═'.repeat(inner) + '╝';
-    
-    console.log(`
-  ${top}
-  ${center(title)}
-  ${mid}
-  ${left('URL:      ' + urlText)}
-  ${left('Storage:  ' + storageText)}
-  ${empty}
-  ${left('Set SCRIPTA_DATA_DIR env var to change storage.')}
-  ${empty}
-    ${left('Endpoints:')}
-  ${left('  /              - Story Forge UI')}
-  ${left('  /health        - Health check')}
-  ${left('  /v1/projects   - Projects API (CRUD)')}
-  ${left('  /v1/generate/llm      - LLM story generation')}
-  ${left('  /v1/generate/nl-story - CNL to prose generation')}
-  ${left('  /v1/generate/refine   - LLM story refinement')}
-  ${left('  /v1/generate/status   - Check LLM availability')}
-  ${left('  /v1/evaluate          - Evaluate CNL specification')}
-  ${left('  /v1/run-eval          - Batch evaluation tests')}
-  ${left('  /v1/run-eval/stream   - SSE streaming evaluation')}
-  ${left('  /eval.html            - Evaluation runner page')}
-  ${bot}
-`);
+    printDemoServerBanner({ port, projectsDir: PROJECTS_DIR });
   });
 }
 

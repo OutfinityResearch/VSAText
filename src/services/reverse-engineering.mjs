@@ -3,8 +3,8 @@
  * Extract specs and plans from existing text artifacts
  */
 
-import crypto from 'crypto';
 import { encodeText, cosine } from '../vsa/encoder.mjs';
+import { makeId } from '../utils/ids.mjs';
 
 /**
  * Extract character names from text using pattern matching
@@ -248,7 +248,7 @@ function extractSpec(text) {
   }
   
   const spec = {
-    id: `spec_${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`,
+    id: makeId('spec'),
     title: 'Extracted Specification',
     synopsis: text.slice(0, 300).trim() + '...',
     themes: themes.map(t => t.theme),
@@ -276,8 +276,8 @@ function extractPlan(text, specId = null) {
   const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 50);
   
   const plan = {
-    id: `plan_${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`,
-    spec_id: specId || `spec_${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`,
+    id: makeId('plan'),
+    spec_id: specId || makeId('spec'),
     plot_graph: {
       nodes: structure.key_events.map((e, i) => ({
         id: `node_${i}`,

@@ -46,7 +46,7 @@ export async function evaluateMetrics() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         cnl,
-        prose: state.generatedProse || null,
+        prose: state.generation?.generatedStory || null,
         targetArc: state.project.selectedArc || null
       })
     });

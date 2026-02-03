@@ -1,5 +1,5 @@
 /**
- * SCRIPTA Predefined Vocabularies v3.2
+ * SCRIPTA Predefined Vocabularies v0.1.0
  * 
  * Main aggregator module for Visual Story Composer vocabularies.
  * 

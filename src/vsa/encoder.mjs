@@ -1,13 +1,20 @@
 #!/usr/bin/env node
-import crypto from 'crypto';
+
+function fnv1a32(input) {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
 
 function tokenize(text) {
   return text.toLowerCase().split(/\W+/).filter(Boolean);
 }
 
 function tokenSeed(token, seed) {
-  const hash = crypto.createHash('sha256').update(`${seed}:${token}`).digest();
-  return hash.readUInt32BE(0);
+  return fnv1a32(`${seed}:${token}`);
 }
 
 function tokenVector(token, dim, seed) {
@@ -67,7 +74,8 @@ function parseArgs(argv) {
   return args;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const isNode = typeof process !== 'undefined' && !!process.versions?.node;
+if (isNode && import.meta.url === `file://${process.argv[1]}`) {
   const args = parseArgs(process.argv);
   if (!args.text) {
     console.error('Usage: node src/vsa/encoder.mjs --text "..." [--compare "..."] [--dim 10000] [--seed 42] [--no-vector]');

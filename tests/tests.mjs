@@ -28,6 +28,20 @@ function testCnlValidator() {
   assert.ok(bad.errors.length > 0, 'Invalid CNL should have errors');
 }
 
+function testCnlRelationshipShorthand() {
+  const cnl = [
+    'Anna is hero',
+    'Gandalf is mentor',
+    'Anna mentor_student Gandalf'
+  ].join('\n');
+  const result = validateText(cnl);
+  assert.strictEqual(result.errors.length, 0, 'CNL should be valid');
+  const rel = (result.ast.relationships || []).find(r =>
+    r.from === 'Anna' && r.to === 'Gandalf' && r.type === 'mentor_student'
+  );
+  assert.ok(rel, 'Should parse DS10 relationship shorthand into structured relationships');
+}
+
 function testCnlTranslator() {
   const nl = 'Anna must stay courageous, and a storm must appear in scene 3.';
   const result = translateNlToCnl(nl);
@@ -223,6 +237,7 @@ function testEvalExamplesCnl() {
 
 export const tests = [
   testCnlValidator,
+  testCnlRelationshipShorthand,
   testCnlTranslator,
   testVsaEncoderDeterministic,
   testPlanningAgent,

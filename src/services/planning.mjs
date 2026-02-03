@@ -3,8 +3,8 @@
  * Generates structured story plans from narrative specifications
  */
 
-import crypto from 'crypto';
 import { parseCNL, extractEntities, extractConstraints } from '../cnl/validator.mjs';
+import { makeId } from '../utils/ids.mjs';
 
 // Story structure templates
 const STORY_STRUCTURES = {
@@ -57,12 +57,7 @@ const SCENE_TEMPLATES = {
   ]
 };
 
-/**
- * Generate a unique ID
- */
-function makeId(prefix) {
-  return `${prefix}_${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`;
-}
+// makeId(prefix) is provided by src/utils/ids.mjs
 
 /**
  * Extract characters from spec using SVO CNL AST

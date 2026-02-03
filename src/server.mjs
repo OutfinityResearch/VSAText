@@ -89,7 +89,7 @@ function createServer() {
         return jsonResponse(res, 200, { 
           status: 'ok', 
           service: 'scripta-persistence',
-          version: '2.0.0',
+          version: '0.1.0',
           timestamp: new Date().toISOString()
         });
       }

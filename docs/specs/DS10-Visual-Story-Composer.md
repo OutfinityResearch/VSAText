@@ -27,7 +27,7 @@ Authors never write CNL directly. They compose visually, and CNL serves as an in
 │   └─ Ch 2     │                             │                  │
 │               │                             │                  │
 ├───────────────┴─────────────────────────────┴──────────────────┤
-│  Chars: 4  Locs: 3  Scenes: 8  Rules: 2           SCRIPTA v3.1 │
+│  Chars: 4  Locs: 3  Scenes: 8  Rules: 2          SCRIPTA v0.1.0 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -85,7 +85,7 @@ Anna has trait courage
 Anna has trait determination
 
 // Relationships
-Anna mentor_student Gandalf
+Anna relates to Gandalf as mentor_student
 
 // Structure
 Book group begin
@@ -293,6 +293,11 @@ Anna has trait determination
 ```
 
 **Relationship between characters:**
+```
+Anna relates to Gandalf as mentor_student
+```
+
+Legacy shorthand (also accepted by the parser):
 ```
 Anna mentor_student Gandalf
 ```

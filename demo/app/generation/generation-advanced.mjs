@@ -181,14 +181,13 @@ async function applyConstraintOptimizations(evalResult) {
   }
   
   // Additional optimizations can be added here
-  await applyStructuralOptimizations(metrics);
+  await applyStructuralOptimizations();
 }
 
 /**
  * Apply structural optimizations to improve story flow
- * @param {Object} metrics - Current metric values
  */
-async function applyStructuralOptimizations(metrics) {
+async function applyStructuralOptimizations() {
   if (!state.project.structure?.children) return;
   
   // Ensure each scene has at least one character

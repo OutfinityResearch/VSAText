@@ -81,6 +81,14 @@ export {
 } from './services/evaluation.mjs';
 
 // ============================================
+// Unified CNL Evaluation
+// ============================================
+export {
+  evaluateCNL,
+  quickEvaluate
+} from './evaluate.mjs';
+
+// ============================================
 // Services - Guardrails
 // ============================================
 export {
@@ -97,7 +105,6 @@ export {
 export {
   translateNlToCnl,
   generateCnlFromSpec,
-  migratePredicate,
   PATTERNS
 } from './services/cnl-translator.mjs';
 
@@ -131,6 +138,6 @@ export {
 // Default export
 // ============================================
 export default {
-  version: '2.0.0',
+  version: '0.1.0',
   name: 'SCRIPTA SDK'
 };

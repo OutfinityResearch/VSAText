@@ -5,7 +5,7 @@
  */
 
 import state from '../state.mjs';
-import { parseCNL } from '/src/cnl-parser/cnl-parser-core.mjs';
+import { parseCNL } from '/src/index.mjs';
 import { setBlueprintArc, updateBeatMapping, setTensionCurve, upsertDialogue, upsertSubplot } from '../state.mjs';
 
 let editorContainer = null;

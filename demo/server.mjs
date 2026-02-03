@@ -496,6 +496,116 @@ function createDemoServer() {
         }
       }
       
+      // Run batch evaluation with SSE streaming
+      if (method === 'GET' && p === '/v1/run-eval/stream') {
+        // Set SSE headers
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'Access-Control-Allow-Origin': '*'
+        });
+        
+        const sendEvent = (data) => {
+          res.write(`data: ${JSON.stringify(data)}\n\n`);
+        };
+        
+        try {
+          const { runEvaluation, TEST_CONFIGS } = await import('../eval/runEval.mjs');
+          
+          // Send start event
+          sendEvent({ type: 'start', total: TEST_CONFIGS.length });
+          
+          const results = [];
+          
+          for (let i = 0; i < TEST_CONFIGS.length; i++) {
+            const config = TEST_CONFIGS[i];
+            
+            // Send progress event
+            sendEvent({ 
+              type: 'progress', 
+              index: i, 
+              name: config.name,
+              config: {
+                genre: config.genre,
+                length: config.length,
+                chars: config.chars,
+                tone: config.tone
+              }
+            });
+            
+            try {
+              const evalResult = await runEvaluation(config);
+              
+              const resultData = {
+                type: 'result',
+                index: i,
+                id: config.id,
+                name: config.name,
+                success: evalResult.result.success,
+                nqs: evalResult.result.success ? evalResult.result.summary.nqs : null,
+                interpretation: evalResult.result.success ? evalResult.result.summary.interpretation : null,
+                metrics: evalResult.result.success ? {
+                  completeness: evalResult.result.metrics.completeness?.score,
+                  coherence: evalResult.result.metrics.coherence?.score,
+                  originality: evalResult.result.metrics.originality?.score,
+                  explainability: evalResult.result.metrics.explainability?.score,
+                  characterContinuity: evalResult.result.metrics.characterContinuity?.score,
+                  locationLogic: evalResult.result.metrics.locationLogic?.score,
+                  sceneCompleteness: evalResult.result.metrics.sceneCompleteness?.score
+                } : null,
+                structure: evalResult.result.success ? evalResult.result.structure : null,
+                timeMs: evalResult.timeMs,
+                error: evalResult.result.success ? null : evalResult.result.message
+              };
+              
+              results.push(resultData);
+              sendEvent(resultData);
+              
+            } catch (err) {
+              const errorData = {
+                type: 'result',
+                index: i,
+                id: config.id,
+                name: config.name,
+                success: false,
+                error: err.message,
+                timeMs: 0
+              };
+              results.push(errorData);
+              sendEvent(errorData);
+            }
+          }
+          
+          // Calculate and send summary
+          const successful = results.filter(r => r.success);
+          const nqsScores = successful.map(r => r.nqs);
+          
+          const summary = nqsScores.length > 0 ? {
+            avgNqs: nqsScores.reduce((a, b) => a + b, 0) / nqsScores.length,
+            minNqs: Math.min(...nqsScores),
+            maxNqs: Math.max(...nqsScores),
+            successCount: successful.length,
+            totalTests: TEST_CONFIGS.length,
+            distribution: {
+              excellent: nqsScores.filter(s => s >= 0.85).length,
+              good: nqsScores.filter(s => s >= 0.7 && s < 0.85).length,
+              fair: nqsScores.filter(s => s >= 0.5 && s < 0.7).length,
+              poor: nqsScores.filter(s => s < 0.5).length
+            }
+          } : null;
+          
+          sendEvent({ type: 'complete', summary });
+          res.end();
+          
+        } catch (err) {
+          console.error('SSE evaluation error:', err);
+          sendEvent({ type: 'error', message: err.message });
+          res.end();
+        }
+        return;
+      }
+      
       // Generate NL (Natural Language) story from CNL
       if (method === 'POST' && p === '/v1/generate/nl-story') {
         const body = await parseBody(req);
@@ -591,6 +701,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   ${left('  /v1/generate/refine   - LLM story refinement')}
   ${left('  /v1/generate/status   - Check LLM availability')}
   ${left('  /v1/evaluate          - Evaluate CNL specification')}
+  ${left('  /v1/run-eval          - Batch evaluation tests')}
+  ${left('  /v1/run-eval/stream   - SSE streaming evaluation')}
+  ${left('  /eval.html            - Evaluation runner page')}
   ${bot}
 `);
   });

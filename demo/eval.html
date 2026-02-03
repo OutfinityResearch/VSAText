@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCRIPTA Evaluation Runner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #0d1117;
+      --bg-surface: #161b22;
+      --bg-elevated: #21262d;
+      --bg-hover: #30363d;
+      --text-primary: #f0f6fc;
+      --text-secondary: #c9d1d9;
+      --text-muted: #8b949e;
+      --text-faded: #6e7681;
+      --accent-emerald: #06d6a0;
+      --accent-teal: #118ab2;
+      --accent-gold: #ffd166;
+      --accent-coral: #ff6f61;
+      --accent-violet: #9d4edd;
+      --font-title: 'Cinzel', serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--bg-elevated);
+    }
+    
+    h1 {
+      font-family: var(--font-title);
+      font-size: 1.5rem;
+      color: var(--accent-gold);
+    }
+    
+    .controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    
+    .btn {
+      padding: 0.5rem 1rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--bg-hover);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .btn:hover { background: var(--bg-hover); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn.primary { background: var(--accent-violet); border-color: var(--accent-violet); }
+    .btn.primary:hover { background: #8b3ecc; }
+    
+    .status {
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .status.idle { background: var(--bg-elevated); color: var(--text-muted); }
+    .status.running { background: rgba(157, 78, 221, 0.2); color: var(--accent-violet); }
+    .status.done { background: rgba(6, 214, 160, 0.2); color: var(--accent-emerald); }
+    .status.error { background: rgba(255, 111, 97, 0.2); color: var(--accent-coral); }
+    
+    /* Progress Section */
+    .progress-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-elevated);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .progress-title {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .progress-counter {
+      font-size: 1.25rem;
+      color: var(--text-primary);
+    }
+    
+    .progress-bar {
+      height: 8px;
+      background: var(--bg-elevated);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-violet), var(--accent-emerald));
+      border-radius: 4px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+    
+    .current-test {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    
+    .current-test .test-name {
+      color: var(--accent-gold);
+    }
+    
+    /* Results Log */
+    .results-log {
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-elevated);
+      border-radius: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .log-header {
+      position: sticky;
+      top: 0;
+      background: var(--bg-elevated);
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--bg-hover);
+    }
+    
+    .log-entry {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--bg-elevated);
+      display: grid;
+      grid-template-columns: 40px 1fr 80px 200px 60px;
+      gap: 1rem;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+    
+    .log-entry:last-child { border-bottom: none; }
+    
+    .log-entry.pending { opacity: 0.4; }
+    .log-entry.running { background: rgba(157, 78, 221, 0.1); }
+    .log-entry.success { }
+    .log-entry.error { background: rgba(255, 111, 97, 0.1); }
+    
+    .log-index {
+      color: var(--text-faded);
+      text-align: center;
+    }
+    
+    .log-name {
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .log-nqs {
+      font-weight: 600;
+      text-align: right;
+    }
+    
+    .log-nqs.excellent { color: var(--accent-emerald); }
+    .log-nqs.good { color: var(--accent-teal); }
+    .log-nqs.fair { color: var(--accent-gold); }
+    .log-nqs.poor { color: var(--accent-coral); }
+    
+    .log-metrics {
+      display: flex;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+    }
+    
+    .log-metric {
+      padding: 0.2rem 0.4rem;
+      background: var(--bg-elevated);
+      border-radius: 3px;
+      color: var(--text-muted);
+    }
+    
+    .log-time {
+      color: var(--text-faded);
+      text-align: right;
+      font-size: 0.75rem;
+    }
+    
+    /* Summary Section */
+    .summary-section {
+      display: none;
+      margin-top: 1.5rem;
+    }
+    
+    .summary-section.visible { display: block; }
+    
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .summary-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-elevated);
+      border-radius: 8px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    
+    .summary-card.main {
+      background: linear-gradient(135deg, rgba(157, 78, 221, 0.15), rgba(6, 214, 160, 0.15));
+    }
+    
+    .summary-label {
+      font-size: 0.7rem;
+      color: var(--text-faded);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    
+    .summary-value {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    
+    .summary-value.excellent { color: var(--accent-emerald); }
+    .summary-value.good { color: var(--accent-teal); }
+    .summary-value.fair { color: var(--accent-gold); }
+    .summary-value.poor { color: var(--accent-coral); }
+    
+    /* Distribution */
+    .distribution {
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-elevated);
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+    
+    .dist-title {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    
+    .dist-row {
+      display: grid;
+      grid-template-columns: 140px 1fr 50px;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    
+    .dist-label { font-size: 0.85rem; }
+    .dist-label.excellent { color: var(--accent-emerald); }
+    .dist-label.good { color: var(--accent-teal); }
+    .dist-label.fair { color: var(--accent-gold); }
+    .dist-label.poor { color: var(--accent-coral); }
+    
+    .dist-bar {
+      height: 12px;
+      background: var(--bg-elevated);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    
+    .dist-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.5s ease;
+    }
+    
+    .dist-fill.excellent { background: var(--accent-emerald); }
+    .dist-fill.good { background: var(--accent-teal); }
+    .dist-fill.fair { background: var(--accent-gold); }
+    .dist-fill.poor { background: var(--accent-coral); }
+    
+    .dist-count {
+      text-align: right;
+      font-weight: 600;
+    }
+    
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+    
+    .empty-state h2 {
+      font-family: var(--font-title);
+      color: var(--accent-gold);
+      margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>SCRIPTA Evaluation Runner</h1>
+      <div class="controls">
+        <span class="status idle" id="status">Idle</span>
+        <button class="btn primary" id="btn-run">Run Evaluation</button>
+        <button class="btn" id="btn-back" onclick="window.close()">Close</button>
+      </div>
+    </header>
+    
+    <div class="progress-section" id="progress-section" style="display: none;">
+      <div class="progress-header">
+        <span class="progress-title">Progress</span>
+        <span class="progress-counter" id="progress-counter">0 / 10</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="current-test" id="current-test">
+        Preparing tests...
+      </div>
+    </div>
+    
+    <div class="results-log" id="results-log">
+      <div class="log-header">
+        <div style="display: grid; grid-template-columns: 40px 1fr 80px 200px 60px; gap: 1rem;">
+          <span>#</span>
+          <span>Test Name</span>
+          <span style="text-align: right;">NQS</span>
+          <span>Key Metrics</span>
+          <span style="text-align: right;">Time</span>
+        </div>
+      </div>
+      <div id="log-entries">
+        <div class="empty-state" id="empty-state">
+          <h2>Ready to Evaluate</h2>
+          <p>Click "Run Evaluation" to start batch testing with 10 different configurations.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="summary-section" id="summary-section">
+      <div class="summary-grid" id="summary-grid"></div>
+      <div class="distribution" id="distribution"></div>
+    </div>
+  </div>
+  
+  <script>
+    // Test configurations (mirrors server)
+    const TEST_CONFIGS = [
+      { id: 'random-fantasy-short', name: 'Random: Fantasy Short' },
+      { id: 'random-fantasy-medium', name: 'Random: Fantasy Medium' },
+      { id: 'random-scifi-medium', name: 'Random: SciFi Medium' },
+      { id: 'random-mystery-long', name: 'Random: Mystery Long' },
+      { id: 'random-romance-short', name: 'Random: Romance Short' },
+      { id: 'random-horror-medium', name: 'Random: Horror Medium' },
+      { id: 'random-adventure-long', name: 'Random: Adventure Long' },
+      { id: 'random-comedy-short', name: 'Random: Comedy Short' },
+      { id: 'random-drama-medium', name: 'Random: Drama Medium' },
+      { id: 'random-fantasy-complex', name: 'Random: Fantasy Complex' }
+    ];
+    
+    let eventSource = null;
+    let results = [];
+    
+    function getScoreClass(score) {
+      if (score >= 0.85) return 'excellent';
+      if (score >= 0.7) return 'good';
+      if (score >= 0.5) return 'fair';
+      return 'poor';
+    }
+    
+    function formatPercent(score) {
+      return score != null ? `${(score * 100).toFixed(0)}%` : '-';
+    }
+    
+    function setStatus(status) {
+      const el = document.getElementById('status');
+      el.className = 'status ' + status;
+      el.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    }
+    
+    function initLogEntries() {
+      const container = document.getElementById('log-entries');
+      container.innerHTML = TEST_CONFIGS.map((config, i) => `
+        <div class="log-entry pending" id="entry-${i}">
+          <span class="log-index">${i + 1}</span>
+          <span class="log-name">${config.name}</span>
+          <span class="log-nqs">-</span>
+          <span class="log-metrics">-</span>
+          <span class="log-time">-</span>
+        </div>
+      `).join('');
+    }
+    
+    function updateEntry(index, data) {
+      const entry = document.getElementById(`entry-${index}`);
+      if (!entry) return;
+      
+      if (data.status === 'running') {
+        entry.className = 'log-entry running';
+        entry.querySelector('.log-nqs').textContent = '...';
+        return;
+      }
+      
+      if (!data.success) {
+        entry.className = 'log-entry error';
+        entry.querySelector('.log-nqs').textContent = 'ERR';
+        entry.querySelector('.log-nqs').className = 'log-nqs poor';
+        entry.querySelector('.log-metrics').textContent = data.error || 'Failed';
+        entry.querySelector('.log-time').textContent = data.timeMs + 'ms';
+        return;
+      }
+      
+      const nqsClass = getScoreClass(data.nqs);
+      entry.className = 'log-entry success';
+      
+      const nqsEl = entry.querySelector('.log-nqs');
+      nqsEl.textContent = formatPercent(data.nqs);
+      nqsEl.className = 'log-nqs ' + nqsClass;
+      
+      const m = data.metrics || {};
+      entry.querySelector('.log-metrics').innerHTML = `
+        <span class="log-metric">C:${formatPercent(m.completeness)}</span>
+        <span class="log-metric">H:${formatPercent(m.coherence)}</span>
+        <span class="log-metric">O:${formatPercent(m.originality)}</span>
+      `;
+      
+      entry.querySelector('.log-time').textContent = data.timeMs + 'ms';
+    }
+    
+    function updateProgress(current, total) {
+      document.getElementById('progress-counter').textContent = `${current} / ${total}`;
+      document.getElementById('progress-fill').style.width = `${(current / total) * 100}%`;
+    }
+    
+    function showSummary(summary) {
+      if (!summary) return;
+      
+      const avgClass = getScoreClass(summary.avgNqs);
+      
+      document.getElementById('summary-grid').innerHTML = `
+        <div class="summary-card main">
+          <div class="summary-label">Average NQS</div>
+          <div class="summary-value ${avgClass}">${formatPercent(summary.avgNqs)}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Minimum</div>
+          <div class="summary-value">${formatPercent(summary.minNqs)}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Maximum</div>
+          <div class="summary-value">${formatPercent(summary.maxNqs)}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Success Rate</div>
+          <div class="summary-value">${summary.successCount}/${summary.totalTests}</div>
+        </div>
+      `;
+      
+      const d = summary.distribution;
+      const total = d.excellent + d.good + d.fair + d.poor;
+      
+      document.getElementById('distribution').innerHTML = `
+        <div class="dist-title">Score Distribution</div>
+        <div class="dist-row">
+          <span class="dist-label excellent">Excellent (>=85%)})</span>
+          <div class="dist-bar"><div class="dist-fill excellent" style="width: ${(d.excellent / total) * 100}%"></div></div>
+          <span class="dist-count">${d.excellent}</span>
+        </div>
+        <div class="dist-row">
+          <span class="dist-label good">Good (70-84%)</span>
+          <div class="dist-bar"><div class="dist-fill good" style="width: ${(d.good / total) * 100}%"></div></div>
+          <span class="dist-count">${d.good}</span>
+        </div>
+        <div class="dist-row">
+          <span class="dist-label fair">Fair (50-69%)</span>
+          <div class="dist-bar"><div class="dist-fill fair" style="width: ${(d.fair / total) * 100}%"></div></div>
+          <span class="dist-count">${d.fair}</span>
+        </div>
+        <div class="dist-row">
+          <span class="dist-label poor">Poor (<50%)</span>
+          <div class="dist-bar"><div class="dist-fill poor" style="width: ${(d.poor / total) * 100}%"></div></div>
+          <span class="dist-count">${d.poor}</span>
+        </div>
+      `;
+      
+      document.getElementById('summary-section').classList.add('visible');
+    }
+    
+    function runEvaluation() {
+      // Reset
+      results = [];
+      document.getElementById('empty-state')?.remove();
+      document.getElementById('progress-section').style.display = 'block';
+      document.getElementById('summary-section').classList.remove('visible');
+      document.getElementById('btn-run').disabled = true;
+      setStatus('running');
+      initLogEntries();
+      updateProgress(0, TEST_CONFIGS.length);
+      
+      // Connect to SSE
+      eventSource = new EventSource('/v1/run-eval/stream');
+      
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'start') {
+          document.getElementById('current-test').innerHTML = 
+            `Starting evaluation of <span class="test-name">${data.total}</span> tests...`;
+        }
+        
+        if (data.type === 'progress') {
+          document.getElementById('current-test').innerHTML = 
+            `Evaluating: <span class="test-name">${data.name}</span>`;
+          updateEntry(data.index, { status: 'running' });
+        }
+        
+        if (data.type === 'result') {
+          results.push(data);
+          updateEntry(data.index, data);
+          updateProgress(data.index + 1, TEST_CONFIGS.length);
+        }
+        
+        if (data.type === 'complete') {
+          eventSource.close();
+          setStatus('done');
+          document.getElementById('btn-run').disabled = false;
+          document.getElementById('current-test').textContent = 'Evaluation complete!';
+          showSummary(data.summary);
+        }
+        
+        if (data.type === 'error') {
+          eventSource.close();
+          setStatus('error');
+          document.getElementById('btn-run').disabled = false;
+          document.getElementById('current-test').textContent = 'Error: ' + data.message;
+        }
+      };
+      
+      eventSource.onerror = () => {
+        eventSource.close();
+        setStatus('error');
+        document.getElementById('btn-run').disabled = false;
+        document.getElementById('current-test').textContent = 'Connection error. Server may be unavailable.';
+      };
+    }
+    
+    // Event listeners
+    document.getElementById('btn-run').addEventListener('click', runEvaluation);
+    
+    // Auto-run if ?auto query param
+    if (new URLSearchParams(window.location.search).has('auto')) {
+      runEvaluation();
+    }
+  </script>
+</body>
+</html>

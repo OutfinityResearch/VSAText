@@ -21,8 +21,16 @@ import {
 import {
   generateMarkdown,
   generateSkeleton,
-  validateText
+  validateText as validateTextInternal
 } from '../cnl-parser/cnl-parser-generators.mjs';
+
+/**
+ * Validate CNL text and return validation result.
+ * Wraps the generator validator to bind the active parseCNL implementation.
+ */
+export function validateText(text) {
+  return validateTextInternal(text, parseCNL);
+}
 
 // Re-export all functions
 export {
@@ -35,7 +43,6 @@ export {
   countGroups,
   generateMarkdown,
   generateSkeleton,
-  validateText,
   ENTITY_TYPES
 };
 

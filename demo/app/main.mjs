@@ -36,6 +36,9 @@ import { generateNLStory, resetNLState } from './nl-generation.mjs';
 // Wizard
 import { openWizard } from './wizard.mjs';
 
+// Eval runner
+import { initEvalRunner } from './eval-runner.mjs';
+
 let currentBlueprintView = 'timeline';
 
 // ==================== INITIALIZATION ====================
@@ -121,6 +124,9 @@ async function init() {
   renderBlocksView();
   renderWorldRulesView();
   renderEmptyMetrics();
+  
+  // Initialize eval runner
+  initEvalRunner();
 }
 
 /**

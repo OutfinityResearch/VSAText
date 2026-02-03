@@ -1,5 +1,0 @@
-{
-  "spec_id": "spec_001",
-  "planning_params": {"arc_template": "man_in_hole", "scenes": 6},
-  "implementation_profile": {"mode": "basic"}
-}

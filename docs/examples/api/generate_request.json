@@ -1,7 +1,0 @@
-{
-  "plan_id": "plan_001",
-  "scene_id": "scene_3",
-  "style": "literary",
-  "constraints": ["include storm imagery", "keep dialog minimal"],
-  "implementation_profile": {"mode": "basic"}
-}

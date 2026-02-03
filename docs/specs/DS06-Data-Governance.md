@@ -8,18 +8,8 @@ The SCRIPTA system handles multiple categories of data with different storage re
 
 | Category | Description | Owner | Storage |
 |----------|-------------|-------|---------|
-| Projects | Story project configurations | Author | projects.json |
-| Characters | Character definitions with traits, goals | Author | characters.json |
-| Locations | Setting/place definitions | Author | locations.json |
-| Specifications | Narrative specs (legacy format) | Author | specs.json |
-| Plans | Generated story structures | System | plans.json |
-| Drafts | Generated text content | Author | drafts.json |
-| Evaluation Reports | Quality metric results | System | evaluation_reports.json |
-| Verification Reports | Constraint check results | System | verify_reports.json |
-| Guardrail Reports | Content safety checks | System | guardrail_reports.json |
-| Reviews | Literary review feedback | System | reviews.json |
+| Projects | Story project configurations (all-in-one) | Author | projects/{id}.json |
 | Audit Log | Operation history | System | audit.json |
-| VSA Index | Semantic vectors | System | vsa_index.json |
 
 
 ## 2. Storage Architecture
@@ -74,7 +64,7 @@ All modifications are immediately persisted to disk with in-memory caching for r
     "themes": ["courage", "family"],
     "tone": "hopeful"
   },
-  "cnl_constraints": "CHARACTER(Anna).\nTRAIT(Anna, courageous).",
+  "cnl_constraints": "Anna is protagonist\\nAnna has trait courageous",
   "created_at": "2024-01-15T10:00:00Z",
   "updated_at": "2024-01-15T12:00:00Z"
 }
@@ -219,21 +209,3 @@ The storage directory can be changed by setting the `SCRIPTA_DATA_DIR` environme
 ```bash
 SCRIPTA_DATA_DIR=/path/to/storage node demo/server.mjs
 ```
-
-
-## 7. Future Considerations
-
-### 7.1 Potential Enhancements
-
-- SQLite backend option for larger datasets
-- Cloud storage integration (S3, GCS)
-- Backup and restore utilities
-- Data export in standard formats
-- Encryption at rest option
-
-### 7.2 Migration Path
-
-The file-based storage can be migrated to other backends by:
-1. Implementing the JsonStore interface for new backend
-2. Running migration script to transfer data
-3. Updating configuration to use new backend

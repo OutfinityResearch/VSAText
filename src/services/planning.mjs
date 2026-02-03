@@ -1,8 +1,6 @@
 /**
  * Planning Agent Service
  * Generates structured story plans from narrative specifications
- * 
- * Updated to use unified SVO CNL parser (no predicate DSL)
  */
 
 import crypto from 'crypto';

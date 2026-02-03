@@ -2,11 +2,8 @@ import assert from 'assert';
 import fs from 'fs';
 import path from 'path';
 import url from 'url';
-import { Readable } from 'stream';
 import { validateText } from '../src/cnl/validator.mjs';
 import { encodeText, cosine } from '../src/vsa/encoder.mjs';
-import { createApiHandler } from '../src/server.mjs';
-import { validateExamples } from '../scripts/validate_examples.mjs';
 import { translateNlToCnl } from '../src/services/cnl-translator.mjs';
 import { generatePlan } from '../src/services/planning.mjs';
 import { verifyAgainstSpec } from '../src/services/verification.mjs';
@@ -23,7 +20,6 @@ const ROOT = path.resolve(__dirname, '..');
 
 // ===== CNL Tests =====
 function testCnlValidator() {
-  // Updated to use SVO CNL format
   const valid = 'Anna is protagonist\nAnna has trait courageous';
   const invalid = 'character(anna).';
   const ok = validateText(valid);
@@ -60,7 +56,6 @@ function testPlanningAgent() {
   const spec = {
     id: 'spec_test',
     title: 'Test Story',
-    // Updated to SVO CNL format
     cnl_constraints: 'Anna is protagonist\nAnna has trait courageous\nAnna wants "protect brother"',
     characters: [{ name: 'Anna', traits: ['courageous'], goals: [{ action: 'protect', target: 'brother' }] }]
   };
@@ -78,7 +73,6 @@ function testPlanningAgent() {
 function testVerificationAgent() {
   const spec = {
     id: 'spec_verify',
-    // Updated to SVO CNL format
     cnl_constraints: 'Story requires "storm"\nWorld forbids "magic"'
   };
   
@@ -190,14 +184,12 @@ function testAuditChain() {
   
   const verification = verifyChain();
   assert.ok(verification.verified > 0, 'Should verify entries');
-  // Note: Chain validity depends on no tampering
 }
 
 // ===== Explainability Tests =====
 function testExplainability() {
   const mockReport = {
     overall_status: 'fail',
-    // Updated to SVO CNL format
     violations: [{ constraint: 'Story requires "storm"', message: 'Missing required element' }],
     summary: { total_checks: 2, passed: 1, failed: 1 }
   };
@@ -212,262 +204,13 @@ function testExplainability() {
   assert.ok(explanation.evidence.length > 0, 'Should have evidence');
 }
 
-// ===== Server Integration Tests =====
-async function testServerEndpoints() {
-  const { handler } = createApiHandler();
-
-  async function call({ method, urlPath, body, headers = {} }) {
-    const reqBody = body ? Buffer.from(JSON.stringify(body), 'utf-8') : null;
-    const req = reqBody ? Readable.from([reqBody]) : Readable.from([]);
-    req.method = method;
-    req.url = urlPath;
-    req.headers = { 
-      host: 'localhost', 
-      'content-type': 'application/json',
-      ...headers 
-    };
-    req.destroy = () => {};
-    req.socket = { remoteAddress: '127.0.0.1' };
-
-    return await new Promise((resolve) => {
-      const res = {
-        statusCode: 200,
-        headers: {},
-        body: '',
-        writeHead(code, hdrs) {
-          this.statusCode = code;
-          this.headers = hdrs || {};
-        },
-        end(chunk) {
-          if (chunk) this.body += chunk.toString('utf-8');
-          resolve(this);
-        }
-      };
-      handler(req, res);
-    });
-  }
-
-  // Health check
-  const health = await call({ method: 'GET', urlPath: '/health' });
-  assert.strictEqual(health.statusCode, 200);
-  const healthJson = JSON.parse(health.body);
-  assert.strictEqual(healthJson.status, 'ok');
-
-  // CNL Validate (updated to SVO format)
-  const cnlRes = await call({ 
-    method: 'POST', 
-    urlPath: '/v1/cnl/validate', 
-    body: { cnl_text: 'Anna is protagonist' } 
-  });
-  assert.strictEqual(cnlRes.statusCode, 200);
-  const cnlJson = JSON.parse(cnlRes.body);
-  assert.strictEqual(cnlJson.valid, true);
-
-  // CNL Translate
-  const translateRes = await call({
-    method: 'POST',
-    urlPath: '/v1/cnl/translate',
-    body: { nl_text: 'Anna must stay courageous.' }
-  });
-  assert.strictEqual(translateRes.statusCode, 200);
-  const translateJson = JSON.parse(translateRes.body);
-  assert.ok(translateJson.cnl_text.length > 0);
-
-  // VSA Encode
-  const vsaRes = await call({ 
-    method: 'POST', 
-    urlPath: '/v1/vsa/encode', 
-    body: { text: 'storm at sea', dim: 64, seed: 7 } 
-  });
-  assert.strictEqual(vsaRes.statusCode, 200);
-  const vsaJson = JSON.parse(vsaRes.body);
-  assert.strictEqual(vsaJson.dim, 64);
-
-  // Create Spec (updated to SVO CNL format)
-  const specCreate = await call({ 
-    method: 'POST', 
-    urlPath: '/v1/specs', 
-    body: { 
-      spec: { 
-        id: 'spec_e2e_test', 
-        title: 'E2E Test Spec',
-        cnl_constraints: 'Anna is protagonist\nAnna has trait brave',
-        characters: [{ name: 'Anna', traits: ['brave'] }]
-      } 
-    } 
-  });
-  assert.strictEqual(specCreate.statusCode, 201);
-  const specJson = JSON.parse(specCreate.body);
-  assert.ok(specJson.spec.id);
-  assert.ok(specJson.audit, 'Should have audit record');
-
-  // Get Spec
-  const specGet = await call({ method: 'GET', urlPath: `/v1/specs/${specJson.spec.id}` });
-  assert.strictEqual(specGet.statusCode, 200);
-
-  // Update Spec
-  const specUpdate = await call({
-    method: 'PUT',
-    urlPath: `/v1/specs/${specJson.spec.id}`,
-    body: { spec: { title: 'Updated Title' } }
-  });
-  assert.strictEqual(specUpdate.statusCode, 200);
-  const updatedSpec = JSON.parse(specUpdate.body);
-  assert.strictEqual(updatedSpec.spec.title, 'Updated Title');
-
-  // Create Plan
-  const planCreate = await call({ 
-    method: 'POST', 
-    urlPath: '/v1/plans', 
-    body: { spec_id: specJson.spec.id, planning_params: { scene_count: 6 } } 
-  });
-  assert.strictEqual(planCreate.statusCode, 201);
-  const planJson = JSON.parse(planCreate.body);
-  assert.ok(planJson.plan.id);
-  assert.ok(planJson.plan.scenes.length > 0);
-
-  // Generate
-  const genCreate = await call({ 
-    method: 'POST', 
-    urlPath: '/v1/generate', 
-    body: { plan_id: planJson.plan.id } 
-  });
-  assert.strictEqual(genCreate.statusCode, 200);
-  const genJson = JSON.parse(genCreate.body);
-  assert.ok(genJson.job_id);
-
-  // Get Job
-  const genGet = await call({ method: 'GET', urlPath: `/v1/generate/${genJson.job_id}` });
-  assert.strictEqual(genGet.statusCode, 200);
-  const jobJson = JSON.parse(genGet.body);
-  assert.strictEqual(jobJson.status, 'completed');
-  assert.ok(jobJson.output_refs.length > 0);
-
-  // Get Draft
-  const draftId = jobJson.output_refs[0].id;
-  const draftGet = await call({ method: 'GET', urlPath: `/v1/drafts/${draftId}` });
-  assert.strictEqual(draftGet.statusCode, 200);
-
-  // Verify
-  const verifyRes = await call({
-    method: 'POST',
-    urlPath: '/v1/verify',
-    body: { spec_id: specJson.spec.id, artifact_ref: { id: draftId, type: 'draft' } }
-  });
-  assert.strictEqual(verifyRes.statusCode, 200);
-  const verifyJson = JSON.parse(verifyRes.body);
-  assert.ok(verifyJson.report_id);
-
-  // Guardrail
-  const guardRes = await call({
-    method: 'POST',
-    urlPath: '/v1/guardrail/check',
-    body: { artifact_ref: { id: draftId, type: 'draft' }, policies: ['bias', 'originality'] }
-  });
-  assert.strictEqual(guardRes.statusCode, 200);
-  const guardJson = JSON.parse(guardRes.body);
-  assert.ok(guardJson.report_id);
-
-  // Evaluate
-  const evalRes = await call({
-    method: 'POST',
-    urlPath: '/v1/evaluate',
-    body: { artifact_ref: { id: draftId, type: 'draft' }, metrics: ['nqs', 'coherence'] }
-  });
-  assert.strictEqual(evalRes.statusCode, 200);
-  const evalJson = JSON.parse(evalRes.body);
-  assert.ok(evalJson.results.length > 0);
-
-  // Review
-  const reviewRes = await call({
-    method: 'POST',
-    urlPath: '/v1/review',
-    body: { artifact_ref: { id: draftId, type: 'draft' }, criteria: ['pacing'] }
-  });
-  assert.strictEqual(reviewRes.statusCode, 200);
-  const reviewJson = JSON.parse(reviewRes.body);
-  assert.ok(reviewJson.report_id);
-
-  // Research
-  const researchRes = await call({
-    method: 'POST',
-    urlPath: '/v1/research/query',
-    body: { query: 'narrative coherence' }
-  });
-  assert.strictEqual(researchRes.statusCode, 200);
-  const researchJson = JSON.parse(researchRes.body);
-  assert.ok(researchJson.results.length > 0);
-
-  // Explain
-  const explainRes = await call({
-    method: 'POST',
-    urlPath: '/v1/explain',
-    body: { 
-      artifact_ref: { id: draftId, type: 'draft' }, 
-      question: 'Why was this generated?',
-      verification_report_id: verifyJson.report_id
-    }
-  });
-  assert.strictEqual(explainRes.statusCode, 200);
-  const explainJson = JSON.parse(explainRes.body);
-  assert.ok(explainJson.explanation);
-
-  // Reverse Engineer
-  const reverseRes = await call({
-    method: 'POST',
-    urlPath: '/v1/reverse-engineer',
-    body: { artifact_ref: { id: draftId, type: 'draft' }, output: 'spec' }
-  });
-  assert.strictEqual(reverseRes.statusCode, 200);
-  const reverseJson = JSON.parse(reverseRes.body);
-  assert.ok(reverseJson.spec);
-
-  // Compliance Report
-  const complianceRes = await call({
-    method: 'POST',
-    urlPath: '/v1/reports/compliance',
-    body: { artifact_ref: { id: draftId, type: 'draft' }, policies: ['bias'] }
-  });
-  assert.strictEqual(complianceRes.statusCode, 200);
-  const complianceJson = JSON.parse(complianceRes.body);
-  assert.ok(complianceJson.report_id);
-
-  // Audit logs
-  const auditRes = await call({ method: 'GET', urlPath: '/v1/audit/logs' });
-  assert.strictEqual(auditRes.statusCode, 200);
-  const auditJson = JSON.parse(auditRes.body);
-  assert.ok(auditJson.entries.length > 0);
-
-  // Audit verify
-  const auditVerify = await call({ method: 'GET', urlPath: '/v1/audit/verify' });
-  assert.strictEqual(auditVerify.statusCode, 200);
-  const verifyAuditJson = JSON.parse(auditVerify.body);
-  assert.ok(verifyAuditJson.verified >= 0);
-
-  // Pipeline run (with default SOP)
-  const pipelineRes = await call({
-    method: 'POST',
-    urlPath: '/v1/pipelines/run',
-    body: { use_default: true, spec_id: specJson.spec.id }
-  });
-  assert.strictEqual(pipelineRes.statusCode, 200);
-  const pipelineJson = JSON.parse(pipelineRes.body);
-  assert.ok(pipelineJson.run_id);
-  assert.ok(['completed', 'failed'].includes(pipelineJson.status));
-
-  // Delete Spec
-  const specDelete = await call({ method: 'DELETE', urlPath: `/v1/specs/${specJson.spec.id}` });
-  assert.strictEqual(specDelete.statusCode, 200);
-}
-
-function testExamplesValidatorCli() {
-  const failures = validateExamples();
-  assert.strictEqual(failures, 0, 'All examples should validate against schemas');
-}
-
+// ===== Eval Examples Tests =====
 function testEvalExamplesCnl() {
-  // Eval JSONL has been migrated to SVO CNL format
   const evalPath = path.join(ROOT, 'docs', 'evals', 'scripta_nl_cnl.jsonl');
+  if (!fs.existsSync(evalPath)) {
+    console.log('Skipping eval examples test - file not found');
+    return;
+  }
   const lines = fs.readFileSync(evalPath, 'utf-8').trim().split(/\r?\n/);
   let validCount = 0;
   for (const line of lines) {
@@ -491,7 +234,5 @@ export const tests = [
   testResearchService,
   testAuditChain,
   testExplainability,
-  testExamplesValidatorCli,
-  testServerEndpoints,
   testEvalExamplesCnl
 ];

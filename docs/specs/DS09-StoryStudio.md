@@ -265,10 +265,10 @@ When evaluating:
 ├────────────────────────────────────────────────────────────────────────┤
 │ CNL Constraints:                                                       │
 │ ┌────────────────────────────────────────────────────────────────────┐ │
-│ │ CHARACTER(Anna).                                                   │ │
-│ │ TRAIT(Anna, courageous).                                           │ │
-│ │ GOAL(Anna, protect, "brother").                                    │ │
-│ │ RULE(Scene_3, must_include, "storm").                              │ │
+│ │ Anna is character                                                  │ │
+│ │ Anna has trait courageous                                          │ │
+│ │ Anna wants "protect brother"                                       │ │
+│ │ Scene_3 requires "storm"                                           │ │
 │ └────────────────────────────────────────────────────────────────────┘ │
 │ [Edit CNL]  [Validate ✓]                                              │
 └────────────────────────────────────────────────────────────────────────┘

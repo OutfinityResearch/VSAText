@@ -1,5 +1,0 @@
-{
-  "spec_id": "spec_001",
-  "artifact_ref": {"id": "draft_001", "type": "draft", "hash": "aa00bb"},
-  "implementation_profile": {"mode": "vsa", "parameters": {"dim": 10000}}
-}

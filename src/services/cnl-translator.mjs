@@ -1,8 +1,7 @@
 /**
- * CNL Translator Service v2.0
+ * CNL Translator Service
  * 
  * Rule-based translation from natural language to SVO CNL.
- * Unified CNL - no more predicate DSL.
  * 
  * Output format: Subject-Verb-Object statements
  *   Anna is protagonist
@@ -278,51 +277,14 @@ function generateCnlFromSpec(spec) {
     }
   }
   
-  // Constraints from cnl_constraints (legacy predicate format)
+  // Append existing CNL constraints if present
   if (spec.cnl_constraints && typeof spec.cnl_constraints === 'string') {
-    const migrated = migratePredicate(spec.cnl_constraints);
-    lines.push(migrated);
+    // Already in SVO format - just append
+    lines.push(spec.cnl_constraints);
   }
   
   return lines.join('\n');
 }
-
-/**
- * Migrate predicate-style CNL to SVO format
- * @param {string} predicateCnl - Old predicate format
- * @returns {string} SVO format
- */
-function migratePredicate(predicateCnl) {
-  const lines = predicateCnl.split('\n');
-  const svoLines = [];
-  
-  for (const line of lines) {
-    const match = line.match(/^(\w+)\(([^)]+)\)\.$/);
-    if (!match) continue;
-    
-    const [, pred, argsStr] = match;
-    const args = argsStr.split(',').map(a => a.trim().replace(/^"|"$/g, ''));
-    
-    switch (pred.toUpperCase()) {
-      case 'CHARACTER':
-        svoLines.push(`${args[0]} is character`);
-        break;
-      case 'TRAIT':
-        svoLines.push(`${args[0]} has trait ${args[1]}`);
-        break;
-      case 'GOAL':
-        svoLines.push(`${args[0]} wants "${args[1]} ${args[2] || ''}".trim()`);
-        break;
-      case 'RULE':
-        if (args[1] === 'must_include') {
-          svoLines.push(`${args[0]} requires "${args[2]}"`);
-        } else if (args[1] === 'forbid') {
-          svoLines.push(`${args[0]} forbids "${args[2]}"`);
-        } else if (args[1] === 'tone') {
-          svoLines.push(`${args[0]} has tone ${args[2]}`);
-        } else if (args[1] === 'max_characters') {
-          svoLines.push(`${args[0]} has max characters ${args[2]}`);
-        }
         break;
       case 'TONE':
         svoLines.push(`${args[0]} has tone ${args[1]}`);
@@ -346,6 +308,5 @@ export {
   validateCnl,
   parseCnlToConstraints,
   generateCnlFromSpec,
-  migratePredicate,
   PATTERNS
 };

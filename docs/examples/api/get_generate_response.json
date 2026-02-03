@@ -1,7 +1,0 @@
-{
-  "job_id": "job_901",
-  "status": "completed",
-  "output_refs": [
-    {"id": "draft_001", "type": "draft", "hash": "aa00bb"}
-  ]
-}

@@ -1,7 +1,0 @@
-{
-  "valid": true,
-  "errors": [],
-  "statements": [
-    {"predicate": "RULE", "args": ["Scene_3", "must_include", "storm"]}
-  ]
-}

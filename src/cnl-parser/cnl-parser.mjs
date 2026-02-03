@@ -39,7 +39,7 @@ import {
 } from './cnl-parser-generators.mjs';
 
 /**
- * Validate CNL text and return legacy format (for compatibility)
+ * Validate CNL text and return validation result
  */
 export function validateText(text) {
   return validateTextInternal(text, parseCNL);

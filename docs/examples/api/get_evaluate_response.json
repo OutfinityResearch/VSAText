@@ -1,8 +1,0 @@
-{
-  "report_id": "eval_301",
-  "results": [
-    {"name": "NQS", "value": 0.82},
-    {"name": "CAD", "value": 0.07},
-    {"name": "CAR", "value": 0.999}
-  ]
-}

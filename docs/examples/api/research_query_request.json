@@ -1,5 +1,0 @@
-{
-  "query": "What is a storm surge?",
-  "constraints": ["include sources", "keep it simple"],
-  "implementation_profile": {"mode": "basic"}
-}

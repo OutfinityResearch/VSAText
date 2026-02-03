@@ -10,7 +10,7 @@ const VERBS = new Set([
   // Core verbs
   'is', 'has', 'relates', 'includes', 'references', 'describes',
   
-  // Constraint verbs (unified CNL - replaces predicate DSL)
+  // Constraint verbs
   'requires', 'forbids', 'must', 'owns', 'applies',
   
   // Action verbs

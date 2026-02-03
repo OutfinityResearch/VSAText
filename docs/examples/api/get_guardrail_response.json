@@ -1,5 +1,0 @@
-{
-  "report_id": "guard_201",
-  "findings": ["Potential trope: stoic captain"],
-  "status": "warn"
-}

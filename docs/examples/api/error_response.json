@@ -1,8 +1,0 @@
-{
-  "error": {
-    "code": "invalid_request",
-    "message": "spec_id is required",
-    "details": {"field": "spec_id"},
-    "correlation_id": "corr_123456"
-  }
-}

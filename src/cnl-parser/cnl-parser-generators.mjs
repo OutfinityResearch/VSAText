@@ -205,7 +205,7 @@ export function generateSkeleton(ast) {
 }
 
 /**
- * Validate CNL text and return legacy format
+ * Validate CNL text and return validation result with statements
  */
 export function validateText(text, parseCNL) {
   const result = parseCNL(text);

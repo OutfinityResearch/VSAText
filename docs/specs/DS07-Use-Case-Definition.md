@@ -239,16 +239,17 @@ For historically or technically accurate content:
 When author adds elements to project, system generates CNL:
 
 ```
-CHARACTER(Anna).
-TRAIT(Anna, courageous).
-TRAIT(Anna, protective).
-GOAL(Anna, protect, "brother").
-RELATIONSHIP(Anna, sibling, Marcus).
+Anna is character
+Anna has trait courageous
+Anna has trait protective
+Anna wants "protect brother"
+Anna relates to Marcus as sibling
 
-SETTING(Story, "coastal village", "modern").
-TONE(Story, hopeful).
-THEME(courage).
-THEME(family).
+Story has setting "coastal village"
+Story has era modern
+Story has tone hopeful
+Story has theme courage
+Story has theme family
 ```
 
 ### 7.2 Manual CNL Editing

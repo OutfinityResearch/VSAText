@@ -219,13 +219,18 @@
 
 <h2>CNL Output</h2>
 
-<pre><code>Story has pattern quest as primary
-Story has pattern transformation as secondary
+<pre><code>PQuest is pattern
+PQuest has type quest
+PQuest has role primary
+PQuest has label "Quest (Master Plot)"
+#hint: Patterns constrain plot shape; do not add beats outside the selected pattern/arc without updating the spec.
 
-// Pattern-specific beats
-pattern quest requires beat "call_to_adventure"
-pattern quest requires beat "tests_allies_enemies"
-pattern quest requires beat "reward"</code></pre>
+Story includes pattern PQuest
+
+// Pattern-specific beat requirements
+PQuest requires beat call_to_adventure
+PQuest requires beat tests_allies_enemies
+PQuest requires beat reward</code></pre>
 
 <h2>Metrics Impact</h2>
 

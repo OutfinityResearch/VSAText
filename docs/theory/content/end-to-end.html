@@ -297,16 +297,26 @@ Dialogue 2: "Valdris Confrontation"
 Story has title "The Silver Key"
 Story has genre fantasy
 Story has tone adventurous
-Story has theme identity
-Story has theme power
-Story has theme redemption
+Story has theme identity as primary
+Story has theme power as secondary
+Story has theme redemption as secondary
 Story requires "happy ending"
 Story forbids "graphic violence"
 
 // --- World Rules ---
-World has rule "Magic is inherited but must be unlocked"
-World has rule "The Silver Key can only be used by those with pure intentions"
-World has rule "Dark magic corrupts the user over time"
+World is setting
+
+R1 is world_rule
+R1 has text "Magic is inherited but must be unlocked"
+World includes rule R1
+
+R2 is world_rule
+R2 has text "The Silver Key can only be used by those with pure intentions"
+World includes rule R2
+
+R3 is world_rule
+R3 has text "Dark magic corrupts the user over time"
+World includes rule R3
 
 // --- Characters ---
 Elena is protagonist

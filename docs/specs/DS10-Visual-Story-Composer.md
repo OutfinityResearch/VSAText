@@ -315,15 +315,19 @@ Sc1 group end
 
 **World rules:**
 ```
-World has rule "Magic requires sacrifice"
-"Magic requires sacrifice" has category magic
-"Magic requires sacrifice" has description "All magic has a cost"
+World is setting
+R1 is world_rule
+R1 has text "Magic requires sacrifice"
+R1 has category magic
+R1 has description "All magic has a cost"
+World includes rule R1
 ```
 
 **Emotional arc beats:**
 ```
-Story beat ordinary_world has mood Peaceful
-Story beat call_to_adventure has mood Mysterious
+Blueprint uses arc heros_journey
+ordinary_world has mood peaceful
+call_to_adventure has mood mysterious
 ```
 
 ## Data Flow

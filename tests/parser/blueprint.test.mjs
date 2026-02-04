@@ -36,6 +36,30 @@ Beat climax mapped to Ch2.Sc3
   }
 }
 
+// Test: Beat properties (mood/notes) are stored on blueprint.beatProperties
+export function testBeatPropertiesMoodAndNotes() {
+  const cnl = `
+Blueprint uses arc heros_journey
+Beat ordeal mapped to Ch3.Sc6
+ordeal has tension 5
+ordeal has mood desperate
+ordeal has note "All is lost moment"
+`;
+
+  const result = parseCNL(cnl);
+  const props = result.ast.blueprint?.beatProperties?.ordeal;
+  if (!props) throw new Error('Expected beatProperties.ordeal');
+  if (props.mood !== 'desperate') {
+    throw new Error(`Expected mood 'desperate', got '${props.mood}'`);
+  }
+  if (!Array.isArray(props.notes) || props.notes.length !== 1) {
+    throw new Error('Expected exactly one note for ordeal');
+  }
+  if (!String(props.notes[0]).includes('All is lost')) {
+    throw new Error('Expected note content to be preserved');
+  }
+}
+
 // Test: Tension curve is parsed
 export function testTensionCurve() {
   const cnl = `

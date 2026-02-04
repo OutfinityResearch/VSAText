@@ -164,6 +164,30 @@ NoMagic applies to all
   }
 }
 
+// Test: Extracts world rules from canonical stable-ID form
+export function testExtractsWorldRulesCanonical() {
+  const cnl = `
+World is setting
+R1 is world_rule
+R1 has text "Magic requires sacrifice"
+R1 has category magic
+R1 has description "Every spell costs blood or memory"
+R1 applies to World
+World includes rule R1
+`;
+
+  const { ast } = parseCNL(cnl);
+  const entities = extractEntitiesFromAST(getRawEntities(ast), ast);
+
+  if (entities.world_rules.length !== 1) {
+    throw new Error(`Expected 1 world rule, got ${entities.world_rules.length}`);
+  }
+  const r = entities.world_rules[0];
+  if (r.id !== 'R1') throw new Error(`Expected id R1, got ${r.id}`);
+  if (r.name !== 'Magic requires sacrifice') throw new Error(`Expected name from text, got ${r.name}`);
+  if (r.category !== 'magic') throw new Error(`Expected category magic, got ${r.category}`);
+}
+
 // Test: Extracts wisdom statements
 export function testExtractsWisdom() {
   const cnl = `
@@ -187,6 +211,27 @@ CourageMatters has insight "Courage is not the absence of fear"
   }
 }
 
+// Test: Extracts wisdom from canonical stable-ID form
+export function testExtractsWisdomCanonical() {
+  const cnl = `
+W1 is wisdom
+W1 has label "Courage matters"
+W1 has category moral
+W1 has insight "Courage is not the absence of fear"
+Story includes wisdom W1
+`;
+
+  const { ast } = parseCNL(cnl);
+  const entities = extractEntitiesFromAST(getRawEntities(ast), ast);
+
+  if (entities.wisdom.length !== 1) {
+    throw new Error(`Expected 1 wisdom, got ${entities.wisdom.length}`);
+  }
+  const w = entities.wisdom[0];
+  if (w.id !== 'W1') throw new Error(`Expected id W1, got ${w.id}`);
+  if (w.label !== 'Courage matters') throw new Error(`Expected label, got ${w.label}`);
+}
+
 // Test: Extracts patterns
 export function testExtractsPatterns() {
   const cnl = `
@@ -208,6 +253,27 @@ ThreeActStructure has type narrative
   if (p.label !== 'ThreeActStructure') {
     throw new Error('Pattern should have label ThreeActStructure');
   }
+}
+
+// Test: Extracts patterns from canonical stable-ID form
+export function testExtractsPatternsCanonical() {
+  const cnl = `
+P1 is pattern
+P1 has label "Three Act Structure"
+P1 has type structure
+Story includes pattern P1
+`;
+
+  const { ast } = parseCNL(cnl);
+  const entities = extractEntitiesFromAST(getRawEntities(ast), ast);
+
+  if (entities.patterns.length !== 1) {
+    throw new Error(`Expected 1 pattern, got ${entities.patterns.length}`);
+  }
+  const p = entities.patterns[0];
+  if (p.id !== 'P1') throw new Error(`Expected id P1, got ${p.id}`);
+  if (p.label !== 'Three Act Structure') throw new Error(`Expected label, got ${p.label}`);
+  if (p.patternType !== 'structure') throw new Error(`Expected type structure, got ${p.patternType}`);
 }
 
 // Test: All character archetypes are recognized

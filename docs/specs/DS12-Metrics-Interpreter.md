@@ -108,6 +108,9 @@ The interpreter MUST parse the CNL with the unified SVO parser (DS11) and produc
 - statements (SVO)
 - extracted entities, relationships, ownership, references, constraints
 
+**Dual-layer note (normative):**
+- Lines beginning with `#` are **LLM annotations** (e.g., `#hint:`, `#example:`). The interpreter MUST ignore them for metric semantics, but SHOULD preserve them in the AST (`globalAnnotations` and `statement.annotations`) for prompt-building and explainability.
+
 ### 4.2 Statement classification (normative)
 
 Each statement is classified into exactly one category:
@@ -304,4 +307,3 @@ The suite MUST apply these thresholds:
 - DS05 — VSA/HDC Specification
 - DS11 — CNL Unification and Migration Guide
 - DS13..DS18, DS20..DS23 — Metric definitions
-

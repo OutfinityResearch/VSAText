@@ -165,11 +165,21 @@ GreenLight has description "Light across the bay representing unattainable dream
 
 <p>Track ownership changes:</p>
 
-<pre><code>scene "The Gift"
+<pre><code>Sc2 group begin
+  Sc2 includes character Gandalf
+  Sc2 includes character Anna
+  Sc2 includes object SilverKey
   Gandalf gives SilverKey to Anna
+  #hint: Make the transfer emotionally meaningful (debt, trust, sacrifice).
+Sc2 group end
   
-scene "The Theft"
-  Villain steals SilverKey from Anna</code></pre>
+Sc4 group begin
+  Sc4 includes character Villain
+  Sc4 includes character Anna
+  Sc4 includes object SilverKey
+  Villain steals SilverKey from Anna
+  #hint: Track consequences: fear, pursuit, broken trust.
+Sc4 group end</code></pre>
 
 <h2>Best Practices</h2>
 

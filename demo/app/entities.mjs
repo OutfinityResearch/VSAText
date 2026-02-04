@@ -11,14 +11,48 @@ import { generateCNL } from './cnl.mjs';
 import { renderRelationshipsView } from './views.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
 
+// ==================== ENTITY DESCRIPTIONS ====================
+const ENTITY_DESCRIPTIONS = {
+  characters: {
+    title: 'Characters',
+    description: 'The people who drive your story. Each character has an archetype (Hero, Mentor, Shadow, etc.) that defines their narrative role, plus traits that make them unique. Characters create conflict, relationships, and emotional connection.'
+  },
+  locations: {
+    title: 'Locations',
+    description: 'The places where your story unfolds. Locations set the mood and atmosphere, provide context for actions, and can become characters themselves. Define geography, time period, and distinctive characteristics.'
+  },
+  objects: {
+    title: 'Objects & Plot Elements',
+    description: 'Items with narrative significance: artifacts, secrets, MacGuffins, or symbolic objects. These drive plot, reveal character, or represent themes. Not every prop—only objects that matter to the story.'
+  },
+  moods: {
+    title: 'Moods & Atmospheres',
+    description: 'The emotional tone of scenes. Moods combine emotions (fear, hope, tension) with intensities. They guide how scenes feel and help create rhythm through contrast—tension followed by relief, mystery into revelation.'
+  },
+  themes: {
+    title: 'Themes',
+    description: 'The deeper meanings your story explores: redemption, sacrifice, identity, power. Themes are woven through character choices and plot outcomes, never stated directly. They give your story resonance beyond plot.'
+  }
+};
+
 // ==================== ENTITY GRIDS ====================
 export function renderEntityGrid(type) {
   const c = $(`#${type}-grid`);
   if (!c) return;
   const list = state.project.libraries[type];
+  const desc = ENTITY_DESCRIPTIONS[type];
+  
+  // Build description header
+  let descHtml = '';
+  if (desc) {
+    descHtml = `<div class="entity-grid-header">
+      <div class="entity-grid-title">${desc.title}</div>
+      <div class="entity-grid-desc">${desc.description}</div>
+    </div>`;
+  }
   
   if (list.length === 0) {
-    c.innerHTML = `<div class="add-entity-card" onclick="addEntity('${type}')"><div class="icon">+</div><span>Add ${type.slice(0, -1)}</span></div>`;
+    c.innerHTML = descHtml + `<div class="entity-grid-cards"><div class="add-entity-card" onclick="addEntity('${type}')"><div class="icon">+</div><span>Add ${type.slice(0, -1)}</span></div></div>`;
     return;
   }
   
@@ -38,7 +72,7 @@ export function renderEntityGrid(type) {
   }).join('');
   
   cards += `<div class="add-entity-card" onclick="addEntity('${type}')"><div class="icon">+</div><span>Add ${type.slice(0, -1)}</span></div>`;
-  c.innerHTML = cards;
+  c.innerHTML = descHtml + `<div class="entity-grid-cards">${cards}</div>`;
 }
 
 window.addEntity = type => { 

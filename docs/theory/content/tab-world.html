@@ -171,11 +171,25 @@
 
 <h2>CNL Output</h2>
 
-<pre><code>World has rule "Magic requires sacrifice"
-World has rule "Dragons can only be defeated by pure hearts"
-World has rule "The dead cannot be resurrected"
-World has rule "Time flows differently in the fae realm"
-World has rule "Names hold power over their bearers"</code></pre>
+<pre><code>World is setting
+World has name "Aethermoor"
+#style: Dark fantasy with Gothic undertones
+#sensory: Cold, damp air; light is rare and precious
+
+R1 is world_rule
+R1 has text "Magic requires sacrifice"
+R1 has category magic
+R1 has description "Every spell costs memory, blood, or time."
+R1 applies to World
+#hint: Each use of magic must visibly cost the caster something meaningful.
+World includes rule R1
+
+R2 is world_rule
+R2 has text "Names hold power over their bearers"
+R2 has category society
+R2 has description "True names enable coercion; characters protect them."
+R2 applies to World
+World includes rule R2</code></pre>
 
 <h2>Metrics Impact</h2>
 

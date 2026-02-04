@@ -175,26 +175,29 @@
 <h2>CNL Output</h2>
 
 <pre><code>// Arc Selection
-Story has arc "heros_journey"
+Blueprint uses arc heros_journey
 
-// Beat Mapping
-beat "call_to_adventure" at chapter 2 scene 1
-beat "call_to_adventure" has tension 3
-beat "call_to_adventure" has note "Herald arrives"
+// Beat Mapping + properties
+Beat call_to_adventure mapped to Ch2.Sc1
+call_to_adventure has tension 3
+call_to_adventure has mood mysterious
+call_to_adventure has note "Herald arrives"
+#hint: Beat notes describe what MUST happen at that beat.
 
 // Tension Curve
-Story has tension_point 0.0 1
-Story has tension_point 0.25 3
-Story has tension_point 0.50 4
-Story has tension_point 0.75 5
-Story has tension_point 1.0 2
+Tension at 0.0 is 1
+Tension at 0.25 is 3
+Tension at 0.50 is 4
+Tension at 0.75 is 5
+Tension at 1.0 is 2
 
 // Subplots
-subplot "forbidden_romance" is romance
-subplot "forbidden_romance" involves Anna
-subplot "forbidden_romance" involves Marcus
-subplot "forbidden_romance" starts at "crossing_threshold"
-subplot "forbidden_romance" resolves at "return_elixir"</code></pre>
+Subplot S1 type romance
+S1 involves Anna
+S1 involves Marcus
+S1 starts at beat crossing_threshold
+S1 resolves at beat return_elixir
+S1 touchpoint Ch2.Sc1 event "First spark"</code></pre>
 
 <h2>Metrics Impact</h2>
 

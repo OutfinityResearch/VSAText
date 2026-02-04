@@ -62,8 +62,13 @@ For each scene, calculate emotional valence:
 
 **Preferred method (explicit moods):**
 ```text
-Scene1 has mood Tense
-Scene2 has mood Triumphant
+M1 is mood
+M1 has emotion tension 3
+M1 has emotion fear 1
+
+Sc1 has mood M1
+
+Sc2 has mood triumphant
 ```
 Look up valence from mood vocabulary.
 
@@ -96,4 +101,3 @@ Acceptance threshold: **Correlation r > 0.7**
 
 - DS03 — metric intent and threshold
 - DS12 — canonical text and scene ordering
-

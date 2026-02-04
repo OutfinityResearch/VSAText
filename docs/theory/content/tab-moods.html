@@ -268,16 +268,22 @@
 <h2>CNL Output</h2>
 
 <pre><code>// Using preset mood
-scene "The Discovery" has mood mysterious
+Sc1 has mood mysterious
+#hint: Preset moods are short keys (e.g., mysterious, ominous, triumphant).
 
 // Custom mood definition
-DreadfulAnticipation is mood
-DreadfulAnticipation has emotion fear 2
-DreadfulAnticipation has emotion curiosity 2
-DreadfulAnticipation has emotion tension 3
+M1 is mood
+M1 has label "Dreadful Anticipation"
+#hint: Use this mood when danger is expected but unseen.
+
+M1 has emotion fear 2
+M1 has emotion curiosity 2
+M1 has emotion tension 3
+#avoid: Maxing every emotion; mixes should stay readable.
 
 // Using custom mood
-scene "Opening the Door" has mood DreadfulAnticipation</code></pre>
+Sc2 has mood M1
+#sensory: Cold air, distant thunder, candle flicker.</code></pre>
 
 <h2>Metrics Impact</h2>
 

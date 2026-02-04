@@ -156,7 +156,7 @@ const LOCATIONS = {
 const ARCHETYPES = ['hero', 'mentor', 'shadow', 'ally', 'trickster', 'guardian'];
 const TRAITS = ['brave', 'cunning', 'loyal', 'mysterious', 'wise', 'impulsive', 'calm', 'fierce'];
 const THEMES = ['redemption', 'love', 'sacrifice', 'power', 'identity', 'justice', 'survival', 'freedom'];
-const RELATIONSHIPS = ['loves', 'rivals with', 'mentors', 'betrayed by', 'allied with', 'fears'];
+const RELATIONSHIPS = ['mentor_student', 'rival', 'ally', 'enemy', 'sibling', 'romantic'];
 
 function pickRandom(arr, count = 1) {
   const shuffled = [...arr].sort(() => Math.random() - 0.5);
@@ -175,6 +175,8 @@ function generateCNL(config) {
   const themes = pickRandom(THEMES, 2);
   
   let cnl = `// Auto-generated CNL\n// ${config.name}\n// Genre: ${genre}, Length: ${length}\n\n`;
+  cnl += `#hint: Treat this CNL as a deterministic specification. Avoid inventing extra plot elements during generation.\n`;
+  cnl += `#hint: Use SVO statements as ground truth (WHAT). Use annotations to guide prose (HOW).\n\n`;
   
   // Characters
   cnl += '// Characters\n';
@@ -194,7 +196,7 @@ function generateCNL(config) {
     const from = names[i].replace(/\s+/g, '_');
     const to = names[(i + 1) % names.length].replace(/\s+/g, '_');
     const rel = pickRandom(RELATIONSHIPS);
-    cnl += `${from} ${rel} ${to}\n`;
+    cnl += `${from} relates to ${to} as ${rel}\n`;
   }
   cnl += '\n';
   
@@ -207,8 +209,9 @@ function generateCNL(config) {
   
   // Themes
   cnl += '// Themes\n';
-  themes.forEach(theme => {
-    cnl += `Story has theme ${theme}\n`;
+  themes.forEach((theme, idx) => {
+    const role = idx === 0 ? 'primary' : 'secondary';
+    cnl += `Story has theme ${theme} as ${role}\n`;
   });
   cnl += '\n';
   

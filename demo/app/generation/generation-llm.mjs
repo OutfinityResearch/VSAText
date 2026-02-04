@@ -61,11 +61,6 @@ export async function generateLLM(options) {
       loadProjectData(result.project);
     }
     
-    // Show fallback warning if applicable
-    if (result._fallback) {
-      console.warn('LLM not available, using fallback generation');
-    }
-    
     updateGenerationStatus(statusEl, 'Complete!', 100);
     
     // Finalize

@@ -172,26 +172,31 @@
 
 <h2>CNL Output</h2>
 
-<pre><code>dialogue "The Revelation" is reveal
-dialogue "The Revelation" involves Anna as speaker
-dialogue "The Revelation" involves Marcus as listener
-dialogue "The Revelation" has tone confrontational
-dialogue "The Revelation" has tension 4
-dialogue "The Revelation" linked to beat "ordeal"
+<pre><code>D3 is dialogue
+D3 has title "The Revelation"
+Dialogue D3 at Sc7
+#context: First direct confrontation after years of secrets.
 
-dialogue "The Revelation" has exchange begin
-  Anna speaks intent "demands the truth"
-  Anna speaks emotion anger
-  Anna speaks sketch "I know you've been hiding something!"
+D3 has purpose revelation
+D3 has tone confrontational
+D3 has tension 4
+D3 linked to beat ordeal
+
+D3 involves Anna as speaker
+D3 involves Marcus as listener
+#voice: Anna — short, clipped, controlled fury.
+#voice: Marcus — hesitant, evasive, guilt underneath.
+
+D3 exchange begin
+  Anna says intent "demand truth"
+  Anna says emotion anger
+  Anna says sketch "I know you've been hiding something."
+  #avoid: shouting; cold anger is more powerful.
   
-  Marcus speaks intent "deflects initially"
-  Marcus speaks emotion fear
-  Marcus speaks sketch "It's not what you think..."
-  
-  Anna speaks intent "presses harder"
-  Marcus speaks intent "finally confesses"
-  Marcus speaks emotion shame
-dialogue "The Revelation" has exchange end</code></pre>
+  Marcus says intent "deflect"
+  Marcus says emotion fear
+  Marcus says sketch "It's not what you think."
+D3 exchange end</code></pre>
 
 <h2>Metrics Impact</h2>
 
@@ -208,7 +213,7 @@ dialogue "The Revelation" has exchange end</code></pre>
 
 <p>Dialogues can be assigned to scenes:</p>
 
-<pre><code>scene "The Confrontation" has dialogue "The Revelation"</code></pre>
+<pre><code>Sc7 includes dialogue D3</code></pre>
 
 <p>This ensures the dialogue's emotional tone aligns with the scene mood.</p>
 

@@ -61,3 +61,21 @@ export function testModifierExtraction() {
     throw new Error('Expected modifier with=trait');
   }
 }
+
+// Test: Common narrative modifiers like "in" and "by" are extracted
+export function testInByModifierExtraction() {
+  const cnl = `
+W1 demonstrated in Sc7
+W1 realized by Anna
+`;
+  const result = parseCNL(cnl);
+  const s1 = result.ast.statements.find(s => s.verb === 'demonstrated');
+  const s2 = result.ast.statements.find(s => s.verb === 'realized');
+
+  if (!s1?.modifiers || s1.modifiers.in !== 'Sc7') {
+    throw new Error(`Expected demonstrated in Sc7, got modifiers: ${JSON.stringify(s1?.modifiers || {})}`);
+  }
+  if (!s2?.modifiers || s2.modifiers.by !== 'Anna') {
+    throw new Error(`Expected realized by Anna, got modifiers: ${JSON.stringify(s2?.modifiers || {})}`);
+  }
+}

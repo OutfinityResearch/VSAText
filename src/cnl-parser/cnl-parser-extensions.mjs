@@ -40,13 +40,34 @@ function ensureSubplot(ast, id, lineNo) {
   return ast.subplots[id];
 }
 
+function ensureBeatProperties(ast, beatKey) {
+  const key = String(beatKey || '').toLowerCase();
+  if (!key) return null;
+
+  if (!ast.blueprint.beatProperties[key]) {
+    ast.blueprint.beatProperties[key] = {
+      mood: null,
+      tension: null,
+      notes: [],
+      annotations: []
+    };
+  } else {
+    const obj = ast.blueprint.beatProperties[key];
+    if (!Array.isArray(obj.notes)) obj.notes = [];
+    if (!Array.isArray(obj.annotations)) obj.annotations = [];
+  }
+
+  return ast.blueprint.beatProperties[key];
+}
+
 function upsertBeatMapping(ast, beatKey, target, lineNo) {
   const parts = String(target).split('.');
   const mapping = {
     beatKey: beatKey.toLowerCase(),
-    chapterId: parts[0],
-    sceneId: parts[1] || null,
+    chapterId: parts.length >= 2 ? parts[0] : (String(parts[0] || '').toLowerCase().startsWith('sc') ? null : parts[0]),
+    sceneId: parts.length >= 2 ? (parts[1] || null) : (String(parts[0] || '').toLowerCase().startsWith('sc') ? parts[0] : null),
     tension: null,
+    notes: [],
     line: lineNo
   };
   const idx = ast.blueprint.beatMappings.findIndex(b => b.beatKey === mapping.beatKey);
@@ -83,7 +104,16 @@ export function applyInlineDeclaration(statement, ast, lineNo) {
     const dialogue = ensureDialogue(ast, statement.dialogueId, lineNo);
     if (statement.location) {
       const parts = String(statement.location).split('.');
-      dialogue.location = { chapterId: parts[0], sceneId: parts[1] || null };
+      if (parts.length >= 2) {
+        dialogue.location = { chapterId: parts[0], sceneId: parts[1] || null };
+      } else {
+        const only = parts[0];
+        if (String(only || '').toLowerCase().startsWith('sc')) {
+          dialogue.location = { chapterId: null, sceneId: only };
+        } else {
+          dialogue.location = { chapterId: only, sceneId: null };
+        }
+      }
     }
     return true;
   }
@@ -134,8 +164,43 @@ export function processBlueprintDialogueSubplot(statement, ast, lineNo) {
       const idx = ast.blueprint.beatMappings.findIndex(b => b.beatKey === subjectLower);
       if (idx >= 0) {
         ast.blueprint.beatMappings[idx].tension = tension;
+        const props = ensureBeatProperties(ast, subjectLower);
+        if (props) props.tension = tension;
         return;
       }
+      const props = ensureBeatProperties(ast, subjectLower);
+      if (props) props.tension = tension;
+    }
+  }
+
+  // call_to_adventure has mood mysterious
+  // ordeal has note "..."
+  if (statement.verb === 'has' && statement.objects.length >= 2) {
+    const prop = String(statement.objects[0] || '').toLowerCase();
+    const isBeatLike =
+      ast.blueprint.beatMappings.some(b => b.beatKey === subjectLower) ||
+      (statement.subject === subjectLower && !subjectLower.startsWith('sc') && !subjectLower.startsWith('ch'));
+
+    if (isBeatLike && (prop === 'mood' || prop === 'note')) {
+      const props = ensureBeatProperties(ast, subjectLower);
+      if (!props) return;
+
+      if (prop === 'mood') {
+        props.mood = statement.objects.slice(1).join(' ').trim() || null;
+      } else if (prop === 'note') {
+        const note = statement.objects.slice(1).join(' ').trim();
+        if (note) props.notes.push(note);
+      }
+
+      const idx = ast.blueprint.beatMappings.findIndex(b => b.beatKey === subjectLower);
+      if (idx >= 0) {
+        if (!Array.isArray(ast.blueprint.beatMappings[idx].notes)) ast.blueprint.beatMappings[idx].notes = [];
+        if (prop === 'note') {
+          const note = statement.objects.slice(1).join(' ').trim();
+          if (note) ast.blueprint.beatMappings[idx].notes.push(note);
+        }
+      }
+      return;
     }
   }
 

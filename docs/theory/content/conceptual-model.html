@@ -192,21 +192,36 @@ Anna owns SilverKey</code></pre>
 <h3>Theme</h3>
 <p>The underlying message or central idea explored in the story. Themes are abstract concepts like "Redemption", "Power and Corruption", or "Identity" that give the narrative deeper meaning.</p>
 
-<pre><code>Story has theme redemption
-Story has theme sacrifice</code></pre>
+<pre><code>Story has theme redemption as primary
+Story has theme sacrifice as secondary</code></pre>
 
 <h3>World Rule</h3>
 <p>A constraint that defines how the story world operates. World rules establish the physics, magic systems, technology levels, and societal norms of the setting.</p>
 
-<pre><code>World has rule "Magic requires sacrifice"
-World has rule "FTL travel causes temporal displacement"
-World has rule "Dragons are extinct"</code></pre>
+<pre><code>World is setting
+
+R1 is world_rule
+R1 has text "Magic requires sacrifice"
+World includes rule R1
+
+R2 is world_rule
+R2 has text "FTL travel causes temporal displacement"
+World includes rule R2
+
+R3 is world_rule
+R3 has text "Dragons are extinct"
+World includes rule R3</code></pre>
 
 <h3>Wisdom</h3>
 <p>Philosophical insights, life lessons, and teachings that the story explores or conveys. Wisdom represents the deeper truths the narrative embodies, drawn from sources like Stoicism, Buddhism, Psychology, or universal human experience.</p>
 
-<pre><code>Story has wisdom "True strength is shown through restraint"
-Story has wisdom "Change is the only constant"</code></pre>
+<pre><code>W1 is wisdom
+W1 has label "True strength is shown through restraint"
+Story includes wisdom W1
+
+W2 is wisdom
+W2 has label "Change is the only constant"
+Story includes wisdom W2</code></pre>
 
 <h3>Pattern</h3>
 <p>A reusable story template or master plot. Patterns are higher-level structures like "Quest", "Revenge", "Rags to Riches", or "Voyage and Return" that define the overall shape of narratives. They can include:</p>
@@ -217,14 +232,15 @@ Story has wisdom "Change is the only constant"</code></pre>
   <li><strong>Character Dynamics</strong>: Relationship patterns (Heist Crew, Found Family)</li>
 </ul>
 
-<pre><code>"Hero's Call" is pattern
-"Hero's Call" has variable $hero as character
-"Hero's Call" has variable $location as location
+<pre><code>P1 is pattern
+P1 has label "Hero's Call"
+P1 has variable $hero as character
+P1 has variable $location as location
 
-"Hero's Call" has template begin
+P1 has template begin
   $hero is at $location
   $hero discovers "call to adventure"
-"Hero's Call" has template end</code></pre>
+P1 has template end</code></pre>
 
 <h3>Relationship</h3>
 <p>A connection between two characters that affects how they interact. Relationships have types (ally, enemy, mentor, sibling, romantic) and can change over the course of the story.</p>

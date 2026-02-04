@@ -7,6 +7,7 @@
 
 import {
   VERBS,
+  ANNOTATION_TYPES,
   MODIFIERS,
   ENTITY_TYPES,
   DIALOGUE_PURPOSES,
@@ -16,10 +17,24 @@ import {
 
 import {
   applyInlineDeclaration,
-  processBlueprintDialogueSubplot
 } from './cnl-parser-extensions.mjs';
 
 export { ENTITY_TYPES, DIALOGUE_PURPOSES, DIALOGUE_TONES, SUBPLOT_TYPES };
+
+import { processStatement } from './cnl-parser-statement.mjs';
+import {
+  extractEntities,
+  extractConstraints,
+  extractOwnership,
+  countGroups
+} from './cnl-parser-extract.mjs';
+
+export {
+  extractEntities,
+  extractConstraints,
+  extractOwnership,
+  countGroups
+};
 
 /**
  * Tokenize a line into meaningful tokens
@@ -75,9 +90,51 @@ export function tokenizeLine(line) {
 export function parseLine(line, lineNo) {
   const stripped = line.trim();
   
-  // Skip empty lines and comments
-  if (!stripped || stripped.startsWith('//') || stripped.startsWith('#')) {
-    return { statement: null, error: null, isComment: stripped.startsWith('//') || stripped.startsWith('#') };
+  // Skip empty lines
+  if (!stripped) {
+    return { statement: null, error: null, isComment: false };
+  }
+
+  // Parse LLM annotation lines (dual-layer CNL).
+  // Unknown #lines remain comments for backwards compatibility.
+  if (stripped.startsWith('#')) {
+    const raw = stripped.slice(1);
+
+    // Block syntax: "#type: begin" ... "#type: end"
+    const blockBegin = raw.match(/^(\w+):\s*begin\s*$/i);
+    if (blockBegin) {
+      const type = blockBegin[1].toLowerCase();
+      if (ANNOTATION_TYPES.has(type)) {
+        return { statement: null, error: null, annotation: { type, blockBegin: true }, isComment: false };
+      }
+      return { statement: null, error: null, isComment: true };
+    }
+
+    const blockEnd = raw.match(/^(\w+):\s*end\s*$/i);
+    if (blockEnd) {
+      const type = blockEnd[1].toLowerCase();
+      if (ANNOTATION_TYPES.has(type)) {
+        return { statement: null, error: null, annotation: { type, blockEnd: true }, isComment: false };
+      }
+      return { statement: null, error: null, isComment: true };
+    }
+
+    // Inline syntax: "#type: content"
+    const inline = raw.match(/^(\w+):\s*(.*)$/i);
+    if (inline) {
+      const type = inline[1].toLowerCase();
+      const content = inline[2] ?? '';
+      if (ANNOTATION_TYPES.has(type)) {
+        return { statement: null, error: null, annotation: { type, content }, isComment: false };
+      }
+    }
+
+    return { statement: null, error: null, isComment: true };
+  }
+
+  // Skip // comments (pure comments, not annotations)
+  if (stripped.startsWith('//')) {
+    return { statement: null, error: null, isComment: true };
   }
   
   // Skip multi-line comment markers
@@ -266,6 +323,7 @@ export function parseCNL(text) {
     relationships: [],
     references: [],
     ownership: [],      // X owns Y
+    globalAnnotations: [], // LLM-only guidance not used by metrics
     constraints: { 
       requires: [],     // X requires "Y"
       forbids: [],      // X forbids "Y"  
@@ -278,6 +336,7 @@ export function parseCNL(text) {
     blueprint: {
       arc: null,           // Selected arc key
       beatMappings: [],    // { beatKey, chapterId, sceneId, tension, notes }
+      beatProperties: {},  // { [beatKey]: { mood, notes, tension, annotations } }
       tensionCurve: []     // { position, tension }
     },
     // Dialogues (NEW)
@@ -290,6 +349,90 @@ export function parseCNL(text) {
   
   const groupStack = [];
   let inMultilineComment = false;
+
+  // Annotation state (dual-layer CNL: SVO + #annotations).
+  let lastAnnotationTarget = null;
+  let annotationBlock = null; // { type, startLine, lines: [] }
+
+  function attachAnnotation(annotation) {
+    if (!annotation || !annotation.type) return;
+
+    const target = lastAnnotationTarget;
+
+    // No target → global annotation
+    if (!target) {
+      ast.globalAnnotations.push(annotation);
+      return;
+    }
+
+    if (target.kind === 'statement' && target.statement) {
+      target.statement.annotations = target.statement.annotations || [];
+      target.statement.annotations.push(annotation);
+      return;
+    }
+
+    if (target.kind === 'group' && target.group) {
+      target.group.annotations = target.group.annotations || [];
+      target.group.annotations.push(annotation);
+      return;
+    }
+
+    if (target.kind === 'dialogue' && target.id) {
+      if (!ast.dialogues[target.id]) {
+        ast.dialogues[target.id] = {
+          id: target.id,
+          purpose: null,
+          participants: [],
+          tone: null,
+          tension: null,
+          beatKey: null,
+          location: null,
+          exchanges: [],
+          annotations: [],
+          line: annotation.line
+        };
+      }
+      ast.dialogues[target.id].annotations = ast.dialogues[target.id].annotations || [];
+      ast.dialogues[target.id].annotations.push(annotation);
+      return;
+    }
+
+    if (target.kind === 'subplot' && target.id) {
+      if (!ast.subplots[target.id]) {
+        ast.subplots[target.id] = {
+          id: target.id,
+          type: null,
+          name: target.id,
+          characterIds: [],
+          startBeat: null,
+          resolveBeat: null,
+          touchpoints: [],
+          annotations: [],
+          line: annotation.line
+        };
+      }
+      ast.subplots[target.id].annotations = ast.subplots[target.id].annotations || [];
+      ast.subplots[target.id].annotations.push(annotation);
+      return;
+    }
+
+    if (target.kind === 'beat' && target.id) {
+      const beatKey = String(target.id).toLowerCase();
+      const idx = ast.blueprint.beatMappings.findIndex(b => b.beatKey === beatKey);
+      if (idx >= 0) {
+        ast.blueprint.beatMappings[idx].annotations = ast.blueprint.beatMappings[idx].annotations || [];
+        ast.blueprint.beatMappings[idx].annotations.push(annotation);
+      } else {
+        ast.blueprint.beatProperties[beatKey] = ast.blueprint.beatProperties[beatKey] || { annotations: [] };
+        ast.blueprint.beatProperties[beatKey].annotations = ast.blueprint.beatProperties[beatKey].annotations || [];
+        ast.blueprint.beatProperties[beatKey].annotations.push(annotation);
+      }
+      return;
+    }
+
+    // Fallback: global
+    ast.globalAnnotations.push(annotation);
+  }
   
   for (let lineNo = 1; lineNo <= lines.length; lineNo++) {
     const line = lines[lineNo - 1];
@@ -299,16 +442,43 @@ export function parseCNL(text) {
     if (stripped.endsWith('*/') || stripped === '*/') { inMultilineComment = false; continue; }
     if (inMultilineComment) continue;
     
-    const { statement, error } = parseLine(line, lineNo);
-    
+    const { statement, error, annotation, isComment } = parseLine(line, lineNo);
+
+    // Inside an annotation block, treat all content as raw until "#type: end".
+    if (annotationBlock) {
+      if (annotation?.blockEnd && annotation.type === annotationBlock.type) {
+        const content = annotationBlock.lines.join('\n');
+        attachAnnotation({ type: annotationBlock.type, content, line: annotationBlock.startLine });
+        annotationBlock = null;
+      } else {
+        annotationBlock.lines.push(line);
+      }
+      continue;
+    }
+
+    // Annotation block begin
+    if (annotation?.blockBegin) {
+      annotationBlock = { type: annotation.type, startLine: lineNo, lines: [] };
+      continue;
+    }
+
+    // Inline annotation
+    if (annotation) {
+      attachAnnotation({ type: annotation.type, content: annotation.content || '', line: lineNo });
+      continue;
+    }
+
     if (error) { errors.push(error); continue; }
-    if (!statement) continue;
+    if (!statement) {
+      if (isComment) continue;
+      continue;
+    }
     
     // Handle group begin
     if (statement.type === 'group_begin') {
       const newGroup = {
         name: statement.name, type: 'group',
-        properties: {}, statements: [], children: [], startLine: lineNo
+        properties: {}, statements: [], children: [], annotations: [], startLine: lineNo
       };
       
       if (groupStack.length > 0) {
@@ -317,6 +487,8 @@ export function parseCNL(text) {
         ast.groups.push(newGroup);
       }
       groupStack.push(newGroup);
+
+      lastAnnotationTarget = { kind: 'group', group: newGroup };
       continue;
     }
     
@@ -345,10 +517,12 @@ export function parseCNL(text) {
         ast.dialogues[dialogueId] = { 
           id: dialogueId, purpose: null, participants: [], 
           tone: null, tension: null, beatKey: null, 
-          location: null, exchanges: [], line: lineNo 
+          location: null, exchanges: [], annotations: [], line: lineNo 
         };
       }
       ast._currentExchange = dialogueId;
+
+      lastAnnotationTarget = { kind: 'dialogue', id: dialogueId };
       continue;
     }
     
@@ -363,13 +537,26 @@ export function parseCNL(text) {
 
     // Extension declarations (beat mapping, tension curve, dialogue, subplot)
     if (applyInlineDeclaration(statement, ast, lineNo)) {
+      if (statement.type === 'dialogue_decl') {
+        lastAnnotationTarget = { kind: 'dialogue', id: statement.dialogueId };
+      } else if (statement.type === 'subplot_decl') {
+        lastAnnotationTarget = { kind: 'subplot', id: statement.subplotId };
+      } else if (statement.type === 'beat_mapping') {
+        lastAnnotationTarget = { kind: 'beat', id: statement.beatKey };
+      }
       continue;
     }
     
     // Regular statement processing
     if (statement.type === 'statement') {
+      statement.annotations = statement.annotations || [];
       processStatement(statement, ast, groupStack, lineNo);
+      lastAnnotationTarget = { kind: 'statement', statement };
     }
+  }
+
+  if (annotationBlock) {
+    errors.push({ line: annotationBlock.startLine, message: `Unclosed annotation block: ${annotationBlock.type}` });
   }
   
   // Check for unclosed groups
@@ -380,287 +567,5 @@ export function parseCNL(text) {
   return { valid: errors.length === 0, errors, warnings, ast };
 }
 
-/**
- * Process a single statement and update AST
- */
-function processStatement(statement, ast, groupStack, lineNo) {
-  const currentScope = groupStack.length > 0 ? groupStack[groupStack.length - 1] : null;
-  
-  // Entity declarations: "X is Y" or "X is Y with trait Z"
-  if (statement.verb === 'is' && statement.objects.length > 0) {
-    const entityType = statement.objects[0].toLowerCase();
-    const entityName = statement.subject;
-    
-    if (!ast.entities[entityName]) {
-      ast.entities[entityName] = {
-        name: entityName, type: entityType, types: [entityType],
-        properties: {}, traits: [], relationships: [], line: lineNo
-      };
-    } else {
-      ast.entities[entityName].types.push(entityType);
-      if (ENTITY_TYPES.has(entityType)) {
-        ast.entities[entityName].type = entityType;
-      }
-    }
-    
-    // Extract traits from "with trait X, Y" modifier
-    if (statement.modifiers?.with === 'trait' && statement.objects.length > 1) {
-      const entity = ast.entities[entityName];
-      // Traits are in objects after the entity type, may be comma-separated
-      for (let i = 1; i < statement.objects.length; i++) {
-        const traitValue = statement.objects[i];
-        // Split by comma if present
-        const traits = traitValue.split(',').map(t => t.trim()).filter(Boolean);
-        entity.traits.push(...traits);
-      }
-    }
-  }
-  
-  // Properties: "X has Y Z"
-  if (statement.verb === 'has' && statement.objects.length >= 1) {
-    const entityName = statement.subject;
-    const propType = statement.objects[0];
-    const propValue = statement.objects.slice(1).join(' ') || true;
-    
-    if (!ast.entities[entityName]) {
-      ast.entities[entityName] = {
-        name: entityName, type: 'unknown', types: [],
-        properties: {}, traits: [], relationships: [], line: lineNo
-      };
-    }
-    
-    const entity = ast.entities[entityName];
-    if (propType.toLowerCase() === 'trait') {
-      if (typeof propValue === 'string') entity.traits.push(propValue);
-    } else {
-      entity.properties[propType] = propValue;
-    }
-    
-    if (currentScope) currentScope.properties[propType] = propValue;
-  }
-  
-  // Relationships: "X relates to Y as Z"
-  if (statement.verb === 'relates' && statement.modifiers.to) {
-    const from = statement.subject;
-    const to = statement.modifiers.to;
-    const relType = statement.modifiers.as || 'related';
-    
-    if (!ast.entities[from]) {
-      ast.entities[from] = {
-        name: from, type: 'unknown', types: [],
-        properties: {}, traits: [], relationships: [], line: lineNo
-      };
-    }
-    
-    ast.entities[from].relationships.push({ target: to, type: relType, line: lineNo });
-    ast.relationships.push({ from, to, type: relType, line: lineNo });
-  }
-
-  // Relationship shorthand: "X mentor_student Y" (legacy DS10 form)
-  // This is treated as: "X relates to Y as mentor_student".
-  if (statement.objects.length > 0 &&
-      statement.verb.includes('_') &&
-      (!statement.modifiers || Object.keys(statement.modifiers).length === 0)) {
-    const from = statement.subject;
-    const to = statement.objects[0];
-    const relType = statement.verb;
-
-    if (!ast.entities[from]) {
-      ast.entities[from] = {
-        name: from, type: 'unknown', types: [],
-        properties: {}, traits: [], relationships: [], line: lineNo
-      };
-    }
-
-    ast.entities[from].relationships.push({ target: to, type: relType, line: lineNo });
-    ast.relationships.push({ from, to, type: relType, line: lineNo });
-  }
-  
-  // Emotional/cognitive verbs as implicit relationships
-  const emotionalVerbs = ['loves', 'hates', 'fears', 'wants', 'seeks', 'avoids'];
-  if (emotionalVerbs.includes(statement.verb) && statement.objects.length > 0) {
-    const from = statement.subject;
-    const to = statement.objects[0];
-    
-    if (!ast.entities[from]) {
-      ast.entities[from] = {
-        name: from, type: 'unknown', types: [],
-        properties: {}, traits: [], relationships: [], line: lineNo
-      };
-    }
-    
-    ast.entities[from].relationships.push({ target: to, type: statement.verb, line: lineNo });
-    ast.relationships.push({ from, to, type: statement.verb, line: lineNo });
-  }
-  
-  // Constraints: requires/forbids
-  if (statement.verb === 'requires') {
-    ast.constraints.requires.push({ 
-      subject: statement.subject, 
-      target: statement.objects.join(' '), 
-      scope: currentScope?.name || 'global',
-      line: lineNo 
-    });
-  }
-  if (statement.verb === 'forbids') {
-    ast.constraints.forbids.push({ 
-      subject: statement.subject, 
-      target: statement.objects.join(' '), 
-      scope: currentScope?.name || 'global',
-      line: lineNo 
-    });
-  }
-  
-  // Constraints: must (introduce/resolve/etc)
-  if (statement.verb === 'must' && statement.objects.length >= 2) {
-    const action = statement.objects[0].toLowerCase();
-    const target = statement.objects.slice(1).join(' ');
-    ast.constraints.must.push({
-      subject: statement.subject,
-      action: action,
-      target: target,
-      scope: currentScope?.name || 'global',
-      line: lineNo
-    });
-  }
-  
-  // Ownership: X owns Y
-  if (statement.verb === 'owns' && statement.objects.length > 0) {
-    const owner = statement.subject;
-    const owned = statement.objects[0];
-    ast.ownership.push({ owner, owned, line: lineNo });
-    
-    // Also create implicit relationship
-    if (!ast.entities[owner]) {
-      ast.entities[owner] = {
-        name: owner, type: 'unknown', types: [],
-        properties: {}, traits: [], relationships: [], line: lineNo
-      };
-    }
-    ast.entities[owner].relationships.push({ target: owned, type: 'owns', line: lineNo });
-    ast.relationships.push({ from: owner, to: owned, type: 'owns', line: lineNo });
-  }
-  
-  // Special properties: tone, max, min
-  if (statement.verb === 'has' && statement.objects.length >= 2) {
-    const propType = statement.objects[0].toLowerCase();
-    const propValue = statement.objects.slice(1).join(' ');
-    
-    if (propType === 'tone') {
-      ast.constraints.tone.push({
-        subject: statement.subject,
-        value: propValue,
-        scope: currentScope?.name || 'global',
-        line: lineNo
-      });
-    } else if (propType === 'max') {
-      const [what, ...rest] = statement.objects.slice(1);
-      const count = parseInt(rest.join(' ')) || parseInt(what);
-      ast.constraints.max.push({
-        subject: statement.subject,
-        what: isNaN(parseInt(what)) ? what : 'items',
-        count: count,
-        scope: currentScope?.name || 'global',
-        line: lineNo
-      });
-    } else if (propType === 'min') {
-      const [what, ...rest] = statement.objects.slice(1);
-      const count = parseInt(rest.join(' ')) || parseInt(what);
-      ast.constraints.min.push({
-        subject: statement.subject,
-        what: isNaN(parseInt(what)) ? what : 'items',
-        count: count,
-        scope: currentScope?.name || 'global',
-        line: lineNo
-      });
-    }
-  }
-  
-  // References (@notation)
-  const allValues = [statement.subject, ...statement.objects, ...Object.values(statement.modifiers)];
-  for (const val of allValues) {
-    if (typeof val === 'string' && val.startsWith('@')) {
-      ast.references.push({
-        from: currentScope ? currentScope.name : 'root',
-        to: val.slice(1), line: lineNo, type: statement.verb
-      });
-    }
-  }
-  
-  // Blueprint/Dialogue/Subplot processing delegated to extension module
-  // (imported dynamically to keep core parser lean)
-  processBlueprintDialogueSubplot(statement, ast, lineNo);
-  
-  // Add to scope
-  if (currentScope) {
-    currentScope.statements.push(statement);
-  } else {
-    ast.statements.push(statement);
-  }
-}
-
-/**
- * Extract categorized entities from parsed AST
- */
-export function extractEntities(ast) {
-  const characters = [], locations = [], themes = [], objects = [], other = [];
-  
-  for (const [name, entity] of Object.entries(ast.entities)) {
-    const item = {
-      name,
-      type: entity.type,
-      types: entity.types || [entity.type],
-      traits: entity.traits || [],
-      properties: entity.properties || {},
-      relationships: entity.relationships || []
-    };
-    
-    const type = entity.type?.toLowerCase();
-    
-    if (['protagonist', 'character', 'antagonist', 'mentor', 'ally', 'enemy', 'hero', 'villain', 'shadow', 'sidekick', 'trickster', 'herald', 'shapeshifter', 'threshold_guardian'].includes(type)) {
-      characters.push(item);
-    } else if (['location', 'place', 'setting'].includes(type)) {
-      locations.push(item);
-    } else if (['theme', 'motif'].includes(type)) {
-      themes.push(item);
-    } else if (['artifact', 'object', 'item'].includes(type)) {
-      objects.push(item);
-    } else {
-      other.push(item);
-    }
-  }
-  
-  return { characters, locations, themes, objects, other };
-}
-
-/**
- * Extract constraints from AST
- */
-export function extractConstraints(ast) {
-  return ast.constraints || { 
-    requires: [], 
-    forbids: [], 
-    must: [], 
-    tone: [], 
-    max: [], 
-    min: [] 
-  };
-}
-
-/**
- * Extract ownership relations from AST
- */
-export function extractOwnership(ast) {
-  return ast.ownership || [];
-}
-
-/**
- * Count all groups recursively
- */
-export function countGroups(groups) {
-  let count = groups?.length || 0;
-  for (const g of groups || []) {
-    count += countGroups(g.children);
-  }
-  return count;
-}
+// Note: statement processing and AST extraction helpers are implemented in
+// dedicated modules to keep this core module focused and compact.

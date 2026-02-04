@@ -31,7 +31,7 @@ import './generation.mjs';
 import { updateGenerateButton } from './generation.mjs';
 
 // NL generation
-import { generateNLStory, resetNLState } from './nl-generation.mjs';
+import { generateNLStory, resetNLState, initNLGeneration } from './nl-generation.mjs';
 
 // Wizard
 import { openWizard } from './wizard.mjs';
@@ -75,6 +75,7 @@ async function init() {
   $('#btn-nl-generate').onclick = generateNLStory;
   $('#btn-nl-copy').onclick = copyNLContent;
   $('#btn-nl-export').onclick = exportNLContent;
+  initNLGeneration(); // Initialize preview button and modal handlers
   
   // Add button with contextual menu
   $('#btn-add-root').onclick = (e) => {

@@ -13,6 +13,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Try to import AchillesAgentLib
 let LLMAgent = null;
 let agentAvailable = false;
+let listModelsFromCache = null;
+let defaultLLMInvokerStrategy = null;
 
 try {
   const achillesPath = path.resolve(__dirname, '../../../AchillesAgentLib/index.mjs');
@@ -20,10 +22,30 @@ try {
   LLMAgent = achilles.LLMAgent;
   agentAvailable = true;
   console.log('[LLM Generator] AchillesAgentLib loaded successfully');
+  
+  // Load LLMClient for model listing
+  const llmClientPath = path.resolve(__dirname, '../../../AchillesAgentLib/utils/LLMClient.mjs');
+  const llmClient = await import(llmClientPath);
+  listModelsFromCache = llmClient.listModelsFromCache;
+  defaultLLMInvokerStrategy = llmClient.defaultLLMInvokerStrategy;
 } catch (err) {
   console.log('[LLM Generator] AchillesAgentLib not available:', err.message);
   console.log('[LLM Generator] LLM generation features will be disabled');
 }
+
+// ============================================
+// SUPPORTED LANGUAGES
+// ============================================
+
+const SUPPORTED_LANGUAGES = {
+  en: { name: 'English', native: 'English' },
+  fr: { name: 'French', native: 'Français' },
+  es: { name: 'Spanish', native: 'Español' },
+  pt: { name: 'Portuguese', native: 'Português' },
+  it: { name: 'Italian', native: 'Italiano' },
+  de: { name: 'German', native: 'Deutsch' },
+  ro: { name: 'Romanian', native: 'Română' }
+};
 
 // ============================================
 // PROMPT TEMPLATES
@@ -123,7 +145,20 @@ Output format - respond with valid JSON:
   }
 }`,
 
-  generateNLFromCNL: (cnl, storyName, options) => `You are a skilled fiction writer. Transform this story specification (CNL format) into compelling narrative prose.
+  generateNLFromCNL: (cnl, storyName, options) => {
+    // Determine language instruction
+    const langCode = options.language || 'en';
+    const langInfo = SUPPORTED_LANGUAGES[langCode] || SUPPORTED_LANGUAGES.en;
+    const languageInstruction = langCode === 'en' 
+      ? '' 
+      : `\n\nIMPORTANT: Write the entire story in ${langInfo.name} (${langInfo.native}). All text, dialogue, and narration must be in ${langInfo.name}.`;
+    
+    // Custom prompt/instructions
+    const customInstructions = options.customPrompt 
+      ? `\n\nADDITIONAL AUTHOR INSTRUCTIONS:\n${options.customPrompt}` 
+      : '';
+
+    return `You are a skilled fiction writer. Transform this story specification (CNL format) into compelling narrative prose.
 
 STORY TITLE: ${storyName}
 
@@ -139,15 +174,103 @@ WRITING GUIDELINES:
 - Show character emotions through actions and dialogue, not just telling
 - Create smooth transitions between scenes
 - Follow the chapter/scene structure from the CNL
-- Incorporate the themes, moods, and world rules naturally
-- Include dialogue that reveals character and advances plot
-- If wisdom or philosophical elements are specified, weave them subtly into the narrative
 
-OUTPUT FORMAT:
-Write the story as continuous prose. Use "Chapter X: Title" headers for chapters.
-Begin directly with the story - no meta-commentary or explanations.
-Do not include any JSON, markdown code blocks, or formatting markers.
-Just write the story.`
+IMPORTANT - USE ALL STORY ELEMENTS:
+1. DIALOGUES: Include meaningful dialogue exchanges between characters in each chapter. Dialogue should reveal character personality, advance the plot, and create tension. Aim for at least 2-3 dialogue exchanges per chapter.
+2. MOODS: Establish and transition between moods (atmospheres) as specified. Use sensory details, weather, lighting, and character reactions to convey the mood.
+3. PATTERNS: If story patterns are specified (like "hero's journey", "rags to riches"), follow the pattern structure but implement it subtly through events, not explicitly naming it.
+4. THEMES: Weave themes into the narrative through character choices, dialogue subtext, and symbolic elements - don't preach them directly.
+5. WORLD RULES: If magical or special rules exist in this world, demonstrate them naturally through the story rather than explaining them.
+6. WISDOM: If philosophical insights are specified, let characters discover them through experience, not exposition.
+
+PACING INSTRUCTION:
+- Don't rush! Build each scene with proper setup, development, and resolution.
+- Let characters breathe, react, and interact naturally.
+- Each chapter should feel complete while advancing the larger narrative.${languageInstruction}${customInstructions}
+
+OUTPUT FORMAT (Markdown):
+- Use "# ${storyName}" as the main title at the beginning
+- Use "## Chapter X: Title" for chapter headers (h2)
+- Use "### Scene Title" for scene breaks if needed (h3)
+- Use "*text*" for emphasis and "**text**" for strong emphasis
+- Use "> quote" for important quotes or epigraphs
+- Use "---" for scene breaks or thematic pauses
+- Write paragraphs separated by blank lines
+- Format dialogue naturally within paragraphs
+- Begin directly with the story - no meta-commentary
+- Do not wrap the output in code blocks`;
+  },
+
+  // Prompt for generating a single chapter
+  generateChapter: (chapterInfo, storyContext, options) => {
+    const langCode = options.language || 'en';
+    const langInfo = SUPPORTED_LANGUAGES[langCode] || SUPPORTED_LANGUAGES.en;
+    const languageInstruction = langCode === 'en' 
+      ? '' 
+      : `\n\nIMPORTANT: Write in ${langInfo.name} (${langInfo.native}). All text must be in ${langInfo.name}.`;
+    
+    const customInstructions = options.customPrompt 
+      ? `\n\nADDITIONAL AUTHOR INSTRUCTIONS:\n${options.customPrompt}` 
+      : '';
+
+    // Build global elements section
+    const globalElements = storyContext.globalElements || {};
+    const globalSection = `
+GLOBAL STORY ELEMENTS (use subtly throughout):
+- Themes: ${globalElements.themes || 'See story specification'}
+- World Rules: ${globalElements.worldRules || 'Standard reality'}
+- Patterns: ${globalElements.patterns || 'Natural story flow'}
+- Overall Mood Arc: ${globalElements.moodArc || 'Follow scene moods'}`;
+
+    return `You are a skilled fiction writer. Write ONLY Chapter ${chapterInfo.number}: "${chapterInfo.title}" of this story.
+
+STORY TITLE: ${storyContext.storyName}
+
+PREVIOUS CHAPTERS SUMMARY:
+${storyContext.previousSummary || 'This is the first chapter.'}
+${globalSection}
+
+THIS CHAPTER'S SPECIFICATION:
+${chapterInfo.cnl}
+
+CHARACTERS IN THIS CHAPTER:
+${chapterInfo.characters || 'See chapter specification.'}
+
+LOCATIONS:
+${chapterInfo.locations || 'See chapter specification.'}
+
+MOODS FOR THIS CHAPTER:
+${chapterInfo.moods || 'Establish appropriate atmosphere based on events.'}
+
+DIALOGUES TO INCLUDE:
+${chapterInfo.dialogues || 'Create natural dialogue exchanges between characters present.'}
+
+WRITING GUIDELINES:
+- Style: ${options.style || 'narrative'} prose
+- Tone: ${options.tone || 'literary'}
+- Length: ${options.chapterLength || '400-800 words'} for this chapter
+- Maintain consistency with previous chapters
+- End the chapter with a hook or transition to the next
+
+IMPORTANT - CHAPTER CONSTRUCTION:
+1. DIALOGUE: Include at least 2-3 meaningful dialogue exchanges. Let characters speak naturally, revealing personality and advancing the plot.
+2. MOOD: Establish the chapter's atmosphere through sensory details, not just stating emotions.
+3. PACING: Don't rush! Build scenes properly:
+   - Setup: Establish where we are and who's present
+   - Development: Let events unfold naturally with character reactions
+   - Resolution: Conclude with a hook or transition
+4. GLOBAL ELEMENTS: Subtly incorporate themes and world rules - show, don't tell.
+5. SHOW DON'T TELL: Demonstrate emotions through actions, dialogue, and body language.${languageInstruction}${customInstructions}
+
+OUTPUT FORMAT (Markdown):
+- Start with "## Chapter ${chapterInfo.number}: ${chapterInfo.title}" header (h2)
+- Use "### Scene Title" for scene breaks if needed (h3)
+- Use "*text*" for emphasis and "**text**" for strong emphasis
+- Use "---" for scene breaks or thematic pauses
+- Write paragraphs separated by blank lines
+- No meta-commentary or explanations
+- Do not wrap the output in code blocks`;
+  }
 };
 
 // ============================================
@@ -214,7 +337,7 @@ export async function refineStoryWithLLM(project, options) {
  * Generate Natural Language prose story from CNL specification
  * @param {string} cnl - The CNL specification
  * @param {string} storyName - Story title
- * @param {Object} options - Generation options (style, tone, length)
+ * @param {Object} options - Generation options (style, tone, length, language, model, customPrompt)
  * @returns {Promise<Object>} Object containing the generated story text
  */
 export async function generateNLFromCNL(cnl, storyName, options = {}) {
@@ -229,16 +352,97 @@ export async function generateNLFromCNL(cnl, storyName, options = {}) {
   
   const prompt = PROMPTS.generateNLFromCNL(cnl, storyName, options);
   
-  const response = await agent.complete({
+  // Build complete options with optional model selection
+  const completeOptions = {
     prompt,
     mode: 'deep',  // Use deeper reasoning for creative writing
     maxTokens: 8000  // Allow for longer stories
-  });
+  };
+  
+  // Add model if specified
+  if (options.model) {
+    completeOptions.model = options.model;
+  }
+  
+  const response = await agent.complete(completeOptions);
   
   const content = response.content || response.text || response;
   
   // For NL generation, we expect plain text, not JSON
   return { story: content.trim() };
+}
+
+/**
+ * Generate a single chapter from CNL specification
+ * @param {Object} chapterInfo - Chapter info (number, title, cnl, characters, locations)
+ * @param {Object} storyContext - Story context (storyName, previousSummary)
+ * @param {Object} options - Generation options (style, tone, language, model, customPrompt)
+ * @returns {Promise<Object>} Object containing the generated chapter text
+ */
+export async function generateChapter(chapterInfo, storyContext, options = {}) {
+  if (!agentAvailable) {
+    throw new Error('LLM agent not available.');
+  }
+  
+  const agent = new LLMAgent({
+    name: 'ScriptaChapterWriter',
+    systemPrompt: 'You are a skilled fiction writer. Write one chapter at a time. Output only the chapter text, no JSON or metadata.'
+  });
+  
+  const prompt = PROMPTS.generateChapter(chapterInfo, storyContext, options);
+  
+  const completeOptions = {
+    prompt,
+    mode: 'deep',
+    maxTokens: 2000
+  };
+  
+  if (options.model) {
+    completeOptions.model = options.model;
+  }
+  
+  const response = await agent.complete(completeOptions);
+  const content = response.content || response.text || response;
+  
+  return { chapter: content.trim() };
+}
+
+/**
+ * Get list of available LLM models
+ * @returns {Object} Object with fast and deep model arrays
+ */
+export function getAvailableModels() {
+  if (!agentAvailable || !listModelsFromCache) {
+    return { fast: [], deep: [], available: false };
+  }
+  
+  try {
+    const models = listModelsFromCache();
+    return {
+      fast: models.fast.map(m => ({
+        name: m.name,
+        provider: m.providerKey,
+        qualifiedName: m.qualifiedName || `${m.providerKey}/${m.name}`
+      })),
+      deep: models.deep.map(m => ({
+        name: m.name,
+        provider: m.providerKey,
+        qualifiedName: m.qualifiedName || `${m.providerKey}/${m.name}`
+      })),
+      available: true
+    };
+  } catch (err) {
+    console.error('[LLM Generator] Error getting models:', err.message);
+    return { fast: [], deep: [], available: false };
+  }
+}
+
+/**
+ * Get supported languages
+ * @returns {Object} Object with language codes and names
+ */
+export function getSupportedLanguages() {
+  return SUPPORTED_LANGUAGES;
 }
 
 // ============================================
@@ -286,5 +490,9 @@ export default {
   generateStoryWithLLM,
   refineStoryWithLLM,
   generateNLFromCNL,
-  isLLMAvailable
+  generateChapter,
+  isLLMAvailable,
+  getAvailableModels,
+  getSupportedLanguages,
+  SUPPORTED_LANGUAGES
 };

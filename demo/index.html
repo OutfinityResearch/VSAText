@@ -77,6 +77,35 @@
         </div>
         <div class="view" id="view-nl">
           <div class="nl-container">
+            <!-- Generation Options Panel -->
+            <div class="nl-options-panel" id="nl-options-panel">
+              <div class="nl-options-row">
+                <div class="nl-option-group">
+                  <label class="nl-option-label">Language</label>
+                  <select class="nl-option-select" id="nl-language">
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                    <option value="es">Español</option>
+                    <option value="pt">Português</option>
+                    <option value="it">Italiano</option>
+                    <option value="de">Deutsch</option>
+                    <option value="ro">Română</option>
+                  </select>
+                </div>
+                <div class="nl-option-group">
+                  <label class="nl-option-label">Model</label>
+                  <select class="nl-option-select" id="nl-model">
+                    <option value="">Default</option>
+                  </select>
+                </div>
+                <div class="nl-option-group nl-option-expand">
+                  <label class="nl-option-label">Custom Instructions</label>
+                  <input type="text" class="nl-option-input" id="nl-custom-prompt" 
+                         placeholder="E.g. Write in first person, focus on dialogue...">
+                </div>
+              </div>
+            </div>
+            <!-- Toolbar -->
             <div class="nl-toolbar">
               <button class="btn random" id="btn-nl-generate">Create Story</button>
               <span class="nl-toolbar-spacer"></span>
@@ -353,6 +382,32 @@
         <button class="btn" id="wizard-prev" onclick="wizardPrev()">Back</button>
         <div class="wizard-step-info" id="wizard-step-info">Step 1 of 5</div>
         <button class="btn primary" id="wizard-next" onclick="wizardNext()">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Book Preview Modal -->
+  <div class="modal-overlay" id="book-preview-modal">
+    <div class="book-preview-container">
+      <div class="book-preview-header">
+        <h2 class="book-preview-title" id="book-preview-title">Story Title</h2>
+        <button class="modal-close" onclick="closeModal('book-preview-modal')">x</button>
+      </div>
+      <div class="book-preview-content" id="book-preview-content">
+        <div class="book-page" id="book-page-left">
+          <div class="book-page-content" id="book-page-left-content"></div>
+          <div class="book-page-number" id="book-page-left-num"></div>
+        </div>
+        <div class="book-spine"></div>
+        <div class="book-page" id="book-page-right">
+          <div class="book-page-content" id="book-page-right-content"></div>
+          <div class="book-page-number" id="book-page-right-num"></div>
+        </div>
+      </div>
+      <div class="book-preview-nav">
+        <button class="btn book-nav-btn" id="book-prev-btn" onclick="bookPrevPage()">Previous</button>
+        <span class="book-page-indicator" id="book-page-indicator">Page 1-2 of 10</span>
+        <button class="btn book-nav-btn" id="book-next-btn" onclick="bookNextPage()">Next</button>
       </div>
     </div>
   </div>

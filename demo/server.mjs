@@ -402,6 +402,26 @@ function createDemoServer() {
         }
       }
       
+      // Get available LLM models
+      if (method === 'GET' && p === '/v1/models') {
+        try {
+          const llmGenerator = await import('./services/llm-generator.mjs');
+          const models = llmGenerator.getAvailableModels();
+          const languages = llmGenerator.getSupportedLanguages();
+          return jsonResponse(res, 200, { 
+            models,
+            languages,
+            llmAvailable: llmGenerator.isLLMAvailable()
+          });
+        } catch (err) {
+          return jsonResponse(res, 200, { 
+            models: { fast: [], deep: [], available: false },
+            languages: {},
+            llmAvailable: false
+          });
+        }
+      }
+      
       // ============================================
       // EVALUATION ENDPOINT
       // ============================================
@@ -634,6 +654,138 @@ function createDemoServer() {
           console.error('NL story generation error:', err);
           return errorResponse(res, 500, 'generation_error', err.message);
         }
+      }
+      
+      // Generate NL story with SSE streaming (chapter by chapter)
+      if (method === 'POST' && p === '/v1/generate/nl-story/stream') {
+        const body = await parseBody(req);
+        
+        // Set SSE headers
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'Access-Control-Allow-Origin': '*'
+        });
+        
+        const sendEvent = (data) => {
+          res.write(`data: ${JSON.stringify(data)}\n\n`);
+        };
+        
+        try {
+          const llmGenerator = await import('./services/llm-generator.mjs');
+          
+          const cnl = body.cnl;
+          const storyName = body.storyName || 'Untitled Story';
+          const options = body.options || {};
+          const chapters = body.chapters || []; // Array of chapter info objects
+          
+          if (!cnl || cnl.trim().length < 50) {
+            sendEvent({ type: 'error', message: 'CNL specification is too short or empty' });
+            res.end();
+            return;
+          }
+          
+          if (!llmGenerator.isLLMAvailable()) {
+            sendEvent({ type: 'error', message: 'LLM not available. Configure API keys.' });
+            res.end();
+            return;
+          }
+          
+          // If no chapters provided, generate all at once
+          if (!chapters.length) {
+            sendEvent({ type: 'start', totalChapters: 1, estimatedTimePerChapter: 15000 });
+            sendEvent({ type: 'chapter_start', chapterNumber: 1, chapterTitle: 'Full Story', estimated: 15000 });
+            
+            const result = await llmGenerator.generateNLFromCNL(cnl, storyName, options);
+            
+            sendEvent({ type: 'chapter_complete', chapterNumber: 1, chapterTitle: 'Full Story', content: result.story });
+            sendEvent({ type: 'complete', totalChapters: 1, fullStory: result.story });
+            res.end();
+            return;
+          }
+          
+          // Generate chapter by chapter
+          const estimatedTimePerChapter = 10000; // 10 seconds per chapter estimate
+          sendEvent({ 
+            type: 'start', 
+            totalChapters: chapters.length, 
+            estimatedTimePerChapter,
+            estimatedTotal: chapters.length * estimatedTimePerChapter
+          });
+          
+          let fullStory = '';
+          let previousSummary = '';
+          
+          for (let i = 0; i < chapters.length; i++) {
+            const chapter = chapters[i];
+            const chapterNumber = i + 1;
+            const startTime = Date.now();
+            
+            sendEvent({ 
+              type: 'chapter_start', 
+              chapterNumber, 
+              chapterTitle: chapter.title || `Chapter ${chapterNumber}`,
+              estimated: estimatedTimePerChapter,
+              progress: Math.round((i / chapters.length) * 100)
+            });
+            
+            try {
+              const chapterResult = await llmGenerator.generateChapter(
+                {
+                  number: chapterNumber,
+                  title: chapter.title || `Chapter ${chapterNumber}`,
+                  cnl: chapter.cnl || cnl,
+                  characters: chapter.characters || '',
+                  locations: chapter.locations || ''
+                },
+                {
+                  storyName,
+                  previousSummary
+                },
+                options
+              );
+              
+              const chapterContent = chapterResult.chapter;
+              fullStory += (fullStory ? '\n\n' : '') + chapterContent;
+              
+              // Create summary for next chapter context
+              previousSummary += `\nChapter ${chapterNumber}: ${chapter.title || 'Untitled'} - ${chapterContent.substring(0, 200)}...`;
+              
+              const elapsed = Date.now() - startTime;
+              
+              sendEvent({ 
+                type: 'chapter_complete', 
+                chapterNumber, 
+                chapterTitle: chapter.title || `Chapter ${chapterNumber}`,
+                content: chapterContent,
+                elapsed,
+                progress: Math.round(((i + 1) / chapters.length) * 100)
+              });
+              
+            } catch (chapterErr) {
+              sendEvent({ 
+                type: 'chapter_error', 
+                chapterNumber, 
+                chapterTitle: chapter.title || `Chapter ${chapterNumber}`,
+                error: chapterErr.message
+              });
+            }
+          }
+          
+          sendEvent({ 
+            type: 'complete', 
+            totalChapters: chapters.length, 
+            fullStory 
+          });
+          res.end();
+          
+        } catch (err) {
+          console.error('SSE NL generation error:', err);
+          sendEvent({ type: 'error', message: err.message });
+          res.end();
+        }
+        return;
       }
 
       // API not found

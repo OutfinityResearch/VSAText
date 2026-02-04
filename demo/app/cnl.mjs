@@ -46,6 +46,12 @@ export function getEditMode() {
 
 export function generateCNL() {
   let cnl = `// Auto-generated CNL\n// ${state.project.name}\n// Arc: ${state.project.selectedArc}\n\n`;
+
+  // Global LLM guidance (dual-layer CNL: SVO + #annotations)
+  cnl += `#hint: Treat this CNL as a deterministic specification. Do not invent new plot events, characters, or world rules.\n`;
+  cnl += `#hint: Use SVO statements as ground truth (WHAT). Use #example/#voice/#subtext/#style annotations to guide prose (HOW).\n`;
+  cnl += `#avoid: Adding named entities that are not declared or included in scenes.\n\n`;
+
   const { characters, locations, objects, moods, emotionalArc, themes, relationships, worldRules, dialogues } = state.project.libraries;
   const { blueprint } = state.project;
   
@@ -66,6 +72,17 @@ export function generateCNL() {
         if (m.tension) {
           cnl += `${m.beatKey} has tension ${m.tension}\n`;
         }
+        if (m.notes) {
+          cnl += `${m.beatKey} has note "${m.notes}"\n`;
+        }
+      });
+      cnl += '\n';
+    }
+
+    if (emotionalArc.length) {
+      cnl += '// Beat Moods\n';
+      emotionalArc.forEach(ea => {
+        cnl += `${ea.beatKey} has mood ${fid(ea.moodPreset)}\n`;
       });
       cnl += '\n';
     }
@@ -141,12 +158,19 @@ export function generateCNL() {
   
   // ==================== WORLD RULES ====================
   if (worldRules.length) {
-    cnl += '// World Rules\n';
-    worldRules.forEach(r => {
-      cnl += `World has rule ${fid(r.name)}\n`;
-      cnl += `${fid(r.name)} has category ${r.category}\n`;
-      if (r.description) cnl += `${fid(r.name)} has description "${r.description}"\n`;
-      if (r.scope) cnl += `${fid(r.name)} applies to ${fid(r.scope)}\n`;
+    cnl += '// === WORLD RULES ===\n';
+    cnl += 'World is setting\n';
+    worldRules.forEach((r, idx) => {
+      const rid = `R${idx + 1}`;
+      cnl += `${rid} is world_rule\n`;
+      cnl += `${rid} has text "${r.name}"\n`;
+      if (r.category) cnl += `${rid} has category ${fid(r.category)}\n`;
+      if (r.description) {
+        cnl += `${rid} has description "${r.description}"\n`;
+        cnl += `#hint: Treat this rule as inviolable unless an explicit exception is specified.\n`;
+      }
+      if (r.scope) cnl += `${rid} applies to ${fid(r.scope)}\n`;
+      cnl += `World includes rule ${rid}\n\n`;
     });
     cnl += '\n';
   }
@@ -204,17 +228,8 @@ export function generateCNL() {
     moods.forEach(m => {
       cnl += `${fid(m.name)} is mood\n`;
       Object.entries(m.emotions || {}).forEach(([e, i]) => 
-        cnl += `${fid(m.name)} has emotion ${e} intensity ${i}\n`
+        cnl += `${fid(m.name)} has emotion ${e} ${i}\n`
       );
-    });
-    cnl += '\n';
-  }
-  
-  // ==================== EMOTIONAL ARC ====================
-  if (emotionalArc.length) {
-    cnl += '// Emotional Arc\n';
-    emotionalArc.forEach(ea => {
-      cnl += `Story beat ${ea.beatKey} has mood ${ea.moodPreset}\n`;
     });
     cnl += '\n';
   }
@@ -222,7 +237,10 @@ export function generateCNL() {
   // ==================== THEMES ====================
   if (themes.length) {
     cnl += '// Themes\n';
-    themes.forEach(t => { cnl += `Story has theme ${fid(t.name)}\n`; });
+    themes.forEach((t, idx) => {
+      const role = idx === 0 ? 'primary' : 'secondary';
+      cnl += `Story has theme ${fid(t.name)} as ${role}\n`;
+    });
     cnl += '\n';
   }
   
@@ -230,12 +248,18 @@ export function generateCNL() {
   const { wisdom, patterns } = state.project.libraries;
   if (wisdom && wisdom.length) {
     cnl += '// === WISDOM ===\n';
-    wisdom.forEach(w => {
-      cnl += `Story conveys wisdom ${fid(w.label)}\n`;
-      cnl += `${fid(w.label)} has category ${w.category}\n`;
-      cnl += `${fid(w.label)} has insight "${w.insight}"\n`;
-      if (w.application) cnl += `${fid(w.label)} applies as "${w.application}"\n`;
-      if (w.examples) cnl += `${fid(w.label)} examples "${w.examples}"\n`;
+    wisdom.forEach((w, idx) => {
+      const wid = `W${idx + 1}`;
+      cnl += `${wid} is wisdom\n`;
+      cnl += `${wid} has label "${w.label}"\n`;
+      if (w.category) cnl += `${wid} has category ${fid(w.category)}\n`;
+      if (w.insight) {
+        cnl += `${wid} has insight "${w.insight}"\n`;
+        cnl += '#hint: Demonstrate wisdom through action and consequence, not lectures.\n';
+      }
+      if (w.application) cnl += `${wid} has application "${w.application}"\n`;
+      if (w.examples) cnl += `${wid} has examples "${w.examples}"\n`;
+      cnl += `Story includes wisdom ${wid}\n\n`;
     });
     cnl += '\n';
   }
@@ -243,15 +267,19 @@ export function generateCNL() {
   // ==================== PATTERNS ====================
   if (patterns && patterns.length) {
     cnl += '// === STORY PATTERNS ===\n';
-    patterns.forEach(p => {
-      cnl += `Story uses pattern ${fid(p.label)}\n`;
-      cnl += `${fid(p.label)} is ${p.patternType}\n`;
-      if (p.description) cnl += `${fid(p.label)} description "${p.description}"\n`;
-      if (p.structure && p.structure.length) {
-        cnl += `${fid(p.label)} structure [${p.structure.join(', ')}]\n`;
+    patterns.forEach((p, idx) => {
+      const pid = `P${idx + 1}`;
+      cnl += `${pid} is pattern\n`;
+      cnl += `${pid} has label "${p.label}"\n`;
+      if (p.patternType) {
+        cnl += `${pid} has type ${fid(p.patternType)}\n`;
+        cnl += '#hint: Patterns constrain plot shape; avoid random twists that break the declared pattern.\n';
       }
-      if (p.keyQuestion) cnl += `${fid(p.label)} key question "${p.keyQuestion}"\n`;
-      if (p.examples) cnl += `${fid(p.label)} examples "${p.examples}"\n`;
+      if (p.description) cnl += `${pid} has description "${p.description}"\n`;
+      if (p.structure && p.structure.length) cnl += `${pid} has structure "${p.structure.join(' > ')}"\n`;
+      if (p.keyQuestion) cnl += `${pid} has key_question "${p.keyQuestion}"\n`;
+      if (p.examples) cnl += `${pid} has examples "${p.examples}"\n`;
+      cnl += `Story includes pattern ${pid}\n\n`;
     });
     cnl += '\n';
   }

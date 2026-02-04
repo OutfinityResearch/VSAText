@@ -135,9 +135,10 @@ export async function loadCNLIntoState(cnlText) {
 // ============================================
 
 /**
- * Generate placeholder dialogue exchanges based on purpose
+ * Generate initial dialogue exchange structure based on purpose
+ * Creates empty exchange slots with suggested intents/emotions for the user to fill
  */
-export function generatePlaceholderExchanges(purpose, characters) {
+export function generateDialogueExchangeStructure(purpose, characters) {
   if (!characters || characters.length === 0) return [];
   
   const template = DIALOGUE_TEMPLATES[purpose] || DIALOGUE_TEMPLATES.exposition;
@@ -149,7 +150,7 @@ export function generatePlaceholderExchanges(purpose, characters) {
       speakerId: characters[charIndex]?.id || 'unknown',
       intent: t.intent,
       emotion: t.emotion,
-      sketch: `[${characters[charIndex]?.name || 'Character'}: ${t.intent}...]`
+      sketch: '' // User must fill in the actual dialogue
     });
   });
   

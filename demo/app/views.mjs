@@ -10,14 +10,56 @@ import { generateCNL } from './cnl.mjs';
 import { updateStats } from './metrics.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
 
+// ==================== VIEW DESCRIPTIONS ====================
+const VIEW_DESCRIPTIONS = {
+  relationships: {
+    title: 'Character Relationships',
+    description: 'The bonds between characters: allies, rivals, family, mentors. Relationships create conflict, motivation, and emotional stakes. Click characters to add connections—every relationship should matter to the story.'
+  },
+  emotionalarc: {
+    title: 'Emotional Arc & Tension',
+    description: 'The emotional rhythm of your story. Map tension levels (1-5) across your narrative: low for breathing room, high for climaxes. Great stories oscillate—build tension, release, rebuild higher.'
+  },
+  blocks: {
+    title: 'Story Blocks',
+    description: 'Narrative building blocks from story patterns: the Call to Adventure, Crossing the Threshold, Ordeal, Return. These are beats your story hits. Assign them to scenes to ensure satisfying structure.'
+  },
+  worldrules: {
+    title: 'World Rules',
+    description: 'The unique laws of your story world: magic systems, technology limits, social structures, physics. Rules create constraints that make problem-solving interesting. Define them—then never break them without consequence.'
+  },
+  wisdom: {
+    title: 'Wisdom & Insights',
+    description: 'The philosophical truths your story explores. Not morals stated outright, but insights characters earn through experience. "Power corrupts" shown through a character\'s journey, not preached.'
+  },
+  patterns: {
+    title: 'Story Patterns',
+    description: 'Master plot structures: Rags to Riches, The Quest, Voyage and Return, Rebirth. These patterns resonate because they reflect human experience. Choose patterns that serve your theme.'
+  }
+};
+
+/**
+ * Generate description header HTML for a view
+ */
+function getViewDescriptionHtml(viewKey) {
+  const desc = VIEW_DESCRIPTIONS[viewKey];
+  if (!desc) return '';
+  return `<div class="view-description-header">
+    <div class="view-description-title">${desc.title}</div>
+    <div class="view-description-text">${desc.description}</div>
+  </div>`;
+}
+
 // ==================== RELATIONSHIPS VIEW ====================
 export function renderRelationshipsView() {
   const container = $('#relationships-view');
   const chars = state.project.libraries.characters;
   const rels = state.project.libraries.relationships;
   
+  const descHtml = getViewDescriptionHtml('relationships');
+  
   if (chars.length === 0) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔗</div><div class="empty-state-text">No characters yet</div><div class="empty-state-hint">Add characters first to create relationships</div></div>`;
+    container.innerHTML = descHtml + `<div class="empty-state"><div class="empty-state-icon">🔗</div><div class="empty-state-text">No characters yet</div><div class="empty-state-hint">Add characters first to create relationships</div></div>`;
     return;
   }
   
@@ -128,7 +170,7 @@ export function renderRelationshipsView() {
     html += `</div>`;
   }
   
-  container.innerHTML = html;
+  container.innerHTML = descHtml + html;
 }
 
 window.renderRelationshipsView = renderRelationshipsView;
@@ -366,11 +408,12 @@ export function renderWorldRulesView() {
   const container = $('#worldrules-grid');
   const rules = state.project.libraries.worldRules;
   
-  let html = '';
+  const descHtml = getViewDescriptionHtml('worldrules');
+  let cardsHtml = '';
   
   if (rules.length > 0) {
     rules.forEach(r => {
-      html += `
+      cardsHtml += `
         <div class="rule-card" onclick="editWorldRule('${r.id}')">
           <div class="rule-category">${r.category}</div>
           <div class="rule-name">${r.name}</div>
@@ -381,9 +424,9 @@ export function renderWorldRulesView() {
     });
   }
   
-  html += `<div class="add-entity-card" onclick="addWorldRule()"><div class="icon">+</div><span>Add World Rule</span></div>`;
+  cardsHtml += `<div class="add-entity-card" onclick="addWorldRule()"><div class="icon">+</div><span>Add World Rule</span></div>`;
   
-  container.innerHTML = html;
+  container.innerHTML = descHtml + `<div class="rules-grid-cards">${cardsHtml}</div>`;
 }
 
 window.addWorldRule = () => {

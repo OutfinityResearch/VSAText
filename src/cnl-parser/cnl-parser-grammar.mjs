@@ -32,10 +32,48 @@ export const VERBS = new Set([
   'uses', 'mapped', 'linked', 'involves', 'starts', 'touchpoint', 'says'
 ]);
 
+// Annotation types used to guide LLM generation (ignored by metrics).
+// Syntax:
+//   #hint: ...
+//   #example: ...
+//   #example: begin ... #example: end
+export const ANNOTATION_TYPES = new Set([
+  'example',
+  'hint',
+  'style',
+  'avoid',
+  'voice',
+  'subtext',
+  'sensory',
+  'pacing',
+  'reference',
+  'context',
+  'contrast',
+  'reveal'
+]);
+
+// Properties that may appear multiple times and must not overwrite previous values.
+export const MULTI_VALUE_PROPERTIES = new Set([
+  'characteristic',
+  'rule',
+  'symbol',
+  'value',
+  'question',
+  'setup',
+  'payoff',
+  'note',
+  'theme',
+  // World rule details often repeat
+  'exception',
+  'implication'
+]);
+
 // Modifiers that connect parts of statements
 export const MODIFIERS = new Set([
   'as', 'to', 'at', 'from', 'with', 'about', 'during',
-  'because', 'despite', 'before', 'after'
+  'because', 'despite', 'before', 'after',
+  // Common narrative linking modifiers used by theory/spec examples
+  'in', 'by'
 ]);
 
 // Entity types
@@ -48,7 +86,13 @@ export const ENTITY_TYPES = new Set([
 
   // Blueprint/Dialogue/Subplot types
   'dialogue', 'subplot', 'beat', 'exchange',
-  'mood'
+  'mood',
+
+  // Higher-level narrative specification types
+  'world_rule',
+  'wisdom',
+  'pattern',
+  'template'
 ]);
 
 // Dialogue purposes
@@ -73,10 +117,11 @@ export const SUBPLOT_TYPES = new Set([
 
 export default {
   VERBS,
+  ANNOTATION_TYPES,
+  MULTI_VALUE_PROPERTIES,
   MODIFIERS,
   ENTITY_TYPES,
   DIALOGUE_PURPOSES,
   DIALOGUE_TONES,
   SUBPLOT_TYPES
 };
-

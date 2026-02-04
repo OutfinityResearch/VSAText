@@ -135,22 +135,23 @@ Generated CNL:
 <h2>CNL Output</h2>
 
 <pre><code>// Template Definition
-"Mentor's Wisdom" is pattern
-"Mentor's Wisdom" has variable $student as character
-"Mentor's Wisdom" has variable $mentor as character
-"Mentor's Wisdom" has variable $lesson as theme
+T1 is template
+T1 has title "Mentor's Wisdom"
+T1 has variable $student as character
+T1 has variable $mentor as character
+T1 has variable $lesson as wisdom
 
-"Mentor's Wisdom" has template begin
+T1 has template begin
   $mentor meets $student
   $mentor reveals $lesson
   $student transforms "gains understanding"
-"Mentor's Wisdom" has template end
+T1 has template end
 
 // Template Instantiation
-scene "The Teaching" uses pattern "Mentor's Wisdom"
-scene "The Teaching" binds $student to Anna
-scene "The Teaching" binds $mentor to Gandalf
-scene "The Teaching" binds $lesson to wisdom</code></pre>
+Sc7 uses template T1
+Sc7 binds $student to Anna
+Sc7 binds $mentor to Gandalf
+Sc7 binds $lesson to W1</code></pre>
 
 <h2>Metrics Impact</h2>
 

@@ -57,6 +57,23 @@ Village is location
 /* Multi-line
    comment */</code></pre>
 
+<h3>LLM Annotations (Dual-Layer CNL)</h3>
+
+<p>CNL supports an annotation layer for LLM prose guidance. Annotation lines start with <code>#</code> and attach to the previous SVO statement (or become global if they appear before any statement). They are ignored by metrics.</p>
+
+<pre><code>#style: Understated, concrete sensory detail
+#avoid: Adding characters not declared/included by scenes
+
+Anna has trait brave
+#hint: Show bravery through action, not declarations.
+#example: "Despite the tremor in her hands, she stepped forward anyway."
+
+Sc7 has purpose revelation
+#example: begin
+  Elena's hand froze on the door handle.
+  "I knew your mother," Mira said.
+#example: end</code></pre>
+
 <h3>Reserved Keywords</h3>
 
 <p>The following words have special meaning in CNL:</p>
@@ -132,7 +149,7 @@ Anna has archetype Hero
 Village has atmosphere peaceful
 Village has geography rural
 Story has title "The Dragon's Quest"
-Scene1 has mood Mysterious</code></pre>
+Sc1 has mood mysterious</code></pre>
 
 <p><strong>Common Properties:</strong></p>
 
@@ -207,10 +224,10 @@ Anna relates to Village as home</code></pre>
 <p>Specifies that a structural element contains an entity reference.</p>
 
 <pre><code>// Syntax: Group includes Type Entity
-Scene1 includes character Anna
-Scene1 includes character Marcus
-Scene1 includes location Village
-Scene1 includes object SilverKey</code></pre>
+Sc1 includes character Anna
+Sc1 includes character Marcus
+Sc1 includes location Village
+Sc1 includes object SilverKey</code></pre>
 
 <h3>5. Ownership (X owns Y)</h3>
 
@@ -227,7 +244,7 @@ Village owns "ancient well"</code></pre>
 
 <pre><code>// Syntax: Subject references @Target
 Chapter2 references @Chapter1
-Scene5 references @Scene2</code></pre>
+Sc5 references @Sc2</code></pre>
 
 <h3>7. Constraints (requires, forbids, must)</h3>
 
@@ -239,11 +256,11 @@ Chapter1 requires "Anna"
 
 // Forbids: must NOT include this element
 Story forbids "explicit violence"
-Scene3 forbids "death"
+Sc3 forbids "death"
 
 // Must: obligation to perform action
 Chapter1 must introduce Anna
-Scene2 must reveal secret
+Sc2 must reveal secret
 
 // Tone: emotional direction
 Story has tone hopeful
@@ -259,7 +276,7 @@ Chapter1 has max scenes 3</code></pre>
 <p>Associates prose text with an entity. This is how narrative content is attached to scenes.</p>
 
 <pre><code>// Syntax: Subject describes "text"
-Scene1 describes "Anna walked through the quiet village at dawn..."
+Sc1 describes "Anna walked through the quiet village at dawn..."
 Anna describes "A young woman with fierce determination in her eyes"</code></pre>
 
 <h3>9. Events (Action Statements)</h3>
@@ -322,32 +339,32 @@ Storm destroys Village</code></pre>
 Book group begin
   Book has title "The Dragon's Quest"
   
-  Chapter1 group begin
-    Chapter1 has title "The Beginning"
+  Ch1 group begin
+    Ch1 has title "The Beginning"
     
-    Scene1 group begin
-Scene1 has title "Morning at the Village"
-Scene1 has mood Peaceful
-Scene1 includes character Anna
-Scene1 includes location Village
-Anna discovers artifact
-    Scene1 group end
+    Sc1 group begin
+      Sc1 has title "Morning at the Village"
+      Sc1 has mood peaceful
+      Sc1 includes character Anna
+      Sc1 includes location Village
+      Anna discovers artifact
+    Sc1 group end
     
-    Scene2 group begin
-Scene2 has title "The Stranger Arrives"
-Scene2 has mood Mysterious
-Scene2 includes character Anna
-Scene2 includes character Gandalf
-Gandalf meets Anna
-Gandalf reveals "quest"
-    Scene2 group end
+    Sc2 group begin
+      Sc2 has title "The Stranger Arrives"
+      Sc2 has mood mysterious
+      Sc2 includes character Anna
+      Sc2 includes character Gandalf
+      Gandalf meets Anna
+      Gandalf reveals "quest"
+    Sc2 group end
     
-  Chapter1 group end
+  Ch1 group end
   
-  Chapter2 group begin
-    Chapter2 has title "Into the Unknown"
+  Ch2 group begin
+    Ch2 has title "Into the Unknown"
     // ... more scenes
-  Chapter2 group end
+  Ch2 group end
   
 Book group end</code></pre>
 
@@ -365,24 +382,24 @@ Book group end</code></pre>
 <p>Patterns are reusable templates with variable slots that can be instantiated in scenes:</p>
 
 <pre><code>// Pattern Definition
-"Hero's Call" is pattern
-"Hero's Call" has variable $hero as character
-"Hero's Call" has variable $location as location
-"Hero's Call" has variable $challenge as event
+P1 is pattern
+P1 has label "Hero's Call"
+P1 has variable $hero as character
+P1 has variable $location as location
+P1 has variable $challenge as event
 
-"Hero's Call" has template begin
+P1 has template begin
   $hero is at $location
   $hero discovers "call to adventure"
   $hero faces $challenge
   $hero decides "accept quest"
-"Hero's Call" has template end
+P1 has template end
 
 // Pattern Instantiation
-Scene1 uses pattern "Hero's Call"
-  $hero binds to Anna
-  $location binds to Village
-  $challenge binds to Storm
-Scene1 pattern end</code></pre>
+Sc1 uses pattern P1
+Sc1 binds $hero to Anna
+Sc1 binds $location to Village
+Sc1 binds $challenge to Storm</code></pre>
 
 <h2>Complete Example</h2>
 
@@ -396,15 +413,27 @@ Scene1 pattern end</code></pre>
 Story has title "The Dragon's Quest"
 Story has genre fantasy
 Story has tone adventurous
-Story has theme redemption
-Story has theme courage
+Story has theme redemption as primary
+Story has theme courage as secondary
 Story requires "happy ending"
 Story forbids "explicit violence"
 Story has max characters 8
 
 // --- World Rules ---
-World has rule "Magic requires sacrifice"
-World has rule "Dragons can only be defeated by pure hearts"
+World is setting
+
+R1 is world_rule
+R1 has text "Magic requires sacrifice"
+R1 has category magic
+R1 applies to World
+#hint: Every use of magic must visibly cost the caster something meaningful.
+World includes rule R1
+
+R2 is world_rule
+R2 has text "Dragons can only be defeated by pure hearts"
+R2 has category biology
+R2 applies to World
+World includes rule R2
 
 // --- Characters ---
 Anna is protagonist
@@ -463,31 +492,31 @@ Book group begin
     Chapter1 must introduce Anna
     
     Sc1 group begin
-Sc1 has title "Ordinary Morning"
-Sc1 has mood Peaceful
-Sc1 includes character Anna
-Sc1 includes location Village
-Anna describes "Living her simple life"
+      Sc1 has title "Ordinary Morning"
+      Sc1 has mood peaceful
+      Sc1 includes character Anna
+      Sc1 includes location Village
+      Anna describes "Living her simple life"
     Sc1 group end
     
     Sc2 group begin
-Sc2 has title "The Stranger"
-Sc2 has mood Mysterious
-Sc2 includes character Anna
-Sc2 includes character Gandalf
-Sc2 includes location Village
-Gandalf arrives at Village
-Gandalf meets Anna
-Gandalf reveals "Dragon threatens the kingdom"
+      Sc2 has title "The Stranger"
+      Sc2 has mood mysterious
+      Sc2 includes character Anna
+      Sc2 includes character Gandalf
+      Sc2 includes location Village
+      Gandalf arrives at Village
+      Gandalf meets Anna
+      Gandalf reveals "Dragon threatens the kingdom"
     Sc2 group end
     
     Sc3 group begin
-Sc3 has title "The Decision"
-Sc3 has mood Tense
-Sc3 includes character Anna
-Sc3 includes character Marcus
-Anna decides "accept the quest"
-Marcus joins Anna
+      Sc3 has title "The Decision"
+      Sc3 has mood tense
+      Sc3 includes character Anna
+      Sc3 includes character Marcus
+      Anna decides "accept the quest"
+      Marcus joins Anna
     Sc3 group end
     
   Chapter1 group end
@@ -496,23 +525,23 @@ Marcus joins Anna
     Chapter2 has title "The Journey"
     
     Sc4 group begin
-Sc4 has title "Into the Forest"
-Sc4 has mood Ominous
-Sc4 includes character Anna
-Sc4 includes character Marcus
-Sc4 includes location "Dark Forest"
-Anna enters "Dark Forest"
-Anna discovers SilverKey
+      Sc4 has title "Into the Forest"
+      Sc4 has mood ominous
+      Sc4 includes character Anna
+      Sc4 includes character Marcus
+      Sc4 includes location "Dark Forest"
+      Anna enters "Dark Forest"
+      Anna discovers SilverKey
     Sc4 group end
     
     Sc5 group begin
-Sc5 has title "The Test"
-Sc5 has mood Desperate
-Sc5 includes character Anna
-Sc5 includes character Marcus
-Anna confronts fear
-Marcus encourages Anna
-Anna transforms "overcomes doubt"
+      Sc5 has title "The Test"
+      Sc5 has mood desperate
+      Sc5 includes character Anna
+      Sc5 includes character Marcus
+      Anna confronts fear
+      Marcus encourages Anna
+      Anna transforms "overcomes doubt"
     Sc5 group end
     
   Chapter2 group end
@@ -522,25 +551,25 @@ Anna transforms "overcomes doubt"
     Chapter3 requires "Drakon"
     
     Sc6 group begin
-Sc6 has title "The Lair"
-Sc6 has mood Epic
-Sc6 includes character Anna
-Sc6 includes character Drakon
-Sc6 includes location "Dragon's Lair"
-Sc6 includes object SilverKey
-Anna confronts Drakon
-Anna uses SilverKey
-Drakon reveals "secret vulnerability"
+      Sc6 has title "The Lair"
+      Sc6 has mood epic
+      Sc6 includes character Anna
+      Sc6 includes character Drakon
+      Sc6 includes location "Dragon's Lair"
+      Sc6 includes object SilverKey
+      Anna confronts Drakon
+      Anna uses SilverKey
+      Drakon reveals "secret vulnerability"
     Sc6 group end
     
     Sc7 group begin
-Sc7 has title "Victory"
-Sc7 has mood Triumphant
-Sc7 includes character Anna
-Sc7 includes character Marcus
-Sc7 includes character Gandalf
-Anna defeats Drakon
-Anna returns to Village
+      Sc7 has title "Victory"
+      Sc7 has mood triumphant
+      Sc7 includes character Anna
+      Sc7 includes character Marcus
+      Sc7 includes character Gandalf
+      Anna defeats Drakon
+      Anna returns to Village
     Sc7 group end
     
   Chapter3 group end
@@ -669,24 +698,25 @@ Castle has characteristic "towering spires"
 Castle has characteristic "ancient walls"</code></pre>
 
 <h3>Scene Template</h3>
-<pre><code>SceneX group begin
-  SceneX has title "Scene Title"
-  SceneX has mood MoodPreset
-  SceneX includes character CharA
-  SceneX includes character CharB
-  SceneX includes location Location
+<pre><code>ScX group begin
+  ScX has title "Scene Title"
+  ScX has mood mysterious
+  ScX includes character CharA
+  ScX includes character CharB
+  ScX includes location Location
   
   // Actions
   CharA verb Object
   CharB responds
-SceneX group end</code></pre>
+ScX group end</code></pre>
 
 <h3>Subplot Definition</h3>
-<pre><code>Romance is subplot
-Romance has type romance
-Romance has characters Anna, Marcus
-Romance has startBeat "meeting"
-Romance has resolveBeat "reunion"</code></pre>
+<pre><code>Subplot S1 type romance
+S1 involves Anna
+S1 involves Marcus
+S1 starts at beat meeting
+S1 resolves at beat reunion
+S1 touchpoint Ch2.Sc3 event "First confession"</code></pre>
 
 <h2>Error Messages</h2>
 

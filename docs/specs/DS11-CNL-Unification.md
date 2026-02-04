@@ -2,7 +2,11 @@
 
 ## 1. Purpose
 
-This document provides the complete reference for SCRIPTA's Controlled Natural Language (CNL) syntax. SCRIPTA uses exclusively the **SVO (Subject-Verb-Object)** syntax which is both human-readable and machine-parseable.
+This document provides the complete reference for SCRIPTA's Controlled Natural Language (CNL) syntax.
+
+SCRIPTA is **SVO-first** (Subject–Verb–Object) for machine-parseable semantics, plus:
+- a small set of **editor header lines** (Blueprint/Dialogue/Exchange) used by the visual editor
+- an **annotation layer** (`#hint`, `#example`, etc.) used for LLM prose guidance and ignored by metrics
 
 ## 2. Syntax Overview
 
@@ -34,6 +38,56 @@ Anna owns SilverKey
 Subject has tone Value
 Subject has max Property Count
 Subject has min Property Count
+```
+
+### 2.2 LLM Annotation Layer (dual-layer CNL)
+
+Annotations start with `#` and attach to the previous SVO statement (or become global if they appear before any statement). They do not affect metrics.
+
+```
+#style: Gothic horror, Victorian prose rhythms
+#avoid: modern slang in narration
+
+Anna has trait brave
+#hint: Show bravery through action, not declarations.
+#example: "Despite the tremor in her hands, she stepped forward anyway."
+
+Sc7 has purpose revelation
+#example: begin
+  Elena's hand froze on the door handle.
+  "I knew your mother," Mira said.
+#example: end
+```
+
+### 2.3 Blueprint / Dialogue / Subplot Extensions
+
+These lines are accepted by the unified parser and populate structured AST sections:
+
+```cnl
+Blueprint uses arc heros_journey
+
+Beat call_to_adventure mapped to Ch1.Sc2
+call_to_adventure has tension 2
+call_to_adventure has mood mysterious
+call_to_adventure has note "Herald delivers the message"
+
+Tension at 0.50 is 4
+
+Dialogue D3 at Sc7
+D3 has purpose revelation
+D3 has tension 4
+D3 linked to beat ordeal
+
+D3 exchange begin
+  Anna says intent "demand truth"
+  Anna says emotion anger
+  Anna says sketch "You knew. All this time, you knew."
+D3 exchange end
+
+Subplot S1 type romance
+S1 involves Anna
+S1 starts at beat crossing_threshold
+S1 resolves at beat return
 ```
 
 ### 2.2 Verb Categories
@@ -102,6 +156,21 @@ Subject has min Property Count
     tone: [{ subject: "Story", value: "hopeful", scope: "global", line: 6 }],
     max: [{ subject: "Story", what: "characters", count: 10, scope: "global", line: 7 }],
     min: [{ subject: "Story", what: "scenes", count: 5, scope: "global", line: 8 }]
+  },
+  globalAnnotations: [
+    { type: "style", content: "Gothic horror...", line: 1 }
+  ],
+  blueprint: {
+    arc: "heros_journey",
+    beatMappings: [{ beatKey: "call_to_adventure", chapterId: "Ch1", sceneId: "Sc2", tension: 2 }],
+    beatProperties: { call_to_adventure: { mood: "mysterious", notes: ["Herald delivers the message"] } },
+    tensionCurve: [{ position: 0.5, tension: 4 }]
+  },
+  dialogues: {
+    D3: { id: "D3", purpose: "revelation", tension: 4, beatKey: "ordeal", exchanges: [...] }
+  },
+  subplots: {
+    S1: { id: "S1", type: "romance", characterIds: ["Anna"], startBeat: "crossing_threshold", resolveBeat: "return" }
   }
 }
 ```
@@ -157,4 +226,4 @@ const csa = total > 0 ? satisfied / total : 1.0;
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 2.0.0 | 2026-02-02 | Unified CNL with SVO syntax only |
+| 2.1.0 | 2026-02-04 | Added dual-layer annotations + blueprint/dialogue extensions |

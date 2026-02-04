@@ -61,7 +61,7 @@ async function init() {
   };
   $('#btn-new').onclick = newProject;
   $('#btn-evaluate').onclick = evaluateMetrics;
-  $('#btn-docs')?.addEventListener('click', () => window.open('/docs/index.html', '_blank'));
+  $('#btn-docs')?.addEventListener('click', () => window.open('/docs/theory/index.html', '_blank'));
   
   // Zoom controls
   setupZoomControls();
@@ -146,6 +146,35 @@ function initTemplatesView() {
   if (!container) return;
   initTemplates(container);
 }
+
+// ==================== TAB SWITCHING UTILITY ====================
+/**
+ * Switch to a specific tab programmatically
+ * @param {string} viewName - The data-view value of the tab to switch to
+ */
+export function switchToTab(viewName) {
+  const tab = $(`.tab[data-view="${viewName}"]`);
+  if (!tab) return;
+  
+  $$('.tab').forEach(t => t.classList.remove('active'));
+  $$('.view').forEach(v => v.classList.remove('active'));
+  tab.classList.add('active');
+  $(`#view-${viewName}`).classList.add('active');
+  
+  // Render view-specific content
+  if (viewName === 'relationships') renderRelationshipsView();
+  if (viewName === 'emotionalarc') renderEmotionalArcView();
+  if (viewName === 'blocks') renderBlocksView();
+  if (viewName === 'worldrules') renderWorldRulesView();
+  if (viewName === 'blueprint') initBlueprintView();
+  if (viewName === 'templates') initTemplatesView();
+  if (viewName === 'dialogues') initDialogueEditor($('#dialogues-container'));
+  if (viewName === 'wisdom') renderWisdomView();
+  if (viewName === 'patterns') renderPatternsView();
+}
+
+// Make switchToTab available globally for tree navigation
+window.switchToTab = switchToTab;
 
 // Run initialization
 init();

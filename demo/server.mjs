@@ -39,6 +39,7 @@ const MIME_TYPES = {
   '.js': 'application/javascript',
   '.mjs': 'application/javascript',
   '.json': 'application/json',
+  '.md': 'text/markdown',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
@@ -139,12 +140,18 @@ function serveStatic(req, res) {
     fullPath = path.join(ROOT_DIR, filePath);
   }
   
-  // Security check - must be within demo, root/src, or root/docs/theory
+  // Handle /docs/specs/ requests - serve from ROOT/docs/specs/
+  if (!fs.existsSync(fullPath) && filePath.startsWith('/docs/specs/')) {
+    fullPath = path.join(ROOT_DIR, filePath);
+  }
+  
+  // Security check - must be within demo, root/src, or root/docs
   const isInDemo = fullPath.startsWith(DEMO_DIR);
   const isInSrc = fullPath.startsWith(path.join(ROOT_DIR, 'src'));
   const isInDocsTheory = fullPath.startsWith(path.join(ROOT_DIR, 'docs', 'theory'));
+  const isInDocsSpecs = fullPath.startsWith(path.join(ROOT_DIR, 'docs', 'specs'));
   
-  if (!isInDemo && !isInSrc && !isInDocsTheory) {
+  if (!isInDemo && !isInSrc && !isInDocsTheory && !isInDocsSpecs) {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('Forbidden');
     return;

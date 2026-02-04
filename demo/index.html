@@ -43,22 +43,27 @@
 
     <main class="center-panel">
       <div class="tabs">
+        <!-- Working Tabs -->
         <button class="tab active" data-view="cnl">CNL</button>
         <button class="tab" data-view="nl">NL</button>
+        <!-- Story-Level (General) -->
         <button class="tab" data-view="blueprint">Blueprint</button>
+        <button class="tab" data-view="emotionalarc">Arc</button>
+        <button class="tab" data-view="themes">Themes</button>
+        <button class="tab" data-view="wisdom">Wisdom</button>
+        <!-- World-Level -->
+        <button class="tab" data-view="worldrules">World</button>
+        <button class="tab" data-view="patterns">Patterns</button>
         <button class="tab" data-view="templates">Templates</button>
+        <!-- Entity-Level -->
         <button class="tab" data-view="characters">Characters</button>
         <button class="tab" data-view="relationships">Relations</button>
         <button class="tab" data-view="locations">Locations</button>
         <button class="tab" data-view="objects">Objects</button>
+        <!-- Scene-Level (Specific) -->
         <button class="tab" data-view="moods">Moods</button>
         <button class="tab" data-view="dialogues">Dialogues</button>
-        <button class="tab" data-view="emotionalarc">Arc</button>
         <button class="tab" data-view="blocks">Blocks</button>
-        <button class="tab" data-view="worldrules">World</button>
-        <button class="tab" data-view="themes">Themes</button>
-        <button class="tab" data-view="wisdom">Wisdom</button>
-        <button class="tab" data-view="patterns">Patterns</button>
       </div>
       <div class="tab-content">
         <div class="view active" id="view-cnl">
@@ -130,6 +135,9 @@
 
   <!-- Context Menu -->
   <div class="context-menu" id="context-menu"></div>
+  
+  <!-- Add Menu (for plus button) -->
+  <div class="add-menu" id="add-menu"></div>
   
   <!-- Entity Modal -->
   <div class="modal-overlay" id="entity-modal">

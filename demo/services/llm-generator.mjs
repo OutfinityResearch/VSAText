@@ -22,7 +22,7 @@ try {
   console.log('[LLM Generator] AchillesAgentLib loaded successfully');
 } catch (err) {
   console.log('[LLM Generator] AchillesAgentLib not available:', err.message);
-  console.log('[LLM Generator] LLM generation will use fallback mode');
+  console.log('[LLM Generator] LLM generation features will be disabled');
 }
 
 // ============================================
@@ -219,8 +219,7 @@ export async function refineStoryWithLLM(project, options) {
  */
 export async function generateNLFromCNL(cnl, storyName, options = {}) {
   if (!agentAvailable) {
-    // Fallback: generate a simple story from CNL
-    return { story: generateNLFallback(cnl, storyName) };
+    throw new Error('LLM agent not available. Configure AchillesAgentLib with a valid API key to generate narrative prose from CNL specifications.');
   }
   
   const agent = new LLMAgent({
@@ -240,169 +239,6 @@ export async function generateNLFromCNL(cnl, storyName, options = {}) {
   
   // For NL generation, we expect plain text, not JSON
   return { story: content.trim() };
-}
-
-/**
- * Fallback NL generation when LLM is not available
- * Parses CNL and creates a simple narrative outline
- */
-function generateNLFallback(cnl, storyName) {
-  const lines = cnl.split('\n').filter(l => l.trim() && !l.trim().startsWith('//'));
-  
-  // Extract characters
-  const characters = [];
-  const charPattern = /^(\w+)\s+is\s+(hero|mentor|shadow|ally|trickster|character)/i;
-  lines.forEach(line => {
-    const match = line.match(charPattern);
-    if (match) characters.push({ name: match[1], archetype: match[2] });
-  });
-  
-  // Extract locations
-  const locations = [];
-  const locPattern = /^(\w+)\s+is\s+location/i;
-  lines.forEach(line => {
-    const match = line.match(locPattern);
-    if (match) locations.push(match[1]);
-  });
-  
-  // Extract themes
-  const themes = [];
-  const themePattern = /Story\s+has\s+theme\s+(\w+)/i;
-  lines.forEach(line => {
-    const match = line.match(themePattern);
-    if (match) themes.push(match[1]);
-  });
-  
-  // Generate simple narrative
-  let story = `# ${storyName}\n\n`;
-  story += `*A story exploring themes of ${themes.join(', ') || 'adventure and discovery'}.*\n\n`;
-  
-  story += `## Chapter 1: The Beginning\n\n`;
-  
-  if (characters.length > 0) {
-    const hero = characters.find(c => c.archetype === 'hero') || characters[0];
-    story += `In a world where shadows dance at the edge of perception, ${hero.name} stood at the threshold of destiny. `;
-    story += `As a ${hero.archetype}, ${hero.name} carried the weight of expectations yet unspoken.\n\n`;
-    
-    if (locations.length > 0) {
-      story += `The ${locations[0]} stretched before them, a place where stories waited to unfold. `;
-      story += `Here, amidst the whispers of the wind, the journey would begin.\n\n`;
-    }
-    
-    if (characters.length > 1) {
-      const others = characters.filter(c => c !== hero);
-      story += `${hero.name} was not alone in this endeavor. `;
-      others.forEach(c => {
-        story += `${c.name}, the ${c.archetype}, would prove essential to what lay ahead. `;
-      });
-      story += `\n\n`;
-    }
-  } else {
-    story += `The story begins in a place between moments, where possibility hangs heavy in the air. `;
-    story += `Something is about to change, though none yet know what form that change will take.\n\n`;
-  }
-  
-  story += `## Chapter 2: The Journey\n\n`;
-  story += `What follows is a tale of courage, sacrifice, and the eternal human search for meaning. `;
-  story += `Through trials and triumphs, the characters will discover that the true treasure was never the destination, but the transformation along the way.\n\n`;
-  
-  story += `---\n\n`;
-  story += `*[This is a placeholder story generated without LLM. Configure an LLM API to generate full narrative prose from your specifications.]*\n`;
-  
-  return story;
-}
-
-/**
- * Generate story using fallback (no LLM) mode
- * Returns a structured template when LLM is unavailable
- */
-export function generateStoryFallback(options) {
-  // Create a basic structure without LLM
-  const characterNames = ['Elena', 'Marcus', 'Vera', 'Thorne', 'Sage'];
-  const locationNames = ['Thornwood', 'Crystalfall', 'Shadowmere'];
-  
-  const numChars = options.characters === 'few' ? 2 : options.characters === 'many' ? 6 : 4;
-  const numScenes = options.length === 'short' ? 4 : options.length === 'long' ? 16 : 10;
-  
-  const characters = [];
-  const archetypes = ['hero', 'mentor', 'shadow', 'ally'];
-  
-  for (let i = 0; i < numChars; i++) {
-    characters.push({
-      id: `char_${i + 1}`,
-      name: characterNames[i % characterNames.length],
-      archetype: archetypes[i % archetypes.length],
-      traits: ['brave', 'determined']
-    });
-  }
-  
-  const locations = locationNames.slice(0, 3).map((name, i) => ({
-    id: `loc_${i + 1}`,
-    name,
-    geography: 'forest',
-    characteristics: ['mysterious']
-  }));
-  
-  // Build structure
-  const chaptersNeeded = Math.ceil(numScenes / 3);
-  const chapters = [];
-  let sceneCount = 0;
-  
-  for (let ch = 0; ch < chaptersNeeded; ch++) {
-    const scenes = [];
-    const scenesInChapter = Math.min(3, numScenes - sceneCount);
-    
-    for (let sc = 0; sc < scenesInChapter; sc++) {
-      sceneCount++;
-      scenes.push({
-        id: `sc_${ch + 1}_${sc + 1}`,
-        type: 'scene',
-        name: `Sc${ch + 1}.${sc + 1}`,
-        title: '',
-        children: [
-          { id: `ref_${sceneCount}_1`, type: 'character-ref', name: characters[0].name, refId: characters[0].id },
-          { id: `ref_${sceneCount}_2`, type: 'location-ref', name: locations[ch % locations.length].name, refId: locations[ch % locations.length].id }
-        ]
-      });
-    }
-    
-    chapters.push({
-      id: `ch_${ch + 1}`,
-      type: 'chapter',
-      name: `Ch${ch + 1}`,
-      title: '',
-      children: scenes
-    });
-  }
-  
-  return {
-    project: {
-      name: options.storyName || 'Generated Story',
-      libraries: {
-        characters,
-        locations,
-        objects: [{ id: 'obj_1', name: 'Ancient Artifact', objectType: 'artifact', significance: 'central' }],
-        relationships: characters.length > 1 ? [{ id: 'rel_1', fromId: characters[0].id, toId: characters[1].id, type: 'mentor_student' }] : [],
-        themes: [{ id: 'theme_1', name: 'Redemption', themeKey: 'redemption' }],
-        moods: [{ id: 'mood_1', name: 'Mysterious', emotions: { mystery: 3 } }],
-        worldRules: [],
-        dialogues: []
-      },
-      structure: {
-        id: 'book_1',
-        type: 'book',
-        name: 'Book',
-        title: options.storyName || 'Generated Story',
-        children: chapters
-      },
-      blueprint: {
-        arc: 'heros_journey',
-        beatMappings: [],
-        tensionCurve: [],
-        subplots: []
-      }
-    }
-  };
 }
 
 // ============================================
@@ -450,6 +286,5 @@ export default {
   generateStoryWithLLM,
   refineStoryWithLLM,
   generateNLFromCNL,
-  generateStoryFallback,
   isLLMAvailable
 };

@@ -356,18 +356,12 @@ function createDemoServer() {
         try {
           const llmGenerator = await import('./services/llm-generator.mjs');
           
-          if (llmGenerator.isLLMAvailable()) {
-            const result = await llmGenerator.generateStoryWithLLM(body);
-            return jsonResponse(res, 200, result);
-          } else {
-            // Fallback to structured generation without LLM
-            const result = llmGenerator.generateStoryFallback(body);
-            return jsonResponse(res, 200, { 
-              ...result, 
-              _fallback: true,
-              _message: 'Generated using fallback mode (LLM not available)'
-            });
+          if (!llmGenerator.isLLMAvailable()) {
+            return errorResponse(res, 503, 'llm_unavailable', 'LLM agent not available. Configure AchillesAgentLib with a valid API key to use story generation.');
           }
+          
+          const result = await llmGenerator.generateStoryWithLLM(body);
+          return jsonResponse(res, 200, result);
         } catch (err) {
           console.error('LLM generation error:', err);
           return errorResponse(res, 500, 'llm_error', err.message);
@@ -380,16 +374,12 @@ function createDemoServer() {
         try {
           const llmGenerator = await import('./services/llm-generator.mjs');
           
-          if (llmGenerator.isLLMAvailable()) {
-            const result = await llmGenerator.refineStoryWithLLM(body.project, body.options);
-            return jsonResponse(res, 200, result);
-          } else {
-            // Return empty suggestions if LLM not available
-            return jsonResponse(res, 200, { 
-              suggestions: null,
-              _message: 'LLM not available for refinement'
-            });
+          if (!llmGenerator.isLLMAvailable()) {
+            return errorResponse(res, 503, 'llm_unavailable', 'LLM agent not available. Configure AchillesAgentLib with a valid API key to use story refinement.');
           }
+          
+          const result = await llmGenerator.refineStoryWithLLM(body.project, body.options);
+          return jsonResponse(res, 200, result);
         } catch (err) {
           console.error('LLM refinement error:', err);
           return errorResponse(res, 500, 'llm_error', err.message);

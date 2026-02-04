@@ -260,6 +260,77 @@
     }
     
     /* ========================================
+       PAGE NAVIGATION FOOTER (Prev/Next)
+       ======================================== */
+    .page-nav-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: stretch;
+      gap: 1rem;
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--bg-elevated);
+    }
+    
+    .page-nav-link {
+      display: flex;
+      flex-direction: column;
+      padding: 1rem 1.25rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-elevated);
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+      min-width: 0;
+      flex: 1;
+      max-width: 48%;
+    }
+    
+    .page-nav-link:hover {
+      background: var(--bg-elevated);
+      border-color: var(--accent-gold);
+      text-decoration: none;
+    }
+    
+    .page-nav-link.prev {
+      align-items: flex-start;
+    }
+    
+    .page-nav-link.next {
+      align-items: flex-end;
+      margin-left: auto;
+    }
+    
+    .page-nav-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.3rem;
+    }
+    
+    .page-nav-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.95rem;
+      color: var(--accent-gold);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    
+    .page-nav-link:hover .page-nav-title {
+      color: var(--text-primary);
+    }
+    
+    /* Placeholder for single-side navigation */
+    .page-nav-placeholder {
+      flex: 1;
+      max-width: 48%;
+    }
+    
+    /* ========================================
        MOBILE RESPONSIVE STYLES
        ======================================== */
     
@@ -462,6 +533,25 @@
         padding: 0.6rem 0.75rem;
         font-size: 0.95rem;
       }
+      
+      /* Page nav footer mobile */
+      .page-nav-footer {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      
+      .page-nav-link {
+        max-width: 100%;
+        padding: 0.875rem 1rem;
+      }
+      
+      .page-nav-link.next {
+        align-items: flex-start;
+      }
+      
+      .page-nav-placeholder {
+        display: none;
+      }
     }
     
     /* ========================================
@@ -621,7 +711,58 @@
       'metrics-evaluation': 'content/metrics-evaluation.html'
     };
     
+    // Build ordered page list from sidebar navigation
+    function buildPageOrder() {
+      const order = [];
+      const titles = {};
+      document.querySelectorAll('.docs-sidebar .docs-nav a[data-page]').forEach(link => {
+        const page = link.dataset.page;
+        if (page && pages[page]) {
+          order.push(page);
+          titles[page] = link.textContent.trim();
+        }
+      });
+      return { order, titles };
+    }
+    
+    const { order: pageOrder, titles: pageTitles } = buildPageOrder();
+    
+    // Create navigation footer HTML
+    function createNavFooter(currentPage) {
+      const currentIndex = pageOrder.indexOf(currentPage);
+      if (currentIndex === -1) return '';
+      
+      const prevPage = currentIndex > 0 ? pageOrder[currentIndex - 1] : null;
+      const nextPage = currentIndex < pageOrder.length - 1 ? pageOrder[currentIndex + 1] : null;
+      
+      let html = '<nav class="page-nav-footer">';
+      
+      if (prevPage) {
+        html += `
+          <a href="#${prevPage}" class="page-nav-link prev" data-page="${prevPage}">
+            <span class="page-nav-label">← Previous</span>
+            <span class="page-nav-title">${pageTitles[prevPage]}</span>
+          </a>`;
+      } else {
+        html += '<div class="page-nav-placeholder"></div>';
+      }
+      
+      if (nextPage) {
+        html += `
+          <a href="#${nextPage}" class="page-nav-link next" data-page="${nextPage}">
+            <span class="page-nav-label">Next →</span>
+            <span class="page-nav-title">${pageTitles[nextPage]}</span>
+          </a>`;
+      } else {
+        html += '<div class="page-nav-placeholder"></div>';
+      }
+      
+      html += '</nav>';
+      return html;
+    }
+    
     const contentEl = document.getElementById('docs-content');
+    let currentPageName = null;
     
     async function loadPage(pageName) {
       const url = pages[pageName];
@@ -635,7 +776,10 @@
         const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to load');
         const html = await response.text();
-        contentEl.innerHTML = html;
+        
+        // Inject content + navigation footer
+        currentPageName = pageName;
+        contentEl.innerHTML = html + createNavFooter(pageName);
         
         // Update active state in sidebar
         document.querySelectorAll('.docs-sidebar .docs-nav a').forEach(link => {
@@ -655,7 +799,7 @@
       }
     }
     
-    // Handle clicks on links within loaded content
+    // Handle clicks on links within loaded content (including nav footer)
     function attachContentLinkHandlers() {
       contentEl.querySelectorAll('a[data-page]').forEach(link => {
         link.addEventListener('click', (e) => {
@@ -736,6 +880,22 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && sidebar.classList.contains('open')) {
         closeSidebar();
+      }
+      // Keyboard navigation: Left/Right arrows for prev/next page
+      if (!e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey) {
+        if (e.key === 'ArrowLeft' && currentPageName) {
+          const currentIndex = pageOrder.indexOf(currentPageName);
+          if (currentIndex > 0) {
+            e.preventDefault();
+            loadPage(pageOrder[currentIndex - 1]);
+          }
+        } else if (e.key === 'ArrowRight' && currentPageName) {
+          const currentIndex = pageOrder.indexOf(currentPageName);
+          if (currentIndex < pageOrder.length - 1) {
+            e.preventDefault();
+            loadPage(pageOrder[currentIndex + 1]);
+          }
+        }
       }
     });
     

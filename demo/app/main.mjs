@@ -6,8 +6,8 @@
 
 import { state } from './state.mjs';
 import { $, $$, genId, openModal } from './utils.mjs';
-import { renderTree } from './tree.mjs';
-import { renderEntityGrid } from './entities.mjs';
+import { renderTree, findNode, addChild } from './tree.mjs';
+import { renderEntityGrid, showSelectModal, showBlockModal, showActionModal } from './entities.mjs';
 import { renderRelationshipsView, renderEmotionalArcView, renderBlocksView, renderWorldRulesView } from './views.mjs';
 import { evaluateMetrics, renderEmptyMetrics, initMetrics } from './metrics.mjs';
 import { exportCNL, importCNL, toggleEditMode } from './cnl.mjs';
@@ -76,19 +76,16 @@ async function init() {
   $('#btn-nl-copy').onclick = copyNLContent;
   $('#btn-nl-export').onclick = exportNLContent;
   
-  // Add root book button
-  $('#btn-add-root').onclick = () => {
-    if (!state.project.structure) {
-      state.project.structure = {
-        id: genId(),
-        type: 'book',
-        name: 'Book',
-        title: state.project.name,
-        children: []
-      };
-      renderTree();
-    }
+  // Add button with contextual menu
+  $('#btn-add-root').onclick = (e) => {
+    e.stopPropagation();
+    showAddMenu(e);
   };
+  
+  // Close add menu on click outside
+  document.addEventListener('click', () => {
+    $('#add-menu')?.classList.remove('open');
+  });
   
   // Tab switching
   $$('.tab').forEach(tab => {
@@ -175,6 +172,128 @@ export function switchToTab(viewName) {
 
 // Make switchToTab available globally for tree navigation
 window.switchToTab = switchToTab;
+
+// ==================== ADD MENU (Plus Button) ====================
+
+/**
+ * Show contextual add menu based on selected node
+ */
+function showAddMenu(e) {
+  const menu = $('#add-menu');
+  if (!menu) return;
+  
+  const selectedNode = state.selectedNode ? findNode(state.selectedNode) : null;
+  const hasStructure = !!state.project.structure;
+  
+  let items = [];
+  
+  if (!hasStructure) {
+    // No structure - only option is to create a book
+    items.push({ a: 'add-book', l: '📖 Add Book', desc: 'Create story structure' });
+  } else if (!selectedNode) {
+    // Has structure but nothing selected - show message
+    items.push({ a: 'hint', l: 'Select a node first', disabled: true });
+    items.push({ a: 'div' });
+    items.push({ a: 'add-chapter-root', l: '📑 Add Chapter to Book' });
+  } else {
+    // Show options based on selected node type
+    const type = selectedNode.type;
+    
+    if (type === 'book' || type === 'chapter') {
+      items.push({ a: 'add-chapter', l: '📑 Add Chapter' });
+      items.push({ a: 'add-scene', l: '🎬 Add Scene' });
+    }
+    
+    if (type === 'scene') {
+      items.push({ a: 'add-char', l: '👤 Add Character' });
+      items.push({ a: 'add-loc', l: '📍 Add Location' });
+      items.push({ a: 'add-obj', l: '🗝️ Add Object' });
+      items.push({ a: 'add-mood', l: '🎭 Add Mood' });
+      items.push({ a: 'div' });
+      items.push({ a: 'add-block', l: '✨ Add Narrative Block' });
+      items.push({ a: 'add-action', l: '⚡ Add Action' });
+      items.push({ a: 'add-dialogue', l: '💬 Add Dialogue' });
+    }
+    
+    // For leaf nodes, show parent's options
+    if (['character-ref', 'location-ref', 'object-ref', 'mood-ref', 'block-ref', 'action', 'dialogue', 'dialogue-ref'].includes(type)) {
+      items.push({ a: 'hint', l: `Selected: ${selectedNode.name || type}`, disabled: true });
+      items.push({ a: 'div' });
+      items.push({ a: 'add-sibling-hint', l: 'Select a scene to add elements', disabled: true });
+    }
+  }
+  
+  if (items.length === 0) {
+    items.push({ a: 'hint', l: 'No actions available', disabled: true });
+  }
+  
+  menu.innerHTML = items.map(i => {
+    if (i.a === 'div') return '<div class="add-menu-divider"></div>';
+    if (i.disabled) return `<div class="add-menu-item disabled">${i.l}</div>`;
+    return `<div class="add-menu-item" data-action="${i.a}">${i.l}${i.desc ? `<span class="add-menu-desc">${i.desc}</span>` : ''}</div>`;
+  }).join('');
+  
+  // Position menu below the button
+  const btn = $('#btn-add-root');
+  const rect = btn.getBoundingClientRect();
+  menu.style.left = rect.left + 'px';
+  menu.style.top = (rect.bottom + 4) + 'px';
+  menu.classList.add('open');
+}
+
+// Handle add menu item clicks
+document.addEventListener('click', e => {
+  const item = e.target.closest('.add-menu-item');
+  if (!item || item.classList.contains('disabled')) return;
+  
+  const action = item.dataset.action;
+  handleAddMenuAction(action);
+  $('#add-menu')?.classList.remove('open');
+});
+
+function handleAddMenuAction(action) {
+  const selectedNode = state.selectedNode ? findNode(state.selectedNode) : null;
+  
+  if (action === 'add-book') {
+    state.project.structure = {
+      id: genId(),
+      type: 'book',
+      name: 'Book',
+      title: state.project.name,
+      children: []
+    };
+    renderTree();
+    return;
+  }
+  
+  if (action === 'add-chapter-root') {
+    const book = state.project.structure;
+    if (book) {
+      addChild(book, { type: 'chapter', name: `Ch${(book.children?.length || 0) + 1}`, title: '', children: [] });
+    }
+    return;
+  }
+  
+  if (!selectedNode) return;
+  
+  if (action === 'add-chapter') {
+    addChild(selectedNode, { type: 'chapter', name: `Ch${(selectedNode.children?.length || 0) + 1}`, title: '', children: [] });
+  }
+  if (action === 'add-scene') {
+    addChild(selectedNode, { type: 'scene', name: `Sc${(selectedNode.children?.length || 0) + 1}`, title: '', children: [] });
+  }
+  if (action === 'add-char') showSelectModal('characters', selectedNode);
+  if (action === 'add-loc') showSelectModal('locations', selectedNode);
+  if (action === 'add-obj') showSelectModal('objects', selectedNode);
+  if (action === 'add-mood') showSelectModal('moods', selectedNode);
+  if (action === 'add-block') showBlockModal(selectedNode);
+  if (action === 'add-action') showActionModal(selectedNode);
+  if (action === 'add-dialogue') {
+    // Switch to dialogues tab to create a dialogue
+    switchToTab('dialogues');
+    window.showNotification?.('Create a dialogue, then add it to the scene', 'info');
+  }
+}
 
 // Run initialization
 init();

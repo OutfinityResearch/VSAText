@@ -12,6 +12,20 @@ import VOCAB from '/src/vocabularies/vocabularies.mjs';
 
 let draggedNodeId = null;
 
+/**
+ * Map node types to their corresponding tabs and entity types
+ */
+const NODE_TO_TAB = {
+  'character-ref': { tab: 'characters', entityType: 'characters' },
+  'location-ref': { tab: 'locations', entityType: 'locations' },
+  'object-ref': { tab: 'objects', entityType: 'objects' },
+  'mood-ref': { tab: 'moods', entityType: 'moods' },
+  'dialogue-ref': { tab: 'dialogues', entityType: 'dialogues' },
+  'dialogue': { tab: 'dialogues', entityType: null },
+  'block-ref': { tab: 'blocks', entityType: null },
+  'action': { tab: null, entityType: null }
+};
+
 // ==================== TREE RENDERING ====================
 export function renderTree() {
   const c = $('#tree-container');
@@ -60,10 +74,15 @@ function renderNode(n, d = 0) {
     ch = `<div class="tree-children">${n.children.map(x => renderNode(x, d + 1)).join('')}</div>`;
   }
   
-  return `<div class="tree-node" data-id="${n.id}" data-type="${n.type}" draggable="${canDrag}" 
+  // Determine if this node should navigate on click (leaf nodes with refs)
+  const isLeafNode = NODE_TO_TAB[n.type];
+  const navigateOnClick = isLeafNode ? 'true' : 'false';
+  const nodeClass = isLeafNode ? 'tree-node clickable-leaf' : 'tree-node';
+  
+  return `<div class="${nodeClass}" data-id="${n.id}" data-type="${n.type}" draggable="${canDrag}" 
     ondragstart="handleDragStart(event,'${n.id}')" ondragend="handleDragEnd(event)"
     ondragover="handleDragOver(event,'${n.id}')" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'${n.id}')">
-    <div class="tree-node-content ${sel}" onclick="selectNode('${n.id}')" oncontextmenu="showCtx(event,'${n.id}')">
+    <div class="tree-node-content ${sel}" onclick="selectNode('${n.id}',${navigateOnClick})" oncontextmenu="showCtx(event,'${n.id}')">
       <span class="tree-icon">${icons[n.type] || '•'}</span>
       <span class="tree-label">${label}</span>
       <span class="tree-type">${n.type}</span>
@@ -71,8 +90,32 @@ function renderNode(n, d = 0) {
 }
 
 // ==================== NODE OPERATIONS ====================
-export function selectNode(id) {
+
+/**
+ * Select a node in the tree and optionally navigate to its corresponding tab/entity
+ * @param {string} id - Node ID to select
+ * @param {boolean} navigate - Whether to navigate to the entity tab (default: true)
+ */
+export function selectNode(id, navigate = true) {
   state.selectedNode = id;
+  
+  const node = findNode(id);
+  if (node && navigate) {
+    const mapping = NODE_TO_TAB[node.type];
+    if (mapping && mapping.tab) {
+      // Navigate to the corresponding tab
+      window.switchToTab?.(mapping.tab);
+      
+      // If this is a reference node with an entity, open the entity editor
+      if (mapping.entityType && node.refId) {
+        // Small delay to ensure tab is rendered
+        setTimeout(() => {
+          window.editEntity?.(mapping.entityType, node.refId);
+        }, 50);
+      }
+    }
+  }
+  
   renderTree();
 }
 
@@ -152,7 +195,7 @@ window.handleDrop = (e, targetId) => {
   renderTree();
 };
 
-window.selectNode = selectNode;
+window.selectNode = (id, navigate = true) => selectNode(id, navigate);
 
 export function getUsedBlocks() {
   const used = new Set();

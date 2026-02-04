@@ -1511,6 +1511,60 @@ footer {
 .context-menu-divider { height: 1px; background: var(--bg-hover); margin: 0.2rem 0; }
 
 /* ============================================ */
+/* Add Menu (Plus Button Dropdown) */
+/* ============================================ */
+.add-menu {
+  position: fixed;
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-hover);
+  border-radius: 6px;
+  padding: 0.3rem 0;
+  min-width: 200px;
+  z-index: 1001;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  display: none;
+}
+.add-menu.open { display: block; }
+
+.add-menu-item {
+  padding: 0.5rem 0.8rem;
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.add-menu-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+.add-menu-item.disabled {
+  color: var(--text-faded);
+  cursor: default;
+  font-style: italic;
+}
+.add-menu-item.disabled:hover { background: transparent; }
+.add-menu-desc {
+  font-size: var(--fs-xs);
+  color: var(--text-faded);
+}
+.add-menu-divider { height: 1px; background: var(--bg-hover); margin: 0.3rem 0; }
+
+/* ============================================ */
+/* Clickable Tree Leaves */
+/* ============================================ */
+.tree-node.clickable-leaf .tree-node-content {
+  cursor: pointer;
+}
+.tree-node.clickable-leaf .tree-node-content:hover {
+  background: var(--bg-hover);
+  border-radius: 4px;
+}
+.tree-node.clickable-leaf .tree-label {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+/* ============================================ */
 /* Empty States */
 /* ============================================ */
 .empty-state { text-align: center; padding: 2rem; color: var(--text-muted); }

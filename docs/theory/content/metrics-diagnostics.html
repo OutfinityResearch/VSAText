@@ -1,0 +1,342 @@
+<h1>Metrics Diagnostics Guide</h1>
+
+<p class="lead">This guide helps you interpret low metric scores and provides actionable solutions for each type of issue. Use it to quickly diagnose and fix problems in your story specification.</p>
+
+<div class="accordion">
+  <!-- Section 1: Quick Diagnostic Table (open by default) -->
+  <section class="accordion-section open">
+    <button class="accordion-header" aria-expanded="true">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Quick Diagnostic Table</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <table>
+          <tr>
+            <th>Low Metric</th>
+            <th>Likely Problem</th>
+            <th>Solution</th>
+          </tr>
+          <tr>
+            <td>Character Continuity &lt; 40%</td>
+            <td>Characters randomly assigned</td>
+            <td>Ensure hero appears in most scenes</td>
+          </tr>
+          <tr>
+            <td>Location Logic &lt; 30%</td>
+            <td>Random scene hopping</td>
+            <td>Reuse key locations (home, workplace)</td>
+          </tr>
+          <tr>
+            <td>Action Coherence &lt; 60%</td>
+            <td>Orphan entity references</td>
+            <td>Add missing characters/objects to libraries</td>
+          </tr>
+          <tr>
+            <td>Scene Completeness &lt; 50%</td>
+            <td>Incomplete scene fragments</td>
+            <td>Ensure each scene has who/where/what</td>
+          </tr>
+          <tr>
+            <td>Relationship Usage &lt; 30%</td>
+            <td>Relationships never used</td>
+            <td>Place related characters in same scenes</td>
+          </tr>
+          <tr>
+            <td>Dialogue Quality &lt; 40%</td>
+            <td>Empty placeholder dialogues</td>
+            <td>Add purpose and exchanges to dialogues</td>
+          </tr>
+          <tr>
+            <td>EAP &lt; 50%</td>
+            <td>Emotional arc doesn't match template</td>
+            <td>Assign appropriate moods; check beat positions</td>
+          </tr>
+          <tr>
+            <td>CS &lt; 60%</td>
+            <td>Story doesn't hold together</td>
+            <td>Fix orphan references; add cause-effect chains</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Overall Coherence Assessment -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Overall Coherence Assessment</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p>Calculate the average of all coherence metrics to get an overall assessment:</p>
+        
+        <table>
+          <tr>
+            <th>Average Score</th>
+            <th>Interpretation</th>
+            <th>Action</th>
+          </tr>
+          <tr>
+            <td><strong>&lt; 30%</strong></td>
+            <td>Garbage - Random/incoherent</td>
+            <td>Regenerate with better specification</td>
+          </tr>
+          <tr>
+            <td><strong>30-50%</strong></td>
+            <td>Poor - Major structural issues</td>
+            <td>Review entities and structure</td>
+          </tr>
+          <tr>
+            <td><strong>50-70%</strong></td>
+            <td>Fair - Some coherence</td>
+            <td>Refine weak areas</td>
+          </tr>
+          <tr>
+            <td><strong>70-85%</strong></td>
+            <td>Good - Mostly coherent</td>
+            <td>Minor adjustments</td>
+          </tr>
+          <tr>
+            <td><strong>&gt; 85%</strong></td>
+            <td>Excellent - Well-structured</td>
+            <td>Ready for expansion</td>
+          </tr>
+        </table>
+        
+        <div class="warning-box">
+          <div class="warning-title">Garbage Detection</div>
+          <p>If coherence metrics average below 40%, the story is likely random noise rather than meaningful narrative. This usually indicates a problem with the generation process, not just the specification.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Detailed Issue Analysis -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Detailed Issue Analysis</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <h4>Character Issues</h4>
+        <div class="example-box">
+          <div class="example-title">Symptom: Low Character Continuity</div>
+          <p><strong>What it looks like:</strong> Each scene has completely different characters. The protagonist appears only once or twice.</p>
+          <p><strong>Root cause:</strong> Random character assignment during generation, or scenes defined without character references.</p>
+          <p><strong>Fix:</strong></p>
+          <ol>
+            <li>Define a clear protagonist with the "hero" role</li>
+            <li>Ensure the protagonist appears in at least 70% of scenes</li>
+            <li>Create a core cast of 3-4 characters who recur throughout</li>
+            <li>Use the Characters tab to review scene assignments</li>
+          </ol>
+        </div>
+        
+        <h4>Location Issues</h4>
+        <div class="example-box">
+          <div class="example-title">Symptom: Low Location Logic</div>
+          <p><strong>What it looks like:</strong> Scene 1 in a forest, Scene 2 in a spaceship, Scene 3 in a kitchen - with no narrative connection.</p>
+          <p><strong>Root cause:</strong> New location created for every scene, or locations assigned randomly.</p>
+          <p><strong>Fix:</strong></p>
+          <ol>
+            <li>Define 3-5 key locations that serve as narrative anchors</li>
+            <li>Return to important locations multiple times</li>
+            <li>Create logical transitions between locations</li>
+            <li>Group related scenes in the same location</li>
+          </ol>
+        </div>
+        
+        <h4>Structure Issues</h4>
+        <div class="example-box">
+          <div class="example-title">Symptom: Low Scene Completeness</div>
+          <p><strong>What it looks like:</strong> Scenes that are just a location name, or a character name, without any action or dialogue.</p>
+          <p><strong>Root cause:</strong> Incomplete scene definitions or generation that stopped early.</p>
+          <p><strong>Fix:</strong></p>
+          <ol>
+            <li>Review each scene in the Blueprint tab</li>
+            <li>Ensure every scene has: character, location, and at least one action or dialogue</li>
+            <li>Merge or remove fragment scenes</li>
+            <li>Use the "adds" keyword to include actions in scenes</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: NQS Component Analysis -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">NQS Component Analysis</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p>When NQS is low, identify which components are dragging it down:</p>
+        
+        <table>
+          <tr>
+            <th>Component</th>
+            <th>Weight</th>
+            <th>If Low, Check...</th>
+          </tr>
+          <tr>
+            <td>Completeness</td>
+            <td>12%</td>
+            <td>Missing elements: characters, locations, scenes, themes, dialogues</td>
+          </tr>
+          <tr>
+            <td>Coherence Score</td>
+            <td>12%</td>
+            <td>Orphan references, missing cause-effect chains</td>
+          </tr>
+          <tr>
+            <td>Character Drift</td>
+            <td>8%</td>
+            <td>Characters without traits, or traits not enforced</td>
+          </tr>
+          <tr>
+            <td>Originality</td>
+            <td>8%</td>
+            <td>Repetitive actions, same block types used throughout</td>
+          </tr>
+          <tr>
+            <td>Emotional Arc</td>
+            <td>10%</td>
+            <td>Missing moods, arc beats not assigned</td>
+          </tr>
+          <tr>
+            <td>Parse Success</td>
+            <td>8%</td>
+            <td>CNL syntax errors</td>
+          </tr>
+          <tr>
+            <td>Constraints</td>
+            <td>8%</td>
+            <td>Violated constraints, invalid references</td>
+          </tr>
+          <tr>
+            <td>Explainability</td>
+            <td>8%</td>
+            <td>Missing documentation: arc, themes, relationships, world rules</td>
+          </tr>
+          <tr>
+            <td>Coherence Analysis</td>
+            <td>26%</td>
+            <td>The six coherence metrics (see Quick Diagnostic Table)</td>
+          </tr>
+        </table>
+        
+        <div class="info-box">
+          <div class="info-box-title">Priority Order</div>
+          <p>Coherence Analysis accounts for 26% of NQS. If your coherence metrics are low, fixing them will have the biggest impact on your overall score.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Console Debugging -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Console Debugging</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p>Open browser developer tools (F12) to see detailed metric calculations:</p>
+        
+        <div class="example-box">
+          <div class="example-title">Console Output Example</div>
+          <pre><code>[Evaluate] Counts: {
+  characters: 4,
+  locations: 3,
+  scenes: 8,
+  chapters: 3,
+  actions: 12,
+  dialogues: 5,
+  themes: 2,
+  relationships: 6,
+  worldRules: 3,
+  wisdom: 2,
+  patterns: 1
+}
+
+[Evaluate] Coherence: {
+  charContinuity: "0.75",
+  locLogic: "0.60",
+  actionCoherence: "0.92",
+  sceneCompleteness: "0.88",
+  relUsage: "0.67",
+  dialogueQuality: "0.70"
+}</code></pre>
+        </div>
+        
+        <h4>What to Look For</h4>
+        <ul>
+          <li><strong>Counts:</strong> Check if element counts meet minimums (2+ characters, 2+ locations, 3+ scenes)</li>
+          <li><strong>Coherence values:</strong> Look for any below 0.5 - these need immediate attention</li>
+          <li><strong>Warnings:</strong> The console may show specific orphan references or missing elements</li>
+        </ul>
+        
+        <p>Use this data to identify exactly which aspects need improvement.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 6: Common Patterns -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Common Failure Patterns</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <h4>Pattern 1: "Empty Shell" Story</h4>
+        <p><strong>Symptoms:</strong> High Completeness, low Coherence metrics</p>
+        <p><strong>Cause:</strong> All elements defined but not connected</p>
+        <p><strong>Fix:</strong> Add relationships, ensure characters appear in scenes together, add cause-effect chains</p>
+        
+        <h4>Pattern 2: "Random Generator" Output</h4>
+        <p><strong>Symptoms:</strong> All coherence metrics below 40%</p>
+        <p><strong>Cause:</strong> Generation process is selecting entities randomly</p>
+        <p><strong>Fix:</strong> Review generation strategy, ensure constraints are being applied, check entity libraries</p>
+        
+        <h4>Pattern 3: "One-Scene Wonder"</h4>
+        <p><strong>Symptoms:</strong> Good first scene, then quality drops</p>
+        <p><strong>Cause:</strong> Story structure not planned beyond opening</p>
+        <p><strong>Fix:</strong> Use Blueprint tab to plan full arc, define emotional beats for each scene</p>
+        
+        <h4>Pattern 4: "Character Soup"</h4>
+        <p><strong>Symptoms:</strong> Many characters, low Character Continuity</p>
+        <p><strong>Cause:</strong> Too many characters, no clear protagonist</p>
+        <p><strong>Fix:</strong> Reduce character count, mark protagonist as hero, focus on core cast</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section id="related">
+  <h2>Related Documentation</h2>
+  
+  <ul>
+    <li><a href="#metrics-overview" data-page="metrics-overview">Metrics Overview</a> - Introduction to SCRIPTA metrics</li>
+    <li><a href="#metrics-nqs" data-page="metrics-nqs">NQS - Narrative Quality Score</a> - The master metric</li>
+    <li><a href="#metrics-coherence" data-page="metrics-coherence">Coherence Analysis</a> - The 6 coherence metrics</li>
+    <li><a href="#generation" data-page="generation">Generation Strategies</a> - How to generate better stories</li>
+  </ul>
+</section>
+
+<script>
+// Accordion functionality
+document.querySelectorAll('.accordion-header').forEach(button => {
+  button.addEventListener('click', () => {
+    const section = button.parentElement;
+    const isOpen = section.classList.contains('open');
+    
+    section.classList.toggle('open');
+    button.setAttribute('aria-expanded', !isOpen);
+  });
+});
+</script>

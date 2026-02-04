@@ -1,0 +1,330 @@
+<h1>Human Evaluation</h1>
+
+<p class="lead">Some metrics require human judgment to assess aspects that automated analysis cannot capture. This page documents the human evaluation protocol and statistical analysis methods used in SCRIPTA.</p>
+
+<div class="accordion">
+  <!-- Section 1: Human Evaluation Protocol (open by default) -->
+  <section class="accordion-section open">
+    <button class="accordion-header" aria-expanded="true">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Human Evaluation Protocol</span>
+      <span class="accordion-badge">DS12</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p>Human evaluation is used when automated metrics cannot fully assess narrative quality. See <a href="../specs/DS12-Metrics-Interpreter.md">DS12</a> for the complete protocol.</p>
+        
+        <div class="info-box">
+          <div class="info-box-title">When to Use Human Evaluation</div>
+          <ul>
+            <li>Comparing generation strategies (Random vs LLM vs Advanced)</li>
+            <li>Assessing creative quality beyond structural metrics</li>
+            <li>Validating automated metric accuracy</li>
+            <li>Research studies and academic publications</li>
+          </ul>
+        </div>
+        
+        <h4>Rater Requirements</h4>
+        <ul>
+          <li>At least 2 independent raters per story</li>
+          <li>Raters should not see which generation strategy produced each story</li>
+          <li>Stories should be presented in randomized order</li>
+          <li>Raters should have experience with narrative evaluation</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Rating Dimensions -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Rating Dimensions</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p>Human raters evaluate stories on five dimensions using a 1-5 scale:</p>
+        
+        <table>
+          <tr>
+            <th>Code</th>
+            <th>Dimension</th>
+            <th>What Raters Evaluate</th>
+          </tr>
+          <tr>
+            <td>H_CO</td>
+            <td>Coherence</td>
+            <td>Does the plot make sense? Are events logically connected?</td>
+          </tr>
+          <tr>
+            <td>H_CH</td>
+            <td>Character Integrity</td>
+            <td>Do characters act consistently with established traits?</td>
+          </tr>
+          <tr>
+            <td>H_ST</td>
+            <td>Style & Readability</td>
+            <td>Is the writing clear and engaging?</td>
+          </tr>
+          <tr>
+            <td>H_ET</td>
+            <td>Ethical Integrity</td>
+            <td>Is content free from harmful stereotypes or bias?</td>
+          </tr>
+          <tr>
+            <td>H_OV</td>
+            <td>Overall</td>
+            <td>Overall impression of narrative quality</td>
+          </tr>
+        </table>
+        
+        <h4>Rating Scale</h4>
+        <table>
+          <tr>
+            <th>Score</th>
+            <th>Meaning</th>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>Very Poor - Major issues, unacceptable</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Poor - Significant problems</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Acceptable - Meets minimum standards</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>Good - Above average quality</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>Excellent - Outstanding quality</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Inter-Rater Agreement -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Inter-Rater Agreement</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p>We use <strong>Cohen's weighted kappa</strong> to measure agreement between raters.</p>
+        
+        <h4>Formula</h4>
+        <pre><code>kappa = (Po - Pe) / (1 - Pe)
+
+Where:
+  Po = observed agreement (proportion of ratings that match)
+  Pe = expected agreement by chance</code></pre>
+        
+        <h4>Interpretation</h4>
+        <table>
+          <tr>
+            <th>Kappa Value</th>
+            <th>Agreement Level</th>
+          </tr>
+          <tr>
+            <td>&lt; 0.20</td>
+            <td>Poor</td>
+          </tr>
+          <tr>
+            <td>0.20 - 0.40</td>
+            <td>Fair</td>
+          </tr>
+          <tr>
+            <td>0.40 - 0.60</td>
+            <td>Moderate</td>
+          </tr>
+          <tr>
+            <td>0.60 - 0.80</td>
+            <td>Substantial</td>
+          </tr>
+          <tr>
+            <td>&gt; 0.80</td>
+            <td>Almost Perfect</td>
+          </tr>
+        </table>
+        
+        <h4>Required Threshold</h4>
+        <p><strong>kappa >= 0.6</strong> (substantial agreement)</p>
+        
+        <div class="warning-box">
+          <div class="warning-title">Low Agreement</div>
+          <p>If kappa is below 0.6, results should be interpreted with caution. Consider:</p>
+          <ul>
+            <li>Clarifying rating guidelines</li>
+            <li>Training raters on example stories</li>
+            <li>Adding more raters to increase reliability</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: Statistical Analysis -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Statistical Analysis</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <h4>ANOVA for Variant Comparison</h4>
+        <p>When comparing generation strategies (Random vs LLM vs Advanced), use ANOVA to determine if differences are statistically significant.</p>
+        
+        <pre><code>H0: All variants have equal mean NQS
+H1: At least one variant has a different mean
+
+Significance level: alpha = 0.05
+If p < alpha, reject H0 (differences are significant)</code></pre>
+        
+        <h4>Post-hoc Analysis</h4>
+        <p>If ANOVA shows significant differences, use Tukey's HSD test to identify which specific pairs differ.</p>
+        
+        <h4>Effect Size (Cohen's d)</h4>
+        <p>Measure practical significance of improvements:</p>
+        
+        <pre><code>d = (M1 - M2) / pooled_SD
+
+Where:
+  M1, M2 = means of two groups
+  pooled_SD = pooled standard deviation</code></pre>
+        
+        <table>
+          <tr>
+            <th>d Value</th>
+            <th>Effect Size</th>
+          </tr>
+          <tr>
+            <td>0.2</td>
+            <td>Small effect</td>
+          </tr>
+          <tr>
+            <td>0.5</td>
+            <td>Medium effect</td>
+          </tr>
+          <tr>
+            <td>0.8+</td>
+            <td>Large effect</td>
+          </tr>
+        </table>
+        
+        <p>SCRIPTA targets <strong>d >= 0.5</strong> for meaningful improvement claims.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Sample Size -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Sample Size Requirements</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <h4>Minimum Sample Sizes</h4>
+        <table>
+          <tr>
+            <th>Study Type</th>
+            <th>Minimum Stories</th>
+            <th>Raters per Story</th>
+          </tr>
+          <tr>
+            <td>Pilot study</td>
+            <td>10</td>
+            <td>2</td>
+          </tr>
+          <tr>
+            <td>Comparison study</td>
+            <td>30 per variant</td>
+            <td>2-3</td>
+          </tr>
+          <tr>
+            <td>Publication-quality</td>
+            <td>50+ per variant</td>
+            <td>3+</td>
+          </tr>
+        </table>
+        
+        <h4>Power Analysis</h4>
+        <p>To detect a medium effect size (d = 0.5) with 80% power:</p>
+        <ul>
+          <li>Two groups: ~64 samples per group</li>
+          <li>Three groups: ~52 samples per group</li>
+        </ul>
+        
+        <div class="info-box">
+          <div class="info-box-title">Practical Considerations</div>
+          <p>For internal development and iteration, smaller sample sizes (10-20 stories) are acceptable. Reserve larger studies for publication or major decisions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 6: Combining Human and Automated Metrics -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Combining Metrics</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p>When human evaluation is available, NQS combines automated and human scores:</p>
+        
+        <pre><code>NQS = 0.5 x CS + 0.5 x H
+
+Where:
+  CS = Coherence Score (automated)
+  H  = Human Overall Rating (normalized to 0-1)</code></pre>
+        
+        <h4>Normalization</h4>
+        <p>Human ratings (1-5 scale) are normalized to 0-1:</p>
+        <pre><code>H_normalized = (H_raw - 1) / 4</code></pre>
+        
+        <h4>When Human Evaluation is Not Available</h4>
+        <p>Use the fully automated NQS formula (see <a href="#metrics-nqs" data-page="metrics-nqs">NQS documentation</a>).</p>
+        
+        <h4>Correlation Validation</h4>
+        <p>Periodically validate that automated metrics correlate with human judgment:</p>
+        <ul>
+          <li>Target: Pearson r > 0.7 between automated CS and human H_CO</li>
+          <li>If correlation drops, review and recalibrate automated metrics</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section id="related">
+  <h2>Related Documentation</h2>
+  
+  <ul>
+    <li><a href="#metrics-overview" data-page="metrics-overview">Metrics Overview</a> - Introduction to SCRIPTA metrics</li>
+    <li><a href="#metrics-nqs" data-page="metrics-nqs">NQS - Narrative Quality Score</a> - The master metric</li>
+    <li><a href="#metrics-diagnostics" data-page="metrics-diagnostics">Diagnostics Guide</a> - Fixing low scores</li>
+    <li><a href="../specs/DS12-Metrics-Interpreter.md">DS12 - Metrics Interpreter</a> - Technical specification</li>
+    <li><a href="../specs/DS03-Research-Evaluation.md">DS03 - Research Framework</a> - Full research methodology</li>
+  </ul>
+</section>
+
+<script>
+// Accordion functionality
+document.querySelectorAll('.accordion-header').forEach(button => {
+  button.addEventListener('click', () => {
+    const section = button.parentElement;
+    const isOpen = section.classList.contains('open');
+    
+    section.classList.toggle('open');
+    button.setAttribute('aria-expanded', !isOpen);
+  });
+});
+</script>

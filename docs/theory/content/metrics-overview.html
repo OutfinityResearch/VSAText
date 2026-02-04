@@ -1,0 +1,260 @@
+<h1>Story Quality Metrics</h1>
+
+<p class="lead">SCRIPTA uses a comprehensive set of metrics to evaluate story quality. These metrics detect structural issues, measure coherence, and ensure generated stories are not random or incoherent.</p>
+
+<div class="accordion">
+  <!-- Section 1: Why Metrics Matter (open by default) -->
+  <section class="accordion-section open">
+    <button class="accordion-header" aria-expanded="true">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Why Metrics Matter</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p>AI-generated stories can suffer from various problems:</p>
+        
+        <ul>
+          <li><strong>Random character assignment</strong> - Characters appear once and vanish</li>
+          <li><strong>Location hopping</strong> - Every scene in a different place with no logic</li>
+          <li><strong>Orphan references</strong> - Actions mention entities that don't exist</li>
+          <li><strong>Incomplete scenes</strong> - Missing characters, locations, or actions</li>
+          <li><strong>Unused relationships</strong> - Defined connections never manifest</li>
+          <li><strong>Empty dialogues</strong> - Placeholder conversations without purpose</li>
+        </ul>
+        
+        <p>SCRIPTA's metrics system detects these issues automatically, giving you immediate feedback on story quality.</p>
+        
+        <div class="info-box">
+          <div class="info-box-title">The Evaluate Button</div>
+          <p>Click "Evaluate" in the Metrics panel after generating a story to see detailed quality analysis. The browser console shows additional debugging information.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Metrics Philosophy -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Metrics Philosophy</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p>SCRIPTA metrics are <strong>deterministic</strong> - the same input always produces the same scores. This enables:</p>
+        
+        <ul>
+          <li><strong>Reproducible research</strong> - Results can be verified and compared</li>
+          <li><strong>Consistent evaluation</strong> - No random variation between runs</li>
+          <li><strong>Reliable optimization</strong> - Improvements can be measured precisely</li>
+        </ul>
+        
+        <div class="warning-box">
+          <div class="warning-title">Important Distinction</div>
+          <p>Metrics measure <strong>specification quality</strong>, not creative merit. A story can have perfect metrics but still be boring. Metrics ensure structural integrity; artistic value requires human judgment.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Metric Categories -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Metric Categories</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p>SCRIPTA organizes metrics into four categories:</p>
+        
+        <h4>1. Master Metric</h4>
+        <div class="metric-card">
+          <span class="metric-code">NQS</span>
+          <div class="metric-info">
+            <div class="metric-name">Narrative Quality Score</div>
+            <div class="metric-desc">Overall quality combining all dimensions into a single 0-100% score</div>
+          </div>
+          <span class="metric-target">>= 25% improvement</span>
+        </div>
+        
+        <h4>2. Summary Metrics</h4>
+        <p>High-level measures of story completeness and structure:</p>
+        <ul>
+          <li><strong>Completeness</strong> - Are all required elements present?</li>
+          <li><strong>Coherence Score (CS)</strong> - Is the story logically consistent?</li>
+          <li><strong>Emotional Arc Profile (EAP)</strong> - Does the emotional journey match the arc?</li>
+        </ul>
+        
+        <h4>3. Detailed Analysis Metrics</h4>
+        <p>Specific quality dimensions:</p>
+        <ul>
+          <li><strong>CAD</strong> - Character Attribute Drift (trait consistency)</li>
+          <li><strong>CAR</strong> - Compliance Adherence Rate (safety guardrails)</li>
+          <li><strong>OI</strong> - Originality Index (cliche avoidance)</li>
+          <li><strong>CPSR</strong> - CNL Parse Success Rate (syntax validity)</li>
+          <li><strong>CSA</strong> - Constraint Satisfaction Accuracy</li>
+          <li><strong>RQ</strong> - Retrieval Quality (naming quality)</li>
+          <li><strong>XAI</strong> - Explainability Score (documentation level)</li>
+        </ul>
+        
+        <h4>4. Coherence Analysis</h4>
+        <p>Six metrics that detect random or incoherent generation:</p>
+        <ul>
+          <li>Character Continuity</li>
+          <li>Location Logic</li>
+          <li>Action Coherence</li>
+          <li>Scene Completeness</li>
+          <li>Relationship Usage</li>
+          <li>Dialogue Quality</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: Quick Reference Table -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Quick Reference Table</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <table>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Target</th>
+            <th>What It Measures</th>
+          </tr>
+          <tr>
+            <td><strong>NQS</strong></td>
+            <td>Narrative Quality Score</td>
+            <td>>= 25% improvement</td>
+            <td>Overall quality (master metric)</td>
+          </tr>
+          <tr>
+            <td><strong>CS</strong></td>
+            <td>Coherence Score</td>
+            <td>> 75%</td>
+            <td>Story consistency and logic</td>
+          </tr>
+          <tr>
+            <td><strong>CAD</strong></td>
+            <td>Character Attribute Drift</td>
+            <td>< 15%</td>
+            <td>Character trait consistency</td>
+          </tr>
+          <tr>
+            <td><strong>CAR</strong></td>
+            <td>Compliance Adherence Rate</td>
+            <td>>= 99.9%</td>
+            <td>Safety guardrail compliance</td>
+          </tr>
+          <tr>
+            <td><strong>OI</strong></td>
+            <td>Originality Index</td>
+            <td>> 80%</td>
+            <td>Trope/cliche avoidance</td>
+          </tr>
+          <tr>
+            <td><strong>EAP</strong></td>
+            <td>Emotional Arc Profile</td>
+            <td>r > 0.7</td>
+            <td>Arc alignment</td>
+          </tr>
+          <tr>
+            <td><strong>RQ</strong></td>
+            <td>Retrieval Quality</td>
+            <td>MRR > 0.6</td>
+            <td>Search effectiveness</td>
+          </tr>
+          <tr>
+            <td><strong>CPSR</strong></td>
+            <td>CNL Parse Success Rate</td>
+            <td>>= 95%</td>
+            <td>Valid CNL syntax</td>
+          </tr>
+          <tr>
+            <td><strong>CSA</strong></td>
+            <td>Constraint Satisfaction Accuracy</td>
+            <td>>= 98%</td>
+            <td>Constraint compliance</td>
+          </tr>
+          <tr>
+            <td><strong>XAI</strong></td>
+            <td>Explainability Score</td>
+            <td>>= 4.0/5.0</td>
+            <td>Explanation quality</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Console Debugging -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Console Debugging</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p>Open browser developer tools (F12) to see detailed metric calculations:</p>
+        
+        <div class="example-box">
+          <div class="example-title">Console Output Example</div>
+          <pre><code>[Evaluate] Counts: {
+  characters: 4,
+  locations: 3,
+  scenes: 8,
+  chapters: 3,
+  actions: 12,
+  dialogues: 5,
+  themes: 2,
+  relationships: 6,
+  worldRules: 3,
+  wisdom: 2,
+  patterns: 1
+}
+
+[Evaluate] Coherence: {
+  charContinuity: "0.75",
+  locLogic: "0.60",
+  actionCoherence: "0.92",
+  sceneCompleteness: "0.88",
+  relUsage: "0.67",
+  dialogueQuality: "0.70"
+}</code></pre>
+        </div>
+        
+        <p>Use this data to identify exactly which aspects need improvement.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section id="related">
+  <h2>Related Documentation</h2>
+  
+  <ul>
+    <li><a href="#metrics-nqs" data-page="metrics-nqs">NQS - Narrative Quality Score</a> - Master metric details</li>
+    <li><a href="#metrics-summary" data-page="metrics-summary">Summary Metrics</a> - Completeness, CS, EAP</li>
+    <li><a href="#metrics-detailed" data-page="metrics-detailed">Detailed Metrics</a> - CAD, CAR, OI, and more</li>
+    <li><a href="#metrics-coherence" data-page="metrics-coherence">Coherence Analysis</a> - Detecting random generation</li>
+    <li><a href="#metrics-diagnostics" data-page="metrics-diagnostics">Diagnostics Guide</a> - Interpreting low scores</li>
+    <li><a href="#metrics-evaluation" data-page="metrics-evaluation">Human Evaluation</a> - Rating protocols</li>
+  </ul>
+</section>
+
+<script>
+// Accordion functionality
+document.querySelectorAll('.accordion-header').forEach(button => {
+  button.addEventListener('click', () => {
+    const section = button.parentElement;
+    const isOpen = section.classList.contains('open');
+    
+    // Toggle current section
+    section.classList.toggle('open');
+    button.setAttribute('aria-expanded', !isOpen);
+  });
+});
+</script>

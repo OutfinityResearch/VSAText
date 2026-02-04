@@ -519,12 +519,40 @@ Dialogues   Relationships      ┌───────────────�
   </tr>
 </table>
 
+<h2>Tab Relationships</h2>
+
+<p>The SCRIPTA editor tabs are interconnected in a structured workflow:</p>
+
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                      BLUEPRINT                               │
+│   Arc Selection → Beat Mapping → Tension Curve → Subplots   │
+└─────────────────────────────┬───────────────────────────────┘
+                        │ guides
+                        ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      STRUCTURE                               │
+│         Book → Chapters → Scenes (with blocks)               │
+└─────────────────────────────┬───────────────────────────────┘
+                        │ references
+                        ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      LIBRARIES                               │
+│  Characters ←→ Relations      Locations    Objects          │
+│  Moods      Dialogues         World Rules  Themes           │
+│  Wisdom     Patterns          Templates                      │
+└─────────────────────────────┬───────────────────────────────┘
+                        │ generates
+                        ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      OUTPUTS                                 │
+│         CNL (specification) → NL (prose)                     │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+
 <h2>Related Documents</h2>
 
 <ul>
   <li><a href="#cnl-language" data-page="cnl-language">CNL Language Reference</a> - Complete syntax and semantics</li>
-  <li><a href="#elements" data-page="elements">Story Elements Guide</a> - Deep dive into each element type</li>
-  <li><a href="#narrative" data-page="narrative">Narrative Structure</a> - Detailed arc documentation</li>
-  <li><a href="../specs/DS04-CNL-Specification.md">DS04 - CNL Specification</a> (Technical)</li>
-  <li><a href="../specs/DS11-CNL-Unification.md">DS11 - CNL Syntax Reference</a> (Technical)</li>
+  <li><a href="#tab-characters" data-page="tab-characters">Characters Tab</a> - Character definitions</li>
+  <li><a href="#tab-blueprint" data-page="tab-blueprint">Blueprint Tab</a> - Story planning</li>
+  <li><a href="#narrative-theory" data-page="narrative-theory">Narrative Structure</a> - Detailed arc documentation</li>
 </ul>

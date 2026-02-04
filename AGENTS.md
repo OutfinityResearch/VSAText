@@ -166,3 +166,61 @@ node tests/run.mjs    # Run all tests directly
 - User interaction and state management
 
 **The demo should NOT contain business logic.** All generation, evaluation, and verification logic belongs in the SDK.
+
+## Documentation Guidelines
+
+### Documentation Structure
+
+Documentation is organized in `docs/theory/`:
+
+```
+docs/theory/
+├── index.html                 # Main documentation hub with navigation
+├── doc-styles.css             # Shared styles
+├── content/                   # Documentation pages
+│   ├── overview.html          # SCRIPTA overview
+│   ├── conceptual-model.html  # Mental model, glossary, tab relationships
+│   ├── cnl-language.html      # CNL syntax reference
+│   ├── end-to-end.html        # Complete workflow example
+│   │
+│   ├── tab-*.html             # Editor tab guides (16 pages)
+│   │   ├── tab-cnl.html       # CNL Editor tab
+│   │   ├── tab-nl.html        # Natural Language generation
+│   │   ├── tab-blueprint.html # Story planning
+│   │   ├── tab-characters.html# Character definitions
+│   │   └── ...                # (one page per UI tab)
+│   │
+│   ├── *-theory.html          # Deep theory pages
+│   │   ├── character-theory.html   # Jungian archetypes
+│   │   ├── narrative-theory.html   # Story structure
+│   │   ├── pattern-theory.html     # Master plots
+│   │   └── ...
+│   │
+│   ├── generation.html        # Generation strategies
+│   ├── metrics.html           # Metrics overview
+│   └── metrics-reference.html # Detailed metrics reference
+```
+
+### Documentation Principles
+
+1. **One page per tab**: Each UI tab has a dedicated `tab-*.html` guide.
+2. **Theory separate from guides**: Deep theory lives in `*-theory.html` files.
+3. **No legacy content**: All documentation is current and maintained.
+4. **Consistent structure**: Each tab guide includes:
+   - What the tab does
+   - When to use it
+   - Properties table
+   - Step-by-step usage
+   - CNL output examples
+   - Metrics impact
+   - Best practices
+   - Related links
+
+### Adding New Documentation
+
+When adding new features:
+
+1. Update the relevant `tab-*.html` guide.
+2. Add new vocabulary terms to `conceptual-model.html` glossary.
+3. Update `index.html` sidebar if adding new pages.
+4. Link related pages using `data-page` attributes for SPA navigation.

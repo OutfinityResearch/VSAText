@@ -1,0 +1,370 @@
+<h1>Coherence Analysis Metrics</h1>
+
+<p class="lead">Six metrics that specifically detect random, inconsistent, or incoherent story generation. These are the primary defense against "garbage" output and account for 26% of the NQS score.</p>
+
+<div class="warning-box">
+  <div class="warning-title">Detecting Bad Generation</div>
+  <p>If coherence metrics average below 40%, the story is likely random noise rather than meaningful narrative. Check the console for detailed diagnostics.</p>
+</div>
+
+<div class="accordion">
+  <!-- Section 1: Character Continuity (open by default) -->
+  <section class="accordion-section open">
+    <button class="accordion-header" aria-expanded="true">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Character Continuity</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p><strong>Question:</strong> Do characters appear consistently across scenes?</p>
+        
+        <h4>What It Measures</h4>
+        <ul>
+          <li>Characters appearing in multiple scenes (50%)</li>
+          <li>Hero/protagonist presence throughout the story (50%)</li>
+        </ul>
+        
+        <h4>Formula</h4>
+        <pre><code>charsInMultiple = count of characters appearing in 2+ scenes
+heroPresence = hero appearances / total scenes
+
+charContinuity = (charsInMultiple / totalCharacters) x 0.5 
+               + min(1, heroPresence) x 0.5</code></pre>
+        
+        <h4>Target</h4>
+        <p><strong>>= 60%</strong></p>
+        
+        <h4>Interpretation</h4>
+        <table>
+          <tr>
+            <th>Score</th>
+            <th>Meaning</th>
+          </tr>
+          <tr>
+            <td>&lt; 30%</td>
+            <td>Most characters appear only once (random assignment)</td>
+          </tr>
+          <tr>
+            <td>30-60%</td>
+            <td>Some continuity but protagonist may be missing from scenes</td>
+          </tr>
+          <tr>
+            <td>>= 60%</td>
+            <td>Good character continuity</td>
+          </tr>
+        </table>
+        
+        <h4>Low Score Indicates</h4>
+        <p>Characters are randomly assigned per scene with no continuity. Each scene has a completely different cast.</p>
+        
+        <h4>How to Fix</h4>
+        <ul>
+          <li>Ensure the hero/protagonist appears in most scenes</li>
+          <li>Reuse key characters across multiple scenes</li>
+          <li>Don't introduce new characters for every scene</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Location Logic -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Location Logic</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p><strong>Question:</strong> Are locations reused logically or is it random hopping?</p>
+        
+        <h4>What It Measures</h4>
+        <ul>
+          <li>Locations appearing 2+ times (50%)</li>
+          <li>Average location usage vs expected (50%)</li>
+        </ul>
+        
+        <h4>Formula</h4>
+        <pre><code>locsReused = count of locations appearing 2+ times
+avgLocUsage = sum(location appearances) / total locations
+expectedUsage = max(3, sceneCount / 3)
+
+locLogic = min(1, (locsReused / totalLocations) x 0.5 
+         + (avgLocUsage / expectedUsage) x 0.5)</code></pre>
+        
+        <h4>Target</h4>
+        <p><strong>>= 50%</strong></p>
+        
+        <h4>Interpretation</h4>
+        <table>
+          <tr>
+            <th>Score</th>
+            <th>Meaning</th>
+          </tr>
+          <tr>
+            <td>&lt; 25%</td>
+            <td>Every scene has a different location (incoherent)</td>
+          </tr>
+          <tr>
+            <td>25-50%</td>
+            <td>Some location reuse but mostly random</td>
+          </tr>
+          <tr>
+            <td>>= 50%</td>
+            <td>Locations are reused appropriately</td>
+          </tr>
+        </table>
+        
+        <h4>Low Score Indicates</h4>
+        <p>Every scene in a different location with no spatial coherence. The story jumps randomly from place to place.</p>
+        
+        <h4>How to Fix</h4>
+        <ul>
+          <li>Return to key locations (home, workplace, etc.)</li>
+          <li>Don't create a new location for every scene</li>
+          <li>Use location transitions that make narrative sense</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Action Coherence -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Action Coherence</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p><strong>Question:</strong> Do actions reference known entities?</p>
+        
+        <h4>What It Measures</h4>
+        <ul>
+          <li>Action subject is a known character</li>
+          <li>Action target is a known character, location, or object (or empty)</li>
+        </ul>
+        
+        <h4>Formula</h4>
+        <pre><code>For each action:
+  - subject should be a known character
+  - target should be a known entity (or empty)
+  
+valid = count of actions with valid subject AND target
+actionCoherence = valid / totalActions</code></pre>
+        
+        <h4>Target</h4>
+        <p><strong>>= 80%</strong></p>
+        
+        <h4>Low Score Indicates</h4>
+        <p>Actions reference entities that don't exist in libraries. The specification contains orphan references.</p>
+        
+        <h4>How to Fix</h4>
+        <ul>
+          <li>Declare all characters before referencing them in actions</li>
+          <li>Add missing characters/objects to libraries</li>
+          <li>Check action subject and target names match declared entities</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: Scene Completeness -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Scene Completeness</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p><strong>Question:</strong> Does each scene have minimum required elements?</p>
+        
+        <h4>A Complete Scene Needs</h4>
+        <ul>
+          <li>At least one character</li>
+          <li>At least one location</li>
+          <li>At least one action OR dialogue</li>
+        </ul>
+        
+        <h4>Formula</h4>
+        <pre><code>For each scene, check:
+  - At least one character reference
+  - At least one location reference
+  - At least one action OR dialogue
+  
+complete = count of scenes with all three
+sceneCompleteness = complete / totalScenes</code></pre>
+        
+        <h4>Target</h4>
+        <p><strong>>= 70%</strong></p>
+        
+        <h4>Low Score Indicates</h4>
+        <p>Scenes are fragments, missing essential elements. You have scenes without characters, locations, or actions.</p>
+        
+        <h4>How to Fix</h4>
+        <ul>
+          <li>Ensure each scene has: who (character), where (location), what (action/dialogue)</li>
+          <li>Add missing elements to incomplete scenes</li>
+          <li>Remove or merge fragment scenes</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Relationship Usage -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Relationship Usage</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p><strong>Question:</strong> Are defined relationships actually used in the story?</p>
+        
+        <h4>What It Measures</h4>
+        <ul>
+          <li>For each relationship (A -> B), do A and B appear in the same scene?</li>
+          <li>Unused relationships are just decoration</li>
+        </ul>
+        
+        <h4>Formula</h4>
+        <pre><code>For each defined relationship (A -> B):
+  Check if A and B appear together in any scene
+  
+usedPairs = count of relationships where both appear in same scene
+relUsage = min(1, usedPairs / totalRelationships)</code></pre>
+        
+        <h4>Target</h4>
+        <p><strong>>= 50%</strong></p>
+        
+        <h4>Low Score Indicates</h4>
+        <p>Relationships are defined but never manifested in the narrative. Characters who are supposedly connected never interact.</p>
+        
+        <h4>How to Fix</h4>
+        <ul>
+          <li>Put related characters in scenes together</li>
+          <li>Create dialogues between related characters</li>
+          <li>Remove relationships that won't be used</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 6: Dialogue Quality -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Dialogue Quality</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p><strong>Question:</strong> Are dialogues well-structured and purposeful?</p>
+        
+        <h4>Scoring (0-1 per dialogue)</h4>
+        <table>
+          <tr>
+            <th>Component</th>
+            <th>Points</th>
+          </tr>
+          <tr>
+            <td>Has purpose defined</td>
+            <td>+0.25</td>
+          </tr>
+          <tr>
+            <td>Has 2+ participants</td>
+            <td>+0.25</td>
+          </tr>
+          <tr>
+            <td>Has at least 1 exchange</td>
+            <td>+0.25</td>
+          </tr>
+          <tr>
+            <td>Exchanges have content (intent or sketch)</td>
+            <td>+0.25</td>
+          </tr>
+        </table>
+        
+        <h4>Formula</h4>
+        <pre><code>For each dialogue, score 0-1:
+  +0.25 if has purpose defined
+  +0.25 if has 2+ participants
+  +0.25 if has at least 1 exchange
+  +0.25 if exchanges have content (intent or sketch)
+
+dialogueQuality = sum(scores) / totalDialogues</code></pre>
+        
+        <h4>Target</h4>
+        <p><strong>>= 60%</strong></p>
+        
+        <h4>Low Score Indicates</h4>
+        <p>Dialogues are empty placeholders without structure. They lack purpose, participants, or actual exchanges.</p>
+        
+        <h4>How to Fix</h4>
+        <ul>
+          <li>Add purpose to each dialogue (what it achieves)</li>
+          <li>Define at least 2 participants</li>
+          <li>Add exchanges with intent or sketch content</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section id="overall-assessment">
+  <h2>Overall Coherence Assessment</h2>
+  
+  <table>
+    <tr>
+      <th>Average Score</th>
+      <th>Interpretation</th>
+      <th>Action</th>
+    </tr>
+    <tr>
+      <td><strong>&lt; 30%</strong></td>
+      <td>Garbage - Random/incoherent</td>
+      <td>Regenerate with better specification</td>
+    </tr>
+    <tr>
+      <td><strong>30-50%</strong></td>
+      <td>Poor - Major structural issues</td>
+      <td>Review entities and structure</td>
+    </tr>
+    <tr>
+      <td><strong>50-70%</strong></td>
+      <td>Fair - Some coherence</td>
+      <td>Refine weak areas</td>
+    </tr>
+    <tr>
+      <td><strong>70-85%</strong></td>
+      <td>Good - Mostly coherent</td>
+      <td>Minor adjustments</td>
+    </tr>
+    <tr>
+      <td><strong>&gt; 85%</strong></td>
+      <td>Excellent - Well-structured</td>
+      <td>Ready for expansion</td>
+    </tr>
+  </table>
+</section>
+
+<section id="related">
+  <h2>Related Documentation</h2>
+  
+  <ul>
+    <li><a href="#metrics-overview" data-page="metrics-overview">Metrics Overview</a> - Introduction to SCRIPTA metrics</li>
+    <li><a href="#metrics-nqs" data-page="metrics-nqs">NQS - Narrative Quality Score</a> - The master metric</li>
+    <li><a href="#metrics-diagnostics" data-page="metrics-diagnostics">Diagnostics Guide</a> - Fixing low scores</li>
+    <li><a href="../specs/DS25-Metric-Coherence-Analysis.md">DS25 - Coherence Analysis</a> - Technical specification</li>
+  </ul>
+</section>
+
+<script>
+// Accordion functionality
+document.querySelectorAll('.accordion-header').forEach(button => {
+  button.addEventListener('click', () => {
+    const section = button.parentElement;
+    const isOpen = section.classList.contains('open');
+    
+    section.classList.toggle('open');
+    button.setAttribute('aria-expanded', !isOpen);
+  });
+});
+</script>

@@ -1,0 +1,248 @@
+<h1>Summary Metrics</h1>
+
+<p class="lead">Summary metrics provide high-level measures of story completeness and structure. These three metrics quickly indicate whether a story specification has the essential elements for a coherent narrative.</p>
+
+<div class="accordion">
+  <!-- Section 1: Completeness (open by default) -->
+  <section class="accordion-section open">
+    <button class="accordion-header" aria-expanded="true">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Completeness</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p><strong>Purpose:</strong> Measures whether all required story elements are present in the specification.</p>
+        
+        <h4>Components</h4>
+        <table>
+          <tr>
+            <th>Element</th>
+            <th>Minimum</th>
+            <th>Weight</th>
+          </tr>
+          <tr>
+            <td>Characters</td>
+            <td>2+</td>
+            <td>20%</td>
+          </tr>
+          <tr>
+            <td>Locations</td>
+            <td>2+</td>
+            <td>10%</td>
+          </tr>
+          <tr>
+            <td>Scenes</td>
+            <td>3+</td>
+            <td>25%</td>
+          </tr>
+          <tr>
+            <td>Themes</td>
+            <td>1+</td>
+            <td>10%</td>
+          </tr>
+          <tr>
+            <td>Emotional Arc</td>
+            <td>3+ beats</td>
+            <td>10%</td>
+          </tr>
+          <tr>
+            <td>Dialogues</td>
+            <td>2+</td>
+            <td>15%</td>
+          </tr>
+          <tr>
+            <td>Relationships</td>
+            <td>2+</td>
+            <td>10%</td>
+          </tr>
+        </table>
+        
+        <h4>Target</h4>
+        <p><strong>Completeness >= 80%</strong></p>
+        
+        <h4>How to Improve</h4>
+        <ul>
+          <li>Add more characters if you have fewer than 2</li>
+          <li>Define at least 2 locations for spatial variety</li>
+          <li>Create at least 3 scenes with clear structure</li>
+          <li>Specify themes for thematic coherence</li>
+          <li>Add emotional arc beats to guide the narrative journey</li>
+          <li>Include dialogues to bring characters to life</li>
+          <li>Define relationships between characters</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Coherence Score (CS) -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Coherence Score (CS)</span>
+      <span class="accordion-badge">DS13</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p><strong>Purpose:</strong> Measures how well a story holds together as a unified narrative with consistent characters, logical cause-and-effect chains, and no contradictions.</p>
+        
+        <div class="info-box">
+          <div class="info-box-title">Technical Specification</div>
+          <p>See <a href="../specs/DS13-Metric-Coherence-Score.md">DS13-Metric-Coherence-Score.md</a> for the complete specification.</p>
+        </div>
+        
+        <h4>Components</h4>
+        <table>
+          <tr>
+            <th>Component</th>
+            <th>Weight</th>
+            <th>What It Measures</th>
+          </tr>
+          <tr>
+            <td>Entity Continuity (EC)</td>
+            <td>0.50</td>
+            <td>Do entities persist across adjacent scenes?</td>
+          </tr>
+          <tr>
+            <td>Causal Chains (CC)</td>
+            <td>0.40</td>
+            <td>Do actions have causes and effects?</td>
+          </tr>
+          <tr>
+            <td>Logic Violation Penalty (LVP)</td>
+            <td>-0.30</td>
+            <td>Errors like orphan references, impossible transitions</td>
+          </tr>
+        </table>
+        
+        <h4>Formula</h4>
+        <pre><code>CS = clamp(0.50 x EC + 0.40 x CC - 0.30 x LVP, 0, 1)
+
+Entity Continuity (Jaccard Similarity):
+  EC_i = |E(scene_i) n E(scene_i+1)| / |E(scene_i) u E(scene_i+1)|
+  EC = average(EC_i) for all adjacent scene pairs
+
+Causal Chain Score:
+  For each adjacent pair (scene_i, scene_i+1):
+    shared = characters in both scenes
+    has_cause = scene_i contains cause verb (threatens, decides, reveals...)
+    has_effect = scene_i+1 contains effect verb (escapes, confronts, resolves...)
+    
+    CC_i = 1.0 if has_cause AND has_effect
+         = 0.7 if shared non-empty AND (has_cause OR has_effect)
+         = 0.4 if shared non-empty
+         = 0.0 otherwise
+  CC = average(CC_i)
+
+Logic Violation Penalty:
+  LVP = min(1.0, violation_count / scene_count)</code></pre>
+        
+        <h4>Target</h4>
+        <p><strong>CS > 75%</strong></p>
+        
+        <h4>How to Improve Low CS</h4>
+        <ul>
+          <li><strong>Low EC:</strong> Ensure characters persist across scenes; don't introduce entirely new casts per scene</li>
+          <li><strong>Low CC:</strong> Add cause-effect relationships; if someone threatens in scene 1, show the consequence in scene 2</li>
+          <li><strong>High LVP:</strong> Fix orphan references, ensure all referenced entities are declared</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Emotional Arc Profile (EAP) -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Emotional Arc Profile (EAP)</span>
+      <span class="accordion-badge">DS17</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p><strong>Purpose:</strong> Measures how well a story's emotional journey matches its intended arc. Good stories take readers on deliberate emotional journeys.</p>
+        
+        <div class="info-box">
+          <div class="info-box-title">Technical Specification</div>
+          <p>See <a href="../specs/DS17-Metric-Emotional-Arc-Profile.md">DS17-Metric-Emotional-Arc-Profile.md</a> for the complete specification.</p>
+        </div>
+        
+        <h4>How It Works</h4>
+        <ol>
+          <li><strong>Build target arc:</strong> From the selected narrative arc, extract expected valence at each position</li>
+          <li><strong>Measure actual arc:</strong> For each scene, calculate emotional valence from moods or text analysis</li>
+          <li><strong>Calculate correlation:</strong> Pearson correlation between target and actual arcs</li>
+        </ol>
+        
+        <h4>Valence Scale</h4>
+        <pre><code>Valence scale:
+  1.0 = very positive (joy, triumph)
+  0.5 = neutral
+  0.0 = very negative (despair, fear)
+
+Correlation r = covariance(target, measured) / (std(target) x std(measured))
+
+For reporting: EAP = (r + 1) / 2  // Normalize to 0-1</code></pre>
+        
+        <h4>Components (Alternative Calculation)</h4>
+        <p>When correlation cannot be calculated, EAP uses component scoring:</p>
+        <table>
+          <tr>
+            <th>Component</th>
+            <th>Weight</th>
+            <th>What It Measures</th>
+          </tr>
+          <tr>
+            <td>Arc Beat Coverage</td>
+            <td>50%</td>
+            <td>How many arc beats are assigned?</td>
+          </tr>
+          <tr>
+            <td>Mood Variety</td>
+            <td>25%</td>
+            <td>Are different moods used?</td>
+          </tr>
+          <tr>
+            <td>Mood Usage</td>
+            <td>25%</td>
+            <td>Are moods applied to scenes?</td>
+          </tr>
+        </table>
+        
+        <h4>Target</h4>
+        <p><strong>Pearson correlation r > 0.7</strong> (or EAP >= 70% when using component calculation)</p>
+        
+        <h4>How to Improve Low EAP</h4>
+        <ul>
+          <li>Assign moods to all scenes</li>
+          <li>Ensure moods follow the arc pattern (rising tension toward climax)</li>
+          <li>Check that scene positions match beat expectations</li>
+          <li>Use varied moods throughout the story</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section id="related">
+  <h2>Related Documentation</h2>
+  
+  <ul>
+    <li><a href="#metrics-overview" data-page="metrics-overview">Metrics Overview</a> - Introduction to SCRIPTA metrics</li>
+    <li><a href="#metrics-nqs" data-page="metrics-nqs">NQS - Narrative Quality Score</a> - The master metric</li>
+    <li><a href="#metrics-detailed" data-page="metrics-detailed">Detailed Metrics</a> - CAD, CAR, OI, and more</li>
+    <li><a href="#metrics-coherence" data-page="metrics-coherence">Coherence Analysis</a> - The 6 coherence metrics</li>
+    <li><a href="#tab-arc" data-page="tab-arc">Arc Tab Guide</a> - Defining emotional arcs</li>
+  </ul>
+</section>
+
+<script>
+// Accordion functionality
+document.querySelectorAll('.accordion-header').forEach(button => {
+  button.addEventListener('click', () => {
+    const section = button.parentElement;
+    const isOpen = section.classList.contains('open');
+    
+    section.classList.toggle('open');
+    button.setAttribute('aria-expanded', !isOpen);
+  });
+});
+</script>

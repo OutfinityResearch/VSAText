@@ -1,0 +1,270 @@
+<h1>Narrative Quality Score (NQS)</h1>
+
+<p class="lead">The master metric that combines all quality dimensions into a single 0-100% score. NQS provides an overall assessment of story specification quality.</p>
+
+<div class="accordion">
+  <!-- Section 1: What is NQS (open by default) -->
+  <section class="accordion-section open">
+    <button class="accordion-header" aria-expanded="true">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">What is NQS?</span>
+      <span class="accordion-badge">DS23</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p>The <strong>Narrative Quality Score (NQS)</strong> is the master metric that combines automated analysis with optional human judgment to measure overall story quality.</p>
+        
+        <div class="info-box">
+          <div class="info-box-title">Technical Specification</div>
+          <p>See <a href="../specs/DS23-Metric-Narrative-Quality-Score.md">DS23-Metric-Narrative-Quality-Score.md</a> for the complete specification.</p>
+        </div>
+        
+        <p>NQS answers the question: <strong>"How good is this story specification overall?"</strong></p>
+        
+        <p>A high NQS indicates:</p>
+        <ul>
+          <li>All required story elements are present</li>
+          <li>Characters behave consistently</li>
+          <li>Narrative structure is coherent</li>
+          <li>Constraints are satisfied</li>
+          <li>The emotional arc is well-defined</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: NQS Components -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">NQS Components</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p>NQS is calculated from weighted component metrics:</p>
+        
+        <table>
+          <tr>
+            <th>Component</th>
+            <th>Weight</th>
+            <th>What It Measures</th>
+          </tr>
+          <tr>
+            <td><strong>Completeness</strong></td>
+            <td>12%</td>
+            <td>Are required elements present? (characters, locations, themes, arc)</td>
+          </tr>
+          <tr>
+            <td><strong>Coherence Score (CS)</strong></td>
+            <td>12%</td>
+            <td>Entity usage and structural coherence</td>
+          </tr>
+          <tr>
+            <td><strong>Character Drift (CAD)</strong></td>
+            <td>8%</td>
+            <td>Character trait consistency (lower is better)</td>
+          </tr>
+          <tr>
+            <td><strong>Originality (OI)</strong></td>
+            <td>8%</td>
+            <td>Variety of narrative blocks and actions</td>
+          </tr>
+          <tr>
+            <td><strong>Emotional Arc (EAP)</strong></td>
+            <td>10%</td>
+            <td>Arc coverage and mood usage</td>
+          </tr>
+          <tr>
+            <td><strong>Parse Success (CPSR)</strong></td>
+            <td>8%</td>
+            <td>Valid CNL syntax in output</td>
+          </tr>
+          <tr>
+            <td><strong>Constraints (CSA)</strong></td>
+            <td>8%</td>
+            <td>Constraint satisfaction accuracy</td>
+          </tr>
+          <tr>
+            <td><strong>Explainability (XAI)</strong></td>
+            <td>8%</td>
+            <td>Documentation level (arc, themes, rules, wisdom)</td>
+          </tr>
+          <tr>
+            <td><strong>Coherence Analysis</strong></td>
+            <td>26%</td>
+            <td>Character continuity, location logic, action coherence, scene completeness</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: NQS Formula -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Formula</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <h4>With Human Evaluation</h4>
+        <p>When human raters are available:</p>
+        <pre><code>NQS = 0.5 x CS + 0.5 x H
+
+Where:
+  CS = Coherence Score (automated)
+  H  = Human Overall Rating (normalized to 0-1)</code></pre>
+
+        <h4>Automated-Only Evaluation</h4>
+        <p>For automated-only evaluation (no human raters), the formula uses weighted component metrics:</p>
+        <pre><code>NQS = 
+  completeness x 0.12 +
+  cs x 0.12 + 
+  (1 - min(1, cad x 4)) x 0.08 +
+  oi x 0.08 + 
+  eap x 0.10 + 
+  cpsr x 0.08 + 
+  csa x 0.08 + 
+  explainability x 0.08 +
+  charContinuity x 0.08 +
+  locLogic x 0.06 +
+  actionCoherence x 0.06 +
+  sceneCompleteness x 0.06</code></pre>
+
+        <div class="info-box">
+          <div class="info-box-title">Note on CAD</div>
+          <p>Character Attribute Drift (CAD) is inverted because lower drift is better. The formula <code>(1 - min(1, cad x 4))</code> converts it to a "consistency" score where higher is better.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: Interpreting NQS -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Interpreting NQS</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <table>
+          <tr>
+            <th>Score Range</th>
+            <th>Interpretation</th>
+            <th>Action</th>
+          </tr>
+          <tr>
+            <td><strong>&lt; 40%</strong></td>
+            <td>Severe issues, likely random/incoherent generation</td>
+            <td>Regenerate with better specification</td>
+          </tr>
+          <tr>
+            <td><strong>40-60%</strong></td>
+            <td>Multiple problems, needs significant improvement</td>
+            <td>Review and fix identified issues</td>
+          </tr>
+          <tr>
+            <td><strong>60-75%</strong></td>
+            <td>Acceptable, some issues to address</td>
+            <td>Targeted improvements</td>
+          </tr>
+          <tr>
+            <td><strong>75-85%</strong></td>
+            <td>Good quality, minor refinements needed</td>
+            <td>Fine-tuning</td>
+          </tr>
+          <tr>
+            <td><strong>&gt; 85%</strong></td>
+            <td>Excellent, well-structured story</td>
+            <td>Ready for use</td>
+          </tr>
+        </table>
+
+        <h4>Success Threshold</h4>
+        <p>NQS must improve by <strong>>= 25%</strong> compared to baseline (Variant A - simple prompting without specification) to demonstrate the value of structured story specification.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: How to Improve NQS -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">How to Improve NQS</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p>To improve NQS, focus on the weakest component metrics:</p>
+        
+        <table>
+          <tr>
+            <th>Low Component</th>
+            <th>Action</th>
+          </tr>
+          <tr>
+            <td>Completeness</td>
+            <td>Add missing elements: characters, locations, scenes, themes, dialogues</td>
+          </tr>
+          <tr>
+            <td>Coherence Score (CS)</td>
+            <td>Fix orphan references, add cause-effect chains between scenes</td>
+          </tr>
+          <tr>
+            <td>Character Drift (CAD)</td>
+            <td>Ensure characters act consistently with their defined traits</td>
+          </tr>
+          <tr>
+            <td>Originality (OI)</td>
+            <td>Vary narrative blocks and action types; avoid repetition</td>
+          </tr>
+          <tr>
+            <td>Emotional Arc (EAP)</td>
+            <td>Assign moods to scenes; ensure arc progression matches template</td>
+          </tr>
+          <tr>
+            <td>Parse Success (CPSR)</td>
+            <td>Fix CNL syntax errors</td>
+          </tr>
+          <tr>
+            <td>Constraints (CSA)</td>
+            <td>Ensure all constraints are satisfied</td>
+          </tr>
+          <tr>
+            <td>Explainability (XAI)</td>
+            <td>Add documentation: arc, themes, relationships, world rules</td>
+          </tr>
+        </table>
+
+        <div class="warning-box">
+          <div class="warning-title">Coherence Analysis Weight</div>
+          <p>Coherence analysis metrics account for 26% of NQS. If your story has random character assignments or incoherent scene structure, this will significantly lower your overall score.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section id="related">
+  <h2>Related Documentation</h2>
+  
+  <ul>
+    <li><a href="#metrics-overview" data-page="metrics-overview">Metrics Overview</a> - Introduction to SCRIPTA metrics</li>
+    <li><a href="#metrics-summary" data-page="metrics-summary">Summary Metrics</a> - Completeness, CS, EAP</li>
+    <li><a href="#metrics-detailed" data-page="metrics-detailed">Detailed Metrics</a> - CAD, CAR, OI, and more</li>
+    <li><a href="#metrics-coherence" data-page="metrics-coherence">Coherence Analysis</a> - The 6 coherence metrics</li>
+    <li><a href="#metrics-diagnostics" data-page="metrics-diagnostics">Diagnostics Guide</a> - Fixing low scores</li>
+  </ul>
+</section>
+
+<script>
+// Accordion functionality
+document.querySelectorAll('.accordion-header').forEach(button => {
+  button.addEventListener('click', () => {
+    const section = button.parentElement;
+    const isOpen = section.classList.contains('open');
+    
+    section.classList.toggle('open');
+    button.setAttribute('aria-expanded', !isOpen);
+  });
+});
+</script>

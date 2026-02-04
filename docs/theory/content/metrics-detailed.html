@@ -1,0 +1,415 @@
+<h1>Detailed Analysis Metrics</h1>
+
+<p class="lead">Detailed analysis metrics measure specific quality dimensions of your story specification. Each metric focuses on a particular aspect of narrative quality.</p>
+
+<div class="accordion">
+  <!-- Section 1: Character Attribute Drift (CAD) (open by default) -->
+  <section class="accordion-section open">
+    <button class="accordion-header" aria-expanded="true">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Character Attribute Drift (CAD)</span>
+      <span class="accordion-badge">DS14</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p><strong>Purpose:</strong> Measures whether characters stay true to their defined traits throughout the story. If Anna is defined as "courageous," she shouldn't act cowardly without explanation.</p>
+        
+        <div class="info-box">
+          <div class="info-box-title">Technical Specification</div>
+          <p>See <a href="../specs/DS14-Metric-Character-Attribute-Drift.md">DS14-Metric-Character-Attribute-Drift.md</a></p>
+        </div>
+        
+        <h4>How It Works</h4>
+        <ol>
+          <li><strong>Create baseline:</strong> Build a vector representation of each character's traits from their specification</li>
+          <li><strong>Analyze portrayal:</strong> Divide story into windows (~10,000 tokens), extract how characters are portrayed</li>
+          <li><strong>Measure drift:</strong> Compare portrayal vectors to baseline using cosine similarity</li>
+          <li><strong>Calculate CAD:</strong> Average drift across all characters and windows</li>
+        </ol>
+        
+        <h4>Formula</h4>
+        <pre><code>drift = 1 - cosine_similarity(baseline_vector, portrayal_vector)
+CAD = average(drift across all characters and windows)</code></pre>
+        
+        <h4>Simplified Calculation</h4>
+        <p>In the current implementation, CAD is calculated based on trait count:</p>
+        <table>
+          <tr>
+            <th>Traits per Character</th>
+            <th>CAD Score</th>
+            <th>Quality</th>
+          </tr>
+          <tr>
+            <td>3+ traits</td>
+            <td>0.05</td>
+            <td>Excellent</td>
+          </tr>
+          <tr>
+            <td>2 traits</td>
+            <td>0.10</td>
+            <td>Good</td>
+          </tr>
+          <tr>
+            <td>1 trait</td>
+            <td>0.15</td>
+            <td>Minimal</td>
+          </tr>
+          <tr>
+            <td>0 traits</td>
+            <td>0.25</td>
+            <td>Poor</td>
+          </tr>
+        </table>
+        
+        <h4>Target</h4>
+        <p><strong>CAD < 15%</strong> (lower is better - less drift is good)</p>
+        
+        <h4>How to Improve High CAD</h4>
+        <ul>
+          <li>Limit characters to 2-4 core traits (too many traits are hard to maintain)</li>
+          <li>Ensure character actions align with their traits</li>
+          <li>If a character must act against type, provide narrative justification</li>
+          <li>Review character aliases to ensure all mentions are tracked</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Compliance Adherence Rate (CAR) -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Compliance Adherence Rate (CAR)</span>
+      <span class="accordion-badge">DS15</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p><strong>Purpose:</strong> Measures the percentage of generated content that passes safety and quality guardrails.</p>
+        
+        <div class="info-box">
+          <div class="info-box-title">Technical Specification</div>
+          <p>See <a href="../specs/DS15-Metric-Compliance-Adherence-Rate.md">DS15-Metric-Compliance-Adherence-Rate.md</a></p>
+        </div>
+        
+        <h4>Guardrail Categories</h4>
+        <table>
+          <tr>
+            <th>Category</th>
+            <th>What It Catches</th>
+          </tr>
+          <tr>
+            <td>Bias/Stereotypes</td>
+            <td>Harmful generalizations about groups</td>
+          </tr>
+          <tr>
+            <td>PII (Personal Info)</td>
+            <td>Real names, addresses, phone numbers</td>
+          </tr>
+          <tr>
+            <td>Harmful Content</td>
+            <td>Violence, illegal activity instructions</td>
+          </tr>
+          <tr>
+            <td>Plagiarism</td>
+            <td>Copying published works</td>
+          </tr>
+          <tr>
+            <td>Cliches</td>
+            <td>Overused phrases</td>
+          </tr>
+        </table>
+        
+        <h4>Formula</h4>
+        <pre><code>CAR_strict = pass_count / total_artifacts
+CAR_lenient = (pass_count + warn_count) / total_artifacts</code></pre>
+        
+        <h4>Target</h4>
+        <p><strong>CAR_strict >= 99.9%</strong></p>
+        
+        <p>In the current implementation, CAR measures orphan reference avoidance:</p>
+        <pre><code>CAR = valid_references / total_references</code></pre>
+        <p><strong>Target: CAR >= 95%</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Originality Index (OI) -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Originality Index (OI)</span>
+      <span class="accordion-badge">DS16</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p><strong>Purpose:</strong> Measures how different a story is from known cliches and tropes. Higher scores mean more original content.</p>
+        
+        <div class="info-box">
+          <div class="info-box-title">Technical Specification</div>
+          <p>See <a href="../specs/DS16-Metric-Originality-Index.md">DS16-Metric-Originality-Index.md</a></p>
+        </div>
+        
+        <h4>How It Works (Full Implementation)</h4>
+        <ol>
+          <li>Encode the story as a vector (bag-of-words or VSA)</li>
+          <li>Compare against a corpus of ~200 known tropes</li>
+          <li>Find the maximum similarity to any trope</li>
+          <li>Originality = 1 - max_similarity</li>
+        </ol>
+        
+        <pre><code>OI = 1 - max(similarity(story, trope) for trope in corpus)</code></pre>
+        
+        <h4>Current Implementation</h4>
+        <p>Measures variety in the narrative:</p>
+        <table>
+          <tr>
+            <th>Component</th>
+            <th>Weight</th>
+            <th>What It Measures</th>
+          </tr>
+          <tr>
+            <td>Block type variety</td>
+            <td>40%</td>
+            <td>Different narrative blocks used</td>
+          </tr>
+          <tr>
+            <td>Action variety</td>
+            <td>30%</td>
+            <td>Different action types used</td>
+          </tr>
+          <tr>
+            <td>Theme variety</td>
+            <td>30%</td>
+            <td>Multiple themes defined</td>
+          </tr>
+        </table>
+        
+        <h4>Target</h4>
+        <p><strong>OI > 80%</strong> (story is at most 20% similar to any known trope)</p>
+        <p>Current implementation: <strong>OI >= 50%</strong></p>
+        
+        <h4>Common Tropes Detected</h4>
+        <ul>
+          <li>Chosen One</li>
+          <li>Dead Mentor</li>
+          <li>Dark Lord</li>
+          <li>Love Triangle</li>
+          <li>Mysterious Stranger</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: CNL Parse Success Rate (CPSR) -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">CNL Parse Success Rate (CPSR)</span>
+      <span class="accordion-badge">DS20</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p><strong>Purpose:</strong> Measures how reliably the system converts input into valid CNL. This is a pipeline reliability metric, not a story quality metric.</p>
+        
+        <div class="info-box">
+          <div class="info-box-title">Technical Specification</div>
+          <p>See <a href="../specs/DS20-Metric-CNL-Parse-Success-Rate.md">DS20-Metric-CNL-Parse-Success-Rate.md</a></p>
+        </div>
+        
+        <h4>What Counts as Success</h4>
+        <ul>
+          <li><strong>Parses without syntax errors:</strong> No unclosed quotes, invalid nesting</li>
+          <li><strong>Validates semantically:</strong> No orphan references, valid constraints</li>
+        </ul>
+        
+        <h4>Formula</h4>
+        <pre><code>CPSR = successful_parses / total_attempts</code></pre>
+        
+        <h4>Target</h4>
+        <p><strong>CPSR >= 95%</strong></p>
+        <p>Current implementation: <strong>CPSR >= 90%</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Constraint Satisfaction Accuracy (CSA) -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Constraint Satisfaction Accuracy (CSA)</span>
+      <span class="accordion-badge">DS21</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p><strong>Purpose:</strong> Measures how well generated content respects the rules specified in CNL. If the author says "forbids violence," does the output avoid violence?</p>
+        
+        <div class="info-box">
+          <div class="info-box-title">Technical Specification</div>
+          <p>See <a href="../specs/DS21-Metric-Constraint-Satisfaction-Accuracy.md">DS21-Metric-Constraint-Satisfaction-Accuracy.md</a></p>
+        </div>
+        
+        <h4>Constraint Types</h4>
+        <table>
+          <tr>
+            <th>Constraint</th>
+            <th>How Satisfaction Is Checked</th>
+          </tr>
+          <tr>
+            <td><code>requires "X"</code></td>
+            <td>X appears in scope (token match, entity reference, or event)</td>
+          </tr>
+          <tr>
+            <td><code>forbids "X"</code></td>
+            <td>X does NOT appear in scope</td>
+          </tr>
+          <tr>
+            <td><code>must action target</code></td>
+            <td>Event with matching verb and target exists in scope</td>
+          </tr>
+          <tr>
+            <td><code>has tone value</code></td>
+            <td>Tone is declared or detected via text analysis</td>
+          </tr>
+          <tr>
+            <td><code>has max/min count</code></td>
+            <td>Count of items in scope respects limit</td>
+          </tr>
+        </table>
+        
+        <h4>Formula</h4>
+        <pre><code>CSA = satisfied_constraints / total_constraints</code></pre>
+        
+        <h4>Target</h4>
+        <p><strong>CSA >= 98%</strong></p>
+        <p>Current implementation: <strong>CSA >= 95%</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 6: Retrieval Quality (RQ) -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Retrieval Quality (RQ)</span>
+      <span class="accordion-badge">DS18</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p><strong>Purpose:</strong> Measures naming quality - entities should have meaningful names (3+ characters, not "undefined").</p>
+        
+        <div class="info-box">
+          <div class="info-box-title">Technical Specification</div>
+          <p>See <a href="../specs/DS18-Metric-Retrieval-Quality.md">DS18-Metric-Retrieval-Quality.md</a></p>
+        </div>
+        
+        <h4>Full Implementation</h4>
+        <p>Uses Mean Reciprocal Rank (MRR) to measure search effectiveness:</p>
+        <pre><code>MRR = (1/N) x sum(1/rank_i) for i = 1 to N</code></pre>
+        
+        <h4>Current Implementation</h4>
+        <p>Measures entity naming quality:</p>
+        <ul>
+          <li>Entity names should be at least 3 characters long</li>
+          <li>Entity names should not be "undefined" or empty</li>
+        </ul>
+        
+        <h4>Target</h4>
+        <p><strong>MRR > 0.6</strong> (full implementation)</p>
+        <p>Current implementation: <strong>RQ >= 80%</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 7: Explainability Score (XAI) -->
+  <section class="accordion-section">
+    <button class="accordion-header" aria-expanded="false">
+      <span class="accordion-icon">&#9654;</span>
+      <span class="accordion-title">Explainability Score (XAI)</span>
+      <span class="accordion-badge">DS22</span>
+    </button>
+    <div class="accordion-content">
+      <div class="accordion-body">
+        <p><strong>Purpose:</strong> Measures documentation level - how well the story specification explains its structure and intentions.</p>
+        
+        <div class="info-box">
+          <div class="info-box-title">Technical Specification</div>
+          <p>See <a href="../specs/DS22-Metric-Explainability-Score.md">DS22-Metric-Explainability-Score.md</a></p>
+        </div>
+        
+        <h4>Scoring Components (0-5 rating)</h4>
+        <table>
+          <tr>
+            <th>Component</th>
+            <th>Points</th>
+          </tr>
+          <tr>
+            <td>Arc defined</td>
+            <td>+0.75</td>
+          </tr>
+          <tr>
+            <td>Themes defined</td>
+            <td>+0.75</td>
+          </tr>
+          <tr>
+            <td>Relationships defined</td>
+            <td>+0.75</td>
+          </tr>
+          <tr>
+            <td>World rules defined</td>
+            <td>+0.75</td>
+          </tr>
+          <tr>
+            <td>Emotional arc (3+ beats)</td>
+            <td>+0.75</td>
+          </tr>
+          <tr>
+            <td>Wisdom entries</td>
+            <td>+0.75</td>
+          </tr>
+          <tr>
+            <td>Patterns defined</td>
+            <td>+0.50</td>
+          </tr>
+        </table>
+        
+        <h4>Target</h4>
+        <p><strong>XAI >= 4.0/5.0</strong> (or >= 3.5/5 in current implementation)</p>
+        
+        <h4>How to Improve Low XAI</h4>
+        <ul>
+          <li>Define the narrative arc template</li>
+          <li>Add themes to the story</li>
+          <li>Define relationships between characters</li>
+          <li>Add world rules for consistency</li>
+          <li>Create emotional arc beats</li>
+          <li>Add wisdom entries for thematic depth</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section id="related">
+  <h2>Related Documentation</h2>
+  
+  <ul>
+    <li><a href="#metrics-overview" data-page="metrics-overview">Metrics Overview</a> - Introduction to SCRIPTA metrics</li>
+    <li><a href="#metrics-nqs" data-page="metrics-nqs">NQS - Narrative Quality Score</a> - The master metric</li>
+    <li><a href="#metrics-summary" data-page="metrics-summary">Summary Metrics</a> - Completeness, CS, EAP</li>
+    <li><a href="#metrics-coherence" data-page="metrics-coherence">Coherence Analysis</a> - The 6 coherence metrics</li>
+    <li><a href="#metrics-diagnostics" data-page="metrics-diagnostics">Diagnostics Guide</a> - Fixing low scores</li>
+  </ul>
+</section>
+
+<script>
+// Accordion functionality
+document.querySelectorAll('.accordion-header').forEach(button => {
+  button.addEventListener('click', () => {
+    const section = button.parentElement;
+    const isOpen = section.classList.contains('open');
+    
+    section.classList.toggle('open');
+    button.setAttribute('aria-expanded', !isOpen);
+  });
+});
+</script>

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SCRIPTA Research Studio - Documentation</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="doc-styles.css">
   <style>
     :root {
       --bg-deep: #1a1a2e;
@@ -32,24 +33,26 @@
     
     .docs-container {
       display: grid;
-      grid-template-columns: 220px 1fr;
+      grid-template-columns: 240px 1fr;
       min-height: 100vh;
     }
     
-    /* Sidebar - Compact single menu */
+    /* Sidebar */
     .docs-sidebar {
       background: var(--bg-surface);
       border-right: 1px solid var(--bg-elevated);
       padding: 1rem;
-      position: sticky;
+      position: fixed;
       top: 0;
+      left: 0;
+      width: 240px;
       height: 100vh;
       overflow-y: auto;
     }
     
     .docs-logo {
       font-family: 'Cinzel', serif;
-      font-size: 1.1rem;
+      font-size: 1.2rem;
       background: linear-gradient(135deg, var(--accent-gold) 0%, #fb8500 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -57,26 +60,29 @@
     }
     
     .docs-logo-sub {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       color: var(--text-muted);
       margin-bottom: 1rem;
       padding-bottom: 1rem;
       border-bottom: 1px solid var(--bg-elevated);
     }
     
-    .back-link {
-      display: block;
-      color: var(--accent-teal);
-      text-decoration: none;
-      font-size: 0.85rem;
+    .nav-section {
       margin-bottom: 1rem;
-      padding: 0.4rem 0.6rem;
-      background: var(--bg-elevated);
-      border-radius: 4px;
     }
-    .back-link:hover { background: var(--bg-hover, #404075); }
     
-    .docs-nav { list-style: none; }
+    .nav-section-title {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      padding-left: 0.5rem;
+      letter-spacing: 0.05em;
+    }
+    
+    .docs-nav { 
+      list-style: none; 
+    }
     
     .docs-nav a {
       display: block;
@@ -84,8 +90,9 @@
       color: var(--text-secondary);
       text-decoration: none;
       border-radius: 4px;
-      font-size: 0.9rem;
-      margin-bottom: 0.15rem;
+      font-size: 0.85rem;
+      margin-bottom: 0.1rem;
+      cursor: pointer;
     }
     
     .docs-nav a:hover {
@@ -99,9 +106,10 @@
     }
     
     /* Main content */
-    .docs-content {
+    .docs-main {
+      margin-left: 240px;
       padding: 2rem 3rem;
-      max-width: 900px;
+      max-width: 1000px;
     }
     
     .docs-content h1 {
@@ -124,6 +132,12 @@
       font-size: 1.15rem;
       color: var(--text-primary);
       margin: 1.5rem 0 0.75rem;
+    }
+    
+    .docs-content h4 {
+      font-size: 1rem;
+      color: var(--accent-gold);
+      margin: 1.2rem 0 0.5rem;
     }
     
     .docs-content p {
@@ -162,6 +176,15 @@
       color: var(--text-primary);
     }
     
+    .docs-content a {
+      color: var(--accent-teal);
+      text-decoration: none;
+    }
+    
+    .docs-content a:hover {
+      text-decoration: underline;
+    }
+    
     .info-box {
       background: rgba(6, 214, 160, 0.1);
       border: 1px solid var(--accent-teal);
@@ -178,7 +201,7 @@
     
     .feature-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 1rem;
       margin: 1.5rem 0;
     }
@@ -194,6 +217,7 @@
       color: var(--accent-gold);
       font-family: 'Cinzel', serif;
       margin-bottom: 0.5rem;
+      margin-top: 0;
     }
     
     .feature-card p {
@@ -222,174 +246,150 @@
     }
     
     td { color: var(--text-secondary); }
+    
+    hr {
+      border: none;
+      border-top: 1px solid var(--bg-elevated);
+      margin: 2rem 0;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+    }
   </style>
 </head>
 <body>
-  <div class="docs-container">
-    <aside class="docs-sidebar">
-      <div class="docs-logo">SCRIPTA</div>
-      <div class="docs-logo-sub">Documentation</div>
-      
-      
-      
-      <nav class="docs-nav">
-        <li><a href="index.html" class="active">Overview</a></li>
-        <li><a href="doc-conceptual-model.html">Conceptual Model</a></li>
-        <li><a href="doc-cnl-language.html">CNL Language</a></li>
-        <li><a href="doc-elements.html">Story Elements</a></li>
-        <li><a href="doc-generation.html">Generation Strategies</a></li>
-        <li><a href="doc-end-to-end.html">End-to-End Example</a></li>
-        <li><a href="doc-metrics-reference.html">Metrics Reference</a></li>
-        <li><a href="doc-characters.html">Characters</a></li>
-        <li><a href="doc-narrative.html">Narrative</a></li>
-        <li><a href="doc-patterns.html">Patterns</a></li>
-        <li><a href="doc-wisdom.html">Wisdom</a></li>
-        <li><a href="doc-worldrules.html">World Rules</a></li>
-        <li><a href="doc-themes.html">Themes</a></li>
-        <li><a href="doc-plotelements.html">Plot Elements</a></li>
-        <li><a href="doc-metrics.html">Metrics</a></li>
-      </nav>
-    </aside>
+  <aside class="docs-sidebar">
+    <div class="docs-logo">SCRIPTA</div>
+    <div class="docs-logo-sub">Documentation</div>
     
-    <main class="docs-content">
-      <h1>SCRIPTA Research Studio</h1>
+    <div class="nav-section">
+      <div class="nav-section-title">Getting Started</div>
+      <nav class="docs-nav">
+        <a href="#overview" data-page="overview" class="active">Overview</a>
+        <a href="#conceptual-model" data-page="conceptual-model">Conceptual Model</a>
+        <a href="#cnl-language" data-page="cnl-language">CNL Language</a>
+        <a href="#end-to-end" data-page="end-to-end">End-to-End Example</a>
+      </nav>
+    </div>
+    
+    <div class="nav-section">
+      <div class="nav-section-title">Story Elements</div>
+      <nav class="docs-nav">
+        <a href="#elements" data-page="elements">Elements Guide</a>
+        <a href="#characters" data-page="characters">Characters</a>
+        <a href="#narrative" data-page="narrative">Narrative Structure</a>
+        <a href="#patterns" data-page="patterns">Story Patterns</a>
+        <a href="#themes" data-page="themes">Themes</a>
+        <a href="#wisdom" data-page="wisdom">Wisdom</a>
+        <a href="#worldrules" data-page="worldrules">World Rules</a>
+        <a href="#plotelements" data-page="plotelements">Plot Elements</a>
+      </nav>
+    </div>
+    
+    <div class="nav-section">
+      <div class="nav-section-title">Generation & Quality</div>
+      <nav class="docs-nav">
+        <a href="#generation" data-page="generation">Generation Strategies</a>
+        <a href="#metrics-reference" data-page="metrics-reference">Metrics Reference</a>
+        <a href="#metrics" data-page="metrics">Metrics Overview</a>
+      </nav>
+    </div>
+  </aside>
+  
+  <main class="docs-main">
+    <div id="docs-content" class="docs-content">
+      <div class="loading">Loading...</div>
+    </div>
+  </main>
+  
+  <script>
+    // Page content mapping
+    const pages = {
+      'overview': 'content/overview.html',
+      'conceptual-model': 'content/conceptual-model.html',
+      'cnl-language': 'content/cnl-language.html',
+      'elements': 'content/elements.html',
+      'generation': 'content/generation.html',
+      'end-to-end': 'content/end-to-end.html',
+      'metrics-reference': 'content/metrics-reference.html',
+      'characters': 'content/characters.html',
+      'narrative': 'content/narrative.html',
+      'patterns': 'content/patterns.html',
+      'wisdom': 'content/wisdom.html',
+      'worldrules': 'content/worldrules.html',
+      'themes': 'content/themes.html',
+      'plotelements': 'content/plotelements.html',
+      'metrics': 'content/metrics.html'
+    };
+    
+    const contentEl = document.getElementById('docs-content');
+    
+    async function loadPage(pageName) {
+      const url = pages[pageName];
+      if (!url) {
+        contentEl.innerHTML = '<h1>Page Not Found</h1><p>The requested page does not exist.</p>';
+        return;
+      }
       
-      <p>SCRIPTA (Structured Creative Writing Intelligent Platform for Textual Authoring) is a Visual Story Composer that enables authors to build narrative specifications through an intuitive visual interface.</p>
-      
-      <div class="info-box">
-        <div class="info-box-title">Key Concept</div>
-        <p>Think of CNL as a programming language for narratives. The visual editor is like an IDE, and the CNL is the source code that describes your story's structure.</p>
-      </div>
-      
-      <h2>Features</h2>
-      
-      <div class="feature-grid">
-        <div class="feature-card">
-          <h4>Build Structure</h4>
-          <p>Create chapters, scenes, and beats in a hierarchical tree with drag-and-drop.</p>
-        </div>
-        <div class="feature-card">
-          <h4>Define Characters</h4>
-          <p>Create characters with archetypes, traits, and relationships.</p>
-        </div>
-        <div class="feature-card">
-          <h4>Set the Scene</h4>
-          <p>Design locations with geography, atmosphere, and time periods.</p>
-        </div>
-        <div class="feature-card">
-          <h4>Plan Emotionally</h4>
-          <p>Use blueprints and emotional arcs to control tension and mood.</p>
-        </div>
-        <div class="feature-card">
-          <h4>Generate Stories</h4>
-          <p>Use Random, LLM, or Advanced strategies to generate specifications.</p>
-        </div>
-        <div class="feature-card">
-          <h4>Measure Quality</h4>
-          <p>Real-time metrics evaluate coherence, completeness, and quality.</p>
-        </div>
-      </div>
-      
-      <h2>Quick Start</h2>
-      
-      <h3>1. Generate a Story</h3>
-      <p>Click <strong>Create Specs</strong> in the left panel. Choose genre, length, complexity, then select a strategy:</p>
-      <ul>
-        <li><strong>Random (Fast)</strong> - Instant generation using templates</li>
-        <li><strong>With LLM</strong> - AI-powered creative generation</li>
-        <li><strong>Advanced</strong> - Multi-pass optimization</li>
-        <li><strong>Guided Wizard</strong> - Step-by-step configuration</li>
-      </ul>
-      
-      <h3>2. Explore the Tabs</h3>
-      <p>After generation, explore the tabs: CNL, NL, Blueprint, Templates, Characters, Relations, Locations, Objects, Moods, Dialogues, Arc, Blocks, World, Themes, Wisdom, Patterns.</p>
-      
-      <h3>3. Export</h3>
-      <p>Click <strong>Export CNL</strong> to download your story specification. Use <strong>Create Story</strong> in the NL tab to generate prose.</p>
-      
-      <h2>CNL Syntax</h2>
-      
-      <pre><code>// Character definition
-Anna is hero
-Anna has trait courage
-
-// Relationship
-Anna relates to Gandalf as mentor_student
-
-// Scene structure
-Sc1 group begin
-  Sc1 has title "The Beginning"
-  Anna discovers artifact
-Sc1 group end
-
-// World rule
-World has rule "Magic requires sacrifice"</code></pre>
-      
-      <h2>Generation Strategies</h2>
-      
-      <table>
-        <tr>
-          <th>Strategy</th>
-          <th>Speed</th>
-          <th>Quality</th>
-        </tr>
-        <tr>
-          <td>Random</td>
-          <td>Instant</td>
-          <td>65-80% NQS</td>
-        </tr>
-        <tr>
-          <td>With LLM</td>
-          <td>10-30s</td>
-          <td>75-90% NQS</td>
-        </tr>
-        <tr>
-          <td>Advanced</td>
-          <td>5-15s</td>
-          <td>80-95% NQS</td>
-        </tr>
-      </table>
-      
-      <h2>Quality Metrics</h2>
-      
-      <table>
-        <tr>
-          <th>Metric</th>
-          <th>Target</th>
-          <th>Measures</th>
-        </tr>
-        <tr>
-          <td>NQS</td>
-          <td>≥70%</td>
-          <td>Overall narrative quality</td>
-        </tr>
-        <tr>
-          <td>Completeness</td>
-          <td>≥80%</td>
-          <td>Required elements present</td>
-        </tr>
-        <tr>
-          <td>Coherence</td>
-          <td>≥75%</td>
-          <td>Entity consistency</td>
-        </tr>
-        <tr>
-          <td>EAP</td>
-          <td>≥70%</td>
-          <td>Emotional arc coverage</td>
-        </tr>
-      </table>
-      
-      <h2>API Endpoints</h2>
-      
-      <pre><code>GET  /v1/projects          - List projects
-POST /v1/projects          - Create project
-GET  /v1/projects/:id      - Load project
-PUT  /v1/projects/:id      - Update project
-
-POST /v1/generate/llm      - Generate with LLM
-POST /v1/generate/nl-story - Generate prose from CNL</code></pre>
-    </main>
-  </div>
+      try {
+        contentEl.innerHTML = '<div class="loading">Loading...</div>';
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to load');
+        const html = await response.text();
+        contentEl.innerHTML = html;
+        
+        // Update active state in sidebar
+        document.querySelectorAll('.docs-sidebar .docs-nav a').forEach(link => {
+          link.classList.toggle('active', link.dataset.page === pageName);
+        });
+        
+        // Attach click handlers to in-content links
+        attachContentLinkHandlers();
+        
+        // Update URL hash
+        history.pushState(null, '', '#' + pageName);
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+      } catch (err) {
+        contentEl.innerHTML = `<h1>Error Loading Page</h1><p>Could not load ${pageName}. Please try again.</p>`;
+      }
+    }
+    
+    // Handle clicks on links within loaded content
+    function attachContentLinkHandlers() {
+      contentEl.querySelectorAll('a[data-page]').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const page = link.dataset.page;
+          if (page && pages[page]) {
+            loadPage(page);
+          }
+        });
+      });
+    }
+    
+    // Handle sidebar navigation clicks
+    document.querySelectorAll('.docs-sidebar .docs-nav a').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const page = link.dataset.page;
+        if (page) loadPage(page);
+      });
+    });
+    
+    // Handle browser back/forward
+    window.addEventListener('popstate', () => {
+      const hash = window.location.hash.slice(1) || 'overview';
+      loadPage(hash);
+    });
+    
+    // Initial load
+    const initialPage = window.location.hash.slice(1) || 'overview';
+    loadPage(initialPage);
+  </script>
 </body>
 </html>

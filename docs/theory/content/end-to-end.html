@@ -1,0 +1,709 @@
+<h1>End-to-End Example</h1>
+
+<p>This document walks through a complete SCRIPTA workflow: from building libraries, creating structure, exporting CNL, generating prose, evaluating quality, and iterating based on metrics.</p>
+
+<div class="info-box">
+  <div class="info-box-title">Example Story: "The Silver Key"</div>
+  <p>We'll create a short fantasy story about a young woman who discovers a magical key that unlocks a hidden power. This compact example demonstrates all major SCRIPTA features.</p>
+</div>
+
+<h2>Phase 1: Building Libraries</h2>
+
+<h3>Step 1.1: Create Characters</h3>
+
+<p>First, we define our cast of characters in the Characters tab:</p>
+
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Type</th>
+    <th>Archetype</th>
+    <th>Traits</th>
+  </tr>
+  <tr>
+    <td>Elena</td>
+    <td>protagonist</td>
+    <td>Hero</td>
+    <td>curious, determined, compassionate</td>
+  </tr>
+  <tr>
+    <td>Mira</td>
+    <td>mentor</td>
+    <td>Sage</td>
+    <td>wise, mysterious, patient</td>
+  </tr>
+  <tr>
+    <td>Valdris</td>
+    <td>antagonist</td>
+    <td>Shadow</td>
+    <td>ambitious, cunning, ruthless</td>
+  </tr>
+  <tr>
+    <td>Finn</td>
+    <td>character</td>
+    <td>Ally</td>
+    <td>loyal, humorous, brave</td>
+  </tr>
+</table>
+
+<h3>Step 1.2: Define Relationships</h3>
+
+<p>In the Relations tab, we establish connections:</p>
+
+<ul>
+  <li>Elena relates to Mira as <strong>mentor_student</strong></li>
+  <li>Elena relates to Finn as <strong>friend</strong></li>
+  <li>Valdris relates to Elena as <strong>enemy</strong></li>
+  <li>Mira relates to Valdris as <strong>former_ally</strong></li>
+</ul>
+
+<h3>Step 1.3: Create Locations</h3>
+
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Geography</th>
+    <th>Atmosphere</th>
+    <th>Characteristics</th>
+  </tr>
+  <tr>
+    <td>Millbrook Village</td>
+    <td>rural</td>
+    <td>peaceful</td>
+    <td>"cobblestone streets", "ancient clock tower"</td>
+  </tr>
+  <tr>
+    <td>Whispering Woods</td>
+    <td>forest</td>
+    <td>mysterious</td>
+    <td>"silver-barked trees", "enchanted paths"</td>
+  </tr>
+  <tr>
+    <td>The Hidden Vault</td>
+    <td>underground</td>
+    <td>threatening</td>
+    <td>"crystal formations", "ancient runes"</td>
+  </tr>
+</table>
+
+<h3>Step 1.4: Add Plot Elements</h3>
+
+<table>
+  <tr>
+    <th>Object</th>
+    <th>Type</th>
+    <th>Significance</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>Silver Key</td>
+    <td>artifact</td>
+    <td>high</td>
+    <td>Ancient key that unlocks dormant magical abilities</td>
+  </tr>
+  <tr>
+    <td>Mira's Journal</td>
+    <td>document</td>
+    <td>medium</td>
+    <td>Contains clues about the key's true power</td>
+  </tr>
+</table>
+
+<h3>Step 1.5: Set World Rules</h3>
+
+<ul>
+  <li>"Magic is inherited but must be unlocked"</li>
+  <li>"The Silver Key can only be used by those with pure intentions"</li>
+  <li>"Dark magic corrupts the user over time"</li>
+</ul>
+
+<h3>Step 1.6: Choose Themes</h3>
+
+<ul>
+  <li><strong>Identity</strong>: Elena discovering who she truly is</li>
+  <li><strong>Power</strong>: The responsibility that comes with magical ability</li>
+  <li><strong>Redemption</strong>: Mira's past connection to Valdris</li>
+</ul>
+
+<h2>Phase 2: Creating Structure</h2>
+
+<h3>Step 2.1: Select Narrative Arc</h3>
+
+<p>We choose the <strong>Story Circle (Dan Harmon)</strong> arc with 8 beats, appropriate for a compact story:</p>
+
+<ol>
+  <li><strong>You</strong> (Comfort Zone) - Elena in her ordinary life</li>
+  <li><strong>Need</strong> (Want Something) - Elena discovers she might have magic</li>
+  <li><strong>Go</strong> (Enter Unfamiliar) - Journey into Whispering Woods</li>
+  <li><strong>Search</strong> (Adapt) - Learning from Mira, facing challenges</li>
+  <li><strong>Find</strong> (Get It) - Discovers the Silver Key</li>
+  <li><strong>Take</strong> (Pay Price) - Confrontation with Valdris, sacrifice</li>
+  <li><strong>Return</strong> - Back to village with new abilities</li>
+  <li><strong>Change</strong> - Elena transformed, new responsibilities</li>
+</ol>
+
+<h3>Step 2.2: Create Chapters and Scenes</h3>
+
+<pre><code>Book: "The Silver Key"
+├── Chapter 1: "Ordinary Days"
+│   ├── Scene 1: "Morning Routine" (Beat: You)
+│   │   Characters: Elena
+│   │   Location: Millbrook Village
+│   │   Mood: Peaceful
+│   │   Actions: Elena describes daily life
+│   │
+│   └── Scene 2: "The Strange Vision" (Beat: Need)
+│       Characters: Elena, Finn
+│       Location: Millbrook Village
+│       Mood: Mysterious
+│       Actions: Elena has a vision of the key
+│
+├── Chapter 2: "Into the Unknown"
+│   ├── Scene 3: "Meeting Mira" (Beat: Go)
+│   │   Characters: Elena, Mira
+│   │   Location: Whispering Woods
+│   │   Mood: Mysterious
+│   │   Actions: Mira reveals Elena's heritage
+│   │
+│   └── Scene 4: "First Lessons" (Beat: Search)
+│       Characters: Elena, Mira
+│       Location: Whispering Woods
+│       Mood: Adventurous
+│       Actions: Elena learns basic magic
+│
+├── Chapter 3: "The Discovery"
+│   ├── Scene 5: "Finding the Vault" (Beat: Find)
+│   │   Characters: Elena, Mira, Finn
+│   │   Location: The Hidden Vault
+│   │   Mood: Epic
+│   │   Actions: Elena discovers Silver Key
+│   │
+│   └── Scene 6: "Valdris Attacks" (Beat: Take)
+│       Characters: Elena, Valdris, Mira
+│       Location: The Hidden Vault
+│       Mood: Desperate
+│       Actions: Confrontation, Mira's sacrifice
+│
+└── Chapter 4: "Transformation"
+    ├── Scene 7: "Victory" (Beat: Return)
+    │   Characters: Elena, Finn
+    │   Location: The Hidden Vault
+    │   Mood: Triumphant
+    │   Actions: Elena defeats Valdris
+    │
+    └── Scene 8: "New Beginning" (Beat: Change)
+  Characters: Elena, Finn
+  Location: Millbrook Village
+  Mood: Bittersweet
+  Actions: Elena returns, transformed</code></pre>
+
+<h3>Step 2.3: Map Beats to Scenes</h3>
+
+<p>In the Blueprint tab, we create beat mappings:</p>
+
+<table>
+  <tr>
+    <th>Beat</th>
+    <th>Chapter</th>
+    <th>Scene</th>
+    <th>Tension</th>
+  </tr>
+  <tr>
+    <td>You (Comfort Zone)</td>
+    <td>Chapter 1</td>
+    <td>Scene 1</td>
+    <td>1</td>
+  </tr>
+  <tr>
+    <td>Need (Want Something)</td>
+    <td>Chapter 1</td>
+    <td>Scene 2</td>
+    <td>2</td>
+  </tr>
+  <tr>
+    <td>Go (Enter Unfamiliar)</td>
+    <td>Chapter 2</td>
+    <td>Scene 3</td>
+    <td>2</td>
+  </tr>
+  <tr>
+    <td>Search (Adapt)</td>
+    <td>Chapter 2</td>
+    <td>Scene 4</td>
+    <td>3</td>
+  </tr>
+  <tr>
+    <td>Find (Get It)</td>
+    <td>Chapter 3</td>
+    <td>Scene 5</td>
+    <td>4</td>
+  </tr>
+  <tr>
+    <td>Take (Pay Price)</td>
+    <td>Chapter 3</td>
+    <td>Scene 6</td>
+    <td>5</td>
+  </tr>
+  <tr>
+    <td>Return</td>
+    <td>Chapter 4</td>
+    <td>Scene 7</td>
+    <td>4</td>
+  </tr>
+  <tr>
+    <td>Change</td>
+    <td>Chapter 4</td>
+    <td>Scene 8</td>
+    <td>2</td>
+  </tr>
+</table>
+
+<h3>Step 2.4: Add Dialogues</h3>
+
+<p>We define key dialogue moments:</p>
+
+<pre><code>Dialogue 1: "Mira's Revelation"
+  Purpose: reveal
+  Participants: Mira (speaker), Elena (listener)
+  Tone: mysterious
+  Tension: 3
+  Beat: Go
+  Exchanges:
+    - Mira: "You are not ordinary, Elena. You never were."
+    - Elena: Questions her identity
+    - Mira: Reveals Elena's magical heritage
+
+Dialogue 2: "Valdris Confrontation"
+  Purpose: conflict
+  Participants: Valdris (speaker), Elena (speaker), Mira (speaker)
+  Tone: confrontational
+  Tension: 5
+  Beat: Take
+  Exchanges:
+    - Valdris: Demands the key
+    - Elena: Refuses
+    - Mira: Reveals past with Valdris
+    - Valdris: Threatens consequences</code></pre>
+
+<h2>Phase 3: Exporting CNL</h2>
+
+<p>The visual editor generates the following CNL:</p>
+
+<pre><code>// ============================================
+// THE SILVER KEY - Story Specification
+// ============================================
+
+// --- Global Settings ---
+Story has title "The Silver Key"
+Story has genre fantasy
+Story has tone adventurous
+Story has theme identity
+Story has theme power
+Story has theme redemption
+Story requires "happy ending"
+Story forbids "graphic violence"
+
+// --- World Rules ---
+World has rule "Magic is inherited but must be unlocked"
+World has rule "The Silver Key can only be used by those with pure intentions"
+World has rule "Dark magic corrupts the user over time"
+
+// --- Characters ---
+Elena is protagonist
+Elena has archetype Hero
+Elena has trait curious
+Elena has trait determined
+Elena has trait compassionate
+
+Mira is mentor
+Mira has archetype Sage
+Mira has trait wise
+Mira has trait mysterious
+Mira has trait patient
+
+Valdris is antagonist
+Valdris has archetype Shadow
+Valdris has trait ambitious
+Valdris has trait cunning
+Valdris has trait ruthless
+
+Finn is character
+Finn has archetype Ally
+Finn has trait loyal
+Finn has trait humorous
+Finn has trait brave
+
+// --- Relationships ---
+Elena relates to Mira as mentor_student
+Elena relates to Finn as friend
+Valdris relates to Elena as enemy
+Mira relates to Valdris as former_ally
+
+// --- Locations ---
+"Millbrook Village" is location
+"Millbrook Village" has geography rural
+"Millbrook Village" has atmosphere peaceful
+"Millbrook Village" has characteristic "cobblestone streets"
+"Millbrook Village" has characteristic "ancient clock tower"
+
+"Whispering Woods" is location
+"Whispering Woods" has geography forest
+"Whispering Woods" has atmosphere mysterious
+"Whispering Woods" has characteristic "silver-barked trees"
+
+"The Hidden Vault" is location
+"The Hidden Vault" has geography underground
+"The Hidden Vault" has atmosphere threatening
+"The Hidden Vault" has characteristic "crystal formations"
+
+// --- Objects ---
+SilverKey is artifact
+SilverKey has significance high
+SilverKey has description "Ancient key that unlocks dormant magical abilities"
+Elena owns SilverKey
+
+MirasJournal is artifact
+MirasJournal has significance medium
+MirasJournal has description "Contains clues about the key's true power"
+Mira owns MirasJournal
+
+// --- Structure ---
+Book group begin
+  Book has title "The Silver Key"
+  
+  Chapter1 group begin
+    Chapter1 has title "Ordinary Days"
+    
+    Sc1 group begin
+Sc1 has title "Morning Routine"
+Sc1 has mood Peaceful
+Sc1 includes character Elena
+Sc1 includes location "Millbrook Village"
+Elena describes "Living her simple life in the village"
+    Sc1 group end
+    
+    Sc2 group begin
+Sc2 has title "The Strange Vision"
+Sc2 has mood Mysterious
+Sc2 includes character Elena
+Sc2 includes character Finn
+Sc2 includes location "Millbrook Village"
+Elena discovers "vision of the key"
+Finn meets Elena
+    Sc2 group end
+    
+  Chapter1 group end
+  
+  Chapter2 group begin
+    Chapter2 has title "Into the Unknown"
+    
+    Sc3 group begin
+Sc3 has title "Meeting Mira"
+Sc3 has mood Mysterious
+Sc3 includes character Elena
+Sc3 includes character Mira
+Sc3 includes location "Whispering Woods"
+Elena enters "Whispering Woods"
+Mira reveals "Elena's heritage"
+    Sc3 group end
+    
+    Sc4 group begin
+Sc4 has title "First Lessons"
+Sc4 has mood Adventurous
+Sc4 includes character Elena
+Sc4 includes character Mira
+Sc4 includes location "Whispering Woods"
+Mira teaches Elena
+Elena transforms "learns basic magic"
+    Sc4 group end
+    
+  Chapter2 group end
+  
+  Chapter3 group begin
+    Chapter3 has title "The Discovery"
+    Chapter3 requires "SilverKey"
+    
+    Sc5 group begin
+Sc5 has title "Finding the Vault"
+Sc5 has mood Epic
+Sc5 includes character Elena
+Sc5 includes character Mira
+Sc5 includes character Finn
+Sc5 includes location "The Hidden Vault"
+Sc5 includes object SilverKey
+Elena discovers SilverKey
+Elena enters "The Hidden Vault"
+    Sc5 group end
+    
+    Sc6 group begin
+Sc6 has title "Valdris Attacks"
+Sc6 has mood Desperate
+Sc6 includes character Elena
+Sc6 includes character Valdris
+Sc6 includes character Mira
+Sc6 includes location "The Hidden Vault"
+Valdris confronts Elena
+Mira sacrifices "for Elena"
+    Sc6 group end
+    
+  Chapter3 group end
+  
+  Chapter4 group begin
+    Chapter4 has title "Transformation"
+    
+    Sc7 group begin
+Sc7 has title "Victory"
+Sc7 has mood Triumphant
+Sc7 includes character Elena
+Sc7 includes character Finn
+Sc7 includes location "The Hidden Vault"
+Elena defeats Valdris
+    Sc7 group end
+    
+    Sc8 group begin
+Sc8 has title "New Beginning"
+Sc8 has mood Bittersweet
+Sc8 includes character Elena
+Sc8 includes character Finn
+Sc8 includes location "Millbrook Village"
+Elena returns to "Millbrook Village"
+Elena transforms "accepts new responsibility"
+    Sc8 group end
+    
+  Chapter4 group end
+  
+Book group end</code></pre>
+
+<h2>Phase 4: Generating Prose (NL)</h2>
+
+<p>Click "Create Story" in the NL tab. The system sends the CNL specification to the LLM and receives prose:</p>
+
+<div class="info-box">
+  <div class="info-box-title">Generated Excerpt (Scene 3)</div>
+  <p style="font-style: italic;">"The silver-barked trees of the Whispering Woods seemed to watch Elena as she stepped deeper into the forest. She had followed the strange pull in her chest since dawn, and now, as twilight painted the sky in shades of violet, she found herself face to face with an old woman whose eyes held the weight of centuries.</p>
+  <p style="font-style: italic;">'You are not ordinary, Elena,' the woman said, her voice like wind through ancient leaves. 'You never were. Your mother... she was one of us. And the power that sleeps within you - it's time to wake it.'"</p>
+</div>
+
+<h2>Phase 5: Evaluation</h2>
+
+<p>Click "Evaluate" to run metrics on the specification. The system calculates:</p>
+
+<h3>Initial Metrics Report</h3>
+
+<table>
+  <tr>
+    <th>Metric</th>
+    <th>Value</th>
+    <th>Target</th>
+    <th>Status</th>
+  </tr>
+  <tr>
+    <td>Completeness</td>
+    <td>92%</td>
+    <td>>= 80%</td>
+    <td style="color: #06d6a0;">PASS</td>
+  </tr>
+  <tr>
+    <td>Coherence Score (CS)</td>
+    <td>78%</td>
+    <td>>= 75%</td>
+    <td style="color: #06d6a0;">PASS</td>
+  </tr>
+  <tr>
+    <td>Character Continuity</td>
+    <td>85%</td>
+    <td>>= 60%</td>
+    <td style="color: #06d6a0;">PASS</td>
+  </tr>
+  <tr>
+    <td>Location Logic</td>
+    <td>67%</td>
+    <td>>= 50%</td>
+    <td style="color: #06d6a0;">PASS</td>
+  </tr>
+  <tr>
+    <td>Action Coherence</td>
+    <td>88%</td>
+    <td>>= 80%</td>
+    <td style="color: #06d6a0;">PASS</td>
+  </tr>
+  <tr>
+    <td>Scene Completeness</td>
+    <td>75%</td>
+    <td>>= 70%</td>
+    <td style="color: #06d6a0;">PASS</td>
+  </tr>
+  <tr>
+    <td>Relationship Usage</td>
+    <td>50%</td>
+    <td>>= 50%</td>
+    <td style="color: #ffd166;">MARGINAL</td>
+  </tr>
+  <tr>
+    <td>Dialogue Quality</td>
+    <td>45%</td>
+    <td>>= 60%</td>
+    <td style="color: #ef476f;">FAIL</td>
+  </tr>
+  <tr>
+    <td>Emotional Arc (EAP)</td>
+    <td>82%</td>
+    <td>>= 70%</td>
+    <td style="color: #06d6a0;">PASS</td>
+  </tr>
+  <tr>
+    <td><strong>NQS (Overall)</strong></td>
+    <td><strong>74%</strong></td>
+    <td>>= 70%</td>
+    <td style="color: #06d6a0;">PASS</td>
+  </tr>
+</table>
+
+<h3>Diagnostic Interpretation</h3>
+
+<p>The metrics reveal:</p>
+
+<ul>
+  <li><strong>Dialogue Quality is low (45%)</strong>: Our dialogues need more exchanges and content</li>
+  <li><strong>Relationship Usage is marginal (50%)</strong>: The Mira-Valdris "former_ally" relationship isn't used in scenes</li>
+  <li><strong>Overall structure is good</strong>: Characters appear consistently, locations are reused</li>
+</ul>
+
+<h2>Phase 6: Metric-Guided Iteration</h2>
+
+<h3>Iteration 1: Fix Dialogue Quality</h3>
+
+<p>The dialogueQuality score is low because exchanges lack content. We add more detail:</p>
+
+<pre><code>Dialogue 1: "Mira's Revelation" (IMPROVED)
+  Purpose: reveal
+  Participants: Mira (speaker), Elena (listener)
+  Tone: mysterious
+  Tension: 3
+  Beat: Go
+  Exchanges:
+    - Mira: intent="reveal heritage", emotion="gentle", 
+      sketch="You are not ordinary, Elena. You never were."
+    - Elena: intent="express confusion", emotion="surprised",
+      sketch="What do you mean? I'm just a village girl."
+    - Mira: intent="explain backstory", emotion="nostalgic",
+      sketch="Your mother was one of us - a Keeper of the Silver Light."
+    - Elena: intent="seek understanding", emotion="hopeful",
+      sketch="Can you teach me?"</code></pre>
+
+<h3>Iteration 2: Manifest the Mira-Valdris Relationship</h3>
+
+<p>Add a scene or modify Scene 6 to show their history:</p>
+
+<pre><code>Sc6 group begin
+  Sc6 has title "Valdris Attacks"
+  Sc6 has mood Desperate
+  Sc6 includes character Elena
+  Sc6 includes character Valdris
+  Sc6 includes character Mira
+  Sc6 includes location "The Hidden Vault"
+  
+  Valdris confronts Elena
+  Mira confronts Valdris           // NEW: Shows relationship
+  Valdris reveals "past betrayal"  // NEW: Manifests former_ally
+  Mira sacrifices "for Elena"
+Sc6 group end</code></pre>
+
+<h3>Re-Evaluation After Iteration</h3>
+
+<table>
+  <tr>
+    <th>Metric</th>
+    <th>Before</th>
+    <th>After</th>
+    <th>Change</th>
+  </tr>
+  <tr>
+    <td>Dialogue Quality</td>
+    <td>45%</td>
+    <td>72%</td>
+    <td style="color: #06d6a0;">+27%</td>
+  </tr>
+  <tr>
+    <td>Relationship Usage</td>
+    <td>50%</td>
+    <td>75%</td>
+    <td style="color: #06d6a0;">+25%</td>
+  </tr>
+  <tr>
+    <td><strong>NQS (Overall)</strong></td>
+    <td><strong>74%</strong></td>
+    <td><strong>82%</strong></td>
+    <td style="color: #06d6a0;">+8%</td>
+  </tr>
+</table>
+
+<h2>Phase 7: Final Export</h2>
+
+<h3>Export Options</h3>
+
+<ul>
+  <li><strong>Export CNL</strong>: Download the specification as <code>the-silver-key.cnl</code></li>
+  <li><strong>Export Project</strong>: Save complete project JSON for later editing</li>
+  <li><strong>Export NL</strong>: Download generated prose</li>
+  <li><strong>Save to Server</strong>: Persist for team collaboration</li>
+</ul>
+
+<h2>Workflow Summary</h2>
+
+<pre><code>┌───────────────────────────────────────────────────────────────┐
+│                    SCRIPTA WORKFLOW                            │
+├───────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  1. BUILD LIBRARIES                                            │
+│     Characters → Relations → Locations → Objects → Rules       │
+│                           │                                     │
+│                           ▼                                     │
+│  2. CREATE STRUCTURE                                           │
+│     Arc Selection → Chapters → Scenes → Beat Mapping           │
+│                           │                                     │
+│                           ▼                                     │
+│  3. EXPORT CNL                                                 │
+│     Visual Editor automatically generates CNL specification    │
+│                           │                                     │
+│                           ▼                                     │
+│  4. GENERATE NL (Optional)                                     │
+│     CNL → LLM → Prose narrative                                │
+│                           │                                     │
+│                           ▼                                     │
+│  5. EVALUATE                                                   │
+│     Run metrics: CS, CAD, CAR, EAP, NQS, etc.                  │
+│                           │                                     │
+│              ┌────────────┴────────────┐                       │
+│              │                         │                       │
+│              ▼                         ▼                       │
+│     Metrics PASS              Metrics FAIL                     │
+│         │                         │                            │
+│         ▼                         ▼                            │
+│  6. FINALIZE               6. ITERATE                          │
+│     Export & Use              Fix issues based on              │
+│                               diagnostic feedback              │
+│                                    │                           │
+│                                    └──────> (back to step 2)   │
+│                                                                 │
+└───────────────────────────────────────────────────────────────┘</code></pre>
+
+<h2>Key Takeaways</h2>
+
+<ol>
+  <li><strong>Libraries before Structure</strong>: Define characters, locations, and objects before creating scenes that reference them</li>
+  <li><strong>Beat Mapping matters</strong>: Align scenes with arc beats for proper pacing</li>
+  <li><strong>Metrics guide improvement</strong>: Low scores indicate specific areas to fix</li>
+  <li><strong>Iterate until quality</strong>: Use the evaluate-fix cycle until NQS meets target</li>
+  <li><strong>Relationships need scenes</strong>: Defined relationships should manifest in the story</li>
+  <li><strong>Dialogues need content</strong>: Empty dialogue placeholders hurt quality</li>
+</ol>
+
+<h2>Related Documents</h2>
+
+<ul>
+  <li><a href="#conceptual-model" data-page="conceptual-model">Conceptual Model</a> - Understand the concepts</li>
+  <li><a href="#cnl-language" data-page="cnl-language">CNL Language</a> - Complete syntax reference</li>
+  <li><a href="#generation" data-page="generation">Generation Strategies</a> - How generation works</li>
+  <li><a href="#metrics-reference" data-page="metrics-reference">Metrics Reference</a> - Detailed metric documentation</li>
+</ul>

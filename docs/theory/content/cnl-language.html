@@ -1,0 +1,753 @@
+<h1>CNL Language Reference</h1>
+
+<p>This document provides a complete specification of SCRIPTA's Controlled Natural Language (CNL), including formal grammar, semantic rules, and comprehensive examples.</p>
+
+<div class="info-box">
+  <div class="info-box-title">What is CNL?</div>
+  <p>CNL (Controlled Natural Language) is a human-readable, machine-parseable language for narrative specifications. It uses Subject-Verb-Object (SVO) syntax that mirrors natural English while being precise enough for automated parsing and analysis.</p>
+</div>
+
+<h2>Design Philosophy</h2>
+
+<p>CNL is designed with these principles:</p>
+
+<ul>
+  <li><strong>Readability</strong>: Authors should be able to read and understand CNL without training</li>
+  <li><strong>Precision</strong>: Every statement has exactly one interpretation</li>
+  <li><strong>Composability</strong>: Small statements combine to describe complex narratives</li>
+  <li><strong>Tool-Friendly</strong>: Visual editors generate CNL; authors rarely write it directly</li>
+</ul>
+
+<h2>Lexical Structure</h2>
+
+<h3>Identifiers</h3>
+
+<p>Identifiers name entities, groups, and properties. There are two types:</p>
+
+<table>
+  <tr>
+    <th>Type</th>
+    <th>Format</th>
+    <th>Examples</th>
+  </tr>
+  <tr>
+    <td>Simple</td>
+    <td>Letter followed by letters, digits, or underscores</td>
+    <td><code>Anna</code>, <code>Village</code>, <code>Chapter1</code>, <code>dark_forest</code></td>
+  </tr>
+  <tr>
+    <td>Quoted</td>
+    <td>Any text in double quotes</td>
+    <td><code>"The Dark Forest"</code>, <code>"inner strength"</code>, <code>"Dr. Smith"</code></td>
+  </tr>
+</table>
+
+<pre><code>// Simple identifiers
+Anna is protagonist
+Village is location
+
+// Quoted identifiers for multi-word names
+"The Dark Forest" is location
+"Dr. Helena Smith" is character</code></pre>
+
+<h3>Comments</h3>
+
+<pre><code>// Single line comment
+
+/* Multi-line
+   comment */</code></pre>
+
+<h3>Reserved Keywords</h3>
+
+<p>The following words have special meaning in CNL:</p>
+
+<pre><code>is, has, relates, to, as, includes, references, describes
+requires, forbids, must, owns, applies
+group, begin, end
+trait, tone, max, min
+character, location, object, mood, theme
+protagonist, antagonist, mentor, ally, enemy</code></pre>
+
+<h2>Statement Types</h2>
+
+<p>CNL has nine fundamental statement types. Each follows the Subject-Verb-Object pattern:</p>
+
+<h3>1. Declaration (X is Y)</h3>
+
+<p>Declares an entity and its type. This is how you introduce characters, locations, objects, and other elements.</p>
+
+<pre><code>// Syntax: Subject is Type
+Anna is protagonist
+Marcus is character
+Gandalf is mentor
+Village is location
+SilverKey is artifact
+Tension is mood</code></pre>
+
+<p><strong>Entity Types:</strong></p>
+
+<table>
+  <tr>
+    <th>Category</th>
+    <th>Types</th>
+  </tr>
+  <tr>
+    <td>Characters</td>
+    <td><code>protagonist</code>, <code>character</code>, <code>antagonist</code>, <code>mentor</code>, <code>ally</code>, <code>enemy</code></td>
+  </tr>
+  <tr>
+    <td>Locations</td>
+    <td><code>location</code>, <code>place</code>, <code>setting</code></td>
+  </tr>
+  <tr>
+    <td>Objects</td>
+    <td><code>artifact</code>, <code>object</code>, <code>item</code></td>
+  </tr>
+  <tr>
+    <td>Narrative</td>
+    <td><code>theme</code>, <code>motif</code>, <code>event</code>, <code>conflict</code>, <code>goal</code></td>
+  </tr>
+  <tr>
+    <td>Dialogue</td>
+    <td><code>dialogue</code>, <code>exchange</code></td>
+  </tr>
+  <tr>
+    <td>Structure</td>
+    <td><code>beat</code>, <code>subplot</code></td>
+  </tr>
+  <tr>
+    <td>Mood</td>
+    <td><code>mood</code></td>
+  </tr>
+</table>
+
+<h3>2. Property Assignment (X has Y Z)</h3>
+
+<p>Assigns a property value to an entity. Properties describe characteristics, traits, and attributes.</p>
+
+<pre><code>// Syntax: Subject has Property Value
+Anna has trait courage
+Anna has trait determination
+Anna has archetype Hero
+Village has atmosphere peaceful
+Village has geography rural
+Story has title "The Dragon's Quest"
+Scene1 has mood Mysterious</code></pre>
+
+<p><strong>Common Properties:</strong></p>
+
+<table>
+  <tr>
+    <th>Entity</th>
+    <th>Properties</th>
+  </tr>
+  <tr>
+    <td>Characters</td>
+    <td><code>trait</code>, <code>archetype</code>, <code>role</code>, <code>goal</code>, <code>flaw</code></td>
+  </tr>
+  <tr>
+    <td>Locations</td>
+    <td><code>atmosphere</code>, <code>geography</code>, <code>characteristic</code>, <code>time_period</code></td>
+  </tr>
+  <tr>
+    <td>Scenes</td>
+    <td><code>title</code>, <code>mood</code>, <code>type</code></td>
+  </tr>
+  <tr>
+    <td>Chapters</td>
+    <td><code>title</code>, <code>summary</code></td>
+  </tr>
+  <tr>
+    <td>Story</td>
+    <td><code>title</code>, <code>theme</code>, <code>tone</code>, <code>genre</code></td>
+  </tr>
+</table>
+
+<h3>3. Relationship (X relates to Y as Z)</h3>
+
+<p>Establishes a relationship between two entities.</p>
+
+<pre><code>// Syntax: Subject relates to Target as RelationType
+Anna relates to Marcus as sibling
+Anna relates to Gandalf as mentor_student
+Marcus relates to Villain as enemy
+Anna relates to Village as home</code></pre>
+
+<p><strong>Relationship Types:</strong></p>
+
+<table>
+  <tr>
+    <th>Category</th>
+    <th>Types</th>
+  </tr>
+  <tr>
+    <td>Family</td>
+    <td><code>sibling</code>, <code>parent_child</code>, <code>spouse</code>, <code>family</code></td>
+  </tr>
+  <tr>
+    <td>Social</td>
+    <td><code>friend</code>, <code>ally</code>, <code>enemy</code>, <code>rival</code>, <code>colleague</code></td>
+  </tr>
+  <tr>
+    <td>Hierarchical</td>
+    <td><code>mentor_student</code>, <code>leader_follower</code>, <code>master_servant</code></td>
+  </tr>
+  <tr>
+    <td>Romantic</td>
+    <td><code>romantic</code>, <code>former_lovers</code>, <code>betrothed</code></td>
+  </tr>
+  <tr>
+    <td>Conflict</td>
+    <td><code>nemesis</code>, <code>betrayer</code>, <code>victim_aggressor</code></td>
+  </tr>
+</table>
+
+<h3>4. Inclusion (X includes Y Z)</h3>
+
+<p>Specifies that a structural element contains an entity reference.</p>
+
+<pre><code>// Syntax: Group includes Type Entity
+Scene1 includes character Anna
+Scene1 includes character Marcus
+Scene1 includes location Village
+Scene1 includes object SilverKey</code></pre>
+
+<h3>5. Ownership (X owns Y)</h3>
+
+<p>Declares that one entity possesses another.</p>
+
+<pre><code>// Syntax: Owner owns Owned
+Anna owns SilverKey
+Marcus owns Sword
+Village owns "ancient well"</code></pre>
+
+<h3>6. Cross-Reference (X references @Y)</h3>
+
+<p>Creates an explicit link between structural elements.</p>
+
+<pre><code>// Syntax: Subject references @Target
+Chapter2 references @Chapter1
+Scene5 references @Scene2</code></pre>
+
+<h3>7. Constraints (requires, forbids, must)</h3>
+
+<p>Constraints define rules that content must follow.</p>
+
+<pre><code>// Requires: must include this element
+Story requires "happy ending"
+Chapter1 requires "Anna"
+
+// Forbids: must NOT include this element
+Story forbids "explicit violence"
+Scene3 forbids "death"
+
+// Must: obligation to perform action
+Chapter1 must introduce Anna
+Scene2 must reveal secret
+
+// Tone: emotional direction
+Story has tone hopeful
+Chapter3 has tone dark
+
+// Limits: numerical constraints
+Story has max characters 10
+Story has min scenes 5
+Chapter1 has max scenes 3</code></pre>
+
+<h3>8. Description (X describes "text")</h3>
+
+<p>Associates prose text with an entity. This is how narrative content is attached to scenes.</p>
+
+<pre><code>// Syntax: Subject describes "text"
+Scene1 describes "Anna walked through the quiet village at dawn..."
+Anna describes "A young woman with fierce determination in her eyes"</code></pre>
+
+<h3>9. Events (Action Statements)</h3>
+
+<p>Any other verb is interpreted as a narrative action or event. These describe what happens in the story.</p>
+
+<pre><code>// Syntax: Subject verb [Object] [Modifiers]
+Anna discovers artifact
+Anna enters forest
+Marcus threatens Anna
+Anna confronts Marcus
+Villain reveals "dark secret"
+Anna travels to Castle
+Anna decides "accept the quest"
+Storm destroys Village</code></pre>
+
+<p><strong>Verb Categories:</strong></p>
+
+<table>
+  <tr>
+    <th>Category</th>
+    <th>Verbs</th>
+  </tr>
+  <tr>
+    <td>Action</td>
+    <td><code>targets</code>, <code>meets</code>, <code>discovers</code>, <code>enters</code>, <code>travels</code>, <code>arrives</code></td>
+  </tr>
+  <tr>
+    <td>Decision</td>
+    <td><code>decides</code>, <code>chooses</code>, <code>accepts</code>, <code>refuses</code></td>
+  </tr>
+  <tr>
+    <td>Conflict</td>
+    <td><code>faces</code>, <code>threatens</code>, <code>confronts</code>, <code>attacks</code>, <code>escapes</code></td>
+  </tr>
+  <tr>
+    <td>Emotional</td>
+    <td><code>wants</code>, <code>fears</code>, <code>loves</code>, <code>hates</code>, <code>seeks</code>, <code>avoids</code></td>
+  </tr>
+  <tr>
+    <td>Revelation</td>
+    <td><code>reveals</code>, <code>discovers</code>, <code>learns</code>, <code>realizes</code></td>
+  </tr>
+  <tr>
+    <td>Transformation</td>
+    <td><code>transforms</code>, <code>changes</code>, <code>becomes</code>, <code>returns</code></td>
+  </tr>
+  <tr>
+    <td>Dialogue</td>
+    <td><code>says</code>, <code>tells</code>, <code>asks</code>, <code>confesses</code></td>
+  </tr>
+</table>
+
+<h2>Hierarchical Grouping</h2>
+
+<p>Groups create hierarchical structure for books, chapters, and scenes:</p>
+
+<pre><code>// Syntax: GroupName group begin ... GroupName group end
+
+Book group begin
+  Book has title "The Dragon's Quest"
+  
+  Chapter1 group begin
+    Chapter1 has title "The Beginning"
+    
+    Scene1 group begin
+Scene1 has title "Morning at the Village"
+Scene1 has mood Peaceful
+Scene1 includes character Anna
+Scene1 includes location Village
+Anna discovers artifact
+    Scene1 group end
+    
+    Scene2 group begin
+Scene2 has title "The Stranger Arrives"
+Scene2 has mood Mysterious
+Scene2 includes character Anna
+Scene2 includes character Gandalf
+Gandalf meets Anna
+Gandalf reveals "quest"
+    Scene2 group end
+    
+  Chapter1 group end
+  
+  Chapter2 group begin
+    Chapter2 has title "Into the Unknown"
+    // ... more scenes
+  Chapter2 group end
+  
+Book group end</code></pre>
+
+<h3>Group Nesting Rules</h3>
+
+<ol>
+  <li>Groups must be properly nested (no overlapping)</li>
+  <li>Every <code>group begin</code> must have a matching <code>group end</code></li>
+  <li>The same group name must be used for begin and end</li>
+  <li>Typical hierarchy: Book &gt; Chapter &gt; Scene</li>
+</ol>
+
+<h2>Pattern System</h2>
+
+<p>Patterns are reusable templates with variable slots that can be instantiated in scenes:</p>
+
+<pre><code>// Pattern Definition
+"Hero's Call" is pattern
+"Hero's Call" has variable $hero as character
+"Hero's Call" has variable $location as location
+"Hero's Call" has variable $challenge as event
+
+"Hero's Call" has template begin
+  $hero is at $location
+  $hero discovers "call to adventure"
+  $hero faces $challenge
+  $hero decides "accept quest"
+"Hero's Call" has template end
+
+// Pattern Instantiation
+Scene1 uses pattern "Hero's Call"
+  $hero binds to Anna
+  $location binds to Village
+  $challenge binds to Storm
+Scene1 pattern end</code></pre>
+
+<h2>Complete Example</h2>
+
+<p>Here is a complete, realistic CNL specification demonstrating all major features:</p>
+
+<pre><code>// ============================================
+// STORY SPECIFICATION: The Dragon's Quest
+// ============================================
+
+// --- Global Settings ---
+Story has title "The Dragon's Quest"
+Story has genre fantasy
+Story has tone adventurous
+Story has theme redemption
+Story has theme courage
+Story requires "happy ending"
+Story forbids "explicit violence"
+Story has max characters 8
+
+// --- World Rules ---
+World has rule "Magic requires sacrifice"
+World has rule "Dragons can only be defeated by pure hearts"
+
+// --- Characters ---
+Anna is protagonist
+Anna has archetype Hero
+Anna has trait courage
+Anna has trait determination
+Anna has trait compassion
+Anna has flaw "fears failure"
+
+Gandalf is mentor
+Gandalf has archetype Sage
+Gandalf has trait wisdom
+Gandalf has trait mysterious
+
+Marcus is character
+Marcus has archetype Ally
+Marcus has trait loyalty
+Marcus has trait humor
+
+Drakon is antagonist
+Drakon has archetype Shadow
+Drakon has trait power
+Drakon has trait cruelty
+
+// --- Relationships ---
+Anna relates to Gandalf as mentor_student
+Anna relates to Marcus as sibling
+Marcus relates to Drakon as enemy
+
+// --- Locations ---
+Village is location
+Village has geography rural
+Village has atmosphere peaceful
+Village has characteristic "ancient stone walls"
+
+"Dark Forest" is location
+"Dark Forest" has geography forest
+"Dark Forest" has atmosphere mysterious
+"Dark Forest" has characteristic "twisted trees"
+
+"Dragon's Lair" is location
+"Dragon's Lair" has geography mountain
+"Dragon's Lair" has atmosphere threatening
+
+// --- Objects ---
+SilverKey is artifact
+SilverKey has significance high
+SilverKey has description "Key to the dragon's weakness"
+Anna owns SilverKey
+
+// --- Structure ---
+Book group begin
+  
+  Chapter1 group begin
+    Chapter1 has title "The Call"
+    Chapter1 must introduce Anna
+    
+    Sc1 group begin
+Sc1 has title "Ordinary Morning"
+Sc1 has mood Peaceful
+Sc1 includes character Anna
+Sc1 includes location Village
+Anna describes "Living her simple life"
+    Sc1 group end
+    
+    Sc2 group begin
+Sc2 has title "The Stranger"
+Sc2 has mood Mysterious
+Sc2 includes character Anna
+Sc2 includes character Gandalf
+Sc2 includes location Village
+Gandalf arrives at Village
+Gandalf meets Anna
+Gandalf reveals "Dragon threatens the kingdom"
+    Sc2 group end
+    
+    Sc3 group begin
+Sc3 has title "The Decision"
+Sc3 has mood Tense
+Sc3 includes character Anna
+Sc3 includes character Marcus
+Anna decides "accept the quest"
+Marcus joins Anna
+    Sc3 group end
+    
+  Chapter1 group end
+  
+  Chapter2 group begin
+    Chapter2 has title "The Journey"
+    
+    Sc4 group begin
+Sc4 has title "Into the Forest"
+Sc4 has mood Ominous
+Sc4 includes character Anna
+Sc4 includes character Marcus
+Sc4 includes location "Dark Forest"
+Anna enters "Dark Forest"
+Anna discovers SilverKey
+    Sc4 group end
+    
+    Sc5 group begin
+Sc5 has title "The Test"
+Sc5 has mood Desperate
+Sc5 includes character Anna
+Sc5 includes character Marcus
+Anna confronts fear
+Marcus encourages Anna
+Anna transforms "overcomes doubt"
+    Sc5 group end
+    
+  Chapter2 group end
+  
+  Chapter3 group begin
+    Chapter3 has title "The Dragon"
+    Chapter3 requires "Drakon"
+    
+    Sc6 group begin
+Sc6 has title "The Lair"
+Sc6 has mood Epic
+Sc6 includes character Anna
+Sc6 includes character Drakon
+Sc6 includes location "Dragon's Lair"
+Sc6 includes object SilverKey
+Anna confronts Drakon
+Anna uses SilverKey
+Drakon reveals "secret vulnerability"
+    Sc6 group end
+    
+    Sc7 group begin
+Sc7 has title "Victory"
+Sc7 has mood Triumphant
+Sc7 includes character Anna
+Sc7 includes character Marcus
+Sc7 includes character Gandalf
+Anna defeats Drakon
+Anna returns to Village
+    Sc7 group end
+    
+  Chapter3 group end
+  
+Book group end</code></pre>
+
+<h2>Parser Output (AST)</h2>
+
+<p>When parsed, CNL produces an Abstract Syntax Tree (AST) with the following structure:</p>
+
+<pre><code>{
+  "type": "document",
+  "entities": {
+    "Anna": {
+"name": "Anna",
+"type": "protagonist",
+"types": ["protagonist"],
+"properties": { "archetype": "Hero" },
+"traits": ["courage", "determination", "compassion"],
+"relationships": [
+  { "target": "Gandalf", "type": "mentor_student" },
+  { "target": "Marcus", "type": "sibling" }
+]
+    },
+    "Village": {
+"name": "Village",
+"type": "location",
+"properties": {
+  "geography": "rural",
+  "atmosphere": "peaceful",
+  "characteristic": "ancient stone walls"
+}
+    }
+    // ... more entities
+  },
+  "groups": [
+    {
+"name": "Book",
+"type": "group",
+"children": [
+  {
+    "name": "Chapter1",
+    "type": "group",
+    "properties": { "title": "The Call" },
+    "children": [/* scenes */]
+  }
+]
+    }
+  ],
+  "relationships": [
+    { "from": "Anna", "to": "Gandalf", "type": "mentor_student" },
+    { "from": "Anna", "to": "Marcus", "type": "sibling" }
+  ],
+  "ownership": [
+    { "owner": "Anna", "owned": "SilverKey" }
+  ],
+  "constraints": {
+    "requires": [{ "subject": "Story", "target": "happy ending" }],
+    "forbids": [{ "subject": "Story", "target": "explicit violence" }],
+    "must": [{ "subject": "Chapter1", "action": "introduce", "target": "Anna" }],
+    "tone": [{ "subject": "Story", "value": "adventurous" }],
+    "max": [{ "subject": "Story", "what": "characters", "count": 8 }]
+  }
+}</code></pre>
+
+<h2>Semantic Rules</h2>
+
+<h3>Entity Declaration Rules</h3>
+
+<ol>
+  <li>Entities must be declared before being referenced</li>
+  <li>An entity can have multiple types (additive)</li>
+  <li>Property assignments are cumulative (traits add up)</li>
+</ol>
+
+<h3>Scope Rules</h3>
+
+<table>
+  <tr>
+    <th>Subject</th>
+    <th>Scope</th>
+    <th>Effect</th>
+  </tr>
+  <tr>
+    <td><code>Story</code> or <code>World</code></td>
+    <td>Global</td>
+    <td>Applies to entire document</td>
+  </tr>
+  <tr>
+    <td>Chapter group</td>
+    <td>Chapter</td>
+    <td>Applies to all scenes in chapter</td>
+  </tr>
+  <tr>
+    <td>Scene group</td>
+    <td>Scene</td>
+    <td>Applies only to that scene</td>
+  </tr>
+</table>
+
+<h3>Validation Rules</h3>
+
+<ol>
+  <li><strong>Reference validation</strong>: <code>includes</code> statements must reference declared entities</li>
+  <li><strong>Ownership validation</strong>: Both owner and owned must be declared</li>
+  <li><strong>Group nesting</strong>: Groups must be properly nested and closed</li>
+  <li><strong>Constraint consistency</strong>: <code>requires</code> and <code>forbids</code> for the same target is an error</li>
+</ol>
+
+<h2>Common Patterns</h2>
+
+<h3>Character Introduction</h3>
+<pre><code>Anna is protagonist
+Anna has archetype Hero
+Anna has trait courage
+Anna has trait determination
+Anna has flaw "fears failure"
+Anna has goal "save the kingdom"</code></pre>
+
+<h3>Location Setup</h3>
+<pre><code>Castle is location
+Castle has geography urban
+Castle has atmosphere grand
+Castle has time_period medieval
+Castle has characteristic "towering spires"
+Castle has characteristic "ancient walls"</code></pre>
+
+<h3>Scene Template</h3>
+<pre><code>SceneX group begin
+  SceneX has title "Scene Title"
+  SceneX has mood MoodPreset
+  SceneX includes character CharA
+  SceneX includes character CharB
+  SceneX includes location Location
+  
+  // Actions
+  CharA verb Object
+  CharB responds
+SceneX group end</code></pre>
+
+<h3>Subplot Definition</h3>
+<pre><code>Romance is subplot
+Romance has type romance
+Romance has characters Anna, Marcus
+Romance has startBeat "meeting"
+Romance has resolveBeat "reunion"</code></pre>
+
+<h2>Error Messages</h2>
+
+<table>
+  <tr>
+    <th>Error</th>
+    <th>Cause</th>
+    <th>Fix</th>
+  </tr>
+  <tr>
+    <td>"Undefined entity: X"</td>
+    <td>Referenced entity not declared</td>
+    <td>Add declaration: <code>X is type</code></td>
+  </tr>
+  <tr>
+    <td>"Unclosed group: X"</td>
+    <td>Missing <code>group end</code></td>
+    <td>Add <code>X group end</code></td>
+  </tr>
+  <tr>
+    <td>"Invalid verb: X"</td>
+    <td>Verb not in vocabulary</td>
+    <td>Use recognized verb or add to vocabulary</td>
+  </tr>
+  <tr>
+    <td>"Conflicting constraints"</td>
+    <td>Both requires and forbids same target</td>
+    <td>Remove one constraint</td>
+  </tr>
+  <tr>
+    <td>"Syntax error at line N"</td>
+    <td>Invalid statement structure</td>
+    <td>Check SVO pattern and keywords</td>
+  </tr>
+</table>
+
+<h2>API Usage</h2>
+
+<pre><code>// In Browser or Node.js
+import { parseCNL, extractEntities, extractConstraints } from './cnl-parser.mjs';
+
+const cnlText = `
+  Anna is protagonist
+  Anna has trait courage
+  Village is location
+`;
+
+const result = parseCNL(cnlText);
+
+if (result.valid) {
+  console.log('Entities:', extractEntities(result.ast));
+  console.log('Constraints:', extractConstraints(result.ast));
+} else {
+  console.error('Parse errors:', result.errors);
+}</code></pre>
+
+<h2>Related Documents</h2>
+
+<ul>
+  <li><a href="#conceptual-model" data-page="conceptual-model">Conceptual Model</a> - What the concepts mean</li>
+  <li><a href="#end-to-end" data-page="end-to-end">End-to-End Example</a> - Complete workflow</li>
+  <li><a href="../specs/DS04-CNL-Specification.md">DS04 - CNL Specification</a> (Technical)</li>
+  <li><a href="../specs/DS11-CNL-Unification.md">DS11 - CNL Syntax Reference</a> (Technical)</li>
+</ul>

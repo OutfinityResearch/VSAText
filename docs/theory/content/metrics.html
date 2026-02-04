@@ -1,0 +1,390 @@
+<h1>Story Quality Metrics</h1>
+
+<p class="lead">SCRIPTA uses a comprehensive set of metrics to evaluate story quality. These metrics detect structural issues, measure coherence, and ensure generated stories are not random or incoherent.</p>
+
+<section id="overview">
+  <h2>Why Metrics Matter</h2>
+  
+  <p>AI-generated stories can suffer from various problems:</p>
+  
+  <ul>
+    <li><strong>Random character assignment</strong> - Characters appear once and vanish</li>
+    <li><strong>Location hopping</strong> - Every scene in a different place with no logic</li>
+    <li><strong>Orphan references</strong> - Actions mention entities that don't exist</li>
+    <li><strong>Incomplete scenes</strong> - Missing characters, locations, or actions</li>
+    <li><strong>Unused relationships</strong> - Defined connections never manifest</li>
+    <li><strong>Empty dialogues</strong> - Placeholder conversations without purpose</li>
+  </ul>
+  
+  <p>SCRIPTA's metrics system detects these issues automatically, giving you immediate feedback on story quality.</p>
+  
+  <div class="info-box">
+    <div class="info-box-title">The Evaluate Button</div>
+    <p>Click "Evaluate" in the Metrics panel after generating a story to see detailed quality analysis. The browser console shows additional debugging information.</p>
+  </div>
+</section>
+
+<section id="nqs">
+  <h2>Narrative Quality Score (NQS)</h2>
+  
+  <p>The <strong>Narrative Quality Score</strong> is the master metric that combines all quality dimensions into a single 0-100% score.</p>
+  
+  <h3>NQS Components</h3>
+  
+  <table>
+    <tr>
+      <th>Component</th>
+      <th>Weight</th>
+      <th>What It Measures</th>
+    </tr>
+    <tr>
+      <td><strong>Completeness</strong></td>
+      <td>12%</td>
+      <td>Are required elements present? (characters, locations, themes, arc)</td>
+    </tr>
+    <tr>
+      <td><strong>Coherence Score</strong></td>
+      <td>12%</td>
+      <td>Entity usage and structural coherence</td>
+    </tr>
+    <tr>
+      <td><strong>Character Drift</strong></td>
+      <td>8%</td>
+      <td>Character trait consistency (lower is better)</td>
+    </tr>
+    <tr>
+      <td><strong>Originality</strong></td>
+      <td>8%</td>
+      <td>Variety of narrative blocks and actions</td>
+    </tr>
+    <tr>
+      <td><strong>Emotional Arc</strong></td>
+      <td>10%</td>
+      <td>Arc coverage and mood usage</td>
+    </tr>
+    <tr>
+      <td><strong>Parse Success</strong></td>
+      <td>8%</td>
+      <td>Valid CNL syntax in output</td>
+    </tr>
+    <tr>
+      <td><strong>Constraints</strong></td>
+      <td>8%</td>
+      <td>Constraint satisfaction accuracy</td>
+    </tr>
+    <tr>
+      <td><strong>Explainability</strong></td>
+      <td>8%</td>
+      <td>Documentation level (arc, themes, rules, wisdom)</td>
+    </tr>
+    <tr>
+      <td><strong>Coherence Analysis</strong></td>
+      <td>26%</td>
+      <td>Character continuity, location logic, action coherence, scene completeness</td>
+    </tr>
+  </table>
+  
+  <div class="example-box">
+    <div class="example-title">Interpreting NQS</div>
+    <ul>
+      <li><strong>&lt; 40%</strong>: Severe issues, likely random/incoherent generation</li>
+      <li><strong>40-60%</strong>: Multiple problems, needs significant improvement</li>
+      <li><strong>60-75%</strong>: Acceptable, some issues to address</li>
+      <li><strong>75-85%</strong>: Good quality, minor refinements needed</li>
+      <li><strong>&gt; 85%</strong>: Excellent, well-structured story</li>
+    </ul>
+  </div>
+</section>
+
+<section id="summary">
+  <h2>Summary Metrics</h2>
+  
+  <h3>Completeness</h3>
+  <p>Measures whether all required story elements are present:</p>
+  <ul>
+    <li>At least 2 characters (20%)</li>
+    <li>At least 2 locations (10%)</li>
+    <li>At least 3 scenes (25%)</li>
+    <li>At least 1 theme (10%)</li>
+    <li>Emotional arc with 3+ beats (10%)</li>
+    <li>At least 2 dialogues (15%)</li>
+    <li>At least 2 relationships (10%)</li>
+  </ul>
+  <p><strong>Threshold:</strong> >= 80%</p>
+  
+  <h3>Coherence Score (CS)</h3>
+  <p>Measures structural coherence through entity usage and relationships:</p>
+  <ul>
+    <li>Entity usage ratio (40%) - Are defined characters/locations actually used?</li>
+    <li>Relationship coverage (30%) - Are relationships defined between characters?</li>
+    <li>Block usage (30%) - Are narrative blocks used in scenes?</li>
+  </ul>
+  <p><strong>Threshold:</strong> >= 75%</p>
+  
+  <h3>Emotional Arc Profile (EAP)</h3>
+  <p>Measures how well the emotional journey is defined:</p>
+  <ul>
+    <li>Arc beat coverage (50%) - How many arc beats are assigned?</li>
+    <li>Mood variety (25%) - Are different moods used?</li>
+    <li>Mood usage (25%) - Are moods applied to scenes?</li>
+  </ul>
+  <p><strong>Threshold:</strong> >= 70%</p>
+</section>
+
+<section id="detailed">
+  <h2>Detailed Analysis Metrics</h2>
+  
+  <h3>Character Attribute Drift (CAD)</h3>
+  <p>Measures trait consistency. Lower is better.</p>
+  <ul>
+    <li>3+ traits per character: 0.05 (excellent)</li>
+    <li>2 traits per character: 0.10 (good)</li>
+    <li>1 trait per character: 0.15 (minimal)</li>
+    <li>0 traits: 0.25 (poor)</li>
+  </ul>
+  <p><strong>Threshold:</strong> <= 0.15</p>
+  
+  <h3>Compliance Adherence Rate (CAR)</h3>
+  <p>Percentage of references that point to existing entities. Orphan references (pointing to non-existent entities) lower this score.</p>
+  <p><strong>Threshold:</strong> >= 95%</p>
+  
+  <h3>Originality Index (OI)</h3>
+  <p>Measures variety in the narrative:</p>
+  <ul>
+    <li>Block type variety (40%) - Different narrative blocks used</li>
+    <li>Action variety (30%) - Different action types used</li>
+    <li>Theme variety (30%) - Multiple themes defined</li>
+  </ul>
+  <p><strong>Threshold:</strong> >= 50%</p>
+  
+  <h3>CNL Parse Success Rate (CPSR)</h3>
+  <p>Percentage of CNL lines that follow valid syntax. Tests whether the specification can be parsed correctly.</p>
+  <p><strong>Threshold:</strong> >= 90%</p>
+  
+  <h3>Constraint Satisfaction Accuracy (CSA)</h3>
+  <p>Ratio of valid references to total references. Similar to CAR but focused on constraint validation.</p>
+  <p><strong>Threshold:</strong> >= 95%</p>
+  
+  <h3>Retrieval Quality (RQ)</h3>
+  <p>Measures naming quality - entities should have meaningful names (3+ characters, not "undefined").</p>
+  <p><strong>Threshold:</strong> >= 80%</p>
+  
+  <h3>Explainability Score</h3>
+  <p>Measures documentation level (0-5 rating):</p>
+  <ul>
+    <li>Arc defined: +0.75</li>
+    <li>Themes defined: +0.75</li>
+    <li>Relationships defined: +0.75</li>
+    <li>World rules defined: +0.75</li>
+    <li>Emotional arc (3+ beats): +0.75</li>
+    <li>Wisdom entries: +0.75</li>
+    <li>Patterns defined: +0.50</li>
+  </ul>
+  <p><strong>Threshold:</strong> >= 3.5/5</p>
+</section>
+
+<section id="coherence">
+  <h2>Coherence Analysis</h2>
+  
+  <p>These six metrics specifically detect random, inconsistent, or incoherent generation. They are the primary defense against "garbage" output.</p>
+  
+  <div class="warning-box">
+    <div class="warning-title">Detecting Bad Generation</div>
+    <p>If coherence metrics average below 40%, the story is likely random noise rather than meaningful narrative. Check the console for detailed diagnostics.</p>
+  </div>
+  
+  <h3>Character Continuity</h3>
+  <p><strong>Question:</strong> Do characters appear consistently across scenes?</p>
+  <ul>
+    <li>Characters in multiple scenes (50%)</li>
+    <li>Hero/protagonist presence throughout (50%)</li>
+  </ul>
+  <p><strong>Threshold:</strong> >= 60%</p>
+  <p><strong>Low score indicates:</strong> Characters randomly assigned per scene, no continuity</p>
+  
+  <h3>Location Logic</h3>
+  <p><strong>Question:</strong> Are locations reused logically or is it random hopping?</p>
+  <ul>
+    <li>Locations appearing 2+ times (50%)</li>
+    <li>Average location usage vs expected (50%)</li>
+  </ul>
+  <p><strong>Threshold:</strong> >= 50%</p>
+  <p><strong>Low score indicates:</strong> Every scene in a different location, no spatial coherence</p>
+  
+  <h3>Action Coherence</h3>
+  <p><strong>Question:</strong> Do actions reference known entities?</p>
+  <ul>
+    <li>Action subject is a known character</li>
+    <li>Action target is a known character, location, or object</li>
+  </ul>
+  <p><strong>Threshold:</strong> >= 80%</p>
+  <p><strong>Low score indicates:</strong> Actions reference entities that don't exist in libraries</p>
+  
+  <h3>Scene Completeness</h3>
+  <p><strong>Question:</strong> Does each scene have minimum required elements?</p>
+  <p>A complete scene needs:</p>
+  <ul>
+    <li>At least one character</li>
+    <li>At least one location</li>
+    <li>At least one action or dialogue</li>
+  </ul>
+  <p><strong>Threshold:</strong> >= 70%</p>
+  <p><strong>Low score indicates:</strong> Scenes are fragments, missing essential elements</p>
+  
+  <h3>Relationship Usage</h3>
+  <p><strong>Question:</strong> Are defined relationships actually used in the story?</p>
+  <ul>
+    <li>For each relationship (A -> B), do A and B appear in the same scene?</li>
+    <li>Unused relationships are just decoration</li>
+  </ul>
+  <p><strong>Threshold:</strong> >= 50%</p>
+  <p><strong>Low score indicates:</strong> Relationships defined but never manifested in narrative</p>
+  
+  <h3>Dialogue Quality</h3>
+  <p><strong>Question:</strong> Are dialogues well-structured and purposeful?</p>
+  <p>Each dialogue scores 0-1 based on:</p>
+  <ul>
+    <li>Has purpose defined (+0.25)</li>
+    <li>Has 2+ participants (+0.25)</li>
+    <li>Has at least 1 exchange (+0.25)</li>
+    <li>Exchanges have content (intent or sketch) (+0.25)</li>
+  </ul>
+  <p><strong>Threshold:</strong> >= 60%</p>
+  <p><strong>Low score indicates:</strong> Dialogues are empty placeholders without structure</p>
+</section>
+
+<section id="diagnostics">
+  <h2>Diagnostic Interpretation</h2>
+  
+  <h3>Overall Coherence Assessment</h3>
+  
+  <table>
+    <tr>
+      <th>Average Score</th>
+      <th>Interpretation</th>
+      <th>Action</th>
+    </tr>
+    <tr>
+      <td><strong>&lt; 30%</strong></td>
+      <td>Garbage - Random/incoherent</td>
+      <td>Regenerate with better specification</td>
+    </tr>
+    <tr>
+      <td><strong>30-50%</strong></td>
+      <td>Poor - Major structural issues</td>
+      <td>Review entities and structure</td>
+    </tr>
+    <tr>
+      <td><strong>50-70%</strong></td>
+      <td>Fair - Some coherence</td>
+      <td>Refine weak areas</td>
+    </tr>
+    <tr>
+      <td><strong>70-85%</strong></td>
+      <td>Good - Mostly coherent</td>
+      <td>Minor adjustments</td>
+    </tr>
+    <tr>
+      <td><strong>&gt; 85%</strong></td>
+      <td>Excellent - Well-structured</td>
+      <td>Ready for expansion</td>
+    </tr>
+  </table>
+  
+  <h3>Specific Issue Detection</h3>
+  
+  <table>
+    <tr>
+      <th>Low Metric</th>
+      <th>Likely Problem</th>
+      <th>Solution</th>
+    </tr>
+    <tr>
+      <td>Character Continuity &lt; 40%</td>
+      <td>Characters randomly assigned</td>
+      <td>Ensure hero appears in most scenes</td>
+    </tr>
+    <tr>
+      <td>Location Logic &lt; 30%</td>
+      <td>Random scene hopping</td>
+      <td>Reuse key locations (home, workplace)</td>
+    </tr>
+    <tr>
+      <td>Action Coherence &lt; 60%</td>
+      <td>Orphan entity references</td>
+      <td>Add missing characters/objects to libraries</td>
+    </tr>
+    <tr>
+      <td>Scene Completeness &lt; 50%</td>
+      <td>Incomplete scene fragments</td>
+      <td>Ensure each scene has who/where/what</td>
+    </tr>
+    <tr>
+      <td>Relationship Usage &lt; 30%</td>
+      <td>Relationships never used</td>
+      <td>Place related characters in same scenes</td>
+    </tr>
+    <tr>
+      <td>Dialogue Quality &lt; 40%</td>
+      <td>Empty placeholder dialogues</td>
+      <td>Add purpose and exchanges to dialogues</td>
+    </tr>
+  </table>
+</section>
+
+<section id="console">
+  <h2>Console Debugging</h2>
+  
+  <p>Open browser developer tools (F12) to see detailed metric calculations:</p>
+  
+  <div class="example-box">
+    <div class="example-title">Console Output Example</div>
+    <pre><code>[Evaluate] Counts: {
+  characters: 4,
+  locations: 3,
+  scenes: 8,
+  chapters: 3,
+  actions: 12,
+  dialogues: 5,
+  themes: 2,
+  relationships: 6,
+  worldRules: 3,
+  wisdom: 2,
+  patterns: 1
+}
+
+[Evaluate] Coherence: {
+  charContinuity: "0.75",
+  locLogic: "0.60",
+  actionCoherence: "0.92",
+  sceneCompleteness: "0.88",
+  relUsage: "0.67",
+  dialogueQuality: "0.70"
+}</code></pre>
+  </div>
+  
+  <p>Use this data to identify exactly which aspects need improvement.</p>
+</section>
+
+<section id="references">
+  <h2>Related Documentation</h2>
+  
+  <h3>Technical Specifications</h3>
+  <ul>
+    <li><strong>DS12</strong> - Metrics Interpreter Overview</li>
+    <li><strong>DS13</strong> - Coherence Score (CS) Definition</li>
+    <li><strong>DS14</strong> - Character Attribute Drift (CAD)</li>
+    <li><strong>DS15</strong> - Compliance Adherence Rate (CAR)</li>
+    <li><strong>DS16</strong> - Originality Index (OI)</li>
+    <li><strong>DS17</strong> - Emotional Arc Profile (EAP)</li>
+    <li><strong>DS18</strong> - Retrieval Quality (RQ)</li>
+    <li><strong>DS20</strong> - CNL Parse Success Rate (CPSR)</li>
+    <li><strong>DS21</strong> - Constraint Satisfaction Accuracy (CSA)</li>
+    <li><strong>DS22</strong> - Explainability Score</li>
+    <li><strong>DS23</strong> - Narrative Quality Score (NQS)</li>
+    <li><strong>DS25</strong> - Coherence Analysis Metrics (NEW)</li>
+  </ul>
+  
+  <h3>Implementation</h3>
+  <p>See <code>demo/app/metrics.mjs</code> for the complete implementation of all metrics calculations.</p>
+</section>

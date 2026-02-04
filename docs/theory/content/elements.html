@@ -1,0 +1,662 @@
+<h1>Story Elements Guide</h1>
+
+<p>This document provides detailed documentation for each element type available in SCRIPTA's visual editor. Each section corresponds to a tab in the Story Forge interface.</p>
+
+<div class="info-box">
+  <div class="info-box-title">Editor Tabs Overview</div>
+  <p>SCRIPTA organizes story elements into specialized tabs for focused editing. Each tab manages a specific aspect of your story specification, from characters and locations to emotional arcs and dialogue planning.</p>
+</div>
+
+<h2>Characters Tab</h2>
+
+<p>The Characters tab manages all persons, creatures, and entities that act within your story.</p>
+
+<h3>Character Properties</h3>
+
+<table>
+  <tr>
+    <th>Property</th>
+    <th>Description</th>
+    <th>Values</th>
+  </tr>
+  <tr>
+    <td>Name</td>
+    <td>Character's identifier</td>
+    <td>Any string</td>
+  </tr>
+  <tr>
+    <td>Type</td>
+    <td>Role in the narrative</td>
+    <td>protagonist, antagonist, mentor, ally, character</td>
+  </tr>
+  <tr>
+    <td>Archetype</td>
+    <td>Jungian/Campbell archetype</td>
+    <td>Hero, Shadow, Mentor, Herald, Threshold Guardian, Shapeshifter, Trickster, Ally</td>
+  </tr>
+  <tr>
+    <td>Traits</td>
+    <td>Personality characteristics</td>
+    <td>courage, wisdom, cunning, loyalty, ambition, compassion, etc.</td>
+  </tr>
+  <tr>
+    <td>Arc Type</td>
+    <td>Character's transformation</td>
+    <td>positive (grows), negative (corrupts), flat (inspires others)</td>
+  </tr>
+  <tr>
+    <td>Flaws</td>
+    <td>Weaknesses for conflict</td>
+    <td>fears failure, arrogance, naivety, etc.</td>
+  </tr>
+</table>
+
+<h3>CNL Output</h3>
+<pre><code>Anna is protagonist
+Anna has archetype Hero
+Anna has trait courage
+Anna has trait determination
+Anna has flaw "fears failure"
+Anna has arc positive</code></pre>
+
+<p>For complete character theory, see <a href="#characters" data-page="characters">Characters Documentation</a>.</p>
+
+<h2>Relations Tab</h2>
+
+<p>The Relations tab defines connections between characters. Relationships affect how characters interact and drive plot dynamics.</p>
+
+<h3>Relationship Types</h3>
+
+<table>
+  <tr>
+    <th>Category</th>
+    <th>Types</th>
+    <th>Story Impact</th>
+  </tr>
+  <tr>
+    <td>Family</td>
+    <td>sibling, parent_child, spouse, family</td>
+    <td>Creates inherent loyalty/conflict, inheritance plots</td>
+  </tr>
+  <tr>
+    <td>Friendship</td>
+    <td>friend, ally, companion</td>
+    <td>Support network, sacrifice opportunities</td>
+  </tr>
+  <tr>
+    <td>Conflict</td>
+    <td>enemy, rival, nemesis</td>
+    <td>Direct opposition, competitive tension</td>
+  </tr>
+  <tr>
+    <td>Hierarchy</td>
+    <td>mentor_student, leader_follower, master_servant</td>
+    <td>Knowledge transfer, power dynamics</td>
+  </tr>
+  <tr>
+    <td>Romantic</td>
+    <td>romantic, former_lovers, betrothed</td>
+    <td>Emotional stakes, subplot fuel</td>
+  </tr>
+  <tr>
+    <td>Betrayal</td>
+    <td>betrayer, victim_aggressor</td>
+    <td>Trust violations, revenge arcs</td>
+  </tr>
+</table>
+
+<h3>Relationship Properties</h3>
+
+<ul>
+  <li><strong>Source</strong>: The character from whose perspective the relationship is defined</li>
+  <li><strong>Target</strong>: The other character in the relationship</li>
+  <li><strong>Type</strong>: The nature of the connection</li>
+  <li><strong>Dynamics</strong>: How the relationship evolves (optional)</li>
+</ul>
+
+<h3>CNL Output</h3>
+<pre><code>Anna relates to Marcus as sibling
+Anna relates to Gandalf as mentor_student
+Marcus relates to Drakon as enemy</code></pre>
+
+<h3>Metrics Impact</h3>
+<p>Relationships affect the <strong>Relationship Usage Score (relUsage)</strong>. Defined relationships should manifest in the narrative - characters in a relationship should appear together in scenes. Low relUsage indicates "decorative" relationships that don't impact the story.</p>
+
+<h2>Locations Tab</h2>
+
+<p>The Locations tab manages places where scenes occur. Well-defined locations enhance atmosphere and spatial coherence.</p>
+
+<h3>Location Properties</h3>
+
+<table>
+  <tr>
+    <th>Property</th>
+    <th>Description</th>
+    <th>Examples</th>
+  </tr>
+  <tr>
+    <td>Name</td>
+    <td>Location identifier</td>
+    <td>Village, Dark Forest, Castle</td>
+  </tr>
+  <tr>
+    <td>Geography</td>
+    <td>Physical type</td>
+    <td>urban, rural, forest, mountain, coastal, desert, space</td>
+  </tr>
+  <tr>
+    <td>Atmosphere</td>
+    <td>Emotional quality</td>
+    <td>peaceful, mysterious, threatening, welcoming, desolate</td>
+  </tr>
+  <tr>
+    <td>Time Period</td>
+    <td>Historical setting</td>
+    <td>ancient, medieval, modern, futuristic</td>
+  </tr>
+  <tr>
+    <td>Characteristics</td>
+    <td>Defining features</td>
+    <td>"ancient stone walls", "bioluminescent plants"</td>
+  </tr>
+</table>
+
+<h3>CNL Output</h3>
+<pre><code>Village is location
+Village has geography rural
+Village has atmosphere peaceful
+Village has time_period medieval
+Village has characteristic "ancient stone walls"
+Village has characteristic "central fountain"</code></pre>
+
+<h3>Metrics Impact</h3>
+<p>Locations affect the <strong>Location Logic Score (locLogic)</strong>. Good stories reuse key locations rather than introducing a new location for every scene. Low locLogic indicates "random scene-hopping" without spatial coherence.</p>
+
+<h2>Objects Tab</h2>
+
+<p>The Objects tab (also called Plot Elements) manages physical items, artifacts, and documents that drive the plot.</p>
+
+<h3>Object Types</h3>
+
+<table>
+  <tr>
+    <th>Type</th>
+    <th>Description</th>
+    <th>Examples</th>
+  </tr>
+  <tr>
+    <td>Artifact</td>
+    <td>Magical or significant item</td>
+    <td>Ring of Power, Horcruxes, Excalibur</td>
+  </tr>
+  <tr>
+    <td>Key</td>
+    <td>Unlocks access or secrets</td>
+    <td>Ancient key, password, map</td>
+  </tr>
+  <tr>
+    <td>Document</td>
+    <td>Contains information</td>
+    <td>Letter, prophecy, will, journal</td>
+  </tr>
+  <tr>
+    <td>Weapon</td>
+    <td>Tool for conflict</td>
+    <td>Sword, gun, poison</td>
+  </tr>
+  <tr>
+    <td>MacGuffin</td>
+    <td>Drives plot but content unimportant</td>
+    <td>Briefcase in Pulp Fiction, Maltese Falcon</td>
+  </tr>
+  <tr>
+    <td>Symbol</td>
+    <td>Represents theme</td>
+    <td>Mockingbird, Green Light, Rosebud</td>
+  </tr>
+</table>
+
+<h3>Object Properties</h3>
+
+<ul>
+  <li><strong>Significance</strong>: How important to the plot (high, medium, low)</li>
+  <li><strong>Owner</strong>: Who possesses the object</li>
+  <li><strong>Description</strong>: What it looks like and does</li>
+  <li><strong>First Appearance</strong>: When introduced (for Chekhov's Gun)</li>
+</ul>
+
+<h3>CNL Output</h3>
+<pre><code>SilverKey is artifact
+SilverKey has significance high
+SilverKey has description "Ancient key that unlocks the forbidden chamber"
+Anna owns SilverKey</code></pre>
+
+<p>For plot element theory, see <a href="#plotelements" data-page="plotelements">Plot Elements Documentation</a>.</p>
+
+<h2>Moods Tab</h2>
+
+<p>The Moods tab defines emotional atmospheres for scenes. Moods combine multiple emotions with varying intensities.</p>
+
+<h3>Preset Moods</h3>
+
+<table>
+  <tr>
+    <th>Mood</th>
+    <th>Primary Emotions</th>
+    <th>Best For</th>
+  </tr>
+  <tr>
+    <td>Mysterious</td>
+    <td>curiosity, unease, wonder</td>
+    <td>Discovery scenes, hidden secrets</td>
+  </tr>
+  <tr>
+    <td>Ominous</td>
+    <td>fear, anxiety, tension</td>
+    <td>Approaching danger, foreshadowing</td>
+  </tr>
+  <tr>
+    <td>Triumphant</td>
+    <td>joy, pride, hope</td>
+    <td>Victories, achievements</td>
+  </tr>
+  <tr>
+    <td>Melancholic</td>
+    <td>sadness, nostalgia, longing</td>
+    <td>Loss, memories, bittersweet moments</td>
+  </tr>
+  <tr>
+    <td>Romantic</td>
+    <td>love, longing, hope</td>
+    <td>Love scenes, emotional connections</td>
+  </tr>
+  <tr>
+    <td>Tense</td>
+    <td>tension, anxiety, fear</td>
+    <td>Confrontations, chase scenes</td>
+  </tr>
+  <tr>
+    <td>Peaceful</td>
+    <td>serenity, gratitude, hope</td>
+    <td>Rest points, ordinary world</td>
+  </tr>
+  <tr>
+    <td>Adventurous</td>
+    <td>curiosity, wonder, hope</td>
+    <td>Journey beginnings, exploration</td>
+  </tr>
+  <tr>
+    <td>Horrific</td>
+    <td>fear, disgust, despair</td>
+    <td>Horror reveals, monster encounters</td>
+  </tr>
+  <tr>
+    <td>Epic</td>
+    <td>awe, tension, hope</td>
+    <td>Climactic battles, grand reveals</td>
+  </tr>
+  <tr>
+    <td>Bittersweet</td>
+    <td>joy, sadness, nostalgia</td>
+    <td>Endings, farewells, sacrifice</td>
+  </tr>
+</table>
+
+<h3>Custom Moods</h3>
+<p>You can create custom moods by combining base emotions with intensity weights (1-3):</p>
+
+<pre><code>CustomMood is mood
+CustomMood has emotion curiosity 2
+CustomMood has emotion fear 1
+CustomMood has emotion wonder 3</code></pre>
+
+<h3>Metrics Impact</h3>
+<p>Moods affect the <strong>Emotional Arc Profile (EAP)</strong>. The sequence of moods across scenes should align with the chosen narrative arc to create proper pacing.</p>
+
+<h2>Dialogues Tab</h2>
+
+<p>The Dialogues tab structures conversations between characters. Dialogues in SCRIPTA are specifications, not full scripts.</p>
+
+<h3>Dialogue Properties</h3>
+
+<table>
+  <tr>
+    <th>Property</th>
+    <th>Description</th>
+    <th>Options</th>
+  </tr>
+  <tr>
+    <td>Purpose</td>
+    <td>Why this conversation happens</td>
+    <td>reveal, conflict, bonding, exposition, negotiation, confession, argument, farewell</td>
+  </tr>
+  <tr>
+    <td>Participants</td>
+    <td>Characters involved</td>
+    <td>List of characters with roles (speaker/listener)</td>
+  </tr>
+  <tr>
+    <td>Tone</td>
+    <td>Emotional register</td>
+    <td>confrontational, intimate, formal, casual, tense</td>
+  </tr>
+  <tr>
+    <td>Tension</td>
+    <td>Conflict level (1-5)</td>
+    <td>1 = calm, 5 = explosive</td>
+  </tr>
+  <tr>
+    <td>Beat Link</td>
+    <td>Associated narrative beat</td>
+    <td>Any beat from selected arc</td>
+  </tr>
+</table>
+
+<h3>Dialogue Exchanges</h3>
+<p>Each dialogue contains exchanges - outline entries for what each character conveys:</p>
+
+<ul>
+  <li><strong>Speaker</strong>: Who is speaking</li>
+  <li><strong>Intent</strong>: What they want to convey</li>
+  <li><strong>Emotion</strong>: How they feel</li>
+  <li><strong>Sketch</strong>: Rough version of the line</li>
+</ul>
+
+<h3>Metrics Impact</h3>
+<p>Dialogues affect the <strong>Dialogue Quality Score (dialogueQuality)</strong>. Well-defined dialogues have purpose, multiple participants, and substantive exchanges. Empty or placeholder dialogues reduce this score.</p>
+
+<h2>Arc Tab</h2>
+
+<p>The Arc tab selects and displays the narrative arc template that guides story structure.</p>
+
+<h3>Available Arcs</h3>
+
+<table>
+  <tr>
+    <th>Arc</th>
+    <th>Beats</th>
+    <th>Best For</th>
+    <th>Origin</th>
+  </tr>
+  <tr>
+    <td>Hero's Journey</td>
+    <td>12</td>
+    <td>Epic adventures, transformations</td>
+    <td>Joseph Campbell</td>
+  </tr>
+  <tr>
+    <td>Three Act Structure</td>
+    <td>9</td>
+    <td>General fiction, screenplays</td>
+    <td>Aristotle/Hollywood</td>
+  </tr>
+  <tr>
+    <td>Save the Cat</td>
+    <td>15</td>
+    <td>Commercial fiction, detailed plotting</td>
+    <td>Blake Snyder</td>
+  </tr>
+  <tr>
+    <td>Story Circle</td>
+    <td>8</td>
+    <td>Character-focused stories</td>
+    <td>Dan Harmon</td>
+  </tr>
+  <tr>
+    <td>Kishotenketsu</td>
+    <td>4</td>
+    <td>Stories without central conflict</td>
+    <td>Japanese tradition</td>
+  </tr>
+  <tr>
+    <td>Five Act</td>
+    <td>5</td>
+    <td>Classical drama, tragedies</td>
+    <td>Freytag</td>
+  </tr>
+  <tr>
+    <td>Seven-Point</td>
+    <td>7</td>
+    <td>Novels with clear turning points</td>
+    <td>Dan Wells</td>
+  </tr>
+  <tr>
+    <td>Chapter Arc</td>
+    <td>5</td>
+    <td>Individual chapter structure</td>
+    <td>SCRIPTA</td>
+  </tr>
+  <tr>
+    <td>Scene Arc</td>
+    <td>3</td>
+    <td>Individual scene structure</td>
+    <td>SCRIPTA</td>
+  </tr>
+</table>
+
+<p>For detailed arc documentation, see <a href="#narrative" data-page="narrative">Narrative Structure</a>.</p>
+
+<h2>Blocks Tab</h2>
+
+<p>The Blocks tab manages reusable narrative building blocks - predefined templates for common story moments.</p>
+
+<h3>Block Categories</h3>
+
+<table>
+  <tr>
+    <th>Category</th>
+    <th>Blocks</th>
+  </tr>
+  <tr>
+    <td>Revelation</td>
+    <td>secret_revealed, identity_exposed, truth_discovered, prophecy_fulfilled</td>
+  </tr>
+  <tr>
+    <td>Conflict</td>
+    <td>confrontation, battle, argument, chase, standoff</td>
+  </tr>
+  <tr>
+    <td>Transformation</td>
+    <td>death_rebirth, sacrifice, redemption, corruption, enlightenment</td>
+  </tr>
+  <tr>
+    <td>Journey</td>
+    <td>crossing_threshold, tests_allies, approach_cave, return</td>
+  </tr>
+  <tr>
+    <td>Relationship</td>
+    <td>reunion, betrayal, rescue, farewell, alliance</td>
+  </tr>
+  <tr>
+    <td>Decision</td>
+    <td>choice, temptation, refusal, acceptance, dilemma</td>
+  </tr>
+</table>
+
+<h3>Using Blocks</h3>
+<p>Blocks can be assigned to scenes to indicate what type of narrative moment occurs. This helps with:</p>
+<ul>
+  <li>Ensuring variety of scene types</li>
+  <li>Aligning scenes with arc beats</li>
+  <li>Generating appropriate content</li>
+</ul>
+
+<h2>World Tab</h2>
+
+<p>The World tab defines rules that govern how your story's universe operates.</p>
+
+<h3>World Rule Categories</h3>
+
+<table>
+  <tr>
+    <th>Category</th>
+    <th>Examples</th>
+  </tr>
+  <tr>
+    <td>Physics</td>
+    <td>"Gravity is 50% of Earth's", "Light cannot escape the void"</td>
+  </tr>
+  <tr>
+    <td>Magic System</td>
+    <td>"Magic requires sacrifice", "Spells must rhyme", "Only women can channel"</td>
+  </tr>
+  <tr>
+    <td>Technology</td>
+    <td>"FTL travel causes temporal displacement", "AI is banned"</td>
+  </tr>
+  <tr>
+    <td>Society</td>
+    <td>"Caste system determines profession", "Dragons and humans coexist"</td>
+  </tr>
+  <tr>
+    <td>Biology</td>
+    <td>"Vampires cannot enter homes uninvited", "Elves live 1000 years"</td>
+  </tr>
+  <tr>
+    <td>Time</td>
+    <td>"Time flows differently in the fae realm", "Prophecies always come true"</td>
+  </tr>
+</table>
+
+<h3>CNL Output</h3>
+<pre><code>World has rule "Magic requires sacrifice"
+World has rule "Dragons can only be defeated by pure hearts"
+World has rule "The dead cannot be resurrected"</code></pre>
+
+<p>For complete world-building documentation, see <a href="#worldrules" data-page="worldrules">World Rules</a>.</p>
+
+<h2>Blueprint Tab</h2>
+
+<p>The Blueprint tab provides high-level story planning tools that connect abstract structure to concrete content.</p>
+
+<h3>Blueprint Components</h3>
+
+<h4>1. Arc Selection</h4>
+<p>Choose the narrative arc template that guides your story's structure.</p>
+
+<h4>2. Beat Mapping</h4>
+<p>Assign arc beats to specific chapters and scenes. Each mapping includes:</p>
+<ul>
+  <li><strong>Beat</strong>: The narrative beat (e.g., "Call to Adventure")</li>
+  <li><strong>Chapter</strong>: Which chapter contains this beat</li>
+  <li><strong>Scene</strong>: Optional specific scene</li>
+  <li><strong>Tension</strong>: Tension level at this point (1-5)</li>
+  <li><strong>Notes</strong>: Author notes about this beat</li>
+</ul>
+
+<h4>3. Tension Curve</h4>
+<p>Visual editor for the emotional intensity across your story. Points on the curve define tension levels at different story positions (0.0-1.0).</p>
+
+<h4>4. Subplots</h4>
+<p>Secondary story threads with:</p>
+<ul>
+  <li><strong>Name</strong>: Subplot identifier</li>
+  <li><strong>Type</strong>: romance, rivalry, mystery, growth, revenge, mentorship</li>
+  <li><strong>Characters</strong>: Who is involved</li>
+  <li><strong>Start Beat</strong>: Where it begins</li>
+  <li><strong>Resolve Beat</strong>: Where it concludes</li>
+  <li><strong>Touchpoints</strong>: Where it intersects main plot</li>
+</ul>
+
+<h2>Templates Tab</h2>
+
+<p>The Templates tab provides reusable pattern templates that can be instantiated in scenes.</p>
+
+<h3>Template Structure</h3>
+
+<p>Templates have:</p>
+<ul>
+  <li><strong>Variables</strong>: Placeholders for entities ($hero, $location, etc.)</li>
+  <li><strong>Body</strong>: Sequence of statements using variables</li>
+  <li><strong>Bindings</strong>: How variables map to actual entities when instantiated</li>
+</ul>
+
+<h3>Example Template</h3>
+<pre><code>"Mentor's Wisdom" is pattern
+"Mentor's Wisdom" has variable $student as character
+"Mentor's Wisdom" has variable $mentor as character
+"Mentor's Wisdom" has variable $lesson as theme
+
+"Mentor's Wisdom" has template begin
+  $mentor meets $student
+  $mentor reveals $lesson
+  $student transforms "gains understanding"
+"Mentor's Wisdom" has template end</code></pre>
+
+<h2>NL Tab</h2>
+
+<p>The NL (Natural Language) tab generates prose from your CNL specification.</p>
+
+<h3>Generation Options</h3>
+
+<ul>
+  <li><strong>Create Story</strong>: Generate complete prose narrative from specification</li>
+  <li><strong>Style</strong>: Literary style preferences</li>
+  <li><strong>Length</strong>: Target word count or detail level</li>
+  <li><strong>Focus</strong>: Specific chapters/scenes to generate</li>
+</ul>
+
+<h3>Output</h3>
+<p>The NL tab displays:</p>
+<ul>
+  <li>Generated prose text</li>
+  <li>Word count and statistics</li>
+  <li>Quality metrics for generated content</li>
+</ul>
+
+<h2>CNL Tab</h2>
+
+<p>The CNL tab shows the raw CNL specification generated by the visual editor.</p>
+
+<h3>Features</h3>
+
+<ul>
+  <li><strong>View</strong>: Read-only display of generated CNL</li>
+  <li><strong>Export</strong>: Download CNL as .cnl or .txt file</li>
+  <li><strong>Copy</strong>: Copy to clipboard</li>
+  <li><strong>Syntax Highlighting</strong>: Keywords and structure highlighted</li>
+</ul>
+
+<h3>Workflow</h3>
+<pre><code>Visual Editor → CNL (auto-generated) → Parser → AST → Metrics</code></pre>
+
+<p>Authors don't typically write CNL directly - they use the visual editor, which generates CNL automatically.</p>
+
+<h2>Tab Relationships</h2>
+
+<p>The tabs are interconnected:</p>
+
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                      BLUEPRINT                               │
+│   Arc Selection → Beat Mapping → Tension Curve → Subplots   │
+└─────────────────────────────┬───────────────────────────────┘
+                        │ guides
+                        ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      STRUCTURE                               │
+│         Book → Chapters → Scenes (with blocks)               │
+└─────────────────────────────┬───────────────────────────────┘
+                        │ references
+                        ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      LIBRARIES                               │
+│  Characters ←→ Relations      Locations    Objects          │
+│  Moods      Dialogues         World Rules  Themes           │
+│  Wisdom     Patterns          Templates                      │
+└─────────────────────────────┬───────────────────────────────┘
+                        │ generates
+                        ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      OUTPUTS                                 │
+│         CNL (specification) → NL (prose)                     │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+
+<h2>Related Documents</h2>
+
+<ul>
+  <li><a href="#conceptual-model" data-page="conceptual-model">Conceptual Model</a> - Detailed concept definitions</li>
+  <li><a href="#characters" data-page="characters">Characters</a> - Character theory and archetypes</li>
+  <li><a href="#narrative" data-page="narrative">Narrative Structure</a> - Arc documentation</li>
+  <li><a href="#worldrules" data-page="worldrules">World Rules</a> - World-building theory</li>
+  <li><a href="#patterns" data-page="patterns">Patterns</a> - Master plots and story patterns</li>
+</ul>

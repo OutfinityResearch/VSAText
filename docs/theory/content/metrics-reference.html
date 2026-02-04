@@ -1,0 +1,703 @@
+<h1>Metrics Reference</h1>
+
+<p>This comprehensive reference documents all SCRIPTA quality metrics, explaining what they measure, how they're calculated, and how to interpret and improve low scores.</p>
+
+<div class="info-box">
+  <div class="info-box-title">Metrics Philosophy</div>
+  <p>SCRIPTA metrics are <strong>deterministic</strong> - the same input always produces the same scores. This enables reproducible research, consistent evaluation, and reliable optimization. Metrics measure specification quality, not creative merit.</p>
+</div>
+
+<h2>Quick Reference</h2>
+
+<table>
+  <tr>
+    <th>Code</th>
+    <th>Name</th>
+    <th>Target</th>
+    <th>Measures</th>
+    <th>Spec</th>
+  </tr>
+  <tr>
+    <td><strong>NQS</strong></td>
+    <td>Narrative Quality Score</td>
+    <td>>= 25% improvement</td>
+    <td>Overall quality (master metric)</td>
+    <td><a href="../specs/DS23-Metric-Narrative-Quality-Score.md">DS23</a></td>
+  </tr>
+  <tr>
+    <td><strong>CS</strong></td>
+    <td>Coherence Score</td>
+    <td>> 75%</td>
+    <td>Story consistency and logic</td>
+    <td><a href="../specs/DS13-Metric-Coherence-Score.md">DS13</a></td>
+  </tr>
+  <tr>
+    <td><strong>CAD</strong></td>
+    <td>Character Attribute Drift</td>
+    <td>< 15%</td>
+    <td>Character trait consistency</td>
+    <td><a href="../specs/DS14-Metric-Character-Attribute-Drift.md">DS14</a></td>
+  </tr>
+  <tr>
+    <td><strong>CAR</strong></td>
+    <td>Compliance Adherence Rate</td>
+    <td>>= 99.9%</td>
+    <td>Safety guardrail compliance</td>
+    <td><a href="../specs/DS15-Metric-Compliance-Adherence-Rate.md">DS15</a></td>
+  </tr>
+  <tr>
+    <td><strong>OI</strong></td>
+    <td>Originality Index</td>
+    <td>> 80%</td>
+    <td>Trope/cliche avoidance</td>
+    <td><a href="../specs/DS16-Metric-Originality-Index.md">DS16</a></td>
+  </tr>
+  <tr>
+    <td><strong>EAP</strong></td>
+    <td>Emotional Arc Profile</td>
+    <td>r > 0.7</td>
+    <td>Arc alignment</td>
+    <td><a href="../specs/DS17-Metric-Emotional-Arc-Profile.md">DS17</a></td>
+  </tr>
+  <tr>
+    <td><strong>RQ</strong></td>
+    <td>Retrieval Quality</td>
+    <td>MRR > 0.6</td>
+    <td>Search effectiveness</td>
+    <td><a href="../specs/DS18-Metric-Retrieval-Quality.md">DS18</a></td>
+  </tr>
+  <tr>
+    <td><strong>CPSR</strong></td>
+    <td>CNL Parse Success Rate</td>
+    <td>>= 95%</td>
+    <td>Valid CNL syntax</td>
+    <td><a href="../specs/DS20-Metric-CNL-Parse-Success-Rate.md">DS20</a></td>
+  </tr>
+  <tr>
+    <td><strong>CSA</strong></td>
+    <td>Constraint Satisfaction Accuracy</td>
+    <td>>= 98%</td>
+    <td>Constraint compliance</td>
+    <td><a href="../specs/DS21-Metric-Constraint-Satisfaction-Accuracy.md">DS21</a></td>
+  </tr>
+  <tr>
+    <td><strong>XAI</strong></td>
+    <td>Explainability Score</td>
+    <td>>= 4.0/5.0</td>
+    <td>Explanation quality (human-rated)</td>
+    <td><a href="../specs/DS22-Metric-Explainability-Score.md">DS22</a></td>
+  </tr>
+</table>
+
+<h2>Coherence Analysis Metrics</h2>
+
+<p>In addition to the primary metrics, SCRIPTA includes six coherence analysis metrics that detect incoherent or random generation. See <a href="../specs/DS25-Metric-Coherence-Analysis.md">DS25</a> for technical details.</p>
+
+<table>
+  <tr>
+    <th>Metric</th>
+    <th>Target</th>
+    <th>Measures</th>
+  </tr>
+  <tr>
+    <td>Character Continuity</td>
+    <td>>= 60%</td>
+    <td>Characters appear in multiple scenes</td>
+  </tr>
+  <tr>
+    <td>Location Logic</td>
+    <td>>= 50%</td>
+    <td>Locations are reused logically</td>
+  </tr>
+  <tr>
+    <td>Action Coherence</td>
+    <td>>= 80%</td>
+    <td>Actions reference valid entities</td>
+  </tr>
+  <tr>
+    <td>Scene Completeness</td>
+    <td>>= 70%</td>
+    <td>Scenes have required elements</td>
+  </tr>
+  <tr>
+    <td>Relationship Usage</td>
+    <td>>= 50%</td>
+    <td>Defined relationships manifest in story</td>
+  </tr>
+  <tr>
+    <td>Dialogue Quality</td>
+    <td>>= 60%</td>
+    <td>Dialogues are well-structured</td>
+  </tr>
+</table>
+
+<h2>Detailed Metric Documentation</h2>
+
+<h3 id="nqs">NQS - Narrative Quality Score</h3>
+
+<p><strong>Purpose:</strong> The master metric that combines automated analysis with human judgment to measure overall story quality.</p>
+
+<p><strong>Technical Specification:</strong> <a href="../specs/DS23-Metric-Narrative-Quality-Score.md">DS23-Metric-Narrative-Quality-Score.md</a></p>
+
+<h4>Formula</h4>
+<pre><code>NQS = 0.5 × CS + 0.5 × H
+
+Where:
+  CS = Coherence Score (automated)
+  H  = Human Overall Rating (normalized to 0-1)</code></pre>
+
+<p>For automated-only evaluation (no human raters), the formula uses weighted component metrics:</p>
+
+<pre><code>NQS = 
+  completeness × 0.12 +
+  cs × 0.12 + 
+  (1 - min(1, cad × 4)) × 0.08 +
+  oi × 0.08 + 
+  eap × 0.10 + 
+  cpsr × 0.08 + 
+  csa × 0.08 + 
+  explainability × 0.08 +
+  charContinuity × 0.08 +
+  locLogic × 0.06 +
+  actionCoherence × 0.06 +
+  sceneCompleteness × 0.06</code></pre>
+
+<h4>Success Threshold</h4>
+<p>NQS must improve by <strong>>= 25%</strong> compared to baseline (Variant A - simple prompting without specification).</p>
+
+<h4>Interpretation</h4>
+<table>
+  <tr>
+    <th>Score Range</th>
+    <th>Interpretation</th>
+    <th>Action</th>
+  </tr>
+  <tr>
+    <td>< 50%</td>
+    <td>Poor quality, major issues</td>
+    <td>Regenerate or major revision</td>
+  </tr>
+  <tr>
+    <td>50-70%</td>
+    <td>Acceptable but needs work</td>
+    <td>Fix identified issues</td>
+  </tr>
+  <tr>
+    <td>70-85%</td>
+    <td>Good quality</td>
+    <td>Minor refinements</td>
+  </tr>
+  <tr>
+    <td>> 85%</td>
+    <td>Excellent quality</td>
+    <td>Ready for use</td>
+  </tr>
+</table>
+
+<hr>
+
+<h3 id="cs">CS - Coherence Score</h3>
+
+<p><strong>Purpose:</strong> Measures how well a story holds together as a unified narrative with consistent characters, logical cause-and-effect chains, and no contradictions.</p>
+
+<p><strong>Technical Specification:</strong> <a href="../specs/DS13-Metric-Coherence-Score.md">DS13-Metric-Coherence-Score.md</a></p>
+
+<h4>Components</h4>
+
+<table>
+  <tr>
+    <th>Component</th>
+    <th>Weight</th>
+    <th>What It Measures</th>
+  </tr>
+  <tr>
+    <td>Entity Continuity (EC)</td>
+    <td>0.50</td>
+    <td>Do entities persist across adjacent scenes?</td>
+  </tr>
+  <tr>
+    <td>Causal Chains (CC)</td>
+    <td>0.40</td>
+    <td>Do actions have causes and effects?</td>
+  </tr>
+  <tr>
+    <td>Logic Violation Penalty (LVP)</td>
+    <td>-0.30</td>
+    <td>Errors like orphan references, impossible transitions</td>
+  </tr>
+</table>
+
+<h4>Formula</h4>
+<pre><code>CS = clamp(0.50 × EC + 0.40 × CC - 0.30 × LVP, 0, 1)
+
+Entity Continuity (Jaccard Similarity):
+  EC_i = |E(scene_i) ∩ E(scene_i+1)| / |E(scene_i) ∪ E(scene_i+1)|
+  EC = average(EC_i) for all adjacent scene pairs
+
+Causal Chain Score:
+  For each adjacent pair (scene_i, scene_i+1):
+    shared = characters in both scenes
+    has_cause = scene_i contains cause verb (threatens, decides, reveals...)
+    has_effect = scene_i+1 contains effect verb (escapes, confronts, resolves...)
+    
+    CC_i = 1.0 if has_cause AND has_effect
+   = 0.7 if shared non-empty AND (has_cause OR has_effect)
+   = 0.4 if shared non-empty
+   = 0.0 otherwise
+  CC = average(CC_i)
+
+Logic Violation Penalty:
+  LVP = min(1.0, violation_count / scene_count)</code></pre>
+
+<h4>Target</h4>
+<p><strong>CS > 75%</strong></p>
+
+<h4>How to Improve Low CS</h4>
+<ul>
+  <li><strong>Low EC</strong>: Ensure characters persist across scenes; don't introduce entirely new casts per scene</li>
+  <li><strong>Low CC</strong>: Add cause-effect relationships; if someone threatens in scene 1, show the consequence in scene 2</li>
+  <li><strong>High LVP</strong>: Fix orphan references, ensure all referenced entities are declared</li>
+</ul>
+
+<hr>
+
+<h3 id="cad">CAD - Character Attribute Drift</h3>
+
+<p><strong>Purpose:</strong> Measures whether characters stay true to their defined traits throughout the story. If Anna is defined as "courageous," she shouldn't act cowardly without explanation.</p>
+
+<p><strong>Technical Specification:</strong> <a href="../specs/DS14-Metric-Character-Attribute-Drift.md">DS14-Metric-Character-Attribute-Drift.md</a></p>
+
+<h4>How It Works</h4>
+
+<ol>
+  <li><strong>Create baseline</strong>: Build a vector representation of each character's traits from their specification</li>
+  <li><strong>Analyze portrayal</strong>: Divide story into windows (~10,000 tokens), extract how characters are portrayed</li>
+  <li><strong>Measure drift</strong>: Compare portrayal vectors to baseline using cosine similarity</li>
+  <li><strong>Calculate CAD</strong>: Average drift across all characters and windows</li>
+</ol>
+
+<pre><code>drift = 1 - cosine_similarity(baseline_vector, portrayal_vector)
+CAD = average(drift across all characters and windows)</code></pre>
+
+<h4>Target</h4>
+<p><strong>CAD < 15%</strong> (lower is better - less drift is good)</p>
+
+<h4>How to Improve High CAD</h4>
+<ul>
+  <li>Limit characters to 2-4 core traits (too many traits are hard to maintain)</li>
+  <li>Ensure character actions align with their traits</li>
+  <li>If a character must act against type, provide narrative justification</li>
+  <li>Review character aliases to ensure all mentions are tracked</li>
+</ul>
+
+<hr>
+
+<h3 id="car">CAR - Compliance Adherence Rate</h3>
+
+<p><strong>Purpose:</strong> Measures the percentage of generated content that passes safety and quality guardrails.</p>
+
+<p><strong>Technical Specification:</strong> <a href="../specs/DS15-Metric-Compliance-Adherence-Rate.md">DS15-Metric-Compliance-Adherence-Rate.md</a></p>
+
+<h4>Guardrail Categories</h4>
+
+<table>
+  <tr>
+    <th>Category</th>
+    <th>What It Catches</th>
+  </tr>
+  <tr>
+    <td>Bias/Stereotypes</td>
+    <td>Harmful generalizations about groups</td>
+  </tr>
+  <tr>
+    <td>PII (Personal Info)</td>
+    <td>Real names, addresses, phone numbers</td>
+  </tr>
+  <tr>
+    <td>Harmful Content</td>
+    <td>Violence, illegal activity instructions</td>
+  </tr>
+  <tr>
+    <td>Plagiarism</td>
+    <td>Copying published works</td>
+  </tr>
+  <tr>
+    <td>Cliches</td>
+    <td>Overused phrases</td>
+  </tr>
+</table>
+
+<h4>Formula</h4>
+<pre><code>CAR_strict = pass_count / total_artifacts
+CAR_lenient = (pass_count + warn_count) / total_artifacts</code></pre>
+
+<h4>Target</h4>
+<p><strong>CAR_strict >= 99.9%</strong></p>
+
+<hr>
+
+<h3 id="oi">OI - Originality Index</h3>
+
+<p><strong>Purpose:</strong> Measures how different a story is from known cliches and tropes. Higher scores mean more original content.</p>
+
+<p><strong>Technical Specification:</strong> <a href="../specs/DS16-Metric-Originality-Index.md">DS16-Metric-Originality-Index.md</a></p>
+
+<h4>How It Works</h4>
+
+<ol>
+  <li>Encode the story as a vector (bag-of-words or VSA)</li>
+  <li>Compare against a corpus of ~200 known tropes</li>
+  <li>Find the maximum similarity to any trope</li>
+  <li>Originality = 1 - max_similarity</li>
+</ol>
+
+<pre><code>OI = 1 - max(similarity(story, trope) for trope in corpus)</code></pre>
+
+<h4>Target</h4>
+<p><strong>OI > 80%</strong> (story is at most 20% similar to any known trope)</p>
+
+<h4>Common Tropes Detected</h4>
+<ul>
+  <li>Chosen One</li>
+  <li>Dead Mentor</li>
+  <li>Dark Lord</li>
+  <li>Love Triangle</li>
+  <li>Mysterious Stranger</li>
+</ul>
+
+<hr>
+
+<h3 id="eap">EAP - Emotional Arc Profile</h3>
+
+<p><strong>Purpose:</strong> Measures how well a story's emotional journey matches its intended arc. Good stories take readers on deliberate emotional journeys.</p>
+
+<p><strong>Technical Specification:</strong> <a href="../specs/DS17-Metric-Emotional-Arc-Profile.md">DS17-Metric-Emotional-Arc-Profile.md</a></p>
+
+<h4>How It Works</h4>
+
+<ol>
+  <li><strong>Build target arc</strong>: From the selected narrative arc, extract expected valence at each position</li>
+  <li><strong>Measure actual arc</strong>: For each scene, calculate emotional valence from moods or text analysis</li>
+  <li><strong>Calculate correlation</strong>: Pearson correlation between target and actual arcs</li>
+</ol>
+
+<pre><code>Valence scale:
+  1.0 = very positive (joy, triumph)
+  0.5 = neutral
+  0.0 = very negative (despair, fear)
+
+Correlation r = covariance(target, measured) / (std(target) × std(measured))
+
+For reporting: EAP = (r + 1) / 2  // Normalize to 0-1</code></pre>
+
+<h4>Target</h4>
+<p><strong>Pearson correlation r > 0.7</strong></p>
+
+<h4>How to Improve Low EAP</h4>
+<ul>
+  <li>Assign moods to all scenes</li>
+  <li>Ensure moods follow the arc pattern (rising tension toward climax)</li>
+  <li>Check that scene positions match beat expectations</li>
+</ul>
+
+<hr>
+
+<h3 id="cpsr">CPSR - CNL Parse Success Rate</h3>
+
+<p><strong>Purpose:</strong> Measures how reliably the system converts input into valid CNL. This is a pipeline reliability metric, not a story quality metric.</p>
+
+<p><strong>Technical Specification:</strong> <a href="../specs/DS20-Metric-CNL-Parse-Success-Rate.md">DS20-Metric-CNL-Parse-Success-Rate.md</a></p>
+
+<h4>What Counts as Success</h4>
+
+<ul>
+  <li><strong>Parses without syntax errors</strong>: No unclosed quotes, invalid nesting</li>
+  <li><strong>Validates semantically</strong>: No orphan references, valid constraints</li>
+</ul>
+
+<h4>Formula</h4>
+<pre><code>CPSR = successful_parses / total_attempts</code></pre>
+
+<h4>Target</h4>
+<p><strong>CPSR >= 95%</strong></p>
+
+<hr>
+
+<h3 id="csa">CSA - Constraint Satisfaction Accuracy</h3>
+
+<p><strong>Purpose:</strong> Measures how well generated content respects the rules specified in CNL. If the author says "forbids violence," does the output avoid violence?</p>
+
+<p><strong>Technical Specification:</strong> <a href="../specs/DS21-Metric-Constraint-Satisfaction-Accuracy.md">DS21-Metric-Constraint-Satisfaction-Accuracy.md</a></p>
+
+<h4>Constraint Types</h4>
+
+<table>
+  <tr>
+    <th>Constraint</th>
+    <th>How Satisfaction Is Checked</th>
+  </tr>
+  <tr>
+    <td><code>requires "X"</code></td>
+    <td>X appears in scope (token match, entity reference, or event)</td>
+  </tr>
+  <tr>
+    <td><code>forbids "X"</code></td>
+    <td>X does NOT appear in scope</td>
+  </tr>
+  <tr>
+    <td><code>must action target</code></td>
+    <td>Event with matching verb and target exists in scope</td>
+  </tr>
+  <tr>
+    <td><code>has tone value</code></td>
+    <td>Tone is declared or detected via text analysis</td>
+  </tr>
+  <tr>
+    <td><code>has max/min count</code></td>
+    <td>Count of items in scope respects limit</td>
+  </tr>
+</table>
+
+<h4>Formula</h4>
+<pre><code>CSA = satisfied_constraints / total_constraints</code></pre>
+
+<h4>Target</h4>
+<p><strong>CSA >= 98%</strong></p>
+
+<hr>
+
+<h3 id="coherence-analysis">Coherence Analysis Metrics</h3>
+
+<p>These six metrics detect random, inconsistent, or incoherent story generation.</p>
+
+<p><strong>Technical Specification:</strong> <a href="../specs/DS25-Metric-Coherence-Analysis.md">DS25-Metric-Coherence-Analysis.md</a></p>
+
+<h4>1. Character Continuity (charContinuity)</h4>
+
+<p><strong>What it measures:</strong> Do characters appear consistently across the narrative?</p>
+
+<pre><code>charsInMultiple = count of characters appearing in 2+ scenes
+heroPresence = hero appearances / total scenes
+
+charContinuity = (charsInMultiple / totalCharacters) × 0.5 
+         + min(1, heroPresence) × 0.5</code></pre>
+
+<p><strong>Target:</strong> >= 60%</p>
+
+<p><strong>Failure indicators:</strong></p>
+<ul>
+  <li>< 30%: Most characters appear only once (random assignment)</li>
+  <li>30-60%: Some continuity but protagonist may be missing from scenes</li>
+  <li>>= 60%: Good character continuity</li>
+</ul>
+
+<h4>2. Location Logic (locLogic)</h4>
+
+<p><strong>What it measures:</strong> Are locations reused logically or is there random scene-hopping?</p>
+
+<pre><code>locsReused = count of locations appearing 2+ times
+avgLocUsage = sum(location appearances) / total locations
+expectedUsage = max(3, sceneCount / 3)
+
+locLogic = min(1, (locsReused / totalLocations) × 0.5 
+       + (avgLocUsage / expectedUsage) × 0.5)</code></pre>
+
+<p><strong>Target:</strong> >= 50%</p>
+
+<p><strong>Failure indicators:</strong></p>
+<ul>
+  <li>< 25%: Every scene has a different location (incoherent)</li>
+  <li>25-50%: Some location reuse but mostly random</li>
+  <li>>= 50%: Locations are reused appropriately</li>
+</ul>
+
+<h4>3. Action Coherence (actionCoherence)</h4>
+
+<p><strong>What it measures:</strong> Do actions reference valid, known entities?</p>
+
+<pre><code>For each action:
+  - subject should be a known character
+  - target should be a known entity (or empty)
+  
+valid = count of actions with valid subject AND target
+actionCoherence = valid / totalActions</code></pre>
+
+<p><strong>Target:</strong> >= 80%</p>
+
+<h4>4. Scene Completeness (sceneCompleteness)</h4>
+
+<p><strong>What it measures:</strong> Does each scene have minimum required elements?</p>
+
+<pre><code>For each scene, check:
+  - At least one character reference
+  - At least one location reference
+  - At least one action OR dialogue
+  
+complete = count of scenes with all three
+sceneCompleteness = complete / totalScenes</code></pre>
+
+<p><strong>Target:</strong> >= 70%</p>
+
+<h4>5. Relationship Usage (relUsage)</h4>
+
+<p><strong>What it measures:</strong> Are defined relationships actually used in the story?</p>
+
+<pre><code>For each defined relationship (A → B):
+  Check if A and B appear together in any scene
+  
+usedPairs = count of relationships where both appear in same scene
+relUsage = min(1, usedPairs / totalRelationships)</code></pre>
+
+<p><strong>Target:</strong> >= 50%</p>
+
+<h4>6. Dialogue Quality (dialogueQuality)</h4>
+
+<p><strong>What it measures:</strong> Are dialogues well-structured and purposeful?</p>
+
+<pre><code>For each dialogue, score 0-1:
+  +0.25 if has purpose defined
+  +0.25 if has 2+ participants
+  +0.25 if has at least 1 exchange
+  +0.25 if exchanges have content (intent or sketch)
+
+dialogueQuality = sum(scores) / totalDialogues</code></pre>
+
+<p><strong>Target:</strong> >= 60%</p>
+
+<h2>Overall Coherence Assessment</h2>
+
+<table>
+  <tr>
+    <th>Average Coherence Score</th>
+    <th>Interpretation</th>
+  </tr>
+  <tr>
+    <td>< 30%</td>
+    <td><strong>Garbage</strong>: Random/incoherent generation</td>
+  </tr>
+  <tr>
+    <td>30-50%</td>
+    <td><strong>Poor</strong>: Major structural issues</td>
+  </tr>
+  <tr>
+    <td>50-70%</td>
+    <td><strong>Fair</strong>: Some coherence, needs improvement</td>
+  </tr>
+  <tr>
+    <td>70-85%</td>
+    <td><strong>Good</strong>: Mostly coherent narrative</td>
+  </tr>
+  <tr>
+    <td>> 85%</td>
+    <td><strong>Excellent</strong>: Well-structured story</td>
+  </tr>
+</table>
+
+<h2>Diagnostic Guide</h2>
+
+<table>
+  <tr>
+    <th>Low Metric</th>
+    <th>Likely Problem</th>
+    <th>Fix</th>
+  </tr>
+  <tr>
+    <td>charContinuity < 40%</td>
+    <td>Characters randomly assigned per scene</td>
+    <td>Ensure protagonist appears in most scenes; reuse key characters</td>
+  </tr>
+  <tr>
+    <td>locLogic < 30%</td>
+    <td>No spatial coherence</td>
+    <td>Return to key locations; don't create new location for every scene</td>
+  </tr>
+  <tr>
+    <td>actionCoherence < 60%</td>
+    <td>Actions reference non-existent entities</td>
+    <td>Declare all entities before referencing them in actions</td>
+  </tr>
+  <tr>
+    <td>sceneCompleteness < 50%</td>
+    <td>Scenes are fragments</td>
+    <td>Each scene needs who, where, and what happens</td>
+  </tr>
+  <tr>
+    <td>relUsage < 30%</td>
+    <td>Relationships decorative only</td>
+    <td>Put related characters in scenes together</td>
+  </tr>
+  <tr>
+    <td>dialogueQuality < 40%</td>
+    <td>Empty placeholder dialogues</td>
+    <td>Add purpose, participants, and exchanges to dialogues</td>
+  </tr>
+  <tr>
+    <td>EAP < 50%</td>
+    <td>Emotional arc doesn't match template</td>
+    <td>Assign appropriate moods; check beat positions</td>
+  </tr>
+  <tr>
+    <td>CS < 60%</td>
+    <td>Story doesn't hold together</td>
+    <td>Fix orphan references; add cause-effect chains</td>
+  </tr>
+</table>
+
+<h2>Human Evaluation Protocol</h2>
+
+<p>Some metrics require human judgment. See <a href="../specs/DS12-Metrics-Interpreter.md">DS12</a> for the complete protocol.</p>
+
+<h3>Rating Dimensions</h3>
+
+<table>
+  <tr>
+    <th>Dimension</th>
+    <th>What Raters Evaluate</th>
+  </tr>
+  <tr>
+    <td>Coherence (H_CO)</td>
+    <td>Does the plot make sense? Are events logically connected?</td>
+  </tr>
+  <tr>
+    <td>Character Integrity (H_CH)</td>
+    <td>Do characters act consistently with established traits?</td>
+  </tr>
+  <tr>
+    <td>Style & Readability (H_ST)</td>
+    <td>Is the writing clear and engaging?</td>
+  </tr>
+  <tr>
+    <td>Ethical Integrity (H_ET)</td>
+    <td>Is content free from harmful stereotypes or bias?</td>
+  </tr>
+  <tr>
+    <td>Overall (H_OV)</td>
+    <td>Overall impression of narrative quality</td>
+  </tr>
+</table>
+
+<h3>Inter-Rater Agreement</h3>
+<p>We use <strong>Cohen's weighted kappa</strong> to measure agreement between raters. Required threshold: <strong>kappa >= 0.6</strong> (substantial agreement).</p>
+
+<h2>Statistical Analysis</h2>
+
+<h3>ANOVA for Variant Comparison</h3>
+<p>When comparing generation strategies (Random vs LLM vs Advanced), use ANOVA to determine if differences are statistically significant.</p>
+
+<h3>Effect Size (Cohen's d)</h3>
+<p>Measure practical significance of improvements:</p>
+<ul>
+  <li>d = 0.2: Small effect</li>
+  <li>d = 0.5: Medium effect</li>
+  <li>d = 0.8+: Large effect</li>
+</ul>
+<p>SCRIPTA targets <strong>d >= 0.5</strong> for meaningful improvement claims.</p>
+
+<h2>Related Documents</h2>
+
+<ul>
+  <li><a href="#generation" data-page="generation">Generation Strategies</a> - How metrics guide optimization</li>
+  <li><a href="#end-to-end" data-page="end-to-end">End-to-End Example</a> - Metrics in practice</li>
+  <li><a href="../specs/DS03-Research-Evaluation.md">DS03 - Research Framework</a> (Technical)</li>
+  <li><a href="../specs/DS12-Metrics-Interpreter.md">DS12 - Metrics Interpreter</a> (Technical)</li>
+</ul>

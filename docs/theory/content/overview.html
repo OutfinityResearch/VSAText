@@ -1,0 +1,168 @@
+<h1>SCRIPTA Research Studio</h1>
+
+<p>SCRIPTA (Structured Creative Writing Intelligent Platform for Textual Authoring) is a Visual Story Composer that enables authors to build narrative specifications through an intuitive visual interface.</p>
+
+<div class="info-box">
+  <div class="info-box-title">Key Concept</div>
+  <p>Think of CNL as a programming language for narratives. The visual editor is like an IDE, and the CNL is the source code that describes your story's structure.</p>
+</div>
+
+<h2>Features</h2>
+
+<div class="feature-grid">
+  <div class="feature-card">
+    <h4>Build Structure</h4>
+    <p>Create chapters, scenes, and beats in a hierarchical tree with drag-and-drop.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Define Characters</h4>
+    <p>Create characters with archetypes, traits, and relationships.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Set the Scene</h4>
+    <p>Design locations with geography, atmosphere, and time periods.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Plan Emotionally</h4>
+    <p>Use blueprints and emotional arcs to control tension and mood.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Generate Stories</h4>
+    <p>Use Random, LLM, or Advanced strategies to generate specifications.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Measure Quality</h4>
+    <p>Real-time metrics evaluate coherence, completeness, and quality.</p>
+  </div>
+</div>
+
+<h2>Core Documentation</h2>
+
+<p>These pages provide fundamental understanding of SCRIPTA's concepts and capabilities:</p>
+
+<div class="feature-grid">
+  <div class="feature-card">
+    <h4><a href="#conceptual-model" data-page="conceptual-model">Conceptual Model & Glossary</a></h4>
+    <p>Central reference for all SCRIPTA concepts: Chapter, Scene, Beat, Block, Pattern, Wisdom, Theme, and how they connect.</p>
+  </div>
+  <div class="feature-card">
+    <h4><a href="#cnl-language" data-page="cnl-language">CNL Language Reference</a></h4>
+    <p>Complete grammar, semantics, and examples for the Controlled Natural Language specification format.</p>
+  </div>
+  <div class="feature-card">
+    <h4><a href="#elements" data-page="elements">Story Elements Guide</a></h4>
+    <p>Documentation for all editor tabs: Characters, Relations, Locations, Moods, Dialogues, Arc, Blueprint, and more.</p>
+  </div>
+  <div class="feature-card">
+    <h4><a href="#generation" data-page="generation">Generation Strategies</a></h4>
+    <p>How Random, LLM, and Advanced generation work: pipelines, algorithms, and metric-driven optimization.</p>
+  </div>
+  <div class="feature-card">
+    <h4><a href="#end-to-end" data-page="end-to-end">End-to-End Example</a></h4>
+    <p>Complete workflow from building libraries to CNL export, prose generation, evaluation, and metric-guided iteration.</p>
+  </div>
+  <div class="feature-card">
+    <h4><a href="#metrics-reference" data-page="metrics-reference">Metrics Reference</a></h4>
+    <p>Comprehensive metrics documentation with formulas, thresholds, and links to technical specifications (DS12-DS25).</p>
+  </div>
+</div>
+
+<h2>Quick Start</h2>
+
+<h3>1. Generate a Story</h3>
+<p>Click <strong>Create Specs</strong> in the left panel. Choose genre, length, complexity, then select a strategy:</p>
+<ul>
+  <li><strong>Random (Fast)</strong> - Instant generation using templates</li>
+  <li><strong>With LLM</strong> - AI-powered creative generation</li>
+  <li><strong>Advanced</strong> - Multi-pass optimization</li>
+  <li><strong>Guided Wizard</strong> - Step-by-step configuration</li>
+</ul>
+
+<h3>2. Explore the Tabs</h3>
+<p>After generation, explore the tabs: CNL, NL, Blueprint, Templates, Characters, Relations, Locations, Objects, Moods, Dialogues, Arc, Blocks, World, Themes, Wisdom, Patterns.</p>
+
+<h3>3. Export</h3>
+<p>Click <strong>Export CNL</strong> to download your story specification. Use <strong>Create Story</strong> in the NL tab to generate prose.</p>
+
+<h2>CNL Syntax</h2>
+
+<pre><code>// Character definition
+Anna is hero
+Anna has trait courage
+
+// Relationship
+Anna relates to Gandalf as mentor_student
+
+// Scene structure
+Sc1 group begin
+  Sc1 has title "The Beginning"
+  Anna discovers artifact
+Sc1 group end
+
+// World rule
+World has rule "Magic requires sacrifice"</code></pre>
+
+<h2>Generation Strategies</h2>
+
+<table>
+  <tr>
+    <th>Strategy</th>
+    <th>Speed</th>
+    <th>Quality</th>
+  </tr>
+  <tr>
+    <td>Random</td>
+    <td>Instant</td>
+    <td>65-80% NQS</td>
+  </tr>
+  <tr>
+    <td>With LLM</td>
+    <td>10-30s</td>
+    <td>75-90% NQS</td>
+  </tr>
+  <tr>
+    <td>Advanced</td>
+    <td>5-15s</td>
+    <td>80-95% NQS</td>
+  </tr>
+</table>
+
+<h2>Quality Metrics</h2>
+
+<table>
+  <tr>
+    <th>Metric</th>
+    <th>Target</th>
+    <th>Measures</th>
+  </tr>
+  <tr>
+    <td>NQS</td>
+    <td>≥70%</td>
+    <td>Overall narrative quality</td>
+  </tr>
+  <tr>
+    <td>Completeness</td>
+    <td>≥80%</td>
+    <td>Required elements present</td>
+  </tr>
+  <tr>
+    <td>Coherence</td>
+    <td>≥75%</td>
+    <td>Entity consistency</td>
+  </tr>
+  <tr>
+    <td>EAP</td>
+    <td>≥70%</td>
+    <td>Emotional arc coverage</td>
+  </tr>
+</table>
+
+<h2>API Endpoints</h2>
+
+<pre><code>GET  /v1/projects          - List projects
+POST /v1/projects          - Create project
+GET  /v1/projects/:id      - Load project
+PUT  /v1/projects/:id      - Update project
+
+POST /v1/generate/llm      - Generate with LLM
+POST /v1/generate/nl-story - Generate prose from CNL</code></pre>

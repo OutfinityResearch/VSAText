@@ -1,0 +1,695 @@
+<h1>Generation Strategies</h1>
+
+<p>This document explains how SCRIPTA generates story specifications, detailing the algorithms, pipelines, and optimization processes for each strategy.</p>
+
+<div class="info-box">
+  <div class="info-box-title">What is Generated?</div>
+  <p>SCRIPTA generates <strong>story specifications</strong> (CNL documents), not prose. The specification describes characters, locations, structure, and constraints. Prose generation (NL) is a separate step that uses the specification as input.</p>
+</div>
+
+<h2>Strategy Overview</h2>
+
+<table>
+  <tr>
+    <th>Strategy</th>
+    <th>Speed</th>
+    <th>Quality (NQS)</th>
+    <th>API Required</th>
+    <th>Best For</th>
+  </tr>
+  <tr>
+    <td><strong>Random</strong></td>
+    <td>Instant (~100ms)</td>
+    <td>65-80%</td>
+    <td>No</td>
+    <td>Quick prototyping, offline use</td>
+  </tr>
+  <tr>
+    <td><strong>With LLM</strong></td>
+    <td>Slow (10-30s)</td>
+    <td>75-90%</td>
+    <td>Yes</td>
+    <td>Creative, nuanced stories</td>
+  </tr>
+  <tr>
+    <td><strong>Advanced</strong></td>
+    <td>Medium (5-15s)</td>
+    <td>80-95%</td>
+    <td>Optional</td>
+    <td>Best metric scores, coherence</td>
+  </tr>
+</table>
+
+<h2>Random Generation Strategy</h2>
+
+<h3>Overview</h3>
+<p>Fast, deterministic generation using predefined vocabularies and randomized templates. Produces complete story specifications instantly without external dependencies.</p>
+
+<h3>Pipeline</h3>
+
+<pre><code>┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐
+│   User      │ => │   Genre      │ => │  Vocabulary │ => │  Structure  │
+│   Options   │    │   Config     │    │  Selection  │    │  Generation │
+└─────────────┘    └──────────────┘    └─────────────┘    └──────┬──────┘
+                                                            │
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐           │
+│   Save      │ <= │   Tension    │ <= │  Arc        │ <=========┘
+│   Snapshot  │    │   Curve      │    │  Mapping    │
+└─────────────┘    └──────────────┘    └─────────────┘</code></pre>
+
+<h3>Algorithm Steps</h3>
+
+<h4>Step 1: Genre Configuration</h4>
+<p>Select genre-specific vocabularies:</p>
+<ul>
+  <li><strong>Fantasy</strong>: Hero, Wizard, Dark Lord, Kingdom, Forest, Magic artifact</li>
+  <li><strong>Sci-Fi</strong>: Captain, Scientist, AI, Spaceship, Planet, Technology</li>
+  <li><strong>Mystery</strong>: Detective, Victim, Suspect, Crime scene, Evidence</li>
+  <li><strong>Romance</strong>: Lovers, Rival, Confidant, Meeting place, Token of affection</li>
+  <li><strong>Horror</strong>: Survivor, Monster, Haunted location, Cursed object</li>
+</ul>
+
+<h4>Step 2: Character Generation</h4>
+<pre><code>for i = 1 to characterCount:
+  name = pickRandom(genreNames)
+  if i == 1:
+    archetype = 'Hero'
+    type = 'protagonist'
+  else if i == 2 and genre.hasAntagonist:
+    archetype = 'Shadow'
+    type = 'antagonist'
+  else:
+    archetype = pickRandom(['Mentor', 'Ally', 'Herald', 'Trickster'])
+    type = 'character'
+  
+  traits = pickRandom(genreTraits, 2-4)
+  
+  characters.add({name, type, archetype, traits})</code></pre>
+
+<h4>Step 3: Relationship Generation</h4>
+<pre><code>// Auto-generate relationships based on archetypes
+for each pair (char1, char2):
+  if char1.archetype == 'Hero' and char2.archetype == 'Mentor':
+    relationship = 'mentor_student'
+  else if char1.archetype == 'Hero' and char2.archetype == 'Shadow':
+    relationship = 'enemy'
+  else if random() < 0.3:
+    relationship = pickRandom(['ally', 'friend', 'sibling', 'rival'])
+  
+  if relationship:
+    relationships.add({from: char1, to: char2, type: relationship})</code></pre>
+
+<h4>Step 4: Location Generation</h4>
+<pre><code>locationCount = based on length parameter
+for i = 1 to locationCount:
+  geography = pickRandom(genreGeographies)
+  atmosphere = pickRandom(genreAtmospheres)
+  characteristic = pickRandom(genreCharacteristics)
+  
+  locations.add({name, geography, atmosphere, characteristic})</code></pre>
+
+<h4>Step 5: Structure Generation</h4>
+<pre><code>sceneCount = length == 'short' ? 3-5 : length == 'medium' ? 8-12 : 15-20
+chaptersNeeded = ceil(sceneCount / 3)
+
+for chapter = 1 to chaptersNeeded:
+  scenesInChapter = min(3, remainingScenes)
+  for scene = 1 to scenesInChapter:
+    sceneCharacters = pickRandom(characters, 1-3)
+    sceneLocation = pickRandom(locations)
+    sceneMood = pickRandom(moods)
+    
+    // Generate actions based on position
+    if position < 0.25:
+actions = ['discovers', 'meets', 'enters']
+    else if position < 0.75:
+actions = ['confronts', 'faces', 'reveals']
+    else:
+actions = ['defeats', 'resolves', 'returns']
+    
+    scenes.add({characters, location, mood, actions})</code></pre>
+
+<h4>Step 6: Arc Mapping</h4>
+<pre><code>selectedArc = NARRATIVE_ARCS[arcKey]
+for each beat in selectedArc.beats:
+  // Find scene at appropriate position
+  targetPosition = beat.position
+  sceneIndex = floor(targetPosition * totalScenes)
+  
+  beatMappings.add({
+    beatKey: beat.key,
+    chapterId: scenes[sceneIndex].chapter,
+    sceneId: scenes[sceneIndex].id,
+    tension: calculateTension(beat.position)
+  })</code></pre>
+
+<h4>Step 7: Tension Curve Calculation</h4>
+<pre><code>// Generate tension based on arc position
+for each scene at position p:
+  if p < 0.25:
+    tension = 1 + p * 4           // Rising from 1 to 2
+  else if p < 0.50:
+    tension = 2 + (p - 0.25) * 4  // Rising from 2 to 3
+  else if p < 0.75:
+    tension = 3 + (p - 0.50) * 4  // Rising from 3 to 4
+  else if p < 0.90:
+    tension = 5                   // Climax at 5
+  else:
+    tension = 5 - (p - 0.90) * 30 // Falling to resolution
+    
+  tensionCurve.add({position: p, tension})</code></pre>
+
+<h3>Input Parameters</h3>
+
+<table>
+  <tr>
+    <th>Parameter</th>
+    <th>Values</th>
+    <th>Effect</th>
+  </tr>
+  <tr>
+    <td>Genre</td>
+    <td>fantasy, scifi, mystery, romance, horror, adventure, drama, comedy</td>
+    <td>Determines vocabularies and archetypes used</td>
+  </tr>
+  <tr>
+    <td>Length</td>
+    <td>short (3-5), medium (8-12), long (15-20)</td>
+    <td>Number of scenes generated</td>
+  </tr>
+  <tr>
+    <td>Characters</td>
+    <td>few (2-3), medium (4-6), many (7-10)</td>
+    <td>Character count</td>
+  </tr>
+  <tr>
+    <td>Tone</td>
+    <td>dark, balanced, light, comedic</td>
+    <td>Mood selection bias</td>
+  </tr>
+  <tr>
+    <td>Complexity</td>
+    <td>simple, moderate, complex</td>
+    <td>Scenes per chapter, subplot density</td>
+  </tr>
+  <tr>
+    <td>World Rules</td>
+    <td>none, few, many</td>
+    <td>Number of world rules generated</td>
+  </tr>
+</table>
+
+<h3>Quality Characteristics</h3>
+<ul>
+  <li><strong>Completeness</strong>: 90-100% (all required elements present)</li>
+  <li><strong>Coherence</strong>: 70-85% (references valid, but not semantically optimized)</li>
+  <li><strong>Originality</strong>: 50-70% (random selection provides variety)</li>
+  <li><strong>NQS</strong>: Typically 65-80%</li>
+</ul>
+
+<h2>LLM Generation Strategy</h2>
+
+<h3>Overview</h3>
+<p>Uses a Large Language Model to generate creative, contextually appropriate story specifications. Produces more nuanced and coherent narratives with better semantic relationships.</p>
+
+<h3>Architecture</h3>
+
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                        Client (Browser)                      │
+│  ┌─────────────┐     ┌─────────────┐     ┌──────────────┐  │
+│  │ UI Options  │ ──> │ Generation  │ ──> │ State Update │  │
+│  └─────────────┘     │   Request   │     └──────────────┘  │
+│                      └──────┬──────┘            ▲           │
+└─────────────────────────────│───────────────────│───────────┘
+                        │ POST /v1/generate/llm
+                        ▼                   │
+┌─────────────────────────────────────────────────│───────────┐
+│                        Server                   │           │
+│  ┌─────────────┐     ┌─────────────┐     ┌─────┴────────┐  │
+│  │  Endpoint   │ ──> │ LLM Service │ ──> │ JSON Response│  │
+│  └─────────────┘     └──────┬──────┘     └──────────────┘  │
+└─────────────────────────────│───────────────────────────────┘
+                        │
+                        ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     LLM API (OpenAI/Anthropic)              │
+│  ┌─────────────┐     ┌─────────────┐     ┌──────────────┐  │
+│  │ Prompt      │ ──> │ Completion  │ ──> │ JSON Parse   │  │
+│  │ Engineering │     │ Generation  │     │ Validation   │  │
+│  └─────────────┘     └─────────────┘     └──────────────┘  │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+
+<h3>Prompt Engineering</h3>
+
+<p>The LLM receives a structured prompt containing:</p>
+
+<ol>
+  <li><strong>Role Definition</strong>: "You are a story specification generator for SCRIPTA"</li>
+  <li><strong>Parameters</strong>: All user-selected options</li>
+  <li><strong>Output Schema</strong>: Detailed JSON structure expected</li>
+  <li><strong>Quality Requirements</strong>: Coherence, genre-appropriateness, completeness</li>
+</ol>
+
+<pre><code>SYSTEM: You are a story specification generator for SCRIPTA, a narrative 
+planning system. Generate creative, coherent story specifications in JSON format.
+
+USER:
+Genre: {genre}
+Length: {length} (short=3-5 scenes, medium=8-12 scenes, long=15-20 scenes)
+Number of characters: {characters}
+Tone: {tone}
+Complexity: {complexity}
+World rules: {worldRules}
+Story name: {storyName}
+
+Generate a complete story specification with:
+1. Characters with archetypes, traits, and meaningful relationships
+2. Locations with geography, atmosphere, and characteristics
+3. Plot elements that drive the story forward
+4. Relationships between characters that create conflict and support
+5. Chapter and scene structure with clear progression
+6. Key dialogues with purpose and participants
+
+Output format: Valid JSON matching the project schema...</code></pre>
+
+<h3>Response Processing</h3>
+
+<pre><code>response = await llm.complete(prompt)
+
+// Parse JSON from response
+try {
+  project = JSON.parse(response.content)
+} catch {
+  // Fallback: extract JSON from markdown code blocks
+  project = extractJSONFromMarkdown(response.content)
+}
+
+// Validate structure
+if (!project.libraries) throw new Error('Missing libraries')
+if (!project.structure) throw new Error('Missing structure')
+
+// Normalize and fill defaults
+project = normalizeProject(project)
+
+return project</code></pre>
+
+<h3>Fallback Mode</h3>
+<p>When LLM is unavailable (no API key, network issues, rate limits):</p>
+<ul>
+  <li>System automatically falls back to enhanced random generation</li>
+  <li>Uses more sophisticated templates than basic random</li>
+  <li>Response includes <code>_fallback: true</code> flag</li>
+</ul>
+
+<h3>Quality Characteristics</h3>
+<ul>
+  <li><strong>Completeness</strong>: 85-95% (LLM may miss some elements)</li>
+  <li><strong>Coherence</strong>: 85-95% (semantic relationships considered)</li>
+  <li><strong>Originality</strong>: 75-90% (creative naming and relationships)</li>
+  <li><strong>NQS</strong>: Typically 75-90%</li>
+</ul>
+
+<h2>Advanced Generation Strategy</h2>
+
+<h3>Overview</h3>
+<p>Multi-pass generation with constraint solving and metric-driven optimization. Iteratively improves specifications until target quality metrics are achieved.</p>
+
+<div class="info-box">
+  <div class="info-box-title">Why Advanced?</div>
+  <p>Random generation is fast but may produce incoherent results. LLM generation is creative but expensive and may miss structural requirements. Advanced combines both: it uses Random for speed, then optimizes based on metrics, optionally refining with LLM.</p>
+</div>
+
+<h3>Algorithm</h3>
+
+<pre><code>function advancedGenerate(options):
+  // Configuration
+  TARGET_NQS = 0.85
+  MAX_ITERATIONS = 5
+  bestResult = null
+  bestScore = 0
+  
+  // Main optimization loop
+  for iteration = 1 to MAX_ITERATIONS:
+    // Step 1: Generate candidate
+    candidate = randomGenerate(options)
+    
+    // Step 2: Evaluate all metrics
+    metrics = evaluateMetrics(candidate)
+    
+    // Step 3: Calculate composite score
+    score = calculateCompositeScore(metrics)
+    
+    // Step 4: Track best result
+    if score > bestScore:
+bestResult = deepCopy(candidate)
+bestScore = score
+    
+    // Step 5: Check if target reached
+    if score >= TARGET_NQS:
+break  // Early exit on success
+    
+    // Step 6: Apply constraint optimizations
+    candidate = fixCoherenceIssues(candidate)
+    candidate = ensureCompleteness(candidate)
+    candidate = balanceEmotionalArc(candidate)
+    candidate = normalizeCharacterTraits(candidate)
+  
+  // Step 7: Optional LLM refinement
+  if llmAvailable and bestScore < TARGET_NQS:
+    refinements = requestLLMRefinements(bestResult)
+    bestResult = applyRefinements(bestResult, refinements)
+  
+  // Step 8: Finalize
+  createSnapshot(bestResult)
+  return bestResult</code></pre>
+
+<h3>Composite Score Calculation</h3>
+
+<table>
+  <tr>
+    <th>Metric</th>
+    <th>Weight</th>
+    <th>Target</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>NQS</td>
+    <td>0.25</td>
+    <td>>= 85%</td>
+    <td>Narrative Quality Score (master metric)</td>
+  </tr>
+  <tr>
+    <td>Coherence (CS)</td>
+    <td>0.20</td>
+    <td>>= 75%</td>
+    <td>Entity reference validity</td>
+  </tr>
+  <tr>
+    <td>Completeness</td>
+    <td>0.15</td>
+    <td>>= 80%</td>
+    <td>Required elements present</td>
+  </tr>
+  <tr>
+    <td>EAP</td>
+    <td>0.10</td>
+    <td>>= 70%</td>
+    <td>Emotional Arc Profile alignment</td>
+  </tr>
+  <tr>
+    <td>1 - CAD</td>
+    <td>0.10</td>
+    <td>CAD <= 15%</td>
+    <td>Character Attribute Drift (inverted)</td>
+  </tr>
+  <tr>
+    <td>CAR</td>
+    <td>0.10</td>
+    <td>>= 95%</td>
+    <td>Compliance Adherence Rate</td>
+  </tr>
+  <tr>
+    <td>CSA</td>
+    <td>0.10</td>
+    <td>>= 95%</td>
+    <td>Constraint Satisfaction Accuracy</td>
+  </tr>
+</table>
+
+<pre><code>function calculateCompositeScore(metrics):
+  return (
+    0.25 * metrics.nqs +
+    0.20 * metrics.coherence +
+    0.15 * metrics.completeness +
+    0.10 * metrics.eap +
+    0.10 * (1 - Math.min(1, metrics.cad * 4)) +
+    0.10 * metrics.car +
+    0.10 * metrics.csa
+  )</code></pre>
+
+<h3>Constraint Optimizations</h3>
+
+<h4>Coherence Fixes</h4>
+<pre><code>function fixCoherenceIssues(project):
+  validIds = getAllDeclaredEntityIds(project)
+  
+  for each scene in project.structure:
+    // Remove invalid character references
+    scene.characterRefs = scene.characterRefs.filter(
+ref => validIds.includes(ref.refId)
+    )
+    
+    // Remove invalid location references
+    scene.locationRefs = scene.locationRefs.filter(
+ref => validIds.includes(ref.refId)
+    )
+    
+    // Fix orphan object references
+    scene.objectRefs = scene.objectRefs.filter(
+ref => validIds.includes(ref.refId)
+    )
+  
+  return project</code></pre>
+
+<h4>Completeness Fixes</h4>
+<pre><code>function ensureCompleteness(project):
+  // Ensure minimum characters
+  if project.libraries.characters.length < 2:
+    project.libraries.characters.push(generateRandomCharacter())
+  
+  // Ensure at least one location
+  if project.libraries.locations.length < 1:
+    project.libraries.locations.push(generateRandomLocation())
+  
+  // Ensure at least one theme
+  if project.libraries.themes.length < 1:
+    project.libraries.themes.push(pickRandom(THEMES))
+  
+  // Ensure protagonist exists
+  hasProtagonist = project.libraries.characters.some(c => c.type === 'protagonist')
+  if !hasProtagonist:
+    project.libraries.characters[0].type = 'protagonist'
+  
+  return project</code></pre>
+
+<h4>Emotional Arc Fixes</h4>
+<pre><code>function balanceEmotionalArc(project):
+  moodCoverage = getMoodTypes(project)
+  
+  // Ensure mood variety
+  if moodCoverage.size < 3:
+    requiredMoods = ['mysterious', 'tense', 'triumphant']
+    for mood in requiredMoods:
+if !moodCoverage.has(mood):
+  project.libraries.moods.push({
+    id: generateId(),
+    name: mood,
+    preset: mood
+  })
+  
+  // Ensure scenes have moods assigned
+  for each scene in project.structure:
+    if !scene.mood:
+position = getScenePosition(scene)
+scene.mood = getMoodForPosition(position)
+  
+  return project</code></pre>
+
+<h4>Character Trait Normalization</h4>
+<pre><code>function normalizeCharacterTraits(project):
+  for each character in project.libraries.characters:
+    // Cap traits at 4 to reduce drift
+    if character.traits.length > 4:
+character.traits = character.traits.slice(0, 4)
+    
+    // Ensure at least 2 traits
+    while character.traits.length < 2:
+character.traits.push(pickRandom(AVAILABLE_TRAITS))
+    
+    // Remove duplicate traits
+    character.traits = [...new Set(character.traits)]
+  
+  return project</code></pre>
+
+<h3>LLM Refinement (Optional)</h3>
+
+<pre><code>function requestLLMRefinements(project):
+  prompt = `
+    Given this story specification, suggest improvements for:
+    1. More evocative scene names
+    2. Richer character traits
+    3. Additional plot elements that would enhance the story
+    
+    Current specification: ${JSON.stringify(project)}
+    
+    Return suggestions as JSON...
+  `
+  
+  response = await llm.complete(prompt)
+  return parseRefinements(response)</code></pre>
+
+<h3>Quality Characteristics</h3>
+<ul>
+  <li><strong>Completeness</strong>: 95-100% (guaranteed by optimization)</li>
+  <li><strong>Coherence</strong>: 90-98% (actively fixed during optimization)</li>
+  <li><strong>NQS</strong>: 80-95% (target-driven improvement)</li>
+  <li><strong>Metric Optimization</strong>: Guaranteed to meet targets or best achievable</li>
+</ul>
+
+<h2>Metrics in Generation</h2>
+
+<h3>How Metrics Guide Generation</h3>
+
+<p>Advanced generation uses metrics as optimization targets:</p>
+
+<ol>
+  <li><strong>Coherence Score (CS)</strong>: Drives reference validation and entity continuity</li>
+  <li><strong>Completeness</strong>: Ensures all required elements are present</li>
+  <li><strong>Character Attribute Drift (CAD)</strong>: Limits trait count to reduce drift</li>
+  <li><strong>Emotional Arc Profile (EAP)</strong>: Guides mood assignment</li>
+  <li><strong>Constraint Satisfaction (CSA)</strong>: Validates requires/forbids rules</li>
+</ol>
+
+<h3>Feedback Loop</h3>
+
+<pre><code>┌──────────────┐
+│   Generate   │
+└──────┬───────┘
+ │
+ ▼
+┌──────────────┐     ┌──────────────┐
+│   Evaluate   │ ──> │   Metrics    │
+└──────┬───────┘     │   Report     │
+ │             └──────────────┘
+ ▼
+┌──────────────┐
+│   Score OK?  │ ── Yes ──> Done
+└──────┬───────┘
+ │ No
+ ▼
+┌──────────────┐
+│   Optimize   │
+└──────┬───────┘
+ │
+ └───────────> (back to Evaluate)</code></pre>
+
+<h2>Strategy Selection Guide</h2>
+
+<h3>When to Use Each Strategy</h3>
+
+<table>
+  <tr>
+    <th>Scenario</th>
+    <th>Recommended Strategy</th>
+    <th>Reason</th>
+  </tr>
+  <tr>
+    <td>Quick exploration</td>
+    <td>Random</td>
+    <td>Instant results, no dependencies</td>
+  </tr>
+  <tr>
+    <td>Learning the system</td>
+    <td>Random</td>
+    <td>See many examples quickly</td>
+  </tr>
+  <tr>
+    <td>Offline work</td>
+    <td>Random</td>
+    <td>No API required</td>
+  </tr>
+  <tr>
+    <td>Creative writing</td>
+    <td>LLM</td>
+    <td>More nuanced, original names</td>
+  </tr>
+  <tr>
+    <td>Unique story concepts</td>
+    <td>LLM</td>
+    <td>Creative relationships and plot</td>
+  </tr>
+  <tr>
+    <td>Research/evaluation</td>
+    <td>Advanced</td>
+    <td>Guaranteed quality metrics</td>
+  </tr>
+  <tr>
+    <td>Maximum coherence</td>
+    <td>Advanced</td>
+    <td>Optimizes for CS score</td>
+  </tr>
+  <tr>
+    <td>Production use</td>
+    <td>Advanced</td>
+    <td>Reliable, high-quality output</td>
+  </tr>
+</table>
+
+<h3>Combining Strategies</h3>
+
+<p>For best results, consider combining strategies:</p>
+
+<ol>
+  <li><strong>Random + Manual</strong>: Generate with Random, then refine manually</li>
+  <li><strong>Random + LLM Refine</strong>: Generate structure with Random, enhance names with LLM</li>
+  <li><strong>Advanced First</strong>: Use Advanced for base, LLM for creative touches</li>
+</ol>
+
+<h2>API Reference</h2>
+
+<h3>POST /v1/generate/llm</h3>
+
+<pre><code>// Request
+{
+  "genre": "fantasy",
+  "length": "medium",
+  "characters": "medium",
+  "tone": "balanced",
+  "complexity": "moderate",
+  "worldRules": "few",
+  "storyName": "The Dragon's Quest"
+}
+
+// Response
+{
+  "project": {
+    "name": "The Dragon's Quest",
+    "libraries": { ... },
+    "structure": { ... },
+    "blueprint": { ... }
+  }
+}</code></pre>
+
+<h3>POST /v1/generate/refine</h3>
+
+<pre><code>// Request
+{
+  "project": { ... },
+  "options": { "genre": "fantasy" }
+}
+
+// Response
+{
+  "suggestions": {
+    "sceneNames": { "sc_1": "The Awakening" },
+    "characterTraits": { "char_1": ["wise", "mysterious"] },
+    "plotElements": [{ "name": "Ancient Prophecy", "type": "prophecy" }]
+  }
+}</code></pre>
+
+<h3>GET /v1/generate/status</h3>
+
+<pre><code>// Response
+{
+  "llmAvailable": true,
+  "strategies": ["random", "llm", "advanced"]
+}</code></pre>
+
+<h2>Related Documents</h2>
+
+<ul>
+  <li><a href="#metrics-reference" data-page="metrics-reference">Metrics Reference</a> - Detailed metric specifications</li>
+  <li><a href="#end-to-end" data-page="end-to-end">End-to-End Example</a> - Complete workflow demonstration</li>
+  <li><a href="../specs/DS08-Generation-Strategies.md">DS08 - Generation Strategies</a> (Technical)</li>
+  <li><a href="../specs/DS12-Metrics-Interpreter.md">DS12 - Metrics Interpreter</a> (Technical)</li>
+</ul>

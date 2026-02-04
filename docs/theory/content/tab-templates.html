@@ -1,0 +1,181 @@
+<h1>Templates Tab</h1>
+
+<p>The Templates tab manages reusable story patterns that can be instantiated in your scenes. Templates are parameterized building blocks for common narrative moments.</p>
+
+<div class="info-box">
+  <div class="info-box-title">When to Use This Tab</div>
+  <p>Use the Templates tab when you want to create reusable patterns for recurring story situations, or when you want to apply proven narrative structures to specific scenes.</p>
+</div>
+
+<h2>What This Tab Does</h2>
+
+<p>Templates allow you to define abstract story patterns with placeholder variables, then instantiate them with specific characters, locations, and objects. This ensures consistency and speeds up scene creation.</p>
+
+<h2>Template Structure</h2>
+
+<h3>Components of a Template</h3>
+
+<table>
+  <tr>
+    <th>Component</th>
+    <th>Description</th>
+    <th>Example</th>
+  </tr>
+  <tr>
+    <td>Name</td>
+    <td>Template identifier</td>
+    <td>"Mentor's Wisdom"</td>
+  </tr>
+  <tr>
+    <td>Variables</td>
+    <td>Placeholders for entities</td>
+    <td>$hero, $mentor, $lesson</td>
+  </tr>
+  <tr>
+    <td>Body</td>
+    <td>Sequence of actions</td>
+    <td>$mentor teaches $hero</td>
+  </tr>
+  <tr>
+    <td>Suggested Mood</td>
+    <td>Recommended atmosphere</td>
+    <td>mysterious, intimate</td>
+  </tr>
+</table>
+
+<h3>Variable Types</h3>
+
+<ul>
+  <li><code>$name as character</code> - A character placeholder</li>
+  <li><code>$place as location</code> - A location placeholder</li>
+  <li><code>$item as object</code> - An object placeholder</li>
+  <li><code>$topic as theme</code> - A theme placeholder</li>
+  <li><code>$feeling as mood</code> - A mood placeholder</li>
+</ul>
+
+<h2>Built-in Templates</h2>
+
+<h3>Mentor's Wisdom</h3>
+<p>A guide imparts crucial knowledge to the protagonist.</p>
+<pre><code>"Mentor's Wisdom" is pattern
+"Mentor's Wisdom" has variable $student as character
+"Mentor's Wisdom" has variable $mentor as character
+"Mentor's Wisdom" has variable $lesson as theme
+
+"Mentor's Wisdom" has template begin
+  $mentor meets $student
+  $mentor teaches $student
+  $mentor reveals $lesson
+  $student transforms "gains understanding"
+"Mentor's Wisdom" has template end</code></pre>
+
+<h3>Hero's Sacrifice</h3>
+<p>A character gives up something precious for others.</p>
+<pre><code>"Hero's Sacrifice" is pattern
+"Hero's Sacrifice" has variable $hero as character
+"Hero's Sacrifice" has variable $saved as character
+"Hero's Sacrifice" has variable $cost as object
+
+"Hero's Sacrifice" has template begin
+  $hero faces choice
+  $hero sacrifices $cost for $saved
+  $saved is saved
+  $hero transforms "achieves nobility"
+"Hero's Sacrifice" has template end</code></pre>
+
+<h3>Revelation</h3>
+<p>A hidden truth changes everything.</p>
+<pre><code>"Revelation" is pattern
+"Revelation" has variable $discoverer as character
+"Revelation" has variable $secret as object
+
+"Revelation" has template begin
+  $discoverer investigates
+  $discoverer discovers $secret
+  $discoverer realizes "truth changes everything"
+"Revelation" has template end</code></pre>
+
+<h2>Creating Custom Templates</h2>
+
+<ol>
+  <li>Click "New Template" in the Templates tab</li>
+  <li>Give it a descriptive name</li>
+  <li>Define variables with their types</li>
+  <li>Write the action sequence using variables</li>
+  <li>Optionally suggest mood and themes</li>
+  <li>Save the template</li>
+</ol>
+
+<h2>Instantiating Templates</h2>
+
+<p>To use a template in a scene:</p>
+
+<ol>
+  <li>Navigate to the scene in Structure view</li>
+  <li>Click "Apply Template"</li>
+  <li>Select the template</li>
+  <li>Bind each variable to actual entities</li>
+  <li>The template actions are added to the scene</li>
+</ol>
+
+<h3>Binding Example</h3>
+
+<pre><code>Template: "Mentor's Wisdom"
+Bindings:
+  $student -> Anna
+  $mentor -> Gandalf
+  $lesson -> wisdom
+
+Generated CNL:
+  Gandalf meets Anna
+  Gandalf teaches Anna
+  Gandalf reveals wisdom
+  Anna transforms "gains understanding"</code></pre>
+
+<h2>CNL Output</h2>
+
+<pre><code>// Template Definition
+"Mentor's Wisdom" is pattern
+"Mentor's Wisdom" has variable $student as character
+"Mentor's Wisdom" has variable $mentor as character
+"Mentor's Wisdom" has variable $lesson as theme
+
+"Mentor's Wisdom" has template begin
+  $mentor meets $student
+  $mentor reveals $lesson
+  $student transforms "gains understanding"
+"Mentor's Wisdom" has template end
+
+// Template Instantiation
+scene "The Teaching" uses pattern "Mentor's Wisdom"
+scene "The Teaching" binds $student to Anna
+scene "The Teaching" binds $mentor to Gandalf
+scene "The Teaching" binds $lesson to wisdom</code></pre>
+
+<h2>Metrics Impact</h2>
+
+<p>Templates help improve several metrics:</p>
+
+<ul>
+  <li><strong>Scene Completeness</strong>: Templates ensure scenes have proper action sequences</li>
+  <li><strong>Consistency</strong>: Similar situations are handled similarly</li>
+  <li><strong>Beat Coverage</strong>: Templates often align with narrative beats</li>
+</ul>
+
+<h2>Best Practices</h2>
+
+<ol>
+  <li><strong>Name templates by function</strong>: "Betrayal Revealed" not "Template 3"</li>
+  <li><strong>Keep templates focused</strong>: One narrative moment per template</li>
+  <li><strong>Use appropriate variable types</strong>: This enables validation</li>
+  <li><strong>Suggest moods</strong>: Helps maintain emotional consistency</li>
+  <li><strong>Create templates from successful scenes</strong>: Extract patterns that work</li>
+</ol>
+
+<h2>Related Documentation</h2>
+
+<ul>
+  <li><a href="#tab-blocks" data-page="tab-blocks">Blocks Tab</a> - Pre-defined narrative blocks</li>
+  <li><a href="#pattern-theory" data-page="pattern-theory">Story Patterns</a> - Master plots theory</li>
+  <li><a href="#cnl-language" data-page="cnl-language">CNL Language</a> - Template syntax details</li>
+</ul>

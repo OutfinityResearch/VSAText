@@ -1,0 +1,232 @@
+<h1>Dialogues Tab</h1>
+
+<p>The Dialogues tab structures conversations between characters. In SCRIPTA, dialogues are specifications that define purpose and flow, not full scripts.</p>
+
+<div class="info-box">
+  <div class="info-box-title">When to Use This Tab</div>
+  <p>Use the Dialogues tab when you need to plan important conversations - revelations, confrontations, confessions, or any scene where character interaction is central.</p>
+</div>
+
+<h2>What This Tab Does</h2>
+
+<p>The Dialogues tab helps you structure conversations by defining:</p>
+
+<ul>
+  <li>Purpose of the conversation</li>
+  <li>Participants and their roles</li>
+  <li>Emotional tone and tension level</li>
+  <li>Key exchanges and their intent</li>
+  <li>Connection to narrative beats</li>
+</ul>
+
+<h2>Dialogue Properties</h2>
+
+<table>
+  <tr>
+    <th>Property</th>
+    <th>Description</th>
+    <th>Options</th>
+  </tr>
+  <tr>
+    <td>Name</td>
+    <td>Dialogue identifier</td>
+    <td>Descriptive name</td>
+  </tr>
+  <tr>
+    <td>Purpose</td>
+    <td>Why this conversation happens</td>
+    <td>reveal, conflict, bonding, exposition, negotiation, confession, argument, farewell</td>
+  </tr>
+  <tr>
+    <td>Participants</td>
+    <td>Characters involved</td>
+    <td>List of characters with roles</td>
+  </tr>
+  <tr>
+    <td>Tone</td>
+    <td>Emotional register</td>
+    <td>confrontational, intimate, formal, casual, tense, humorous</td>
+  </tr>
+  <tr>
+    <td>Tension</td>
+    <td>Conflict level (1-5)</td>
+    <td>1 = calm, 5 = explosive</td>
+  </tr>
+  <tr>
+    <td>Beat Link</td>
+    <td>Associated narrative beat</td>
+    <td>Any beat from selected arc</td>
+  </tr>
+</table>
+
+<h2>Dialogue Purposes</h2>
+
+<table>
+  <tr>
+    <th>Purpose</th>
+    <th>Function</th>
+    <th>Typical Tension</th>
+    <th>Example</th>
+  </tr>
+  <tr>
+    <td>reveal</td>
+    <td>Hidden truth emerges</td>
+    <td>3-4</td>
+    <td>"I am your father"</td>
+  </tr>
+  <tr>
+    <td>conflict</td>
+    <td>Direct opposition</td>
+    <td>4-5</td>
+    <td>Hero confronts villain</td>
+  </tr>
+  <tr>
+    <td>bonding</td>
+    <td>Relationship building</td>
+    <td>1-2</td>
+    <td>Friends sharing stories</td>
+  </tr>
+  <tr>
+    <td>exposition</td>
+    <td>World/plot information</td>
+    <td>1-2</td>
+    <td>Mentor explains quest</td>
+  </tr>
+  <tr>
+    <td>negotiation</td>
+    <td>Seeking agreement</td>
+    <td>2-4</td>
+    <td>Alliance forming</td>
+  </tr>
+  <tr>
+    <td>confession</td>
+    <td>Admitting truth</td>
+    <td>3-4</td>
+    <td>Revealing love or guilt</td>
+  </tr>
+  <tr>
+    <td>argument</td>
+    <td>Heated disagreement</td>
+    <td>4-5</td>
+    <td>Friends falling out</td>
+  </tr>
+  <tr>
+    <td>farewell</td>
+    <td>Parting words</td>
+    <td>2-3</td>
+    <td>Before the final battle</td>
+  </tr>
+</table>
+
+<h2>Dialogue Exchanges</h2>
+
+<p>Each dialogue contains exchanges - outline entries for what characters convey:</p>
+
+<table>
+  <tr>
+    <th>Property</th>
+    <th>Description</th>
+    <th>Example</th>
+  </tr>
+  <tr>
+    <td>Speaker</td>
+    <td>Who is speaking</td>
+    <td>Anna</td>
+  </tr>
+  <tr>
+    <td>Intent</td>
+    <td>What they want to convey</td>
+    <td>"demands the truth"</td>
+  </tr>
+  <tr>
+    <td>Emotion</td>
+    <td>How they feel</td>
+    <td>anger, desperation</td>
+  </tr>
+  <tr>
+    <td>Sketch</td>
+    <td>Rough version of the line</td>
+    <td>"Tell me what really happened!"</td>
+  </tr>
+</table>
+
+<h2>Step-by-Step: Creating a Dialogue</h2>
+
+<ol>
+  <li>Click "Add Dialogue"</li>
+  <li>Give it a descriptive name</li>
+  <li>Select the purpose</li>
+  <li>Add participating characters</li>
+  <li>Set the tone and tension level</li>
+  <li>Link to a narrative beat (optional)</li>
+  <li>Add exchanges:
+    <ul>
+      <li>Select speaker</li>
+      <li>Describe their intent</li>
+      <li>Note their emotion</li>
+      <li>Optionally sketch the line</li>
+    </ul>
+  </li>
+  <li>Save the dialogue</li>
+</ol>
+
+<h2>CNL Output</h2>
+
+<pre><code>dialogue "The Revelation" is reveal
+dialogue "The Revelation" involves Anna as speaker
+dialogue "The Revelation" involves Marcus as listener
+dialogue "The Revelation" has tone confrontational
+dialogue "The Revelation" has tension 4
+dialogue "The Revelation" linked to beat "ordeal"
+
+dialogue "The Revelation" has exchange begin
+  Anna speaks intent "demands the truth"
+  Anna speaks emotion anger
+  Anna speaks sketch "I know you've been hiding something!"
+  
+  Marcus speaks intent "deflects initially"
+  Marcus speaks emotion fear
+  Marcus speaks sketch "It's not what you think..."
+  
+  Anna speaks intent "presses harder"
+  Marcus speaks intent "finally confesses"
+  Marcus speaks emotion shame
+dialogue "The Revelation" has exchange end</code></pre>
+
+<h2>Metrics Impact</h2>
+
+<p>Dialogues affect the <strong>Dialogue Quality Score (dialogueQuality)</strong>:</p>
+
+<ul>
+  <li>Well-defined dialogues have clear purpose</li>
+  <li>Multiple participants create dynamic exchanges</li>
+  <li>Substantive exchanges with clear intent</li>
+  <li>Empty or placeholder dialogues reduce the score</li>
+</ul>
+
+<h2>Dialogue-Scene Connection</h2>
+
+<p>Dialogues can be assigned to scenes:</p>
+
+<pre><code>scene "The Confrontation" has dialogue "The Revelation"</code></pre>
+
+<p>This ensures the dialogue's emotional tone aligns with the scene mood.</p>
+
+<h2>Best Practices</h2>
+
+<ol>
+  <li><strong>One purpose per dialogue</strong>: Don't mix revelation with bonding</li>
+  <li><strong>Keep exchanges focused</strong>: 3-7 exchanges per dialogue</li>
+  <li><strong>Vary tension</strong>: Not every dialogue needs to be explosive</li>
+  <li><strong>Use intent, not full lines</strong>: Leave room for generation</li>
+  <li><strong>Link to beats</strong>: Major dialogues should align with arc</li>
+  <li><strong>Consider character voice</strong>: Traits should influence speech</li>
+</ol>
+
+<h2>Related Documentation</h2>
+
+<ul>
+  <li><a href="#tab-characters" data-page="tab-characters">Characters Tab</a> - Character traits affect voice</li>
+  <li><a href="#tab-relations" data-page="tab-relations">Relations Tab</a> - Relationships influence dynamics</li>
+  <li><a href="#tab-moods" data-page="tab-moods">Moods Tab</a> - Emotional tone</li>
+</ul>

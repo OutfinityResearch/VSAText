@@ -1,0 +1,125 @@
+<h1>CNL Tab</h1>
+
+<p>The CNL (Controlled Natural Language) tab displays the generated specification code for your story. This is the machine-readable format that powers all of SCRIPTA's analysis and generation features.</p>
+
+<div class="info-box">
+  <div class="info-box-title">When to Use This Tab</div>
+  <p>Use the CNL tab to review the generated specification, export your story definition, or debug issues with story elements.</p>
+</div>
+
+<h2>What This Tab Does</h2>
+
+<p>The CNL tab provides a read-only view of the CNL code generated from your visual editor inputs. Every character, location, relationship, scene, and constraint you define through the UI is automatically converted to CNL syntax.</p>
+
+<h3>Key Features</h3>
+
+<ul>
+  <li><strong>Syntax Highlighting</strong>: Keywords, entities, and values are color-coded for readability</li>
+  <li><strong>Export</strong>: Download the CNL as a <code>.cnl</code> or <code>.txt</code> file</li>
+  <li><strong>Copy</strong>: Copy the entire specification to clipboard</li>
+  <li><strong>Search</strong>: Find specific elements within the specification</li>
+</ul>
+
+<h2>Understanding the CNL Structure</h2>
+
+<p>The generated CNL follows a consistent pattern:</p>
+
+<pre><code>// Entity Definitions
+EntityName is type
+EntityName has property value
+
+// Relationships
+Entity1 relates to Entity2 as relationship_type
+
+// Story Structure
+"Book Title" is book
+  "Chapter 1" is chapter
+    "Scene 1" is scene at Location
+      Character does action</code></pre>
+
+<h2>CNL Sections</h2>
+
+<table>
+  <tr>
+    <th>Section</th>
+    <th>Contains</th>
+    <th>Generated From</th>
+  </tr>
+  <tr>
+    <td>Entities</td>
+    <td>Characters, locations, objects</td>
+    <td>Characters, Locations, Objects tabs</td>
+  </tr>
+  <tr>
+    <td>Relationships</td>
+    <td>Character connections</td>
+    <td>Relations tab</td>
+  </tr>
+  <tr>
+    <td>Moods</td>
+    <td>Emotional atmospheres</td>
+    <td>Moods tab</td>
+  </tr>
+  <tr>
+    <td>Themes & Wisdom</td>
+    <td>Thematic content</td>
+    <td>Themes, Wisdom tabs</td>
+  </tr>
+  <tr>
+    <td>World Rules</td>
+    <td>Universe constraints</td>
+    <td>World tab</td>
+  </tr>
+  <tr>
+    <td>Blueprint</td>
+    <td>Arc, beats, tension curve</td>
+    <td>Blueprint, Arc tabs</td>
+  </tr>
+  <tr>
+    <td>Structure</td>
+    <td>Books, chapters, scenes</td>
+    <td>Visual story structure</td>
+  </tr>
+</table>
+
+<h2>Workflow Position</h2>
+
+<pre><code>Visual Editor Tabs
+       |
+       v
+   CNL (auto-generated)  <-- You are here
+       |
+       v
+   Parser (SDK)
+       |
+       v
+   AST (Abstract Syntax Tree)
+       |
+       v
+   Metrics & Generation</code></pre>
+
+<h2>Common Use Cases</h2>
+
+<h3>1. Debugging</h3>
+<p>When metrics show unexpected values, check the CNL to verify that your elements are correctly defined.</p>
+
+<h3>2. Backup</h3>
+<p>Export CNL regularly to have a text-based backup of your story specification.</p>
+
+<h3>3. Sharing</h3>
+<p>Share CNL files with collaborators who can import them into their own SCRIPTA instance.</p>
+
+<h3>4. Advanced Editing</h3>
+<p>While the visual editor handles most cases, some advanced patterns may require direct CNL knowledge.</p>
+
+<h2>Metrics Impact</h2>
+
+<p>The CNL tab itself doesn't affect metrics - it's a view of what generates the metrics. However, examining the CNL helps you understand why certain scores appear.</p>
+
+<h2>Related Documentation</h2>
+
+<ul>
+  <li><a href="#cnl-language" data-page="cnl-language">CNL Language Reference</a> - Full syntax documentation</li>
+  <li><a href="#conceptual-model" data-page="conceptual-model">Conceptual Model</a> - Understanding the data model</li>
+  <li><a href="#end-to-end" data-page="end-to-end">End-to-End Example</a> - Complete workflow demonstration</li>
+</ul>

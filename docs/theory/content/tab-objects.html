@@ -1,0 +1,191 @@
+<h1>Objects Tab</h1>
+
+<p>The Objects tab (also called Plot Elements) manages physical items, artifacts, documents, and symbols that drive the plot or carry thematic weight.</p>
+
+<div class="info-box">
+  <div class="info-box-title">When to Use This Tab</div>
+  <p>Use the Objects tab when you have items that will be important to your plot - MacGuffins, magical artifacts, key documents, or symbolic objects.</p>
+</div>
+
+<h2>What This Tab Does</h2>
+
+<p>Objects in SCRIPTA serve multiple narrative functions:</p>
+
+<ul>
+  <li>Drive the plot forward (quests, heists)</li>
+  <li>Reveal information (documents, prophecies)</li>
+  <li>Enable actions (weapons, tools)</li>
+  <li>Symbolize themes (metaphorical objects)</li>
+  <li>Connect characters (gifts, heirlooms)</li>
+</ul>
+
+<h2>Object Properties</h2>
+
+<table>
+  <tr>
+    <th>Property</th>
+    <th>Description</th>
+    <th>Examples</th>
+  </tr>
+  <tr>
+    <td>Name</td>
+    <td>Object identifier</td>
+    <td>SilverKey, AncientMap, Excalibur</td>
+  </tr>
+  <tr>
+    <td>Type</td>
+    <td>Object category</td>
+    <td>artifact, key, document, weapon, macguffin, symbol</td>
+  </tr>
+  <tr>
+    <td>Significance</td>
+    <td>Plot importance</td>
+    <td>high, medium, low</td>
+  </tr>
+  <tr>
+    <td>Owner</td>
+    <td>Current possessor</td>
+    <td>Any character</td>
+  </tr>
+  <tr>
+    <td>Description</td>
+    <td>Physical description</td>
+    <td>"Ancient key with runes"</td>
+  </tr>
+</table>
+
+<h2>Object Types</h2>
+
+<table>
+  <tr>
+    <th>Type</th>
+    <th>Description</th>
+    <th>Narrative Function</th>
+    <th>Examples</th>
+  </tr>
+  <tr>
+    <td>artifact</td>
+    <td>Magical or significant item</td>
+    <td>Quest goal, power source</td>
+    <td>Ring of Power, Horcruxes, Excalibur</td>
+  </tr>
+  <tr>
+    <td>key</td>
+    <td>Unlocks access or secrets</td>
+    <td>Progress enabler</td>
+    <td>Ancient key, password, map</td>
+  </tr>
+  <tr>
+    <td>document</td>
+    <td>Contains information</td>
+    <td>Revelation, mystery</td>
+    <td>Letter, prophecy, will, journal</td>
+  </tr>
+  <tr>
+    <td>weapon</td>
+    <td>Tool for conflict</td>
+    <td>Combat, power</td>
+    <td>Sword, gun, poison</td>
+  </tr>
+  <tr>
+    <td>macguffin</td>
+    <td>Drives plot but content unimportant</td>
+    <td>Motivation</td>
+    <td>Briefcase, Maltese Falcon</td>
+  </tr>
+  <tr>
+    <td>symbol</td>
+    <td>Represents theme</td>
+    <td>Thematic resonance</td>
+    <td>Mockingbird, Green Light, Rosebud</td>
+  </tr>
+  <tr>
+    <td>heirloom</td>
+    <td>Inherited item with history</td>
+    <td>Legacy, connection to past</td>
+    <td>Family ring, ancestral sword</td>
+  </tr>
+  <tr>
+    <td>container</td>
+    <td>Holds something important</td>
+    <td>Mystery, discovery</td>
+    <td>Chest, box, locket</td>
+  </tr>
+</table>
+
+<h2>Step-by-Step: Creating an Object</h2>
+
+<ol>
+  <li>Click "Add Object" button</li>
+  <li>Enter a memorable name</li>
+  <li>Select the object type</li>
+  <li>Set its significance level</li>
+  <li>Optionally assign an owner</li>
+  <li>Write a brief description</li>
+  <li>Save the object</li>
+</ol>
+
+<h2>CNL Output</h2>
+
+<pre><code>SilverKey is artifact
+SilverKey has significance high
+SilverKey has description "Ancient key that unlocks the forbidden chamber"
+Anna owns SilverKey
+
+ProphecyScroll is document
+ProphecyScroll has significance high
+ProphecyScroll has description "Scroll foretelling the return of the shadow"
+
+GreenLight is symbol
+GreenLight has significance medium
+GreenLight has description "Light across the bay representing unattainable dreams"</code></pre>
+
+<h2>Chekhov's Gun Principle</h2>
+
+<p>SCRIPTA tracks object usage to enforce narrative economy:</p>
+
+<div class="info-box">
+  <div class="info-box-title">Chekhov's Gun</div>
+  <p>"If you say in the first chapter that there is a rifle hanging on the wall, in the second or third chapter it absolutely must go off."</p>
+</div>
+
+<p>Objects defined with high significance should appear in scenes and affect the plot. The Object Integration (OI) metric tracks this.</p>
+
+<h2>Metrics Impact</h2>
+
+<p>Objects affect several metrics:</p>
+
+<ul>
+  <li><strong>Object Integration (OI)</strong>: Are important objects used in the plot?</li>
+  <li><strong>Orphan Index</strong>: Unused objects lower this score</li>
+  <li><strong>Setup/Payoff</strong>: Objects should be introduced before becoming crucial</li>
+</ul>
+
+<h2>Object Transfer Tracking</h2>
+
+<p>Track ownership changes:</p>
+
+<pre><code>scene "The Gift"
+  Gandalf gives SilverKey to Anna
+  
+scene "The Theft"
+  Villain steals SilverKey from Anna</code></pre>
+
+<h2>Best Practices</h2>
+
+<ol>
+  <li><strong>Limit important objects</strong>: 3-5 high-significance objects per story</li>
+  <li><strong>Introduce early</strong>: Important objects should appear before needed</li>
+  <li><strong>Track ownership</strong>: Know who has what at each point</li>
+  <li><strong>Match type to function</strong>: Use appropriate categories</li>
+  <li><strong>Use objects for connection</strong>: Gifts link characters</li>
+  <li><strong>Consider symbolic weight</strong>: Objects can carry theme</li>
+</ol>
+
+<h2>Related Documentation</h2>
+
+<ul>
+  <li><a href="#plotelements" data-page="plotelements">Plot Elements Theory</a> - Deep dive into objects as narrative devices</li>
+  <li><a href="#tab-themes" data-page="tab-themes">Themes Tab</a> - Symbolic connections</li>
+  <li><a href="#metrics-reference" data-page="metrics-reference">Metrics Reference</a> - Object-related metrics</li>
+</ul>

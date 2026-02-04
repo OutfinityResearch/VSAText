@@ -1,0 +1,225 @@
+<h1>Locations Tab</h1>
+
+<p>The Locations tab manages places where scenes occur. Well-defined locations enhance atmosphere, provide spatial coherence, and ground your story in a believable world.</p>
+
+<div class="info-box">
+  <div class="info-box-title">When to Use This Tab</div>
+  <p>Use the Locations tab after defining characters and before building scenes. Create the key places where your story will unfold.</p>
+</div>
+
+<h2>What This Tab Does</h2>
+
+<p>The Locations tab lets you define the physical and atmospheric properties of places in your story:</p>
+
+<ul>
+  <li>Geographic type (urban, forest, mountain, etc.)</li>
+  <li>Emotional atmosphere (peaceful, threatening, mysterious)</li>
+  <li>Historical period (medieval, modern, futuristic)</li>
+  <li>Physical characteristics</li>
+  <li>Symbolic meaning</li>
+</ul>
+
+<h2>Location Properties</h2>
+
+<table>
+  <tr>
+    <th>Property</th>
+    <th>Description</th>
+    <th>Examples</th>
+  </tr>
+  <tr>
+    <td>Name</td>
+    <td>Location identifier</td>
+    <td>Village, DarkForest, Castle, Tavern</td>
+  </tr>
+  <tr>
+    <td>Geography</td>
+    <td>Physical type</td>
+    <td>urban, rural, forest, mountain, coastal, desert, underground, space</td>
+  </tr>
+  <tr>
+    <td>Atmosphere</td>
+    <td>Emotional quality</td>
+    <td>peaceful, mysterious, threatening, welcoming, desolate, sacred</td>
+  </tr>
+  <tr>
+    <td>Time Period</td>
+    <td>Historical setting</td>
+    <td>ancient, medieval, renaissance, modern, futuristic</td>
+  </tr>
+  <tr>
+    <td>Characteristics</td>
+    <td>Defining physical features</td>
+    <td>"ancient stone walls", "bioluminescent plants"</td>
+  </tr>
+  <tr>
+    <td>Significance</td>
+    <td>Story importance</td>
+    <td>primary (major scenes), secondary (supporting), transitional</td>
+  </tr>
+</table>
+
+<h2>Geography Types</h2>
+
+<table>
+  <tr>
+    <th>Type</th>
+    <th>Description</th>
+    <th>Common Atmospheres</th>
+  </tr>
+  <tr>
+    <td>urban</td>
+    <td>Cities, towns, settlements</td>
+    <td>busy, dangerous, welcoming</td>
+  </tr>
+  <tr>
+    <td>rural</td>
+    <td>Countryside, farms, villages</td>
+    <td>peaceful, isolated, pastoral</td>
+  </tr>
+  <tr>
+    <td>forest</td>
+    <td>Woods, jungles, groves</td>
+    <td>mysterious, threatening, enchanted</td>
+  </tr>
+  <tr>
+    <td>mountain</td>
+    <td>Peaks, ranges, highlands</td>
+    <td>majestic, dangerous, isolated</td>
+  </tr>
+  <tr>
+    <td>coastal</td>
+    <td>Shores, ports, islands</td>
+    <td>peaceful, adventurous, liminal</td>
+  </tr>
+  <tr>
+    <td>desert</td>
+    <td>Arid lands, wastelands</td>
+    <td>desolate, harsh, mystical</td>
+  </tr>
+  <tr>
+    <td>underground</td>
+    <td>Caves, dungeons, mines</td>
+    <td>threatening, mysterious, claustrophobic</td>
+  </tr>
+  <tr>
+    <td>aquatic</td>
+    <td>Underwater, ships, lakes</td>
+    <td>mysterious, dangerous, otherworldly</td>
+  </tr>
+  <tr>
+    <td>space</td>
+    <td>Orbital, interstellar</td>
+    <td>vast, isolated, wondrous</td>
+  </tr>
+</table>
+
+<h2>Atmosphere Options</h2>
+
+<p>Choose atmospheres that support the emotional needs of scenes:</p>
+
+<ul>
+  <li><strong>peaceful</strong>: Rest points, ordinary world, recovery</li>
+  <li><strong>mysterious</strong>: Discovery scenes, hidden secrets</li>
+  <li><strong>threatening</strong>: Danger, confrontations, ordeals</li>
+  <li><strong>welcoming</strong>: Allies, safe havens, respite</li>
+  <li><strong>desolate</strong>: Isolation, despair, wastelands</li>
+  <li><strong>sacred</strong>: Temples, transformations, revelations</li>
+  <li><strong>corrupted</strong>: Fallen places, shadow influence</li>
+  <li><strong>enchanted</strong>: Magic, wonder, otherworldly</li>
+</ul>
+
+<h2>Step-by-Step: Creating a Location</h2>
+
+<ol>
+  <li>Click "Add Location" button</li>
+  <li>Enter a descriptive name</li>
+  <li>Select the geography type</li>
+  <li>Choose the primary atmosphere</li>
+  <li>Set the time period</li>
+  <li>Add 2-3 specific characteristics</li>
+  <li>Set significance level</li>
+  <li>Save the location</li>
+</ol>
+
+<h2>CNL Output</h2>
+
+<pre><code>Village is location
+Village has geography rural
+Village has atmosphere peaceful
+Village has time_period medieval
+Village has characteristic "ancient stone walls"
+Village has characteristic "central fountain"
+Village has significance primary
+
+DarkForest is location
+DarkForest has geography forest
+DarkForest has atmosphere threatening
+DarkForest has characteristic "perpetual mist"
+DarkForest has characteristic "twisted ancient trees"</code></pre>
+
+<h2>Metrics Impact</h2>
+
+<p>Locations affect the <strong>Location Logic Score (locLogic)</strong>:</p>
+
+<ul>
+  <li>Good stories reuse key locations</li>
+  <li>Scene-hopping without returning lowers the score</li>
+  <li>Locations should serve narrative purpose</li>
+</ul>
+
+<p>Low locLogic indicates random scene placement without spatial coherence.</p>
+
+<h2>Symbolic Locations</h2>
+
+<p>Locations often carry symbolic weight:</p>
+
+<table>
+  <tr>
+    <th>Location Type</th>
+    <th>Common Symbolism</th>
+  </tr>
+  <tr>
+    <td>Home/Village</td>
+    <td>Ordinary world, safety, what's at stake</td>
+  </tr>
+  <tr>
+    <td>Forest/Wilderness</td>
+    <td>Unconscious, transformation, tests</td>
+  </tr>
+  <tr>
+    <td>Mountain Peak</td>
+    <td>Achievement, enlightenment, confrontation</td>
+  </tr>
+  <tr>
+    <td>Cave/Underground</td>
+    <td>Death/rebirth, inner journey, shadow</td>
+  </tr>
+  <tr>
+    <td>Water/Ocean</td>
+    <td>Transition, unconscious, cleansing</td>
+  </tr>
+  <tr>
+    <td>Castle/Tower</td>
+    <td>Power, authority, goal</td>
+  </tr>
+</table>
+
+<h2>Best Practices</h2>
+
+<ol>
+  <li><strong>Start with the ordinary world</strong>: Where does your hero begin?</li>
+  <li><strong>Create contrast</strong>: New world should differ from ordinary world</li>
+  <li><strong>Limit location count</strong>: 5-10 key locations is usually enough</li>
+  <li><strong>Return to locations</strong>: Revisiting adds meaning</li>
+  <li><strong>Match atmosphere to mood</strong>: Location supports scene emotion</li>
+  <li><strong>Add specific details</strong>: Characteristics make places memorable</li>
+</ol>
+
+<h2>Related Documentation</h2>
+
+<ul>
+  <li><a href="#worldrules-theory" data-page="worldrules-theory">World Building Theory</a> - Creating consistent worlds</li>
+  <li><a href="#tab-moods" data-page="tab-moods">Moods Tab</a> - Emotional atmospheres</li>
+  <li><a href="#plotelements" data-page="plotelements">Plot Elements</a> - Setting as story element</li>
+</ul>

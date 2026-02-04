@@ -1,0 +1,226 @@
+<h1>Blueprint Tab</h1>
+
+<p>The Blueprint tab provides high-level story planning tools that connect abstract narrative structure to concrete content. This is where you design the overall shape of your story.</p>
+
+<div class="info-box">
+  <div class="info-box-title">When to Use This Tab</div>
+  <p>Use the Blueprint tab early in your planning process to establish the narrative arc, map story beats, design tension curves, and plan subplots.</p>
+</div>
+
+<h2>What This Tab Does</h2>
+
+<p>The Blueprint tab is your story's architectural plan. It defines:</p>
+
+<ul>
+  <li>Which narrative arc template guides your story</li>
+  <li>How story beats map to specific chapters and scenes</li>
+  <li>The tension curve showing emotional intensity over time</li>
+  <li>Subplot threads and their intersection points</li>
+</ul>
+
+<h2>Blueprint Components</h2>
+
+<h3>1. Arc Selection</h3>
+
+<p>Choose the narrative arc template that best fits your story:</p>
+
+<table>
+  <tr>
+    <th>Arc</th>
+    <th>Beats</th>
+    <th>Best For</th>
+    <th>Origin</th>
+  </tr>
+  <tr>
+    <td>Hero's Journey</td>
+    <td>12</td>
+    <td>Epic adventures, transformations</td>
+    <td>Joseph Campbell</td>
+  </tr>
+  <tr>
+    <td>Three Act Structure</td>
+    <td>9</td>
+    <td>General fiction, screenplays</td>
+    <td>Aristotle/Hollywood</td>
+  </tr>
+  <tr>
+    <td>Save the Cat</td>
+    <td>15</td>
+    <td>Commercial fiction, detailed plotting</td>
+    <td>Blake Snyder</td>
+  </tr>
+  <tr>
+    <td>Story Circle</td>
+    <td>8</td>
+    <td>Character-focused stories</td>
+    <td>Dan Harmon</td>
+  </tr>
+  <tr>
+    <td>Kishotenketsu</td>
+    <td>4</td>
+    <td>Stories without central conflict</td>
+    <td>Japanese tradition</td>
+  </tr>
+  <tr>
+    <td>Five Act</td>
+    <td>5</td>
+    <td>Classical drama, tragedies</td>
+    <td>Freytag</td>
+  </tr>
+  <tr>
+    <td>Seven-Point</td>
+    <td>7</td>
+    <td>Novels with clear turning points</td>
+    <td>Dan Wells</td>
+  </tr>
+</table>
+
+<h3>2. Beat Mapping</h3>
+
+<p>Assign arc beats to specific locations in your story:</p>
+
+<table>
+  <tr>
+    <th>Property</th>
+    <th>Description</th>
+    <th>Example</th>
+  </tr>
+  <tr>
+    <td>Beat</td>
+    <td>The narrative beat name</td>
+    <td>"Call to Adventure"</td>
+  </tr>
+  <tr>
+    <td>Chapter</td>
+    <td>Target chapter</td>
+    <td>Chapter 2</td>
+  </tr>
+  <tr>
+    <td>Scene</td>
+    <td>Specific scene (optional)</td>
+    <td>Scene 3</td>
+  </tr>
+  <tr>
+    <td>Tension</td>
+    <td>Tension level (1-5)</td>
+    <td>3</td>
+  </tr>
+  <tr>
+    <td>Notes</td>
+    <td>Author notes</td>
+    <td>"Herald delivers message"</td>
+  </tr>
+</table>
+
+<h3>3. Tension Curve</h3>
+
+<p>The tension curve is a visual editor for emotional intensity across your story. Each point defines:</p>
+
+<ul>
+  <li><strong>Position</strong>: Where in the story (0.0 = start, 1.0 = end)</li>
+  <li><strong>Tension</strong>: Intensity level (1-5)</li>
+</ul>
+
+<p>A well-designed tension curve typically:</p>
+<ul>
+  <li>Starts at low tension (ordinary world)</li>
+  <li>Rises through the first half</li>
+  <li>Has a midpoint shift</li>
+  <li>Peaks near 75-85% (climax)</li>
+  <li>Falls to resolution</li>
+</ul>
+
+<h3>4. Subplots</h3>
+
+<p>Secondary story threads that enrich the main narrative:</p>
+
+<table>
+  <tr>
+    <th>Property</th>
+    <th>Description</th>
+    <th>Options</th>
+  </tr>
+  <tr>
+    <td>Name</td>
+    <td>Subplot identifier</td>
+    <td>Any descriptive name</td>
+  </tr>
+  <tr>
+    <td>Type</td>
+    <td>Subplot pattern</td>
+    <td>romance, rivalry, mystery, growth, revenge, mentorship</td>
+  </tr>
+  <tr>
+    <td>Characters</td>
+    <td>Who is involved</td>
+    <td>Select from defined characters</td>
+  </tr>
+  <tr>
+    <td>Start Beat</td>
+    <td>When it begins</td>
+    <td>Any story beat</td>
+  </tr>
+  <tr>
+    <td>Resolve Beat</td>
+    <td>When it concludes</td>
+    <td>Any story beat</td>
+  </tr>
+  <tr>
+    <td>Touchpoints</td>
+    <td>Main plot intersections</td>
+    <td>List of scenes/chapters</td>
+  </tr>
+</table>
+
+<h2>CNL Output</h2>
+
+<pre><code>// Arc Selection
+Story has arc "heros_journey"
+
+// Beat Mapping
+beat "call_to_adventure" at chapter 2 scene 1
+beat "call_to_adventure" has tension 3
+beat "call_to_adventure" has note "Herald arrives"
+
+// Tension Curve
+Story has tension_point 0.0 1
+Story has tension_point 0.25 3
+Story has tension_point 0.50 4
+Story has tension_point 0.75 5
+Story has tension_point 1.0 2
+
+// Subplots
+subplot "forbidden_romance" is romance
+subplot "forbidden_romance" involves Anna
+subplot "forbidden_romance" involves Marcus
+subplot "forbidden_romance" starts at "crossing_threshold"
+subplot "forbidden_romance" resolves at "return_elixir"</code></pre>
+
+<h2>Metrics Impact</h2>
+
+<p>Blueprint decisions affect several key metrics:</p>
+
+<ul>
+  <li><strong>Emotional Arc Profile (EAP)</strong>: How well scene moods match the tension curve</li>
+  <li><strong>Beat Coverage</strong>: Are all selected arc beats represented in scenes?</li>
+  <li><strong>Subplot Integration</strong>: Do subplots have sufficient touchpoints?</li>
+  <li><strong>Pacing Score</strong>: Is tension distributed appropriately?</li>
+</ul>
+
+<h2>Best Practices</h2>
+
+<ol>
+  <li><strong>Choose arc early</strong>: The arc selection influences everything else</li>
+  <li><strong>Map major beats first</strong>: Start with Inciting Incident, Midpoint, Climax</li>
+  <li><strong>Don't skip beats</strong>: Each beat serves a purpose in the structure</li>
+  <li><strong>Match subplot to main plot</strong>: Subplots should echo or contrast the main theme</li>
+  <li><strong>Use tension curve</strong>: Visual pacing prevents monotony</li>
+</ol>
+
+<h2>Related Documentation</h2>
+
+<ul>
+  <li><a href="#narrative-theory" data-page="narrative-theory">Narrative Structure Theory</a> - Deep dive into arc theory</li>
+  <li><a href="#tab-arc" data-page="tab-arc">Arc Tab</a> - Detailed arc selection</li>
+  <li><a href="#pattern-theory" data-page="pattern-theory">Story Patterns</a> - Master plots and patterns</li>
+</ul>

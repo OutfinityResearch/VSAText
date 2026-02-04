@@ -33,7 +33,7 @@
     
     .docs-container {
       display: grid;
-      grid-template-columns: 240px 1fr;
+      grid-template-columns: 260px 1fr;
       min-height: 100vh;
     }
     
@@ -45,7 +45,7 @@
       position: fixed;
       top: 0;
       left: 0;
-      width: 240px;
+      width: 260px;
       height: 100vh;
       overflow-y: auto;
     }
@@ -68,14 +68,14 @@
     }
     
     .nav-section {
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
     }
     
     .nav-section-title {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       text-transform: uppercase;
       color: var(--text-muted);
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.4rem;
       padding-left: 0.5rem;
       letter-spacing: 0.05em;
     }
@@ -86,12 +86,12 @@
     
     .docs-nav a {
       display: block;
-      padding: 0.4rem 0.6rem;
+      padding: 0.3rem 0.6rem;
       color: var(--text-secondary);
       text-decoration: none;
       border-radius: 4px;
-      font-size: 0.85rem;
-      margin-bottom: 0.1rem;
+      font-size: 0.8rem;
+      margin-bottom: 0.05rem;
       cursor: pointer;
     }
     
@@ -107,7 +107,7 @@
     
     /* Main content */
     .docs-main {
-      margin-left: 240px;
+      margin-left: 260px;
       padding: 2rem 3rem;
       max-width: 1000px;
     }
@@ -276,25 +276,53 @@
     </div>
     
     <div class="nav-section">
-      <div class="nav-section-title">Story Elements</div>
+      <div class="nav-section-title">Editor Tabs</div>
       <nav class="docs-nav">
-        <a href="#elements" data-page="elements">Elements Guide</a>
-        <a href="#characters" data-page="characters">Characters</a>
-        <a href="#narrative" data-page="narrative">Narrative Structure</a>
-        <a href="#patterns" data-page="patterns">Story Patterns</a>
-        <a href="#themes" data-page="themes">Themes</a>
-        <a href="#wisdom" data-page="wisdom">Wisdom</a>
-        <a href="#worldrules" data-page="worldrules">World Rules</a>
+        <a href="#tab-cnl" data-page="tab-cnl">CNL Editor</a>
+        <a href="#tab-nl" data-page="tab-nl">Natural Language</a>
+        <a href="#tab-blueprint" data-page="tab-blueprint">Blueprint</a>
+        <a href="#tab-templates" data-page="tab-templates">Templates</a>
+        <a href="#tab-characters" data-page="tab-characters">Characters</a>
+        <a href="#tab-relations" data-page="tab-relations">Relations</a>
+        <a href="#tab-locations" data-page="tab-locations">Locations</a>
+        <a href="#tab-objects" data-page="tab-objects">Objects</a>
+        <a href="#tab-moods" data-page="tab-moods">Moods</a>
+        <a href="#tab-dialogues" data-page="tab-dialogues">Dialogues</a>
+        <a href="#tab-arc" data-page="tab-arc">Arc</a>
+        <a href="#tab-blocks" data-page="tab-blocks">Blocks</a>
+        <a href="#tab-world" data-page="tab-world">World Rules</a>
+        <a href="#tab-themes" data-page="tab-themes">Themes</a>
+        <a href="#tab-wisdom" data-page="tab-wisdom">Wisdom</a>
+        <a href="#tab-patterns" data-page="tab-patterns">Patterns</a>
+      </nav>
+    </div>
+    
+    <div class="nav-section">
+      <div class="nav-section-title">Deep Dive (Theory)</div>
+      <nav class="docs-nav">
+        <a href="#character-theory" data-page="character-theory">Character Archetypes</a>
+        <a href="#narrative-theory" data-page="narrative-theory">Narrative Structure</a>
+        <a href="#pattern-theory" data-page="pattern-theory">Story Patterns</a>
+        <a href="#theme-theory" data-page="theme-theory">Theme Theory</a>
+        <a href="#wisdom-theory" data-page="wisdom-theory">Wisdom Traditions</a>
+        <a href="#worldrules-theory" data-page="worldrules-theory">World Building</a>
         <a href="#plotelements" data-page="plotelements">Plot Elements</a>
       </nav>
     </div>
     
     <div class="nav-section">
-      <div class="nav-section-title">Generation & Quality</div>
+      <div class="nav-section-title">Quality & Metrics</div>
       <nav class="docs-nav">
         <a href="#generation" data-page="generation">Generation Strategies</a>
         <a href="#metrics-reference" data-page="metrics-reference">Metrics Reference</a>
         <a href="#metrics" data-page="metrics">Metrics Overview</a>
+      </nav>
+    </div>
+    
+    <div class="nav-section">
+      <div class="nav-section-title">Reference</div>
+      <nav class="docs-nav">
+        <a href="#elements" data-page="elements">All Elements (Legacy)</a>
       </nav>
     </div>
   </aside>
@@ -308,21 +336,46 @@
   <script>
     // Page content mapping
     const pages = {
+      // Getting Started
       'overview': 'content/overview.html',
       'conceptual-model': 'content/conceptual-model.html',
       'cnl-language': 'content/cnl-language.html',
-      'elements': 'content/elements.html',
-      'generation': 'content/generation.html',
       'end-to-end': 'content/end-to-end.html',
-      'metrics-reference': 'content/metrics-reference.html',
-      'characters': 'content/characters.html',
-      'narrative': 'content/narrative.html',
-      'patterns': 'content/patterns.html',
-      'wisdom': 'content/wisdom.html',
-      'worldrules': 'content/worldrules.html',
-      'themes': 'content/themes.html',
+      
+      // Editor Tabs
+      'tab-cnl': 'content/tab-cnl.html',
+      'tab-nl': 'content/tab-nl.html',
+      'tab-blueprint': 'content/tab-blueprint.html',
+      'tab-templates': 'content/tab-templates.html',
+      'tab-characters': 'content/tab-characters.html',
+      'tab-relations': 'content/tab-relations.html',
+      'tab-locations': 'content/tab-locations.html',
+      'tab-objects': 'content/tab-objects.html',
+      'tab-moods': 'content/tab-moods.html',
+      'tab-dialogues': 'content/tab-dialogues.html',
+      'tab-arc': 'content/tab-arc.html',
+      'tab-blocks': 'content/tab-blocks.html',
+      'tab-world': 'content/tab-world.html',
+      'tab-themes': 'content/tab-themes.html',
+      'tab-wisdom': 'content/tab-wisdom.html',
+      'tab-patterns': 'content/tab-patterns.html',
+      
+      // Deep Dive (Theory)
+      'character-theory': 'content/character-theory.html',
+      'narrative-theory': 'content/narrative-theory.html',
+      'pattern-theory': 'content/pattern-theory.html',
+      'theme-theory': 'content/theme-theory.html',
+      'wisdom-theory': 'content/wisdom-theory.html',
+      'worldrules-theory': 'content/worldrules-theory.html',
       'plotelements': 'content/plotelements.html',
-      'metrics': 'content/metrics.html'
+      
+      // Quality & Metrics
+      'generation': 'content/generation.html',
+      'metrics-reference': 'content/metrics-reference.html',
+      'metrics': 'content/metrics.html',
+      
+      // Reference
+      'elements': 'content/elements.html'
     };
     
     const contentEl = document.getElementById('docs-content');

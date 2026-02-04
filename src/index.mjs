@@ -135,9 +135,20 @@ export {
 } from './vsa/encoder.mjs';
 
 // ============================================
+// Story Generation
+// ============================================
+export {
+  generateRandomStory,
+  generateRandom,
+  NARRATIVE_ARCS as GENERATION_ARCS,
+  GENRE_CONFIG
+} from './generation/index.mjs';
+
+// ============================================
 // Default export
 // ============================================
 export default {
   version: '0.1.0',
-  name: 'SCRIPTA SDK'
+  name: 'SCRIPTA SDK',
+  environment: 'browser'
 };

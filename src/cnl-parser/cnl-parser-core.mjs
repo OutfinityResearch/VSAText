@@ -386,7 +386,7 @@ export function parseCNL(text) {
 function processStatement(statement, ast, groupStack, lineNo) {
   const currentScope = groupStack.length > 0 ? groupStack[groupStack.length - 1] : null;
   
-  // Entity declarations: "X is Y"
+  // Entity declarations: "X is Y" or "X is Y with trait Z"
   if (statement.verb === 'is' && statement.objects.length > 0) {
     const entityType = statement.objects[0].toLowerCase();
     const entityName = statement.subject;
@@ -400,6 +400,18 @@ function processStatement(statement, ast, groupStack, lineNo) {
       ast.entities[entityName].types.push(entityType);
       if (ENTITY_TYPES.has(entityType)) {
         ast.entities[entityName].type = entityType;
+      }
+    }
+    
+    // Extract traits from "with trait X, Y" modifier
+    if (statement.modifiers?.with === 'trait' && statement.objects.length > 1) {
+      const entity = ast.entities[entityName];
+      // Traits are in objects after the entity type, may be comma-separated
+      for (let i = 1; i < statement.objects.length; i++) {
+        const traitValue = statement.objects[i];
+        // Split by comma if present
+        const traits = traitValue.split(',').map(t => t.trim()).filter(Boolean);
+        entity.traits.push(...traits);
       }
     }
   }
@@ -605,7 +617,7 @@ export function extractEntities(ast) {
     
     const type = entity.type?.toLowerCase();
     
-    if (['protagonist', 'character', 'antagonist', 'mentor', 'ally', 'enemy'].includes(type)) {
+    if (['protagonist', 'character', 'antagonist', 'mentor', 'ally', 'enemy', 'hero', 'villain', 'shadow', 'sidekick', 'trickster', 'herald', 'shapeshifter', 'threshold_guardian'].includes(type)) {
       characters.push(item);
     } else if (['location', 'place', 'setting'].includes(type)) {
       locations.push(item);

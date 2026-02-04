@@ -258,12 +258,254 @@
       padding: 3rem;
       color: var(--text-muted);
     }
+    
+    /* ========================================
+       MOBILE RESPONSIVE STYLES
+       ======================================== */
+    
+    /* Hamburger button - hidden on desktop */
+    .hamburger-btn {
+      display: none;
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 1001;
+      width: 44px;
+      height: 44px;
+      padding: 10px;
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-elevated);
+      border-radius: 8px;
+      cursor: pointer;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .hamburger-line {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--accent-gold);
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+    
+    .hamburger-btn.active .hamburger-line:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+    
+    .hamburger-btn.active .hamburger-line:nth-child(2) {
+      opacity: 0;
+    }
+    
+    .hamburger-btn.active .hamburger-line:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+    }
+    
+    /* Sidebar header with close button */
+    .sidebar-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--bg-elevated);
+    }
+    
+    .sidebar-header .docs-logo {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    
+    .sidebar-header .docs-logo-sub {
+      width: 100%;
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    
+    /* Close button - hidden on desktop */
+    .close-sidebar-btn {
+      display: none;
+      width: 36px;
+      height: 36px;
+      background: transparent;
+      border: 1px solid var(--bg-elevated);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+      line-height: 1;
+      transition: all 0.2s ease;
+    }
+    
+    .close-sidebar-btn:hover {
+      background: var(--bg-elevated);
+      color: var(--accent-coral);
+    }
+    
+    /* Overlay - hidden by default */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .sidebar-overlay.active {
+      opacity: 1;
+    }
+    
+    /* ========================================
+       TABLET BREAKPOINT (< 1024px)
+       ======================================== */
+    @media (max-width: 1024px) {
+      .docs-main {
+        padding: 2rem 2rem;
+      }
+    }
+    
+    /* ========================================
+       MOBILE BREAKPOINT (< 768px)
+       ======================================== */
+    @media (max-width: 768px) {
+      /* Show hamburger button */
+      .hamburger-btn {
+        display: flex;
+      }
+      
+      /* Show close button in sidebar */
+      .close-sidebar-btn {
+        display: block;
+      }
+      
+      /* Show overlay when active */
+      .sidebar-overlay {
+        display: block;
+        pointer-events: none;
+      }
+      
+      .sidebar-overlay.active {
+        pointer-events: auto;
+      }
+      
+      /* Sidebar transforms to slide-out panel */
+      .docs-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 280px;
+        max-width: 85vw;
+        height: 100vh;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 1000;
+        box-shadow: none;
+      }
+      
+      .docs-sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+      }
+      
+      /* Main content takes full width */
+      .docs-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .docs-main {
+        margin-left: 0;
+        padding: 1rem;
+        padding-top: 4.5rem; /* Space for hamburger button */
+      }
+      
+      /* Adjust content for mobile */
+      .docs-content h1 {
+        font-size: 1.5rem;
+      }
+      
+      .docs-content h2 {
+        font-size: 1.2rem;
+      }
+      
+      .docs-content h3 {
+        font-size: 1rem;
+      }
+      
+      /* Tables scroll horizontally */
+      .docs-content table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      /* Reduce padding on boxes */
+      .info-box, .feature-card {
+        padding: 0.75rem 1rem;
+      }
+      
+      /* Feature grid single column */
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      /* Improve touch targets */
+      .docs-nav a {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.95rem;
+      }
+    }
+    
+    /* ========================================
+       SMALL MOBILE BREAKPOINT (< 480px)
+       ======================================== */
+    @media (max-width: 480px) {
+      .docs-main {
+        padding: 0.75rem;
+        padding-top: 4rem;
+      }
+      
+      .docs-content h1 {
+        font-size: 1.3rem;
+      }
+      
+      .docs-content pre {
+        padding: 0.75rem;
+        font-size: 0.8rem;
+      }
+      
+      th, td {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+      }
+    }
   </style>
 </head>
 <body>
-  <aside class="docs-sidebar">
-    <div class="docs-logo">SCRIPTA</div>
-    <div class="docs-logo-sub">Documentation</div>
+  <!-- Mobile hamburger button -->
+  <button class="hamburger-btn" id="hamburger-btn" aria-label="Toggle menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+  
+  <!-- Overlay for mobile menu -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  
+  <aside class="docs-sidebar" id="docs-sidebar">
+    <div class="sidebar-header">
+      <div class="docs-logo">SCRIPTA</div>
+      <div class="docs-logo-sub">Documentation</div>
+      <button class="close-sidebar-btn" id="close-sidebar-btn" aria-label="Close menu">&times;</button>
+    </div>
     
     <div class="nav-section">
       <div class="nav-section-title">Getting Started</div>
@@ -439,6 +681,69 @@
     window.addEventListener('popstate', () => {
       const hash = window.location.hash.slice(1) || 'overview';
       loadPage(hash);
+    });
+    
+    // ========================================
+    // MOBILE MENU FUNCTIONALITY
+    // ========================================
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+    const sidebar = document.getElementById('docs-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    
+    function openSidebar() {
+      sidebar.classList.add('open');
+      overlay.classList.add('active');
+      hamburgerBtn.classList.add('active');
+      hamburgerBtn.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden'; // Prevent background scroll
+    }
+    
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('active');
+      hamburgerBtn.classList.remove('active');
+      hamburgerBtn.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = ''; // Restore scroll
+    }
+    
+    // Toggle sidebar on hamburger click
+    hamburgerBtn.addEventListener('click', () => {
+      if (sidebar.classList.contains('open')) {
+        closeSidebar();
+      } else {
+        openSidebar();
+      }
+    });
+    
+    // Close sidebar on close button click
+    closeSidebarBtn.addEventListener('click', closeSidebar);
+    
+    // Close sidebar on overlay click
+    overlay.addEventListener('click', closeSidebar);
+    
+    // Close sidebar when a nav link is clicked (mobile UX)
+    document.querySelectorAll('.docs-sidebar .docs-nav a').forEach(link => {
+      link.addEventListener('click', () => {
+        // Only close on mobile
+        if (window.innerWidth <= 768) {
+          closeSidebar();
+        }
+      });
+    });
+    
+    // Close sidebar on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+        closeSidebar();
+      }
+    });
+    
+    // Handle resize - close sidebar if window becomes larger than mobile breakpoint
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 768 && sidebar.classList.contains('open')) {
+        closeSidebar();
+      }
     });
     
     // Initial load

@@ -124,11 +124,17 @@ CAD = average(drift across all characters and windows)</code></pre>
 CAR_lenient = (pass_count + warn_count) / total_artifacts</code></pre>
         
         <h4>Target</h4>
-        <p><strong>CAR_strict >= 99.9%</strong></p>
+        <p><strong>CAR_strict >= 99.9%</strong> (spec requirement)</p>
         
-        <p>In the current implementation, CAR measures orphan reference avoidance:</p>
+        <h4>Current Implementation</h4>
+        <p>The current simplified implementation measures reference validity (orphan avoidance) as a proxy for compliance:</p>
         <pre><code>CAR = valid_references / total_references</code></pre>
-        <p><strong>Target: CAR >= 95%</strong></p>
+        <p>Current target: <strong>CAR >= 95%</strong></p>
+        
+        <div class="info-box">
+          <div class="info-box-title">Note</div>
+          <p>Full guardrail checking (bias detection, PII filtering, plagiarism) requires LLM integration. The current implementation uses reference validation as a simpler proxy metric.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -295,27 +301,36 @@ CAR_lenient = (pass_count + warn_count) / total_artifacts</code></pre>
     </button>
     <div class="accordion-content">
       <div class="accordion-body">
-        <p><strong>Purpose:</strong> Measures naming quality - entities should have meaningful names (3+ characters, not "undefined").</p>
+        <p><strong>Purpose:</strong> Measures how well the system finds relevant content when searching. When an author searches for specific scenes or entities, the system should return the right results quickly.</p>
         
         <div class="info-box">
           <div class="info-box-title">Technical Specification</div>
           <p>See <a href="../specs/DS18-Metric-Retrieval-Quality.md">DS18-Metric-Retrieval-Quality.md</a></p>
         </div>
         
-        <h4>Full Implementation</h4>
+        <h4>How It Works</h4>
         <p>Uses Mean Reciprocal Rank (MRR) to measure search effectiveness:</p>
-        <pre><code>MRR = (1/N) x sum(1/rank_i) for i = 1 to N</code></pre>
+        <pre><code>MRR = (1/N) x sum(1/rank_i) for i = 1 to N
+
+Where rank_i is the position of the first relevant result for query i.</code></pre>
+        
+        <p><strong>Interpretation:</strong></p>
+        <ul>
+          <li>MRR = 1.0: First result is always relevant</li>
+          <li>MRR = 0.5: First relevant result is typically at position 2</li>
+          <li>MRR = 0.33: First relevant result is typically at position 3</li>
+        </ul>
         
         <h4>Current Implementation</h4>
-        <p>Measures entity naming quality:</p>
+        <p>The current simplified implementation measures entity naming quality as a proxy for retrieval (well-named entities are easier to find):</p>
         <ul>
           <li>Entity names should be at least 3 characters long</li>
           <li>Entity names should not be "undefined" or empty</li>
         </ul>
         
         <h4>Target</h4>
-        <p><strong>MRR > 0.6</strong> (full implementation)</p>
-        <p>Current implementation: <strong>RQ >= 80%</strong></p>
+        <p><strong>MRR > 0.6</strong> (on average, first relevant result within top 2 positions)</p>
+        <p>Current implementation (naming proxy): <strong>RQ >= 80%</strong></p>
       </div>
     </div>
   </section>

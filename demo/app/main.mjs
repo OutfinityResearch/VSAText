@@ -11,7 +11,7 @@ import { renderEntityGrid, showSelectModal, showBlockModal, showActionModal } fr
 import { renderRelationshipsView, renderEmotionalArcView, renderBlocksView, renderWorldRulesView } from './views.mjs';
 import { evaluateMetrics, renderEmptyMetrics, initMetrics } from './metrics.mjs';
 import { exportCNL, importCNL, toggleEditMode } from './cnl.mjs';
-import { saveProject, loadProjectsList, newProject } from './persistence.mjs';
+import { loadProjectsList, newProject, initPersistence } from './persistence.mjs';
 import { setupContextMenu } from './context-menu.mjs';
 
 // Blueprint imports
@@ -46,11 +46,13 @@ async function init() {
   // Load blueprint data
   await loadBlueprintData();
   
+  // Initialize persistence (autosave, beforeunload)
+  initPersistence();
+  
   // Setup context menu
   setupContextMenu();
   
   // Header buttons
-  $('#btn-save').onclick = saveProject;
   $('#btn-load').onclick = loadProjectsList;
   $('#btn-generate').onclick = () => {
     if (state.generation.hasGenerated) {

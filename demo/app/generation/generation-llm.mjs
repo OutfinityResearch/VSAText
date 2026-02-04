@@ -5,6 +5,7 @@
  */
 
 import { state, createSnapshot } from '../state.mjs';
+import { showNotification } from '../utils.mjs';
 import { 
   refreshAllViews,
   loadProjectData,
@@ -41,7 +42,7 @@ export async function generateLLM(options) {
     });
     
     if (!response.ok) {
-      const err = await response.json();
+      const err = await response.json().catch(() => ({ error: { message: 'Server error' } }));
       throw new Error(err.error?.message || 'LLM generation failed');
     }
     
@@ -72,7 +73,9 @@ export async function generateLLM(options) {
     
   } catch (err) {
     hideGenerationStatus(statusEl);
-    alert('LLM Generation Error: ' + err.message + '\n\nMake sure the server is running and API keys are configured.');
+    console.error('LLM Generation Error:', err);
+    showNotification('LLM Generation failed: ' + err.message, 'error');
+    throw err; // Re-throw so caller can handle
   }
 }
 

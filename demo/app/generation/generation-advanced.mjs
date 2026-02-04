@@ -5,6 +5,7 @@
  */
 
 import { state, createSnapshot } from '../state.mjs';
+import { showNotification } from '../utils.mjs';
 import { countType } from '../tree.mjs';
 import { generateCNL } from '../cnl.mjs';
 import { 
@@ -147,7 +148,9 @@ export async function generateAdvanced(options) {
     
   } catch (err) {
     hideGenerationStatus(statusEl);
-    alert('Advanced Generation Error: ' + err.message);
+    console.error('Advanced Generation Error:', err);
+    showNotification('Advanced Generation failed: ' + err.message, 'error');
+    throw err; // Re-throw so caller can handle
   }
 }
 

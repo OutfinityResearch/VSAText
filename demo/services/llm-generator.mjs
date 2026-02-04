@@ -201,6 +201,56 @@ OUTPUT FORMAT (Markdown):
 - Do not wrap the output in code blocks`;
   },
 
+  // Prompt for improving an existing story version
+  improveNLStory: (cnl, storyName, previousVersion, options) => {
+    const langCode = options.language || 'en';
+    const langInfo = SUPPORTED_LANGUAGES[langCode] || SUPPORTED_LANGUAGES.en;
+    const languageInstruction = langCode === 'en' 
+      ? '' 
+      : `\n\nIMPORTANT: Keep the story in ${langInfo.name} (${langInfo.native}). All text must remain in ${langInfo.name}.`;
+    
+    const customInstructions = options.customPrompt 
+      ? `\n\nSPECIFIC IMPROVEMENT INSTRUCTIONS FROM AUTHOR:\n${options.customPrompt}` 
+      : '';
+
+    return `You are a skilled fiction editor and writer. Improve and enhance the following story while keeping its essence and structure intact.
+
+STORY TITLE: ${storyName}
+
+STORY SPECIFICATION (CNL) - The blueprint to follow:
+${cnl}
+
+CURRENT VERSION TO IMPROVE:
+${previousVersion}
+
+IMPROVEMENT GOALS:
+1. Enhance prose quality - make descriptions more vivid and evocative
+2. Deepen character voices - make dialogue more distinctive and natural
+3. Strengthen emotional impact - show more, tell less
+4. Improve pacing - ensure each scene has proper buildup and payoff
+5. Add sensory details - sounds, smells, textures, lighting
+6. Enhance transitions between scenes and chapters
+7. Ensure all story elements from the CNL spec are properly utilized
+8. Fix any awkward phrasing or repetitive language
+${customInstructions}${languageInstruction}
+
+IMPORTANT CONSTRAINTS:
+- Maintain the same chapter/scene structure
+- Keep the same characters and their essential traits
+- Preserve the plot points and narrative arc
+- Keep approximately the same length (you may expand up to 20% if it improves quality)
+- Do not add new major plot elements not in the CNL spec
+
+OUTPUT FORMAT (Markdown):
+- Use "# ${storyName}" as the main title
+- Use "## Chapter X: Title" for chapters
+- Use "### Scene Title" for scene breaks
+- Use *italics* and **bold** for emphasis
+- Use > for quotes or epigraphs
+- Use --- for scene breaks
+- Output only the improved story, no commentary`;
+  },
+
   // Prompt for generating a single chapter
   generateChapter: (chapterInfo, storyContext, options) => {
     const langCode = options.language || 'en';
@@ -334,10 +384,12 @@ export async function refineStoryWithLLM(project, options) {
 }
 
 /**
- * Generate Natural Language prose story from CNL specification
- * @param {string} cnl - The CNL specification
- * @param {string} storyName - Story title
- * @param {Object} options - Generation options (style, tone, length, language, model, customPrompt)
+ * Generate or improve a prose story from CNL specification
+ * @param {string} cnl - CNL specification
+ * @param {string} storyName - Name of the story
+ * @param {Object} options - Generation options
+ * @param {string} options.previousVersion - Previous version text (for improvement)
+ * @param {boolean} options.isImprovement - Whether this is an improvement request
  * @returns {Promise<Object>} Object containing the generated story text
  */
 export async function generateNLFromCNL(cnl, storyName, options = {}) {
@@ -345,12 +397,19 @@ export async function generateNLFromCNL(cnl, storyName, options = {}) {
     throw new Error('LLM agent not available. Configure AchillesAgentLib with a valid API key to generate narrative prose from CNL specifications.');
   }
   
+  const isImprovement = options.isImprovement && options.previousVersion;
+  
   const agent = new LLMAgent({
-    name: 'ScriptaStoryWriter',
-    systemPrompt: 'You are a skilled fiction writer. Write compelling narrative prose based on story specifications. Output only the story text, no JSON or metadata.'
+    name: isImprovement ? 'ScriptaStoryEditor' : 'ScriptaStoryWriter',
+    systemPrompt: isImprovement 
+      ? 'You are a skilled fiction editor. Improve stories while maintaining their essence. Output only the improved story text.'
+      : 'You are a skilled fiction writer. Write compelling narrative prose based on story specifications. Output only the story text, no JSON or metadata.'
   });
   
-  const prompt = PROMPTS.generateNLFromCNL(cnl, storyName, options);
+  // Choose appropriate prompt based on improvement mode
+  const prompt = isImprovement
+    ? PROMPTS.improveNLStory(cnl, storyName, options.previousVersion, options)
+    : PROMPTS.generateNLFromCNL(cnl, storyName, options);
   
   // Build complete options with optional model selection
   const completeOptions = {
@@ -366,10 +425,35 @@ export async function generateNLFromCNL(cnl, storyName, options = {}) {
   
   const response = await agent.complete(completeOptions);
   
+  // Check if response indicates truncation (finish_reason)
+  if (response.finish_reason === 'length' || response.finishReason === 'length') {
+    throw new Error('Story was truncated due to token limit. Try generating chapter by chapter.');
+  }
+  
   const content = response.content || response.text || response;
   
-  // For NL generation, we expect plain text, not JSON
-  return { story: content.trim() };
+  if (!content || typeof content !== 'string') {
+    throw new Error('LLM returned empty or invalid response');
+  }
+  
+  const trimmedContent = content.trim();
+  
+  // Validate response has meaningful content
+  if (trimmedContent.length < 500) {
+    throw new Error(`Story content too short (${trimmedContent.length} chars). Generation may have failed.`);
+  }
+  
+  // Check for truncated content (ends mid-word)
+  const lastChar = trimmedContent.slice(-1);
+  const last50 = trimmedContent.slice(-50);
+  const endsWithIncompleteWord = /[a-zA-Z]$/.test(trimmedContent) && !['.', '!', '?', '"', "'", '—', '…', '*', '_', '\n'].includes(lastChar);
+  
+  if (endsWithIncompleteWord) {
+    console.error(`[LLM Generator] Story truncated mid-word: "...${last50}"`);
+    throw new Error('Story was truncated mid-word. LLM may have hit token limit.');
+  }
+  
+  return { story: trimmedContent };
 }
 
 /**
@@ -386,7 +470,7 @@ export async function generateChapter(chapterInfo, storyContext, options = {}) {
   
   const agent = new LLMAgent({
     name: 'ScriptaChapterWriter',
-    systemPrompt: 'You are a skilled fiction writer. Write one chapter at a time. Output only the chapter text, no JSON or metadata.'
+    systemPrompt: 'You are a skilled fiction writer. Write one chapter at a time. Output only the chapter text in Markdown format, no JSON or metadata. CRITICAL: Always complete the chapter fully - never stop mid-sentence, mid-word, or mid-paragraph. End with a complete thought.'
   });
   
   const prompt = PROMPTS.generateChapter(chapterInfo, storyContext, options);
@@ -394,7 +478,7 @@ export async function generateChapter(chapterInfo, storyContext, options = {}) {
   const completeOptions = {
     prompt,
     mode: 'deep',
-    maxTokens: 2000
+    maxTokens: 6000  // Increased further for longer chapters
   };
   
   if (options.model) {
@@ -402,9 +486,50 @@ export async function generateChapter(chapterInfo, storyContext, options = {}) {
   }
   
   const response = await agent.complete(completeOptions);
+  
+  // Check if response indicates truncation (finish_reason)
+  if (response.finish_reason === 'length' || response.finishReason === 'length') {
+    throw new Error('Chapter was truncated due to token limit. Try a shorter chapter or different model.');
+  }
+  
   const content = response.content || response.text || response;
   
-  return { chapter: content.trim() };
+  if (!content || typeof content !== 'string') {
+    throw new Error('LLM returned empty or invalid response');
+  }
+  
+  const trimmedContent = content.trim();
+  
+  // Minimum length check
+  if (trimmedContent.length < 200) {
+    throw new Error(`Chapter content too short (${trimmedContent.length} chars). Generation may have failed.`);
+  }
+  
+  // Check for truncated content (ends mid-word or mid-sentence)
+  const lastChar = trimmedContent.slice(-1);
+  const properEndings = ['.', '!', '?', '"', "'", '—', '…', '*', '_', '\n'];
+  
+  // More aggressive truncation detection
+  const last50 = trimmedContent.slice(-50);
+  const endsWithIncompleteWord = /[a-zA-Z]$/.test(trimmedContent) && !properEndings.includes(lastChar);
+  const endsWithOpenQuote = (trimmedContent.match(/"/g) || []).length % 2 !== 0;
+  
+  if (endsWithIncompleteWord) {
+    console.error(`[LLM Generator] Chapter truncated mid-word: "...${last50}"`);
+    throw new Error('Chapter was truncated mid-word. LLM may have hit token limit.');
+  }
+  
+  if (endsWithOpenQuote) {
+    console.warn(`[LLM Generator] Chapter may have unclosed quotes: "...${last50}"`);
+    // Don't throw - might be intentional stylistic choice
+  }
+  
+  if (!properEndings.includes(lastChar)) {
+    console.warn(`[LLM Generator] Chapter ends unusually: "...${last50}"`);
+    // Log but don't throw - some valid content may end with special chars
+  }
+  
+  return { chapter: trimmedContent };
 }
 
 /**

@@ -176,55 +176,88 @@ function serveStatic(req, res) {
 }
 
 // ============================================
-// PROJECT STORAGE
+// PROJECT STORAGE - Folder-based structure
 // ============================================
+// Each project has its own folder:
+//   projects/{project_name}/
+//     ├── project.json     # Full project state
+//     ├── story.cnl        # Generated CNL
+//     └── stories/         # Generated story versions
+//         ├── v001_en_gpt4.md
+//         ├── v002_ro_claude.md
+//         └── ...
 
-function getProjectPath(id) {
-  // Sanitize id to prevent directory traversal
-  const safeId = id.replace(/[^a-zA-Z0-9_-]/g, '');
-  return path.join(PROJECTS_DIR, `${safeId}.json`);
+/**
+ * Get project folder path
+ */
+function getProjectDir(projectName) {
+  const safeName = sanitizeFilename(projectName);
+  if (!safeName) return null;
+  return path.join(PROJECTS_DIR, safeName);
 }
 
 /**
- * Get project path by name (for saving with story name)
+ * Get next available project number (project_001, project_002, etc.)
  */
-function getProjectPathByName(name) {
-  const safeName = sanitizeFilename(name);
-  if (!safeName) return null;
-  return path.join(PROJECTS_DIR, `${safeName}.json`);
+function getNextProjectNumber() {
+  if (!fs.existsSync(PROJECTS_DIR)) return 1;
+  
+  const dirs = fs.readdirSync(PROJECTS_DIR, { withFileTypes: true })
+    .filter(d => d.isDirectory())
+    .map(d => d.name);
+  
+  // Find existing project_XXX patterns
+  const projectNumbers = dirs
+    .map(name => {
+      const match = name.match(/^project_(\d+)$/);
+      return match ? parseInt(match[1], 10) : 0;
+    })
+    .filter(n => n > 0);
+  
+  if (projectNumbers.length === 0) return 1;
+  return Math.max(...projectNumbers) + 1;
 }
 
 /**
- * Find project by name
+ * Generate default project name
  */
-function findProjectByName(name) {
-  const safeName = sanitizeFilename(name);
-  if (!safeName) return null;
-  const filepath = path.join(PROJECTS_DIR, `${safeName}.json`);
-  if (fs.existsSync(filepath)) {
-    try {
-      return JSON.parse(fs.readFileSync(filepath, 'utf-8'));
-    } catch {
-      return null;
-    }
-  }
-  return null;
+function generateDefaultProjectName() {
+  const num = getNextProjectNumber();
+  return `project_${String(num).padStart(3, '0')}`;
 }
 
+/**
+ * List all projects with metadata
+ */
 function listProjects() {
   if (!fs.existsSync(PROJECTS_DIR)) return [];
-  const files = fs.readdirSync(PROJECTS_DIR).filter(f => f.endsWith('.json'));
-  return files.map(f => {
+  
+  const dirs = fs.readdirSync(PROJECTS_DIR, { withFileTypes: true })
+    .filter(d => d.isDirectory())
+    .map(d => d.name);
+  
+  return dirs.map(dirName => {
+    const projectPath = path.join(PROJECTS_DIR, dirName, 'project.json');
     try {
-      const data = JSON.parse(fs.readFileSync(path.join(PROJECTS_DIR, f), 'utf-8'));
+      if (!fs.existsSync(projectPath)) return null;
+      const data = JSON.parse(fs.readFileSync(projectPath, 'utf-8'));
+      
+      // Count story versions
+      const storiesDir = path.join(PROJECTS_DIR, dirName, 'stories');
+      let versionCount = 0;
+      if (fs.existsSync(storiesDir)) {
+        versionCount = fs.readdirSync(storiesDir).filter(f => f.endsWith('.md')).length;
+      }
+      
       return {
-        id: data.id,
-        name: data.name || 'Untitled',
+        id: dirName,
+        name: data.name || dirName,
         genre: data.metadata?.genre || '',
         modified_at: data.modified_at || data.created_at,
         metrics_summary: data.metrics?.scores ? { nqs: data.metrics.scores.nqs } : null,
-        group_count: data.structure?.groups?.length || 0,
-        entity_count: Object.values(data.entities || {}).flat().length
+        group_count: data.structure?.children?.length || 0,
+        entity_count: Object.values(data.libraries || {}).flat().length,
+        version_count: versionCount
       };
     } catch {
       return null;
@@ -232,48 +265,169 @@ function listProjects() {
   }).filter(Boolean);
 }
 
+/**
+ * Load a project by ID (folder name)
+ */
 function loadProject(id) {
-  const filepath = getProjectPath(id);
-  if (!fs.existsSync(filepath)) return null;
+  const projectDir = path.join(PROJECTS_DIR, sanitizeFilename(id) || '');
+  const projectPath = path.join(projectDir, 'project.json');
+  
+  if (!fs.existsSync(projectPath)) return null;
+  
   try {
-    return JSON.parse(fs.readFileSync(filepath, 'utf-8'));
+    const project = JSON.parse(fs.readFileSync(projectPath, 'utf-8'));
+    project.id = id; // Ensure ID matches folder name
+    return project;
   } catch {
     return null;
   }
 }
 
+/**
+ * Save a project (creates folder structure)
+ */
 function saveProject(project) {
-  // Try to use project name as filename if no ID exists
-  if (!project.id) {
-    const nameBasedPath = getProjectPathByName(project.name);
-    if (nameBasedPath) {
-      // Check if a project with this name already exists
-      const existing = findProjectByName(project.name);
-      if (existing) {
-        // Use existing project's ID
-        project.id = existing.id;
-      } else {
-        // Create new ID based on sanitized name
-        const safeName = sanitizeFilename(project.name);
-        project.id = safeName || generateId();
-      }
-    } else {
-      project.id = generateId();
-    }
+  // Use provided name or generate default
+  const projectName = sanitizeFilename(project.name) || generateDefaultProjectName();
+  const projectDir = path.join(PROJECTS_DIR, projectName);
+  const storiesDir = path.join(projectDir, 'stories');
+  
+  // Create directories
+  if (!fs.existsSync(projectDir)) {
+    fs.mkdirSync(projectDir, { recursive: true });
+  }
+  if (!fs.existsSync(storiesDir)) {
+    fs.mkdirSync(storiesDir, { recursive: true });
   }
   
+  // Update project metadata
+  project.id = projectName;
   project.modified_at = new Date().toISOString();
   if (!project.created_at) project.created_at = project.modified_at;
   
-  const filepath = getProjectPath(project.id);
-  fs.writeFileSync(filepath, JSON.stringify(project, null, 2), 'utf-8');
-  return project.id;
+  // Save project.json
+  const projectPath = path.join(projectDir, 'project.json');
+  fs.writeFileSync(projectPath, JSON.stringify(project, null, 2), 'utf-8');
+  
+  // Save CNL if available
+  if (project.cnl) {
+    const cnlPath = path.join(projectDir, 'story.cnl');
+    fs.writeFileSync(cnlPath, project.cnl, 'utf-8');
+  }
+  
+  return projectName;
 }
 
+/**
+ * Delete a project (removes entire folder)
+ */
 function deleteProject(id) {
-  const filepath = getProjectPath(id);
-  if (!fs.existsSync(filepath)) return false;
-  fs.unlinkSync(filepath);
+  const projectDir = path.join(PROJECTS_DIR, sanitizeFilename(id) || '');
+  if (!fs.existsSync(projectDir)) return false;
+  
+  // Remove directory recursively
+  fs.rmSync(projectDir, { recursive: true, force: true });
+  return true;
+}
+
+// ============================================
+// STORY VERSIONS
+// ============================================
+
+/**
+ * Parse version filename to extract metadata
+ * Format: v{NNN}_{lang}_{model}.md
+ */
+function parseVersionFilename(filename) {
+  const match = filename.match(/^v(\d+)_([a-z]{2})_(.+)\.md$/);
+  if (!match) return null;
+  return {
+    version: parseInt(match[1], 10),
+    language: match[2],
+    model: match[3],
+    filename
+  };
+}
+
+/**
+ * List story versions for a project
+ */
+function listStoryVersions(projectId) {
+  const storiesDir = path.join(PROJECTS_DIR, sanitizeFilename(projectId) || '', 'stories');
+  if (!fs.existsSync(storiesDir)) return [];
+  
+  const files = fs.readdirSync(storiesDir).filter(f => f.endsWith('.md'));
+  
+  return files.map(filename => {
+    const meta = parseVersionFilename(filename);
+    if (!meta) return null;
+    
+    const filePath = path.join(storiesDir, filename);
+    const stats = fs.statSync(filePath);
+    
+    return {
+      ...meta,
+      created_at: stats.birthtime.toISOString(),
+      modified_at: stats.mtime.toISOString(),
+      size: stats.size
+    };
+  }).filter(Boolean).sort((a, b) => b.version - a.version);
+}
+
+/**
+ * Get next version number for a project
+ */
+function getNextVersionNumber(projectId) {
+  const versions = listStoryVersions(projectId);
+  if (versions.length === 0) return 1;
+  return Math.max(...versions.map(v => v.version)) + 1;
+}
+
+/**
+ * Save a story version
+ */
+function saveStoryVersion(projectId, content, language, model) {
+  const projectDir = path.join(PROJECTS_DIR, sanitizeFilename(projectId) || '');
+  const storiesDir = path.join(projectDir, 'stories');
+  
+  if (!fs.existsSync(storiesDir)) {
+    fs.mkdirSync(storiesDir, { recursive: true });
+  }
+  
+  const versionNum = getNextVersionNumber(projectId);
+  const safeModel = sanitizeFilename(model) || 'default';
+  const filename = `v${String(versionNum).padStart(3, '0')}_${language}_${safeModel}.md`;
+  const filePath = path.join(storiesDir, filename);
+  
+  fs.writeFileSync(filePath, content, 'utf-8');
+  
+  return {
+    version: versionNum,
+    language,
+    model: safeModel,
+    filename,
+    created_at: new Date().toISOString()
+  };
+}
+
+/**
+ * Load a story version
+ */
+function loadStoryVersion(projectId, filename) {
+  const filePath = path.join(PROJECTS_DIR, sanitizeFilename(projectId) || '', 'stories', filename);
+  if (!fs.existsSync(filePath)) return null;
+  
+  return fs.readFileSync(filePath, 'utf-8');
+}
+
+/**
+ * Delete a story version
+ */
+function deleteStoryVersion(projectId, filename) {
+  const filePath = path.join(PROJECTS_DIR, sanitizeFilename(projectId) || '', 'stories', filename);
+  if (!fs.existsSync(filePath)) return false;
+  
+  fs.unlinkSync(filePath);
   return true;
 }
 
@@ -314,6 +468,13 @@ function createDemoServer() {
         return jsonResponse(res, 200, { projects: listProjects() });
       }
 
+      // Get next available project number (MUST be before /:id route)
+      if (method === 'GET' && p === '/v1/projects/next-number') {
+        const nextNumber = getNextProjectNumber();
+        const defaultName = generateDefaultProjectName();
+        return jsonResponse(res, 200, { nextNumber, defaultName });
+      }
+
       // Get project
       if (method === 'GET' && p.match(/^\/v1\/projects\/([^/]+)$/)) {
         const id = p.split('/').pop();
@@ -343,6 +504,58 @@ function createDemoServer() {
       if (method === 'DELETE' && p.match(/^\/v1\/projects\/([^/]+)$/)) {
         const id = p.split('/').pop();
         if (!deleteProject(id)) return errorResponse(res, 404, 'not_found', 'Project not found');
+        return jsonResponse(res, 200, { deleted: true });
+      }
+
+      // ============================================
+      // STORY VERSIONS ENDPOINTS
+      // ============================================
+
+      // List story versions for a project
+      if (method === 'GET' && p.match(/^\/v1\/projects\/([^/]+)\/versions$/)) {
+        const id = decodeURIComponent(p.split('/')[3]);
+        if (!loadProject(id)) return errorResponse(res, 404, 'not_found', 'Project not found');
+        const versions = listStoryVersions(id);
+        return jsonResponse(res, 200, { versions });
+      }
+
+      // Save a new story version
+      if (method === 'POST' && p.match(/^\/v1\/projects\/([^/]+)\/versions$/)) {
+        const id = decodeURIComponent(p.split('/')[3]);
+        if (!loadProject(id)) return errorResponse(res, 404, 'not_found', 'Project not found');
+        
+        const body = await parseBody(req);
+        if (!body.content) return errorResponse(res, 400, 'missing_content', 'Story content is required');
+        
+        const language = body.language || 'en';
+        const model = body.model || 'default';
+        
+        const versionInfo = saveStoryVersion(id, body.content, language, model);
+        return jsonResponse(res, 201, versionInfo);
+      }
+
+      // Load a specific story version
+      if (method === 'GET' && p.match(/^\/v1\/projects\/([^/]+)\/versions\/([^/]+)$/)) {
+        const parts = p.split('/');
+        const id = decodeURIComponent(parts[3]);
+        const filename = decodeURIComponent(parts[5]);
+        
+        const content = loadStoryVersion(id, filename);
+        if (content === null) return errorResponse(res, 404, 'not_found', 'Version not found');
+        
+        const meta = parseVersionFilename(filename);
+        return jsonResponse(res, 200, { content, ...meta });
+      }
+
+      // Delete a story version
+      if (method === 'DELETE' && p.match(/^\/v1\/projects\/([^/]+)\/versions\/([^/]+)$/)) {
+        const parts = p.split('/');
+        const id = decodeURIComponent(parts[3]);
+        const filename = decodeURIComponent(parts[5]);
+        
+        if (!deleteStoryVersion(id, filename)) {
+          return errorResponse(res, 404, 'not_found', 'Version not found');
+        }
         return jsonResponse(res, 200, { deleted: true });
       }
 
@@ -747,6 +960,12 @@ function createDemoServer() {
               );
               
               const chapterContent = chapterResult.chapter;
+              
+              // Validate chapter content
+              if (!chapterContent || chapterContent.length < 50) {
+                throw new Error('Chapter content too short or empty');
+              }
+              
               fullStory += (fullStory ? '\n\n' : '') + chapterContent;
               
               // Create summary for next chapter context
@@ -764,12 +983,31 @@ function createDemoServer() {
               });
               
             } catch (chapterErr) {
+              console.error(`Chapter ${chapterNumber} generation error:`, chapterErr);
               sendEvent({ 
                 type: 'chapter_error', 
                 chapterNumber, 
                 chapterTitle: chapter.title || `Chapter ${chapterNumber}`,
                 error: chapterErr.message
               });
+              
+              // For critical errors (LLM issues, truncation, API errors), stop generation entirely
+              const isCriticalError = 
+                chapterErr.message.includes('LLM') || 
+                chapterErr.message.includes('API') ||
+                chapterErr.message.includes('truncated') ||
+                chapterErr.message.includes('token limit') ||
+                chapterErr.message.includes('empty') ||
+                chapterErr.message.includes('invalid');
+              
+              if (isCriticalError) {
+                sendEvent({ type: 'error', message: `Generation stopped at Chapter ${chapterNumber}: ${chapterErr.message}` });
+                res.end();
+                return;
+              }
+              
+              // For non-critical errors, add placeholder and continue
+              fullStory += (fullStory ? '\n\n' : '') + `## Chapter ${chapterNumber}: ${chapter.title || 'Untitled'}\n\n[Generation failed: ${chapterErr.message}]`;
             }
           }
           

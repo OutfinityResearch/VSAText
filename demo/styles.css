@@ -2156,6 +2156,49 @@ footer {
 .progress-metrics { display: flex; gap: 1rem; font-size: var(--fs-sm); color: var(--text-secondary); }
 .progress-metrics span { display: flex; align-items: center; gap: 0.25rem; }
 
+/* Generation loading overlay (for LLM/Advanced strategies) */
+.generation-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 26, 46, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  border-radius: 8px;
+}
+
+.generation-loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+  padding: 2rem;
+}
+
+.generation-loading-text {
+  font-size: var(--fs-md);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.generation-loading-hint {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+/* Make modal body position relative for overlay */
+#generate-modal-body {
+  position: relative;
+}
+
+/* Loading state for buttons */
+.btn.loading {
+  opacity: 0.7;
+  cursor: wait;
+}
+
 /* ============================================
    NOTIFICATION SYSTEM
    ============================================ */
@@ -2199,6 +2242,50 @@ footer {
 
 /* NL Tab Styles */
 .nl-container { height: 100%; display: flex; flex-direction: column; }
+
+/* NL Versions Panel */
+.nl-versions-panel {
+  background: var(--bg-surface);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.4rem;
+  border-left: 3px solid var(--accent-gold);
+}
+
+.nl-versions-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nl-versions-label {
+  font-size: var(--fs-2xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.nl-version-select {
+  flex: 1;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--bg-hover);
+  border-radius: 4px;
+  padding: 0.3rem 0.5rem;
+  font-size: var(--fs-xs);
+  cursor: pointer;
+  min-width: 150px;
+}
+
+.nl-version-select:hover {
+  border-color: var(--accent-sky);
+}
+
+.nl-version-select:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
 
 /* NL Options Panel */
 .nl-options-panel {

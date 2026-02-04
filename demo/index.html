@@ -23,7 +23,6 @@
       <div class="header-actions">
         <button class="btn" id="btn-new" title="Create new project">◇ New</button>
         <button class="btn" id="btn-load" title="Load project from server">↥ Load</button>
-        <button class="btn accent" id="btn-save" title="Save project to server">↧ Save</button>
         <button class="btn primary" id="btn-evaluate" title="Evaluate story quality">⚖ Evaluate</button>
         <button class="btn" id="btn-run-eval" title="Run batch evaluation tests">🧪 Eval</button>
         <button class="btn" id="btn-docs" title="Open Documentation">📖 Docs</button>
@@ -77,6 +76,16 @@
         </div>
         <div class="view" id="view-nl">
           <div class="nl-container">
+            <!-- Version Selector Panel -->
+            <div class="nl-versions-panel" id="nl-versions-panel">
+              <div class="nl-versions-header">
+                <span class="nl-versions-label">Story Versions</span>
+                <select class="nl-version-select" id="nl-version-select">
+                  <option value="">-- New Generation --</option>
+                </select>
+                <button class="btn small" id="btn-nl-delete-version" title="Delete selected version" disabled>Delete</button>
+              </div>
+            </div>
             <!-- Generation Options Panel -->
             <div class="nl-options-panel" id="nl-options-panel">
               <div class="nl-options-row">
@@ -95,7 +104,7 @@
                 <div class="nl-option-group">
                   <label class="nl-option-label">Model</label>
                   <select class="nl-option-select" id="nl-model">
-                    <option value="">Default</option>
+                    <!-- Populated dynamically from /v1/models -->
                   </select>
                 </div>
                 <div class="nl-option-group nl-option-expand">
@@ -344,25 +353,26 @@
     </div>
   </div>
 
-  <!-- Confirm New Project Modal -->
-  <div class="modal-overlay" id="confirm-new-modal">
-    <div class="modal" style="max-width: 420px;">
+  <!-- Project Name Dialog Modal -->
+  <div class="modal-overlay" id="project-name-modal">
+    <div class="modal" style="max-width: 450px;">
       <div class="modal-header">
-        <h2 class="modal-title">Create New Project?</h2>
-        <button class="modal-close" onclick="closeModal('confirm-new-modal')">x</button>
+        <h2 class="modal-title" id="project-name-modal-title">Project Name</h2>
+        <button class="modal-close" onclick="closeModal('project-name-modal')">x</button>
       </div>
-      <div class="modal-body" id="confirm-new-body">
-        <div style="text-align: center; padding: 1rem 0;">
-          <div style="font-size: 2.5rem; margin-bottom: 1rem;">&#128196;</div>
-          <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-            You have unsaved changes. Would you like to save your current project before creating a new one?
-          </p>
-          <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
-            <button class="btn primary" id="btn-confirm-save">Save & New</button>
-            <button class="btn danger" id="btn-confirm-discard">Discard & New</button>
-            <button class="btn" onclick="closeModal('confirm-new-modal')">Cancel</button>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Enter a name for your project:</label>
+          <input type="text" class="form-input" id="new-project-name-input" 
+                 placeholder="project_001" autocomplete="off">
+          <div class="form-hint" style="margin-top: 0.5rem; color: var(--text-faded); font-size: 0.75rem;">
+            The project will be saved in its own folder. Story versions will be stored separately.
           </div>
         </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('project-name-modal')">Cancel</button>
+        <button class="btn primary" id="btn-project-name-confirm">Continue</button>
       </div>
     </div>
   </div>

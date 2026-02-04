@@ -2,12 +2,12 @@
  * SCRIPTA Demo - NL (Natural Language) Story Generation
  * 
  * Generates prose story from CNL specifications using LLM API.
- * Supports Markdown output and book-style preview.
+ * Supports Markdown output, book-style preview, and version management.
  */
 
 import { state, setGeneratedStory, getGeneratedStory } from './state.mjs';
 import { generateCNL } from './cnl.mjs';
-import { $ } from './utils.mjs';
+import { $, showNotification } from './utils.mjs';
 
 // Track NL generation state
 let isGenerating = false;
@@ -17,11 +17,43 @@ let hasGeneratedNL = false;
 let bookPages = [];
 let currentBookPage = 0;
 
+// Current loaded version info
+let currentVersionFilename = null;
+let currentVersionLanguage = null;
+let currentVersionModel = null;
+
+// Lazy import for persistence to avoid circular dependency
+let persistenceModule = null;
+async function getPersistence() {
+  if (!persistenceModule) {
+    persistenceModule = await import('./persistence.mjs');
+  }
+  return persistenceModule;
+}
+
 /**
  * Get NL generation state
  */
 export function getNLGenerationState() {
   return { isGenerating, hasGeneratedNL };
+}
+
+/**
+ * Check if we can improve (same language+model as current version)
+ */
+function canImprove() {
+  if (!hasGeneratedNL && !currentVersionFilename) return false;
+  
+  const selectedLang = $('#nl-language')?.value || 'en';
+  const selectedModel = $('#nl-model')?.value || 'default';
+  
+  // If we have a loaded version, check if settings match
+  if (currentVersionLanguage && currentVersionModel) {
+    return selectedLang === currentVersionLanguage && 
+           (selectedModel || 'default') === currentVersionModel;
+  }
+  
+  return false;
 }
 
 /**
@@ -134,6 +166,7 @@ function extractChaptersFromProject() {
 /**
  * Generate NL story from current CNL specification
  * Uses SSE streaming for chapter-by-chapter progress
+ * If improving, includes previous version text for LLM reference
  */
 export async function generateNLStory() {
   if (isGenerating) {
@@ -155,6 +188,17 @@ export async function generateNLStory() {
     
     // Get options from UI
     const options = getGenerationOptions();
+    
+    // Check if this is an improvement (same language+model)
+    const isImprovement = canImprove();
+    if (isImprovement) {
+      // Include previous version text for improvement
+      const previousStory = getGeneratedStory();
+      if (previousStory) {
+        options.previousVersion = previousStory;
+        options.isImprovement = true;
+      }
+    }
     
     // Check if we have chapters for streaming
     const chapters = extractChaptersFromProject();
@@ -206,7 +250,14 @@ async function generateNLStorySingle(cnl, options) {
     throw new Error('No story generated. Check API configuration.');
   }
   
-  updateNLLoadingState('Rendering story...', 90);
+  updateNLLoadingState('Saving story version...', 85);
+  
+  // Save as a new version
+  const language = options.language || 'en';
+  const model = options.model || 'default';
+  await saveStoryVersion(result.story, language, model);
+  
+  updateNLLoadingState('Rendering story...', 95);
   
   // Store and display the generated story (raw markdown)
   setGeneratedStory(result.story);
@@ -217,8 +268,12 @@ async function generateNLStorySingle(cnl, options) {
   updateNLGenerateButton();
   enablePreviewButton();
   
+  // Mark project as dirty (lazy import)
+  const persistence = await getPersistence();
+  persistence.markDirty();
+  
   // Success notification
-  window.showNotification?.('Story generated successfully!', 'success');
+  showNotification?.('Story generated and saved!', 'success');
 }
 
 /**
@@ -283,12 +338,22 @@ async function generateNLStoryStreaming(cnl, options, chapters) {
       }
       
       if (fullStory) {
+        // Save as a new version
+        const language = options.language || 'en';
+        const model = options.model || 'default';
+        await saveStoryVersion(fullStory, language, model);
+        
         setGeneratedStory(fullStory);
         displayNLContent(fullStory);
         hasGeneratedNL = true;
         updateNLGenerateButton();
         enablePreviewButton();
-        window.showNotification?.('Story generated successfully!', 'success');
+        
+        // Mark project as dirty (lazy import)
+        const persistence = await getPersistence();
+        persistence.markDirty();
+        
+        showNotification?.('Story generated and saved!', 'success');
       }
       
       resolve();
@@ -567,12 +632,14 @@ function showNLErrorState(errorMessage) {
 
 /**
  * Update NL generate button text based on state
+ * - "Create Story" when no version exists with current language+model
+ * - "Improve Story" when a version exists with same language+model
  */
 export function updateNLGenerateButton() {
   const btn = $('#btn-nl-generate');
   if (!btn) return;
   
-  btn.textContent = hasGeneratedNL ? 'Improve Story' : 'Create Story';
+  btn.textContent = canImprove() ? 'Improve Story' : 'Create Story';
 }
 
 /**
@@ -583,6 +650,18 @@ export function resetNLState() {
   isGenerating = false;
   bookPages = [];
   currentBookPage = 0;
+  currentVersionFilename = null;
+  currentVersionLanguage = null;
+  currentVersionModel = null;
+  
+  // Reset version selector
+  const versionSelect = $('#nl-version-select');
+  if (versionSelect) {
+    versionSelect.innerHTML = '<option value="">-- New Generation --</option>';
+  }
+  
+  const deleteBtn = $('#btn-nl-delete-version');
+  if (deleteBtn) deleteBtn.disabled = true;
   
   const content = $('#nl-content');
   if (content) {
@@ -795,11 +874,226 @@ function handleBookKeyNav(e) {
 }
 
 // ============================================
+// VERSION MANAGEMENT
+// ============================================
+
+/**
+ * Load story versions for current project
+ */
+export async function loadStoryVersions() {
+  const versionSelect = $('#nl-version-select');
+  const deleteBtn = $('#btn-nl-delete-version');
+  
+  if (!versionSelect) return;
+  
+  // Clear existing options
+  versionSelect.innerHTML = '<option value="">-- New Generation --</option>';
+  currentVersionFilename = null;
+  
+  // Disable delete button
+  if (deleteBtn) deleteBtn.disabled = true;
+  
+  // Can't load versions without project ID
+  if (!state.project.id) return;
+  
+  try {
+    const response = await fetch(`/v1/projects/${encodeURIComponent(state.project.id)}/versions`);
+    if (!response.ok) return;
+    
+    const data = await response.json();
+    const versions = data.versions || [];
+    
+    if (versions.length === 0) return;
+    
+    // Language names for display
+    const langNames = {
+      en: 'English', fr: 'French', es: 'Spanish', pt: 'Portuguese',
+      it: 'Italian', de: 'German', ro: 'Romanian'
+    };
+    
+    // Add options for each version
+    versions.forEach(v => {
+      const option = document.createElement('option');
+      option.value = v.filename;
+      option.textContent = `v${v.version} - ${langNames[v.language] || v.language} - ${v.model}`;
+      versionSelect.appendChild(option);
+    });
+    
+  } catch (err) {
+    console.error('Failed to load story versions:', err);
+  }
+}
+
+/**
+ * Handle version selection change
+ */
+async function onVersionSelect(e) {
+  const filename = e.target.value;
+  const deleteBtn = $('#btn-nl-delete-version');
+  
+  if (!filename) {
+    // New generation selected - reset version tracking
+    currentVersionFilename = null;
+    currentVersionLanguage = null;
+    currentVersionModel = null;
+    hasGeneratedNL = false;
+    if (deleteBtn) deleteBtn.disabled = true;
+    resetNLContent();
+    updateNLGenerateButton();
+    return;
+  }
+  
+  if (!state.project.id) return;
+  
+  try {
+    const response = await fetch(`/v1/projects/${encodeURIComponent(state.project.id)}/versions/${encodeURIComponent(filename)}`);
+    if (!response.ok) throw new Error('Failed to load version');
+    
+    const data = await response.json();
+    
+    // Display the story
+    setGeneratedStory(data.content);
+    displayNLContent(data.content);
+    
+    // Track current version info
+    currentVersionFilename = filename;
+    currentVersionLanguage = data.language || 'en';
+    currentVersionModel = data.model || 'default';
+    hasGeneratedNL = true;
+    
+    // Update UI to match version's language and model
+    const langSelect = $('#nl-language');
+    const modelSelect = $('#nl-model');
+    if (langSelect && currentVersionLanguage) {
+      langSelect.value = currentVersionLanguage;
+    }
+    if (modelSelect && currentVersionModel) {
+      // Try to set the model, might not exist in options
+      const modelOption = Array.from(modelSelect.options).find(
+        opt => opt.value === currentVersionModel || opt.value === ''
+      );
+      if (modelOption) {
+        modelSelect.value = currentVersionModel;
+      }
+    }
+    
+    updateNLGenerateButton();
+    enablePreviewButton();
+    
+    if (deleteBtn) deleteBtn.disabled = false;
+    
+  } catch (err) {
+    showNotification('Error loading version: ' + err.message, 'error');
+  }
+}
+
+/**
+ * Delete current story version
+ */
+async function deleteCurrentVersion() {
+  if (!currentVersionFilename || !state.project.id) return;
+  
+  if (!confirm('Delete this story version permanently?')) return;
+  
+  try {
+    const response = await fetch(
+      `/v1/projects/${encodeURIComponent(state.project.id)}/versions/${encodeURIComponent(currentVersionFilename)}`,
+      { method: 'DELETE' }
+    );
+    
+    if (!response.ok) throw new Error('Failed to delete version');
+    
+    showNotification('Version deleted', 'success');
+    
+    // Reload versions list
+    await loadStoryVersions();
+    
+    // Reset content
+    resetNLContent();
+    
+  } catch (err) {
+    showNotification('Error deleting version: ' + err.message, 'error');
+  }
+}
+
+/**
+ * Reset NL content to empty state
+ */
+function resetNLContent() {
+  currentVersionFilename = null;
+  const content = $('#nl-content');
+  if (content) {
+    content.innerHTML = `
+      <div class="nl-empty-state">
+        <div class="icon">📖</div>
+        <div>No story generated yet</div>
+        <div style="font-size: 0.9rem; color: var(--text-faded);">
+          Create your specs first, then click "Create Story" to generate prose
+        </div>
+      </div>
+    `;
+  }
+}
+
+/**
+ * Save generated story as a new version
+ */
+async function saveStoryVersion(content, language, model) {
+  if (!state.project.id) {
+    // Need to create project first
+    const persistence = await getPersistence();
+    const projectName = await persistence.showProjectNameDialog('Save Story - Enter Project Name');
+    if (!projectName) return null;
+    
+    state.project.id = projectName;
+    state.project.name = projectName;
+    $('#project-name').value = projectName;
+    
+    // Save the project first
+    await persistence.saveProject(true);
+  }
+  
+  try {
+    const response = await fetch(`/v1/projects/${encodeURIComponent(state.project.id)}/versions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, language, model })
+    });
+    
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || 'Failed to save version');
+    }
+    
+    const versionInfo = await response.json();
+    
+    // Reload versions list
+    await loadStoryVersions();
+    
+    // Select the new version
+    const versionSelect = $('#nl-version-select');
+    if (versionSelect) {
+      versionSelect.value = versionInfo.filename;
+      currentVersionFilename = versionInfo.filename;
+      const deleteBtn = $('#btn-nl-delete-version');
+      if (deleteBtn) deleteBtn.disabled = false;
+    }
+    
+    return versionInfo;
+    
+  } catch (err) {
+    console.error('Failed to save story version:', err);
+    showNotification('Error saving story: ' + err.message, 'error');
+    return null;
+  }
+}
+
+// ============================================
 // INITIALIZATION
 // ============================================
 
 /**
- * Load available models from server
+ * Load available models from server and auto-select first deep model
  */
 async function loadAvailableModels() {
   try {
@@ -810,18 +1104,24 @@ async function loadAvailableModels() {
     const modelSelect = $('#nl-model');
     if (!modelSelect) return;
     
-    // Clear existing options except default
-    modelSelect.innerHTML = '<option value="">Default (auto)</option>';
+    // Clear existing options
+    modelSelect.innerHTML = '';
     
-    // Add deep models (preferred for creative writing)
+    let firstDeepModelValue = null;
+    
+    // Add deep models first (preferred for creative writing)
     if (data.models?.deep?.length) {
       const deepGroup = document.createElement('optgroup');
       deepGroup.label = 'Deep (Creative)';
-      data.models.deep.forEach(model => {
+      data.models.deep.forEach((model, idx) => {
         const option = document.createElement('option');
         option.value = model.qualifiedName || model.name;
         option.textContent = `${model.name} (${model.provider})`;
         deepGroup.appendChild(option);
+        // Remember first deep model
+        if (idx === 0) {
+          firstDeepModelValue = option.value;
+        }
       });
       modelSelect.appendChild(deepGroup);
     }
@@ -837,6 +1137,11 @@ async function loadAvailableModels() {
         fastGroup.appendChild(option);
       });
       modelSelect.appendChild(fastGroup);
+    }
+    
+    // Auto-select first deep model (best for creative writing)
+    if (firstDeepModelValue) {
+      modelSelect.value = firstDeepModelValue;
     }
     
   } catch (err) {
@@ -862,6 +1167,29 @@ export function initNLGeneration() {
         closeBookPreview();
       }
     });
+  }
+  
+  // Version select handler
+  const versionSelect = $('#nl-version-select');
+  if (versionSelect) {
+    versionSelect.addEventListener('change', onVersionSelect);
+  }
+  
+  // Delete version button
+  const deleteBtn = $('#btn-nl-delete-version');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', deleteCurrentVersion);
+  }
+  
+  // Language/Model change handlers - update button text
+  const langSelect = $('#nl-language');
+  const modelSelect = $('#nl-model');
+  
+  if (langSelect) {
+    langSelect.addEventListener('change', updateNLGenerateButton);
+  }
+  if (modelSelect) {
+    modelSelect.addEventListener('change', updateNLGenerateButton);
   }
   
   // Load available models

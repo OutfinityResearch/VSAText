@@ -76,8 +76,43 @@
       text-transform: uppercase;
       color: var(--text-muted);
       margin-bottom: 0.4rem;
-      padding-left: 0.5rem;
+      padding: 0.4rem 0.5rem;
       letter-spacing: 0.05em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    
+    .nav-section-title:hover {
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+    }
+    
+    .nav-section-icon {
+      font-size: 0.55rem;
+      transition: transform 0.2s ease;
+      display: inline-block;
+      width: 0.8em;
+    }
+    
+    .nav-section.collapsed .nav-section-icon {
+      transform: rotate(0deg);
+    }
+    
+    .nav-section:not(.collapsed) .nav-section-icon {
+      transform: rotate(90deg);
+    }
+    
+    .nav-section.collapsed .docs-nav {
+      display: none;
+    }
+    
+    .nav-section:not(.collapsed) .docs-nav {
+      display: block;
     }
     
     .docs-nav { 
@@ -597,8 +632,8 @@
       <button class="close-sidebar-btn" id="close-sidebar-btn" aria-label="Close menu">&times;</button>
     </div>
     
-    <div class="nav-section">
-      <div class="nav-section-title">Getting Started</div>
+    <div class="nav-section" data-section="getting-started">
+      <div class="nav-section-title"><span class="nav-section-icon">▶</span>Getting Started</div>
       <nav class="docs-nav">
         <a href="#overview" data-page="overview" class="active">Overview</a>
         <a href="#conceptual-model" data-page="conceptual-model">Conceptual Model</a>
@@ -607,8 +642,8 @@
       </nav>
     </div>
     
-    <div class="nav-section">
-      <div class="nav-section-title">Editor Tabs</div>
+    <div class="nav-section collapsed" data-section="editor-tabs">
+      <div class="nav-section-title"><span class="nav-section-icon">▶</span>Editor Tabs</div>
       <nav class="docs-nav">
         <a href="#tab-cnl" data-page="tab-cnl">CNL Editor</a>
         <a href="#tab-nl" data-page="tab-nl">Natural Language</a>
@@ -629,8 +664,8 @@
       </nav>
     </div>
     
-    <div class="nav-section">
-      <div class="nav-section-title">Deep Dive (Theory)</div>
+    <div class="nav-section collapsed" data-section="deep-dive">
+      <div class="nav-section-title"><span class="nav-section-icon">▶</span>Deep Dive (Theory)</div>
       <nav class="docs-nav">
         <a href="#character-theory" data-page="character-theory">Character Archetypes</a>
         <a href="#narrative-theory" data-page="narrative-theory">Narrative Structure</a>
@@ -642,8 +677,8 @@
       </nav>
     </div>
     
-    <div class="nav-section">
-      <div class="nav-section-title">Quality & Metrics</div>
+    <div class="nav-section collapsed" data-section="quality-metrics">
+      <div class="nav-section-title"><span class="nav-section-icon">▶</span>Quality & Metrics</div>
       <nav class="docs-nav">
         <a href="#generation" data-page="generation">Generation Strategies</a>
         <a href="#metrics-overview" data-page="metrics-overview">Metrics Overview</a>
@@ -786,6 +821,15 @@
           link.classList.toggle('active', link.dataset.page === pageName);
         });
         
+        // Expand the section containing the active page
+        const activeLink = document.querySelector(`.docs-sidebar .docs-nav a[data-page="${pageName}"]`);
+        if (activeLink) {
+          const section = activeLink.closest('.nav-section');
+          if (section) {
+            section.classList.remove('collapsed');
+          }
+        }
+        
         // Attach click handlers to in-content links
         attachContentLinkHandlers();
         
@@ -904,6 +948,16 @@
       if (window.innerWidth > 768 && sidebar.classList.contains('open')) {
         closeSidebar();
       }
+    });
+    
+    // ========================================
+    // ACCORDION MENU FUNCTIONALITY
+    // ========================================
+    document.querySelectorAll('.nav-section-title').forEach(title => {
+      title.addEventListener('click', () => {
+        const section = title.closest('.nav-section');
+        section.classList.toggle('collapsed');
+      });
     });
     
     // Initial load

@@ -128,8 +128,8 @@ function extractCharactersFromSpec(spec) {
  *   forbids: [{ subject, target, scope, line }],    // "Scene_3 forbids violence"
  *   must: [{ subject, action, target, scope, line }], // "Scene_3 must introduce villain"
  *   tone: [{ subject, value, line }],               // "Scene_3 has tone tense"
- *   max: [{ subject, property, value, line }],      // "Scene_3 has max words 1000"
- *   min: [{ subject, property, value, line }]       // "Scene_3 has min tension 5"
+ *   max: [{ subject, what, count, line }],          // "Scene_3 has max words 1000"
+ *   min: [{ subject, what, count, line }]           // "Scene_3 has min tension 5"
  * }
  */
 function extractSceneRequirementsFromSpec(spec) {
@@ -206,7 +206,7 @@ function extractSceneRequirementsFromSpec(spec) {
     const sceneNum = getSceneNumber(max.subject);
     if (sceneNum !== null) {
       ensureScene(sceneNum);
-      requirements[sceneNum].max[max.property] = max.value;
+      requirements[sceneNum].max[max.what] = max.count;
     }
   }
   
@@ -215,7 +215,7 @@ function extractSceneRequirementsFromSpec(spec) {
     const sceneNum = getSceneNumber(min.subject);
     if (sceneNum !== null) {
       ensureScene(sceneNum);
-      requirements[sceneNum].min[min.property] = min.value;
+      requirements[sceneNum].min[min.what] = min.count;
     }
   }
   

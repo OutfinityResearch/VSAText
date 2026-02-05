@@ -58,3 +58,25 @@ export function testMultipleClichesDetected() {
     throw new Error('Should detect at least one cliché');
   }
 }
+
+// Test: PII findings affect overall status (DS15 severity mapping)
+export function testPIIEmailFails() {
+  const report = runGuardrailCheck('Contact me at test@example.com', { policies: ['pii'] });
+  if (report.status !== 'fail') {
+    throw new Error(`Expected status 'fail' for email PII, got '${report.status}'`);
+  }
+  if ((report.summary?.error || 0) < 1) {
+    throw new Error('Expected at least one error finding for email PII');
+  }
+}
+
+// Test: Critical PII triggers reject
+export function testPIISSNRejects() {
+  const report = runGuardrailCheck('SSN: 123-45-6789', { policies: ['pii'] });
+  if (report.status !== 'reject') {
+    throw new Error(`Expected status 'reject' for SSN PII, got '${report.status}'`);
+  }
+  if ((report.summary?.critical || 0) < 1) {
+    throw new Error('Expected at least one critical finding for SSN PII');
+  }
+}

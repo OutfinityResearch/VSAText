@@ -4,7 +4,7 @@
  * Tests: Text encoding, cosine similarity, determinism
  */
 
-import { encodeText, cosine } from '../../src/vsa/encoder.mjs';
+import { encodeText, cosine, bind, bundle, permute } from '../../src/vsa/encoder.mjs';
 
 // Test: Same text produces same vector
 export function testDeterministicEncoding() {
@@ -92,5 +92,47 @@ export function testCosineEdgeCases() {
   }
   if (sim3 !== 0) {
     throw new Error('Cosine of different length arrays should be 0');
+  }
+}
+
+// Test: bind is element-wise multiplication (bipolar binding)
+export function testBindElementwiseMultiply() {
+  const a = [1, -1, 1];
+  const b = [-1, -1, 1];
+  const out = bind(a, b);
+
+  const expected = [-1, 1, 1];
+  for (let i = 0; i < expected.length; i++) {
+    if (out[i] !== expected[i]) {
+      throw new Error(`Expected bind()[${i}] to be ${expected[i]}, got ${out[i]}`);
+    }
+  }
+}
+
+// Test: bundle uses majority vote with +1 tie-break
+export function testBundleMajorityVote() {
+  const out = bundle([
+    [1, 1, -1],
+    [1, -1, -1],
+    [-1, 1, -1]
+  ]);
+
+  const expected = [1, 1, -1];
+  for (let i = 0; i < expected.length; i++) {
+    if (out[i] !== expected[i]) {
+      throw new Error(`Expected bundle()[${i}] to be ${expected[i]}, got ${out[i]}`);
+    }
+  }
+}
+
+// Test: permute performs a cyclic shift
+export function testPermuteCyclicShift() {
+  const out = permute([1, 2, 3, 4], 1);
+  const expected = [4, 1, 2, 3];
+
+  for (let i = 0; i < expected.length; i++) {
+    if (out[i] !== expected[i]) {
+      throw new Error(`Expected permute()[${i}] to be ${expected[i]}, got ${out[i]}`);
+    }
   }
 }

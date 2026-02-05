@@ -64,11 +64,11 @@ const HARMFUL_PATTERNS = [
 
 // PII patterns
 const PII_PATTERNS = [
-  { pattern: /\b[A-Z][a-z]+\s+[A-Z][a-z]+\s+\d{3}-\d{2}-\d{4}\b/g, type: 'ssn', severity: 'high' },
-  { pattern: /\b\d{3}-\d{2}-\d{4}\b/g, type: 'ssn', severity: 'high' },
-  { pattern: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, type: 'email', severity: 'medium' },
-  { pattern: /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, type: 'credit-card', severity: 'high' },
-  { pattern: /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g, type: 'phone', severity: 'medium' }
+  { pattern: /\b[A-Z][a-z]+\s+[A-Z][a-z]+\s+\d{3}-\d{2}-\d{4}\b/g, type: 'ssn', severity: 'critical' },
+  { pattern: /\b\d{3}-\d{2}-\d{4}\b/g, type: 'ssn', severity: 'critical' },
+  { pattern: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, type: 'email', severity: 'error' },
+  { pattern: /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, type: 'credit-card', severity: 'critical' },
+  { pattern: /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g, type: 'phone', severity: 'error' }
 ];
 
 /**

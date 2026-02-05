@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { encodeText, cosine } from './encoder.mjs';
 
-class VsaIndex {
+export class VsaIndex {
   constructor(dim = 10000, seed = 42) {
     this.dim = dim;
     this.seed = seed;
@@ -37,6 +39,8 @@ class VsaIndex {
   }
 }
 
+export default VsaIndex;
+
 function parseArgs(argv) {
   const args = { add: [] };
   for (let i = 2; i < argv.length; i++) {
@@ -56,23 +60,33 @@ function parseArgs(argv) {
   return args;
 }
 
-const args = parseArgs(process.argv);
-const dim = args.dim ? Number(args.dim) : 10000;
-const seed = args.seed ? Number(args.seed) : 42;
-const index = args.load ? VsaIndex.load(args.load) : new VsaIndex(dim, seed);
-
-for (const [id, text] of args.add) {
-  index.add(id, text);
+function isMain() {
+  const isNode = typeof process !== 'undefined' && !!process.versions?.node;
+  if (!isNode) return false;
+  if (!process.argv?.[1]) return false;
+  const __filename = fileURLToPath(import.meta.url);
+  return path.resolve(process.argv[1]) === __filename;
 }
 
-if (args.search) {
-  const topK = args['top-k'] ? Number(args['top-k']) : 5;
-  const results = index.search(args.search, topK).map(([id, score]) => ({ id, score }));
-  console.log(JSON.stringify({ query: args.search, results }, null, 2));
-} else {
-  console.log(JSON.stringify({ indexed: Object.keys(index.vectors).length }, null, 2));
-}
+if (isMain()) {
+  const args = parseArgs(process.argv);
+  const dim = args.dim ? Number(args.dim) : 10000;
+  const seed = args.seed ? Number(args.seed) : 42;
+  const index = args.load ? VsaIndex.load(args.load) : new VsaIndex(dim, seed);
 
-if (args.save) {
-  index.save(args.save);
+  for (const [id, text] of args.add) {
+    index.add(id, text);
+  }
+
+  if (args.search) {
+    const topK = args['top-k'] ? Number(args['top-k']) : 5;
+    const results = index.search(args.search, topK).map(([id, score]) => ({ id, score }));
+    console.log(JSON.stringify({ query: args.search, results }, null, 2));
+  } else {
+    console.log(JSON.stringify({ indexed: Object.keys(index.vectors).length }, null, 2));
+  }
+
+  if (args.save) {
+    index.save(args.save);
+  }
 }

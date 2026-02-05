@@ -171,6 +171,14 @@ function getAuditByTimeRange(startTime, endTime) {
 }
 
 /**
+ * Get the full audit log (chronological).
+ * Convenience helper for consumers that need a simple log view.
+ */
+function getAuditLog() {
+  return stores.audit.values().sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+}
+
+/**
  * Generate a compliance-ready audit report
  */
 function generateAuditReport(filter = {}) {
@@ -245,6 +253,7 @@ export {
   addAuditEntry,
   verifyEntry,
   verifyChain,
+  getAuditLog,
   getAuditTrail,
   getAuditByType,
   getAuditByTimeRange,

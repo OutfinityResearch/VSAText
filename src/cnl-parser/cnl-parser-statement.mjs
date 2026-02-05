@@ -249,7 +249,7 @@ export function processStatement(statement, ast, groupStack, lineNo) {
   for (const val of allValues) {
     if (typeof val === 'string' && val.startsWith('@')) {
       ast.references.push({
-        from: currentScope ? currentScope.name : 'root',
+        from: statement.subject,
         to: val.slice(1),
         line: lineNo,
         type: statement.verb
@@ -266,4 +266,3 @@ export function processStatement(statement, ast, groupStack, lineNo) {
 }
 
 export default { processStatement };
-

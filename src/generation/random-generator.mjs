@@ -21,97 +21,12 @@ import {
 } from '../vocabularies/vocabularies.mjs';
 
 import { makeId } from '../utils/ids.mjs';
+import { NARRATIVE_ARCS, GENRE_CONFIG, MOODS_BY_TONE, COUNTS } from './random-generator-config.mjs';
+import { generateBlueprint } from './random-generator-blueprint.mjs';
 
 // ============================================
 // CONFIGURATION
 // ============================================
-
-const NARRATIVE_ARCS = {
-  heros_journey: [
-    { key: 'ordinary_world', position: 0.0, dialoguePurpose: 'exposition' },
-    { key: 'call_to_adventure', position: 0.1, dialoguePurpose: 'revelation' },
-    { key: 'refusal', position: 0.15, dialoguePurpose: 'conflict' },
-    { key: 'meeting_mentor', position: 0.2, dialoguePurpose: 'advice' },
-    { key: 'crossing_threshold', position: 0.25, dialoguePurpose: 'decision' },
-    { key: 'tests_allies_enemies', position: 0.35, dialoguePurpose: 'confrontation' },
-    { key: 'approach', position: 0.5, dialoguePurpose: 'planning' },
-    { key: 'ordeal', position: 0.6, dialoguePurpose: 'confrontation' },
-    { key: 'reward', position: 0.7, dialoguePurpose: 'revelation' },
-    { key: 'road_back', position: 0.8, dialoguePurpose: 'decision' },
-    { key: 'resurrection', position: 0.9, dialoguePurpose: 'confrontation' },
-    { key: 'return', position: 1.0, dialoguePurpose: 'resolution' }
-  ],
-  three_act: [
-    { key: 'setup', position: 0.0, dialoguePurpose: 'exposition' },
-    { key: 'inciting_incident', position: 0.1, dialoguePurpose: 'revelation' },
-    { key: 'first_plot_point', position: 0.25, dialoguePurpose: 'decision' },
-    { key: 'rising_action', position: 0.4, dialoguePurpose: 'conflict' },
-    { key: 'midpoint', position: 0.5, dialoguePurpose: 'revelation' },
-    { key: 'complications', position: 0.65, dialoguePurpose: 'confrontation' },
-    { key: 'crisis', position: 0.75, dialoguePurpose: 'conflict' },
-    { key: 'climax', position: 0.9, dialoguePurpose: 'confrontation' },
-    { key: 'resolution', position: 1.0, dialoguePurpose: 'resolution' }
-  ],
-  five_act: [
-    { key: 'exposition', position: 0.0, dialoguePurpose: 'exposition' },
-    { key: 'rising_action', position: 0.2, dialoguePurpose: 'conflict' },
-    { key: 'climax', position: 0.5, dialoguePurpose: 'confrontation' },
-    { key: 'falling_action', position: 0.7, dialoguePurpose: 'revelation' },
-    { key: 'denouement', position: 0.9, dialoguePurpose: 'resolution' }
-  ]
-};
-
-const GENRE_CONFIG = {
-  fantasy: {
-    archetypes: ['hero', 'mentor', 'shadow', 'ally', 'trickster'],
-    geographies: ['forest', 'mountain', 'castle', 'village'],
-    objectTypes: ['weapon', 'artifact', 'document'],
-    themes: ['good_vs_evil', 'coming_of_age', 'power_corruption'],
-    arc: 'heros_journey'
-  },
-  romance: {
-    archetypes: ['hero', 'ally', 'mentor', 'threshold_guardian'],
-    geographies: ['urban', 'coastal', 'rural'],
-    objectTypes: ['jewelry', 'document', 'art'],
-    themes: ['love_sacrifice', 'self_discovery', 'forbidden_love'],
-    arc: 'three_act'
-  },
-  mystery: {
-    archetypes: ['hero', 'shadow', 'shapeshifter', 'herald'],
-    geographies: ['urban', 'mansion', 'institution'],
-    objectTypes: ['document', 'tool', 'artifact'],
-    themes: ['justice', 'truth_deception', 'identity'],
-    arc: 'five_act'
-  },
-  scifi: {
-    archetypes: ['hero', 'mentor', 'shadow', 'herald'],
-    geographies: ['space_station', 'alien_world', 'dystopia'],
-    objectTypes: ['technology', 'weapon', 'artifact'],
-    themes: ['humanity_technology', 'survival', 'identity'],
-    arc: 'heros_journey'
-  },
-  thriller: {
-    archetypes: ['hero', 'shadow', 'shapeshifter', 'ally'],
-    geographies: ['urban', 'industrial', 'wilderness'],
-    objectTypes: ['weapon', 'document', 'technology'],
-    themes: ['survival', 'justice', 'power_corruption'],
-    arc: 'three_act'
-  }
-};
-
-const MOODS_BY_TONE = {
-  dark: ['ominous', 'melancholic', 'tense'],
-  light: ['hopeful', 'joyful', 'serene'],
-  balanced: ['contemplative', 'anticipation', 'tense', 'hopeful'],
-  dramatic: ['epic', 'tense', 'melancholic', 'triumphant'],
-  mysterious: ['mysterious', 'ominous', 'contemplative']
-};
-
-const COUNTS = {
-  characters: { few: [2, 3], medium: [4, 6], many: [7, 10] },
-  scenes: { short: [4, 6], medium: [8, 12], long: [15, 25] },
-  rules: { none: 0, few: [1, 2], many: [3, 5] }
-};
 
 // ============================================
 // HELPER FUNCTIONS
@@ -124,8 +39,16 @@ function pick(arr) {
 
 function pickN(arr, n) {
   if (!arr || arr.length === 0) return [];
-  const shuffled = [...arr].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, n);
+  const copy = [...arr];
+  const k = Math.max(0, Math.min(n, copy.length));
+
+  // Fisher–Yates partial shuffle (unbiased, O(n))
+  for (let i = 0; i < k; i++) {
+    const j = i + Math.floor(Math.random() * (copy.length - i));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+
+  return copy.slice(0, k);
 }
 
 function getConfig(genre) {
@@ -143,34 +66,6 @@ function getRelationshipType(archetype) {
     threshold_guardian: 'acquaintances'
   };
   return mapping[archetype] || 'acquaintances';
-}
-
-function getToneFromPurpose(purpose) {
-  const mapping = {
-    exposition: 'neutral',
-    revelation: 'dramatic',
-    conflict: 'tense',
-    confrontation: 'aggressive',
-    advice: 'warm',
-    decision: 'serious',
-    planning: 'focused',
-    resolution: 'warm'
-  };
-  return mapping[purpose] || 'neutral';
-}
-
-function getTensionForBeat(beatKey) {
-  const tensions = {
-    ordinary_world: 1, call_to_adventure: 3, refusal: 4,
-    meeting_mentor: 2, crossing_threshold: 4, tests_allies_enemies: 5,
-    approach: 6, ordeal: 8, reward: 4, road_back: 6,
-    resurrection: 9, return: 2,
-    setup: 1, inciting_incident: 3, first_plot_point: 4,
-    rising_action: 5, midpoint: 6, complications: 7,
-    crisis: 8, climax: 9, resolution: 2,
-    exposition: 1, falling_action: 4, denouement: 2
-  };
-  return tensions[beatKey] || 5;
 }
 
 // ============================================
@@ -310,6 +205,29 @@ function generateThemes(config) {
   return themes;
 }
 
+function generateWorldRules(config, rulesSetting) {
+  const templates = Array.isArray(config.worldRules) ? config.worldRules : [];
+  const spec = COUNTS.rules[rulesSetting] ?? 0;
+
+  let count = 0;
+  if (Array.isArray(spec)) {
+    const [min, max] = spec;
+    count = min + Math.floor(Math.random() * (max - min + 1));
+  } else {
+    count = Number(spec) || 0;
+  }
+
+  if (count <= 0 || templates.length === 0) return [];
+
+  return pickN(templates, Math.min(count, templates.length)).map(r => ({
+    id: makeId('rule'),
+    name: r.name,
+    category: r.category || 'other',
+    description: r.description || '',
+    scope: r.scope || ''
+  }));
+}
+
 function generateStructure(options, libraries, numScenes) {
   const { characters, locations, moods, objects } = libraries;
   const hero = characters.find(c => c.archetype === 'hero') || characters[0];
@@ -431,98 +349,6 @@ function createScene(chapterIndex, sceneIndex, { characters, locations, moods, o
   return scene;
 }
 
-function generateBlueprint(arcName, structure, characters, numScenes) {
-  const arcBeats = NARRATIVE_ARCS[arcName] || NARRATIVE_ARCS.heros_journey;
-  const chapters = structure.children;
-  
-  const beatMappings = [];
-  const dialogues = [];
-  
-  arcBeats.forEach(beat => {
-    const targetSceneIndex = Math.floor(beat.position * numScenes);
-    const { chapter, scene } = findSceneByIndex(chapters, targetSceneIndex);
-    
-    if (chapter && scene) {
-      beatMappings.push({
-        beatKey: beat.key,
-        chapterId: chapter.id,
-        sceneId: scene.id,
-        tension: Math.ceil(beat.position * 5)
-      });
-      
-      if (beat.dialoguePurpose) {
-        const dialogue = createDialogueForBeat(beat, chapter, scene, characters);
-        dialogues.push(dialogue);
-        
-        scene.children.push({
-          id: makeId('ref'),
-          type: 'dialogue-ref',
-          name: `[${beat.dialoguePurpose}]`,
-          refId: dialogue.id
-        });
-      }
-    }
-  });
-  
-  const tensionCurve = arcBeats
-    .filter((_, i) => i % 2 === 0)
-    .map(beat => ({
-      position: beat.position,
-      tension: getTensionForBeat(beat.key)
-    }));
-  
-  return {
-    arc: arcName,
-    beatMappings,
-    tensionCurve,
-    dialogues
-  };
-}
-
-function findSceneByIndex(chapters, targetIndex) {
-  let sceneCount = 0;
-  
-  for (const ch of chapters) {
-    for (const sc of ch.children || []) {
-      if (sceneCount === targetIndex) {
-        return { chapter: ch, scene: sc };
-      }
-      sceneCount++;
-    }
-  }
-  
-  return { chapter: null, scene: null };
-}
-
-function createDialogueForBeat(beat, chapter, scene, characters) {
-  const sceneChars = scene.children
-    .filter(c => c.type === 'character-ref')
-    .map(c => characters.find(ch => ch.id === c.refId))
-    .filter(Boolean);
-  
-  const participants = [];
-  if (sceneChars.length >= 1) {
-    participants.push({ characterId: sceneChars[0].id, role: 'speaker' });
-  }
-  if (sceneChars.length >= 2) {
-    participants.push({ characterId: sceneChars[1].id, role: 'listener' });
-  }
-  
-  return {
-    id: makeId('dlg'),
-    purpose: beat.dialoguePurpose,
-    participants,
-    tone: getToneFromPurpose(beat.dialoguePurpose),
-    tension: Math.ceil(beat.position * 5),
-    beatKey: beat.key,
-    location: {
-      chapterId: chapter.id,
-      sceneId: scene.id
-    },
-    exchanges: []
-  };
-}
-
 // ============================================
 // MAIN EXPORT
 // ============================================
@@ -558,8 +384,9 @@ export function generateRandomStory(options = {}) {
   const objects = generateObjects(config, characters, usedNames);
   const moods = generateMoods(options.tone);
   const themes = generateThemes(config);
+  const worldRules = generateWorldRules(config, options.rules);
   
-  const libraries = { characters, relationships, locations, objects, moods, themes, worldRules: [] };
+  const libraries = { characters, relationships, locations, objects, moods, themes, worldRules };
   
   // Generate structure
   const structure = generateStructure(options, libraries, numScenes);

@@ -136,4 +136,30 @@ const stores = {
   audit: new JsonStore('audit')
 };
 
-export { JsonStore, stores, DATA_DIR };
+/**
+ * Save arbitrary JSON data to a file.
+ * Convenience helper for Node-only consumers.
+ */
+function saveToFile(filePath, data, options = {}) {
+  const pretty = options.pretty !== false;
+  const dir = path.dirname(filePath);
+  if (dir && !fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const json = pretty ? JSON.stringify(data, null, 2) : JSON.stringify(data);
+  fs.writeFileSync(filePath, json, 'utf-8');
+  return true;
+}
+
+/**
+ * Load JSON data from a file.
+ * Returns `defaultValue` when file is missing or invalid.
+ */
+function loadFromFile(filePath, defaultValue = null) {
+  try {
+    if (!fs.existsSync(filePath)) return defaultValue;
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  } catch {
+    return defaultValue;
+  }
+}
+
+export { JsonStore, stores, DATA_DIR, saveToFile, loadFromFile };

@@ -283,28 +283,48 @@ async function generateNLStoryStreaming(cnl, options, chapters) {
  * Handle SSE stream events
  */
 let streamingChapterCount = 0;
+let failedSections = []; // Track failed sections for retry
 
 function handleStreamEvent(event, setFullStory) {
   switch (event.type) {
     case 'start':
       streamingChapterCount = 0;
-      const totalChapters = event.totalChapters || 1;
-      const estMinutes = Math.ceil((event.estimatedTotal || 15000) / 60000);
+      failedSections = [];
+      const totalScenes = event.totalScenes || event.totalChapters || 1;
       // Switch to streaming view
       showNLStreamingState();
       updateNLStreamingProgress(
-        `Starting... (${totalChapters} chapters)`,
+        `Starting... (${totalScenes} sections)`,
         0,
-        `~${estMinutes} min total`
+        ''
+      );
+      break;
+    
+    case 'scene_start':
+      updateNLStreamingProgress(
+        `Writing Scene ${event.sceneNumber}: ${event.title || ''}`,
+        event.progress || 0,
+        ''
       );
       break;
       
     case 'chapter_start':
       updateNLStreamingProgress(
-        `Writing Chapter ${event.chapterNumber}: ${event.chapterTitle}`,
+        `Writing Chapter ${event.chapterNumber}: ${event.chapterTitle || ''}`,
         event.progress || 0,
-        `~${Math.ceil((event.estimated || 10000) / 1000)}s`
+        ''
       );
+      break;
+    
+    case 'scene_complete':
+      streamingChapterCount++;
+      updateNLStreamingProgress(
+        `Scene ${event.sceneNumber} complete`,
+        event.progress || 0,
+        ''
+      );
+      const sceneHtml = parseMarkdown(event.content || '');
+      appendNLStreamingContent(sceneHtml, streamingChapterCount === 1);
       break;
       
     case 'chapter_complete':
@@ -312,26 +332,49 @@ function handleStreamEvent(event, setFullStory) {
       updateNLStreamingProgress(
         `Chapter ${event.chapterNumber} complete`,
         event.progress || 0,
-        `${Math.ceil((event.elapsed || 0) / 1000)}s`
+        ''
       );
-      // Append chapter content to display - show the actual text!
       const chapterHtml = parseMarkdown(event.content || '');
       appendNLStreamingContent(chapterHtml, streamingChapterCount === 1);
+      break;
+    
+    case 'scene_error':
+      showNotification?.(`Error in Scene ${event.sceneNumber}: ${event.error}`, 'error');
+      failedSections.push({
+        id: `scene_${event.sceneNumber}`,
+        type: 'scene',
+        title: event.title,
+        error: event.error,
+        cnl: event.cnl
+      });
+      appendNLStreamingContent(renderFailedSection(event, 'scene'), false);
       break;
       
     case 'chapter_error':
       showNotification?.(`Error in Chapter ${event.chapterNumber}: ${event.error}`, 'error');
-      appendNLStreamingContent(`<p class="nl-error-inline">Error generating chapter ${event.chapterNumber}: ${escapeHtml(event.error)}</p>`, false);
+      failedSections.push({
+        id: `chapter_${event.chapterNumber}`,
+        type: 'chapter',
+        chapterNumber: event.chapterNumber,
+        title: event.title,
+        error: event.error,
+        cnl: event.cnl
+      });
+      appendNLStreamingContent(renderFailedSection(event, 'chapter'), false);
       break;
       
     case 'complete':
       updateNLStreamingProgress(
-        `Complete! ${event.totalChapters} chapters`,
+        event.success ? `Complete!` : `Completed with ${event.stats?.failed || failedSections.length} errors`,
         100,
         ''
       );
       if (event.fullStory) {
         setFullStory(event.fullStory);
+      }
+      // Show retry button if there are failed sections
+      if (event.failedSections?.length > 0 || failedSections.length > 0) {
+        showRetryButton(event.failedSections || failedSections);
       }
       break;
       
@@ -339,6 +382,136 @@ function handleStreamEvent(event, setFullStory) {
       throw new Error(event.message || 'Generation failed');
   }
 }
+
+/**
+ * Render a failed section with CNL info and retry option
+ */
+function renderFailedSection(event, type) {
+  const title = type === 'scene' 
+    ? `Scene ${event.sceneNumber}: ${event.title || 'Untitled'}`
+    : `Chapter ${event.chapterNumber}: ${event.title || 'Untitled'}`;
+  
+  const cnlPreview = event.cnl 
+    ? escapeHtml(event.cnl.substring(0, 300)) + (event.cnl.length > 300 ? '...' : '')
+    : 'No CNL available';
+  
+  return `
+    <div class="nl-failed-section" data-section-id="${type}_${event.sceneNumber || event.chapterNumber}">
+      <div class="nl-failed-header">
+        <span class="nl-failed-icon">!</span>
+        <span class="nl-failed-title">${escapeHtml(title)}</span>
+      </div>
+      <div class="nl-failed-error">${escapeHtml(event.error)}</div>
+      <details class="nl-failed-cnl">
+        <summary>Show CNL specification</summary>
+        <pre>${cnlPreview}</pre>
+      </details>
+    </div>
+  `;
+}
+
+/**
+ * Show retry button for failed sections
+ */
+function showRetryButton(sections) {
+  const container = $('.nl-streaming-content') || $('#nl-content');
+  if (!container) return;
+  
+  const retryHtml = `
+    <div class="nl-retry-section">
+      <div class="nl-retry-info">
+        <strong>${sections.length} section(s) failed to generate.</strong>
+        You can retry generating these sections or continue with the current story.
+      </div>
+      <button class="btn primary" onclick="retryFailedSections()">
+        Retry Failed Sections (${sections.length})
+      </button>
+    </div>
+  `;
+  
+  container.innerHTML += retryHtml;
+  
+  // Store failed sections globally for retry
+  window._failedSections = sections;
+}
+
+/**
+ * Retry generating failed sections
+ */
+window.retryFailedSections = async function() {
+  const sections = window._failedSections;
+  if (!sections || !sections.length) {
+    showNotification?.('No failed sections to retry', 'info');
+    return;
+  }
+  
+  const retryBtn = document.querySelector('.nl-retry-section .btn');
+  if (retryBtn) {
+    retryBtn.disabled = true;
+    retryBtn.textContent = 'Retrying...';
+  }
+  
+  try {
+    const response = await fetch('/v1/generate/nl-story/retry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        failedSections: sections,
+        storyName: state.project.name,
+        options: getGenerationOptions()
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Retry request failed');
+    }
+    
+    const data = await response.json();
+    
+    // Update display with retried content
+    let successCount = 0;
+    for (const result of data.results) {
+      if (result.success) {
+        successCount++;
+        // Replace failed section placeholder with new content
+        const sectionEl = document.querySelector(`[data-section-id="${result.id}"]`);
+        if (sectionEl) {
+          const newHtml = parseMarkdown(result.content);
+          sectionEl.outerHTML = newHtml;
+        }
+        
+        // Update stored story
+        const currentStory = getGeneratedStory() || '';
+        const placeholder = `[Generation failed: ${result.error || result.id}]`;
+        if (currentStory.includes(placeholder)) {
+          setGeneratedStory(currentStory.replace(placeholder, result.content));
+        }
+      }
+    }
+    
+    // Remove retry section if all succeeded
+    const stillFailed = data.results.filter(r => !r.success);
+    if (stillFailed.length === 0) {
+      document.querySelector('.nl-retry-section')?.remove();
+      showNotification?.(`All ${successCount} sections regenerated successfully!`, 'success');
+    } else {
+      showNotification?.(`${successCount} sections regenerated, ${stillFailed.length} still failed`, 'warning');
+      window._failedSections = stillFailed;
+      if (retryBtn) {
+        retryBtn.disabled = false;
+        retryBtn.textContent = `Retry Failed Sections (${stillFailed.length})`;
+      }
+    }
+    
+  } catch (err) {
+    console.error('Retry error:', err);
+    showNotification?.('Retry failed: ' + err.message, 'error');
+    if (retryBtn) {
+      retryBtn.disabled = false;
+      retryBtn.textContent = `Retry Failed Sections (${sections.length})`;
+    }
+  }
+};
 
 // ============================================
 // UI STATE MANAGEMENT

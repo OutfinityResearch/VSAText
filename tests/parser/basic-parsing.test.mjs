@@ -79,3 +79,31 @@ W1 realized by Anna
     throw new Error(`Expected realized by Anna, got modifiers: ${JSON.stringify(s2?.modifiers || {})}`);
   }
 }
+
+// Test: One-line block comments do not swallow the rest of the document
+export function testOneLineBlockCommentDoesNotSwallowDocument() {
+  const cnl = `
+/* comment */
+Hero is hero
+`;
+  const result = parseCNL(cnl);
+
+  if (!result.ast.entities.Hero) {
+    throw new Error('Expected entity "Hero" to be parsed after /* ... */ comment');
+  }
+}
+
+// Test: References use the statement subject as `from` (DS11)
+export function testReferencesFromUsesSubject() {
+  const cnl = `Chapter2 references @Chapter1`;
+  const result = parseCNL(cnl);
+
+  if (!result.ast.references || result.ast.references.length !== 1) {
+    throw new Error(`Expected 1 reference, got ${result.ast.references?.length || 0}`);
+  }
+
+  const ref = result.ast.references[0];
+  if (ref.from !== 'Chapter2' || ref.to !== 'Chapter1') {
+    throw new Error(`Expected from=Chapter2,to=Chapter1, got ${JSON.stringify(ref)}`);
+  }
+}

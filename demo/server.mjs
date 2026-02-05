@@ -288,7 +288,31 @@ async function handleLLMRoutes(method, p, req, res) {
       const llmGenerator = await import('./services/llm-generator.mjs');
       
       if (!llmGenerator.isLLMAvailable()) {
-        return errorResponse(res, 503, 'llm_unavailable', 'LLM agent not available.');
+        // DS08 fallback: enhanced random generation when LLM is unavailable.
+        try {
+          const gen = await import('../src/generation/index.mjs');
+          const options = {
+            genre: body.genre,
+            tone: body.tone,
+            chars: body.characters || body.chars,
+            length: body.length,
+            complexity: body.complexity,
+            rules: body.worldRules || body.rules,
+            title: body.storyName || body.title || 'Untitled Story'
+          };
+
+          const optimized = gen.quickOptimize(options);
+          const project = optimized?.project || gen.generateRandomStory(options);
+          return jsonResponse(res, 200, {
+            project,
+            _fallback: true,
+            strategy: 'advanced',
+            score: optimized?.score ?? null
+          });
+        } catch (err) {
+          console.error('LLM fallback generation error:', err);
+          return errorResponse(res, 503, 'llm_unavailable', 'LLM agent not available (fallback failed).');
+        }
       }
       
       const result = await llmGenerator.generateStoryWithLLM(body);
@@ -370,6 +394,33 @@ async function handleLLMRoutes(method, p, req, res) {
   if (method === 'POST' && p === '/v1/generate/nl-story/stream') {
     return handleNLStoryStream(req, res);
   }
+  
+  // Retry failed sections
+  if (method === 'POST' && p === '/v1/generate/nl-story/retry') {
+    const body = await parseBody(req);
+    try {
+      const llmGenerator = await import('./services/llm-generator.mjs');
+      
+      if (!llmGenerator.isLLMAvailable()) {
+        return errorResponse(res, 503, 'llm_unavailable', 'LLM not available.');
+      }
+      
+      if (!body.failedSections || !body.failedSections.length) {
+        return errorResponse(res, 400, 'invalid_request', 'No failed sections provided');
+      }
+      
+      const results = await llmGenerator.retryFailedSections(
+        body.failedSections,
+        { storyName: body.storyName, previousSummary: body.previousSummary || '' },
+        body.options || {}
+      );
+      
+      return jsonResponse(res, 200, { results });
+    } catch (err) {
+      console.error('Retry generation error:', err);
+      return errorResponse(res, 500, 'generation_error', err.message);
+    }
+  }
 
   return false; // Not handled
 }
@@ -385,12 +436,18 @@ async function handleNLStoryStream(req, res) {
     'Access-Control-Allow-Origin': '*'
   });
   
-  const sendEvent = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+  const sendEvent = (data) => {
+    try {
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    } catch (e) {
+      console.error('SSE write error:', e.message);
+    }
+  };
   
   try {
     const llmGenerator = await import('./services/llm-generator.mjs');
     
-    const { cnl, storyName = 'Untitled Story', options = {}, chapters = [] } = body;
+    const { cnl, storyName = 'Untitled Story', options = {}, chapters = [], scenes = [] } = body;
     
     if (!cnl || cnl.trim().length < 50) {
       sendEvent({ type: 'error', message: 'CNL specification is too short' });
@@ -404,76 +461,98 @@ async function handleNLStoryStream(req, res) {
       return true;
     }
     
-    // If no chapters, generate all at once
-    if (!chapters.length) {
-      sendEvent({ type: 'start', totalChapters: 1 });
-      sendEvent({ type: 'chapter_start', chapterNumber: 1, chapterTitle: 'Full Story' });
+    // Use SDK streaming generation with callbacks
+    const callbacks = {
+      onStart: (data) => {
+        sendEvent({ 
+          type: 'start', 
+          totalScenes: data.totalScenes || data.totalChapters || 1,
+          storyName: data.storyName
+        });
+      },
       
-      const result = await llmGenerator.generateNLFromCNL(cnl, storyName, options);
+      onSceneStart: (data) => {
+        sendEvent({ 
+          type: 'scene_start', 
+          sceneNumber: data.sceneNumber,
+          chapterNumber: data.chapterNumber,
+          title: data.title,
+          progress: data.progress
+        });
+      },
       
-      sendEvent({ type: 'chapter_complete', chapterNumber: 1, content: result.story });
-      sendEvent({ type: 'complete', totalChapters: 1, fullStory: result.story });
-      res.end();
-      return true;
-    }
-    
-    // Generate chapter by chapter
-    sendEvent({ type: 'start', totalChapters: chapters.length, estimatedTotal: chapters.length * 10000 });
-    
-    let fullStory = '';
-    let previousSummary = '';
-    
-    for (let i = 0; i < chapters.length; i++) {
-      const chapter = chapters[i];
-      const chapterNumber = i + 1;
-      const startTime = Date.now();
+      onSceneComplete: (data) => {
+        sendEvent({ 
+          type: 'scene_complete', 
+          sceneNumber: data.sceneNumber,
+          content: data.content,
+          progress: data.progress
+        });
+      },
       
-      sendEvent({ 
-        type: 'chapter_start', 
-        chapterNumber, 
-        chapterTitle: chapter.title || `Chapter ${chapterNumber}`,
-        progress: Math.round((i / chapters.length) * 100)
-      });
+      onSceneError: (data) => {
+        sendEvent({ 
+          type: 'scene_error', 
+          sceneNumber: data.sceneNumber,
+          title: data.title,
+          error: data.error,
+          cnl: data.cnl,  // Include CNL for retry
+          progress: data.progress
+        });
+      },
       
-      try {
-        const chapterResult = await llmGenerator.generateChapter(
-          { number: chapterNumber, title: chapter.title, cnl: chapter.cnl || cnl },
-          { storyName, previousSummary },
-          options
-        );
-        
-        const chapterContent = chapterResult.chapter;
-        if (!chapterContent || chapterContent.length < 50) {
-          throw new Error('Chapter content too short');
-        }
-        
-        fullStory += (fullStory ? '\n\n' : '') + chapterContent;
-        previousSummary += `\nChapter ${chapterNumber}: ${chapter.title} - ${chapterContent.substring(0, 200)}...`;
-        
+      onChapterStart: (data) => {
+        sendEvent({ 
+          type: 'chapter_start', 
+          chapterNumber: data.chapterNumber,
+          chapterTitle: data.title,
+          progress: data.progress
+        });
+      },
+      
+      onChapterComplete: (data) => {
         sendEvent({ 
           type: 'chapter_complete', 
-          chapterNumber, 
-          chapterTitle: chapter.title,
-          content: chapterContent,
-          elapsed: Date.now() - startTime,
-          progress: Math.round(((i + 1) / chapters.length) * 100)
+          chapterNumber: data.chapterNumber,
+          content: data.content,
+          progress: data.progress
         });
-      } catch (chapterErr) {
-        console.error(`Chapter ${chapterNumber} error:`, chapterErr);
-        sendEvent({ type: 'chapter_error', chapterNumber, error: chapterErr.message });
-        
-        // Stop on critical errors
-        if (chapterErr.message.includes('LLM') || chapterErr.message.includes('API')) {
-          sendEvent({ type: 'error', message: `Generation stopped: ${chapterErr.message}` });
-          res.end();
-          return true;
-        }
-        
-        fullStory += `\n\n## Chapter ${chapterNumber}\n\n[Generation failed]`;
+      },
+      
+      onChapterError: (data) => {
+        sendEvent({ 
+          type: 'chapter_error', 
+          chapterNumber: data.chapterNumber,
+          title: data.title,
+          error: data.error,
+          cnl: data.cnl,
+          progress: data.progress
+        });
+      },
+      
+      onComplete: (result) => {
+        sendEvent({ 
+          type: 'complete', 
+          success: result.success,
+          fullStory: result.fullStory,
+          stats: result.stats,
+          failedSections: result.failedSections.map(s => ({
+            id: s.id,
+            type: s.type,
+            title: s.title,
+            error: s.error,
+            cnl: s.cnl
+          }))
+        });
       }
-    }
+    };
     
-    sendEvent({ type: 'complete', totalChapters: chapters.length, fullStory });
+    // Call SDK streaming generator
+    await llmGenerator.generateStoryStreaming(
+      { cnl, storyName, options, chapters, scenes },
+      callbacks
+    );
+    
     res.end();
   } catch (err) {
     console.error('SSE NL generation error:', err);

@@ -100,3 +100,45 @@ TestNovel group end
     throw new Error('Expected error for mismatched group end');
   }
 }
+
+// Test: Dot identifiers (e.g., Sc1.1) are parsed as group names
+export function testDotIdGroupNamesParsed() {
+  const cnl = `
+Book group begin
+  Ch1 group begin
+    Sc1.1 group begin
+    Sc1.1 group end
+  Ch1 group end
+Book group end
+`;
+
+  const result = parseCNL(cnl);
+  const book = result.ast.groups[0];
+  const ch1 = book?.children?.[0];
+  const scene = ch1?.children?.[0];
+
+  if (!scene || scene.name !== 'Sc1.1') {
+    throw new Error(`Expected a scene group named 'Sc1.1', got '${scene?.name}'`);
+  }
+}
+
+// Test: Quoted group names with spaces are supported
+export function testQuotedGroupNamesParsed() {
+  const cnl = `
+"Chapter 1" group begin
+  "Scene 1.1" group begin
+  "Scene 1.1" group end
+"Chapter 1" group end
+`;
+
+  const result = parseCNL(cnl);
+  const chapter = result.ast.groups[0];
+  const scene = chapter?.children?.[0];
+
+  if (!chapter || chapter.name !== 'Chapter 1') {
+    throw new Error(`Expected chapter name 'Chapter 1', got '${chapter?.name}'`);
+  }
+  if (!scene || scene.name !== 'Scene 1.1') {
+    throw new Error(`Expected scene name 'Scene 1.1', got '${scene?.name}'`);
+  }
+}

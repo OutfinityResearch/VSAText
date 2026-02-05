@@ -360,6 +360,13 @@ function serializeStructure(lines, structure) {
 function serializeNode(node, depth) {
   const indent = '  '.repeat(depth);
   let result = '';
+
+  function formatActionVerb(actionKey) {
+    if (!actionKey) return '';
+    // Avoid generating "X is ..." action lines, because the parser treats "is" as a type declaration.
+    if (actionKey === 'is' || actionKey.startsWith('is_')) return actionKey;
+    return actionKey.replace(/_/g, ' ');
+  }
   
   if (['book', 'chapter', 'scene'].includes(node.type)) {
     result += `${indent}${formatId(node.name)} group begin\n`;
@@ -370,7 +377,7 @@ function serializeNode(node, depth) {
     (node.children || []).forEach(child => {
       if (child.type === 'action') {
         const act = child.actionData;
-        result += `${indent}  ${formatId(act.subject)} ${act.action.replace(/_/g, ' ')}`;
+        result += `${indent}  ${formatId(act.subject)} ${formatActionVerb(act.action)}`;
         if (act.target) result += ` ${formatId(act.target)}`;
         result += '\n';
       } else if (child.type === 'dialogue' && child.dialogueData) {

@@ -218,11 +218,11 @@ files_to_process=()
 while IFS= read -r -d '' file; do
   files_to_process+=("$file")
 done < <(
-  find . -path "*/node_modules" -prune -o -type f \( -name "*.js" -o -name "*.mjs" -o -name "*.sys2" -o -name "*.md" -o -name "*.html" \) -print0
+  find . -path "*/node_modules" -prune -o -type f \( -name "*.js" -o -name "*.mjs" -o -name "*.sys2" -o -name "*.md" -o -name "*.html" -o -name "*.css" \) -print0
 )
 
 if (( ${#files_to_process[@]} == 0 )); then
-  echo "No JS/MJS/SYS2/MD/HTML files found."
+  echo "No JS/MJS/SYS2/MD/HTML/CSS files found."
   exit 0
 fi
 
@@ -232,6 +232,7 @@ jsmjs_files=()
 sys2_files=()
 md_files=()
 html_files=()
+css_files=()
 
 for file in "${files_to_process[@]}"; do
   case "$file" in
@@ -240,6 +241,7 @@ for file in "${files_to_process[@]}"; do
     *.sys2) sys2_files+=("$file") ;;
     *.md) md_files+=("$file") ;;
     *.html) html_files+=("$file") ;;
+    *.css) css_files+=("$file") ;;
   esac
 done
 
@@ -248,21 +250,24 @@ total_mjs_lines=$(compute_total_lines mjs_files)
 total_sys2_lines=$(compute_total_lines sys2_files)
 total_md_lines=$(compute_total_lines md_files)
 total_html_lines=$(compute_total_lines html_files)
+total_css_lines=$(compute_total_lines css_files)
 
 total_js_size=$(compute_total_size_kb js_files)
 total_mjs_size=$(compute_total_size_kb mjs_files)
 total_sys2_size=$(compute_total_size_kb sys2_files)
 total_md_size=$(compute_total_size_kb md_files)
 total_html_size=$(compute_total_size_kb html_files)
+total_css_size=$(compute_total_size_kb css_files)
 
 echo "--- Oversized Files ---"
 render_oversized_table "JS/MJS" "$YELLOW_THRESHOLD" jsmjs_files
 render_oversized_table "SYS2" "$YELLOW_THRESHOLD" sys2_files
 render_oversized_table "Markdown" "$YELLOW_THRESHOLD" md_files
 render_oversized_table "HTML" "$YELLOW_THRESHOLD" html_files
+render_oversized_table "CSS" "$YELLOW_THRESHOLD" css_files
 
-total_all_lines=$((total_js_lines + total_mjs_lines + total_sys2_lines + total_md_lines + total_html_lines))
-total_all_size=$((total_js_size + total_mjs_size + total_sys2_size + total_md_size + total_html_size))
+total_all_lines=$((total_js_lines + total_mjs_lines + total_sys2_lines + total_md_lines + total_html_lines + total_css_lines))
+total_all_size=$((total_js_size + total_mjs_size + total_sys2_size + total_md_size + total_html_size + total_css_size))
 
 echo "--- Line Totals and File Sizes ---"
 printf "%-8s | %-6s | %-8s | %-8s | %s\n" "Type" "Files" "Lines" "Size(KB)" "Avg KB/File"
@@ -272,6 +277,7 @@ printf "%-8s | %6d | %8s | %8s | %s\n" ".mjs" "${#mjs_files[@]}" "$total_mjs_lin
 printf "%-8s | %6d | %8s | %8s | %s\n" ".sys2" "${#sys2_files[@]}" "$total_sys2_lines" "$total_sys2_size" "$(( ${#sys2_files[@]} > 0 ? total_sys2_size / ${#sys2_files[@]} : 0 ))"
 printf "%-8s | %6d | %8s | %8s | %s\n" ".md" "${#md_files[@]}" "$total_md_lines" "$total_md_size" "$(( ${#md_files[@]} > 0 ? total_md_size / ${#md_files[@]} : 0 ))"
 printf "%-8s | %6d | %8s | %8s | %s\n" ".html" "${#html_files[@]}" "$total_html_lines" "$total_html_size" "$(( ${#html_files[@]} > 0 ? total_html_size / ${#html_files[@]} : 0 ))"
+printf "%-8s | %6d | %8s | %8s | %s\n" ".css" "${#css_files[@]}" "$total_css_lines" "$total_css_size" "$(( ${#css_files[@]} > 0 ? total_css_size / ${#css_files[@]} : 0 ))"
 printf "%-8s | %6s | %8s | %8s | %s\n" "TOTAL" "-" "$total_all_lines" "$total_all_size" "-"
 echo ""
 

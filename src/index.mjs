@@ -131,6 +131,9 @@ export {
 // ============================================
 export {
   encodeText,
+  bind,
+  bundle,
+  permute,
   cosine
 } from './vsa/encoder.mjs';
 

@@ -1,0 +1,189 @@
+/**
+ * SCRIPTA Demo - Base Styles
+ * Variables, Base, Layout, Zoom Controls, Buttons
+ */
+
+/* ============================================ */
+/* CSS Variables */
+/* ============================================ */
+:root {
+  /* Font Scale - adjustable via UI */
+  --font-scale: 1;
+  
+  /* Colors */
+  --bg-deep: #1a1a2e;
+  --bg-main: #242442;
+  --bg-surface: #2d2d52;
+  --bg-elevated: #363663;
+  --bg-hover: #404075;
+  --accent-gold: #ffd166;
+  --accent-rose: #ef476f;
+  --accent-emerald: #06d6a0;
+  --accent-sky: #118ab2;
+  --accent-violet: #9d4edd;
+  --accent-amber: #fb8500;
+  --text-primary: #f8f9fa;
+  --text-secondary: #c9d1d9;
+  --text-muted: #8b949e;
+  --text-faded: #6e7681;
+  
+  /* Entity Colors */
+  --entity-character: #06d6a0;
+  --entity-location: #118ab2;
+  --entity-mood: #9d4edd;
+  --entity-block: #fb8500;
+  --entity-object: #ffd166;
+  --entity-theme: #ef476f;
+  --entity-rule: #4cc9f0;
+  --entity-arc: #7b2cbf;
+  
+  /* Fonts */
+  --font-title: 'Cinzel', serif;
+  --font-body: 'Crimson Text', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  /* Scaled font sizes - ALL fonts in app use these */
+  --fs-2xs: calc(0.6rem * var(--font-scale));
+  --fs-xs: calc(0.7rem * var(--font-scale));
+  --fs-sm: calc(0.8rem * var(--font-scale));
+  --fs-base: calc(0.9rem * var(--font-scale));
+  --fs-md: calc(1rem * var(--font-scale));
+  --fs-lg: calc(1.15rem * var(--font-scale));
+  --fs-xl: calc(1.3rem * var(--font-scale));
+  --fs-2xl: calc(1.5rem * var(--font-scale));
+}
+
+/* ============================================ */
+/* Base */
+/* ============================================ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at 20% 80%, rgba(157, 78, 221, 0.08) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 20%, rgba(255, 209, 102, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* ============================================ */
+/* Layout */
+/* ============================================ */
+.app {
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  grid-template-rows: 52px 1fr 36px;
+  height: 100vh;
+}
+
+header {
+  grid-column: 1 / -1;
+  background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-main) 100%);
+  border-bottom: 1px solid var(--bg-elevated);
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo h1 {
+  font-family: var(--font-title);
+  font-size: var(--fs-lg);
+  background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-amber) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.header-center { display: flex; align-items: center; gap: 0.75rem; }
+
+.project-name {
+  font-family: var(--font-title);
+  font-size: var(--fs-base);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  color: var(--text-primary);
+  padding: 0.2rem 0.4rem;
+  min-width: 180px;
+  text-align: center;
+}
+.project-name:focus { outline: none; border-color: var(--accent-gold); }
+
+.header-actions { display: flex; gap: 0.4rem; }
+
+/* Zoom Controls */
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  background: var(--bg-elevated);
+  border-radius: 6px;
+  margin-right: 0.5rem;
+}
+
+.zoom-btn {
+  font-size: var(--fs-xs) !important;
+  padding: 0.25rem 0.5rem !important;
+  min-width: 28px;
+}
+
+.zoom-level {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-secondary);
+  min-width: 40px;
+  text-align: center;
+}
+
+footer {
+  grid-column: 1 / -1;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--bg-elevated);
+  padding: 0 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+.footer-stats { display: flex; gap: 1rem; }
+.stat-value { color: var(--text-secondary); font-family: var(--font-mono); }
+
+/* ============================================ */
+/* Buttons */
+/* ============================================ */
+.btn {
+  font-family: var(--font-title);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--bg-hover);
+  border-radius: 4px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn:hover { border-color: var(--accent-violet); color: var(--text-primary); background: var(--bg-elevated); }
+.btn.primary { background: var(--accent-violet); border-color: var(--accent-violet); color: white; }
+.btn.success { background: var(--accent-emerald); border-color: var(--accent-emerald); color: var(--bg-deep); }
+.btn.accent { background: var(--accent-gold); border-color: var(--accent-gold); color: var(--bg-deep); }
+.btn.danger { background: var(--accent-rose); border-color: var(--accent-rose); color: white; }
+.btn.random { background: linear-gradient(135deg, var(--accent-amber), var(--accent-rose)); border: none; color: white; }
+.btn.wizard-trigger { background: linear-gradient(135deg, var(--accent-violet), var(--accent-sky)); border: none; color: white; }
+.btn.small { font-size: var(--fs-2xs); padding: 0.3rem 0.5rem; }

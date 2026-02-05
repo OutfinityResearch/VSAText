@@ -147,43 +147,51 @@ export function parseLine(line, lineNo) {
   if (tokens.length === 0) return { statement: null, error: null };
   
   const tokenWords = tokens.filter(t => t.type === 'word').map(t => t.value.toLowerCase());
+
+  function tailWordsMatch(secondLast, last) {
+    if (tokens.length < 2) return false;
+    const a = tokens[tokens.length - 2];
+    const b = tokens[tokens.length - 1];
+    if (a.type !== 'word' || b.type !== 'word') return false;
+    return a.value.toLowerCase() === secondLast && b.value.toLowerCase() === last;
+  }
+
+  function joinHeadValues(headCountFromEnd) {
+    return tokens
+      .slice(0, Math.max(0, tokens.length - headCountFromEnd))
+      .map(t => t.value)
+      .join(' ')
+      .trim();
+  }
   
   // GROUP BEGIN: "Name group begin"
-  if (tokenWords.length >= 3 && 
-      tokenWords[tokenWords.length - 2] === 'group' && 
-      tokenWords[tokenWords.length - 1] === 'begin') {
+  if (tokens.length >= 3 && tailWordsMatch('group', 'begin')) {
     return {
-      statement: { type: 'group_begin', name: tokens[0].value, line: lineNo },
+      statement: { type: 'group_begin', name: joinHeadValues(2), line: lineNo },
       error: null
     };
   }
   
   // GROUP END: "Name group end"
-  if (tokenWords.length >= 3 && 
-      tokenWords[tokenWords.length - 2] === 'group' && 
-      tokenWords[tokenWords.length - 1] === 'end') {
+  if (tokens.length >= 3 && tailWordsMatch('group', 'end')) {
     return {
-      statement: { type: 'group_end', name: tokens[0].value, line: lineNo },
+      statement: { type: 'group_end', name: joinHeadValues(2), line: lineNo },
       error: null
     };
   }
   
   // EXCHANGE BEGIN: "DialogueId exchange begin" (NEW)
-  if (tokenWords.length >= 3 && 
-      tokenWords[tokenWords.length - 2] === 'exchange' && 
-      tokenWords[tokenWords.length - 1] === 'begin') {
+  if (tokens.length >= 3 && tailWordsMatch('exchange', 'begin')) {
     return {
-      statement: { type: 'exchange_begin', dialogueId: tokens[0].value, line: lineNo },
+      statement: { type: 'exchange_begin', dialogueId: joinHeadValues(2), line: lineNo },
       error: null
     };
   }
   
   // EXCHANGE END: "DialogueId exchange end" (NEW)
-  if (tokenWords.length >= 3 && 
-      tokenWords[tokenWords.length - 2] === 'exchange' && 
-      tokenWords[tokenWords.length - 1] === 'end') {
+  if (tokens.length >= 3 && tailWordsMatch('exchange', 'end')) {
     return {
-      statement: { type: 'exchange_end', dialogueId: tokens[0].value, line: lineNo },
+      statement: { type: 'exchange_end', dialogueId: joinHeadValues(2), line: lineNo },
       error: null
     };
   }
@@ -438,9 +446,15 @@ export function parseCNL(text) {
     const line = lines[lineNo - 1];
     const stripped = line.trim();
     
-    if (stripped.startsWith('/*')) { inMultilineComment = true; continue; }
-    if (stripped.endsWith('*/') || stripped === '*/') { inMultilineComment = false; continue; }
-    if (inMultilineComment) continue;
+    // Multi-line comments: support one-line block comments too ("/* ... */").
+    if (inMultilineComment) {
+      if (stripped.includes('*/')) inMultilineComment = false;
+      continue;
+    }
+    if (stripped.startsWith('/*')) {
+      if (!stripped.includes('*/')) inMultilineComment = true;
+      continue;
+    }
     
     const { statement, error, annotation, isComment } = parseLine(line, lineNo);
 

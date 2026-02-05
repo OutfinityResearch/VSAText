@@ -16,11 +16,13 @@
  * formatId('hero')        // 'hero'
  * formatId('Dark Knight') // '"Dark Knight"'
  * formatId('test@123')    // '"test@123"'
+ * formatId('Sc1.1')       // 'Sc1.1'
  */
 export function formatId(name) {
   if (!name) return '';
-  // Quote if contains spaces or non-alphanumeric characters (except underscore)
-  return (name.includes(' ') || /[^a-zA-Z0-9_]/.test(name)) ? `"${name}"` : name;
+  // Quote if contains spaces or non-alphanumeric characters (except underscore + dot)
+  // Dot is used for hierarchical IDs (e.g., "Ch1.Sc2", "Sc1.1").
+  return (name.includes(' ') || /[^a-zA-Z0-9_.]/.test(name)) ? `"${name}"` : name;
 }
 
 /**

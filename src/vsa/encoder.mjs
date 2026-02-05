@@ -30,7 +30,14 @@ function tokenVector(token, dim, seed) {
   return vec;
 }
 
-function bundle(vectors) {
+export function bind(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return [];
+  const out = new Array(a.length);
+  for (let i = 0; i < a.length; i++) out[i] = a[i] * b[i];
+  return out;
+}
+
+export function bundle(vectors) {
   if (!vectors.length) return [];
   const dim = vectors[0].length;
   const sums = new Array(dim).fill(0);
@@ -38,6 +45,20 @@ function bundle(vectors) {
     for (let i = 0; i < dim; i++) sums[i] += vec[i];
   }
   return sums.map((s) => (s >= 0 ? 1 : -1));
+}
+
+export function permute(vec, shiftK = 1) {
+  if (!Array.isArray(vec) || vec.length === 0) return [];
+  const dim = vec.length;
+  const raw = Number(shiftK) || 0;
+  const k = ((raw % dim) + dim) % dim;
+  if (k === 0) return [...vec];
+
+  const out = new Array(dim);
+  for (let i = 0; i < dim; i++) {
+    out[(i + k) % dim] = vec[i];
+  }
+  return out;
 }
 
 export function encodeText(text, dim = 10000, seed = 42) {

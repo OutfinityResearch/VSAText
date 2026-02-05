@@ -49,6 +49,10 @@ export async function generateLLM(options) {
     updateGenerationStatus(statusEl, 'Parsing response...', 60);
     
     const result = await response.json();
+
+    if (result && result._fallback) {
+      showNotification('LLM unavailable — generated a fallback story instead.', 'warning');
+    }
     
     // Handle CNL response
     if (result.cnl) {

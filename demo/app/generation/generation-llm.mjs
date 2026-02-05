@@ -8,6 +8,7 @@ import { state, createSnapshot } from '../state.mjs';
 import { showNotification } from '../utils.mjs';
 import { 
   refreshAllViews,
+  resetProjectState,
   loadProjectData,
   loadCNLIntoState,
   showGenerationStatus,
@@ -24,6 +25,9 @@ export async function generateLLM(options) {
   const statusEl = showGenerationStatus('Connecting to LLM API...');
   
   try {
+    // Reset demo state to avoid merging old libraries/structure with LLM output
+    resetProjectState();
+
     updateGenerationStatus(statusEl, 'Generating CNL specification...', 20);
     
     // Call server API for LLM generation
@@ -37,7 +41,10 @@ export async function generateLLM(options) {
         tone: options.tone,
         complexity: options.complexity,
         worldRules: options.rules,
-        storyName: state.project.name
+        storyName: state.project.name,
+        model: options.model || undefined,
+        promptKey: options.promptKey || undefined,
+        customPrompt: options.customPrompt || undefined
       })
     });
     
@@ -61,9 +68,15 @@ export async function generateLLM(options) {
     }
     
     // Handle direct project data
-    if (result.project) {
+    const projectData = result?.project || (
+      result?.libraries && (result?.structure || result?.blueprint)
+        ? result
+        : null
+    );
+
+    if (projectData) {
       updateGenerationStatus(statusEl, 'Loading project data...', 80);
-      loadProjectData(result.project);
+      loadProjectData(projectData);
     }
     
     updateGenerationStatus(statusEl, 'Complete!', 100);

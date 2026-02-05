@@ -1,6 +1,6 @@
 /**
  * SCRIPTA Demo - LLM Provider Adapter
- * 
+ *
  * Thin adapter that connects SDK NL generation with AchillesAgentLib.
  * This module provides the LLM provider interface expected by the SDK.
  */
@@ -8,7 +8,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Import SDK NL generator
 import {
   SUPPORTED_LANGUAGES,
   buildFullStoryPrompt,
@@ -17,6 +16,14 @@ import {
   generateStoryByChapters,
   regenerateFailedSections
 } from '../../src/generation/nl-generator.mjs';
+import { generateTextWithContinuation } from '../../src/generation/nl-generator-continuation.mjs';
+
+import {
+  buildJsonRepairPrompt,
+  buildSpecsPrompt,
+  normalizeSpecsProject,
+  parseLLMJson
+} from './llm-specs-json.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -34,7 +41,7 @@ try {
   LLMAgent = achilles.LLMAgent;
   agentAvailable = true;
   console.log('[LLM Provider] AchillesAgentLib loaded successfully');
-  
+
   const llmClientPath = path.resolve(__dirname, '../../../AchillesAgentLib/utils/LLMClient.mjs');
   const llmClient = await import(llmClientPath);
   listModelsFromCache = llmClient.listModelsFromCache;
@@ -61,44 +68,45 @@ const llmProvider = {
     if (!agentAvailable) {
       throw new Error('LLM not available. Configure AchillesAgentLib with API keys.');
     }
-    
+
     const agent = new LLMAgent({
       name: 'ScriptaGenerator',
       systemPrompt: 'You are a skilled fiction writer. Output only the story text in Markdown format. Never stop mid-sentence or mid-word. Always complete your response fully.'
     });
-    
+
     const completeOptions = {
       prompt,
       mode: 'deep',
       maxTokens: options.maxTokens || 4000
     };
-    
+
     if (options.model) {
       completeOptions.model = options.model;
     }
-    
+
     // Create timeout wrapper
     const timeoutMs = options.timeout || 60000;
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('Generation timed out')), timeoutMs);
     });
-    
+
     const response = await Promise.race([
       agent.complete(completeOptions),
       timeoutPromise
     ]);
-    
-    // Check for truncation
-    if (response.finish_reason === 'length' || response.finishReason === 'length') {
-      throw new Error('Response truncated due to token limit');
-    }
-    
-    const content = response.content || response.text || response;
-    
+
+    const content = response?.content || response?.text || response;
+
     if (!content || typeof content !== 'string') {
       throw new Error('LLM returned empty or invalid response');
     }
-    
+
+    // Some providers return a finish reason; prefer returning partial content so
+    // the SDK continuation logic can attempt a repair.
+    if (response?.finish_reason === 'length' || response?.finishReason === 'length') {
+      return content;
+    }
+
     return content;
   }
 };
@@ -128,7 +136,7 @@ export function getAvailableModels() {
   if (!agentAvailable || !listModelsFromCache) {
     return { fast: [], deep: [], available: false };
   }
-  
+
   try {
     const models = listModelsFromCache();
     return {
@@ -157,20 +165,20 @@ export async function generateNLFromCNL(cnl, storyName, options = {}) {
   if (!agentAvailable) {
     throw new Error('LLM not available. Configure API keys.');
   }
-  
+
   const prompt = buildFullStoryPrompt(cnl, storyName, options);
-  
-  const content = await llmProvider.generateText(prompt, {
-    maxTokens: 8000,
-    timeout: 120000,
-    model: options.model
+
+  const content = await generateTextWithContinuation({
+    llmProvider,
+    prompt,
+    llmCallOptions: { maxTokens: 8000, timeout: 120000, model: options.model },
+    continuationCallOptions: { maxTokens: 2400, timeout: 60000, model: options.model },
+    validate: (text) => validateContent(text, 500),
+    sectionLabel: `Full story "${storyName}"`,
+    maxContinuations: 4,
+    options
   });
-  
-  const validation = validateContent(content, 500);
-  if (!validation.valid) {
-    throw new Error(validation.error);
-  }
-  
+
   return { story: content.trim() };
 }
 
@@ -181,26 +189,26 @@ export async function generateStoryStreaming(params, callbacks) {
   if (!agentAvailable) {
     throw new Error('LLM not available. Configure API keys.');
   }
-  
+
   // Use scene-level generation for better reliability
   if (params.scenes && params.scenes.length > 0) {
     return generateStoryByScenes(params, callbacks, llmProvider);
   }
-  
+
   // Fall back to chapter-level
   if (params.chapters && params.chapters.length > 0) {
     return generateStoryByChapters(params, {
       onStart: callbacks.onStart,
-      onChapterStart: callbacks.onSceneStart || callbacks.onChapterStart,
-      onChapterComplete: callbacks.onSceneComplete || callbacks.onChapterComplete,
-      onChapterError: callbacks.onSceneError || callbacks.onChapterError,
+      onChapterStart: callbacks.onChapterStart || callbacks.onSceneStart,
+      onChapterComplete: callbacks.onChapterComplete || callbacks.onSceneComplete,
+      onChapterError: callbacks.onChapterError || callbacks.onSceneError,
       onComplete: callbacks.onComplete
     }, llmProvider);
   }
-  
+
   // No structure, generate full story
   const result = await generateNLFromCNL(params.cnl, params.storyName, params.options);
-  
+
   callbacks.onComplete?.({
     success: true,
     fullStory: result.story,
@@ -208,7 +216,7 @@ export async function generateStoryStreaming(params, callbacks) {
     failedSections: [],
     stats: { total: 1, completed: 1, failed: 0, retried: 0 }
   });
-  
+
   return {
     success: true,
     fullStory: result.story,
@@ -225,47 +233,87 @@ export async function retryFailedSections(failedSections, storyContext, options)
   if (!agentAvailable) {
     throw new Error('LLM not available. Configure API keys.');
   }
-  
+
   return regenerateFailedSections(failedSections, storyContext, options, llmProvider);
 }
 
 // ============================================
-// LEGACY API (for backwards compatibility)
+// SPECS JSON (Create Specs → With LLM)
 // ============================================
 
+function parseJSONResponse(content) {
+  try {
+    return parseLLMJson(content);
+  } catch (err) {
+    console.error('Failed to parse LLM response as JSON:', err.message);
+    throw new Error('Invalid JSON response from LLM');
+  }
+}
+
+async function repairJsonWithLLM({ model, originalContent }) {
+  const agent = new LLMAgent({
+    name: 'ScriptaJSONRepair',
+    systemPrompt: 'You repair JSON. Return valid JSON only. No markdown. No commentary.'
+  });
+
+  const completeOptions = {
+    prompt: buildJsonRepairPrompt(originalContent),
+    mode: 'fast',
+    maxTokens: 5000
+  };
+
+  if (model) completeOptions.model = model;
+
+  const response = await agent.complete(completeOptions);
+  return response?.content || response?.text || response;
+}
+
 /**
- * Generate CNL specification with LLM (legacy)
+ * Generate story specification as a project JSON payload
  */
 export async function generateStoryWithLLM(options) {
   if (!agentAvailable) {
     throw new Error('LLM agent not available.');
   }
-  
+
+  const { systemPrompt, prompt } = buildSpecsPrompt({
+    promptKey: options.promptKey,
+    options
+  });
+
   const agent = new LLMAgent({
     name: 'ScriptaStoryGenerator',
-    systemPrompt: 'You are a creative story specification generator. Always respond with valid JSON.'
+    systemPrompt
   });
-  
-  // Build prompt for CNL generation (not NL story)
-  const prompt = `Generate a story specification in JSON format for:
-Genre: ${options.genre}
-Length: ${options.length}
-Characters: ${options.characters}
-Tone: ${options.tone}
-Complexity: ${options.complexity}
-World rules: ${options.worldRules}
-Story name: ${options.storyName || 'Untitled Story'}
 
-Output valid JSON with project structure including characters, locations, objects, and chapter/scene structure.`;
-  
-  const response = await agent.complete({
+  const completeOptions = {
     prompt,
     mode: 'deep',
-    maxTokens: 4000
-  });
-  
-  const content = response.content || response.text || response;
-  return parseJSONResponse(content);
+    maxTokens: 6500
+  };
+  if (options.model) completeOptions.model = options.model;
+
+  const response = await agent.complete(completeOptions);
+  const content = response?.content || response?.text || response;
+
+  let parsed;
+  try {
+    parsed = parseJSONResponse(content);
+  } catch {
+    const repairedText = await repairJsonWithLLM({
+      model: options.model,
+      originalContent: content
+    });
+    parsed = parseJSONResponse(repairedText);
+  }
+
+  const projectName = options.storyName || options.title || 'Untitled Story';
+  const project = normalizeSpecsProject(parsed, projectName);
+  if (!project) {
+    throw new Error('LLM returned JSON but no project payload was found.');
+  }
+
+  return { project };
 }
 
 /**
@@ -275,51 +323,95 @@ export async function refineStoryWithLLM(project, options) {
   if (!agentAvailable) {
     throw new Error('LLM agent not available');
   }
-  
+
   const agent = new LLMAgent({
     name: 'ScriptaStoryRefiner',
-    systemPrompt: 'You are a story editor. Suggest improvements. Always respond with valid JSON.'
+    systemPrompt: 'You are a story editor. Return valid JSON only (no markdown, no commentary).'
   });
-  
-  const prompt = `Review this story specification and suggest improvements:
-Current story: ${project.name}
-Genre: ${options.genre}
-Current characters: ${JSON.stringify(project.libraries?.characters?.map(c => ({ name: c.name, archetype: c.archetype })))}
 
-Output JSON with suggestions for scene names, character traits, and plot elements.`;
-  
-  const response = await agent.complete({
-    prompt,
-    mode: 'fast',
-    maxTokens: 2000
-  });
-  
-  const content = response.content || response.text || response;
-  return parseJSONResponse(content);
+  const safeGenre = options?.genre || 'unknown';
+  const safeName = project?.name || 'Untitled Story';
+  const model = options?.model;
+
+  const characters = (project?.libraries?.characters || [])
+    .filter(c => c && typeof c === 'object')
+    .slice(0, 12)
+    .map(c => ({
+      id: c.id,
+      name: c.name,
+      archetype: c.archetype,
+      traits: Array.isArray(c.traits) ? c.traits.slice(0, 8) : []
+    }));
+
+  const collectScenes = () => {
+    const structure = project?.structure;
+    if (!structure || typeof structure !== 'object') return [];
+    const chapters = Array.isArray(structure.children) ? structure.children : [];
+    return chapters.slice(0, 12).map(ch => ({
+      id: ch.id,
+      name: ch.name,
+      title: ch.title,
+      scenes: (Array.isArray(ch.children) ? ch.children : []).slice(0, 20).map(sc => ({
+        id: sc.id,
+        name: sc.name,
+        title: sc.title
+      }))
+    }));
+  };
+
+  const prompt = `Review this story specification and suggest compact, high-impact improvements.
+
+Hard rules:
+- Output JSON only. No markdown. No code blocks. No comments.
+- Use double quotes for keys and strings.
+- No trailing commas.
+
+Return this exact shape:
+{
+  "suggestions": {
+    "sceneNames": { "<sceneId>": "New scene title", "...": "..." },
+    "characterTraits": { "<characterId>": ["trait1","trait2"], "...": [] },
+    "plotElements": [{ "name": "Element", "description": "1-2 sentences" }]
+  }
 }
 
-/**
- * Parse JSON from LLM response
- */
-function parseJSONResponse(content) {
-  if (typeof content !== 'string') return content;
-  
-  const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (jsonMatch) content = jsonMatch[1].trim();
-  
-  const jsonStart = content.indexOf('{');
-  const jsonEnd = content.lastIndexOf('}');
-  
-  if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-    content = content.substring(jsonStart, jsonEnd + 1);
-  }
-  
+Story:
+- Name: ${safeName}
+- Genre: ${safeGenre}
+
+Characters (IDs matter for characterTraits keys):
+${JSON.stringify(characters)}
+
+Structure (scene IDs matter for sceneNames keys):
+${JSON.stringify(collectScenes())}
+`;
+
+  const completeOptions = {
+    prompt,
+    mode: 'fast',
+    maxTokens: 2500
+  };
+  if (model) completeOptions.model = model;
+
+  const response = await agent.complete(completeOptions);
+  const content = response?.content || response?.text || response;
+
+  let parsed;
   try {
-    return JSON.parse(content);
-  } catch (err) {
-    console.error('Failed to parse LLM response as JSON:', err.message);
-    throw new Error('Invalid JSON response from LLM');
+    parsed = parseJSONResponse(content);
+  } catch {
+    const repairedText = await repairJsonWithLLM({
+      model,
+      originalContent: content
+    });
+    parsed = parseJSONResponse(repairedText);
   }
+
+  const suggestions = (parsed && typeof parsed === 'object')
+    ? (parsed.suggestions && typeof parsed.suggestions === 'object' ? parsed.suggestions : parsed)
+    : { raw: parsed };
+
+  return { suggestions };
 }
 
 export default {

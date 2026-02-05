@@ -54,17 +54,25 @@ The interpreter consumes:
   - `seed` (integer): deterministic seed for any stochastic components (default `42`).
   - `profile` (string): implementation profile (e.g., `basic`, `vsa`) affecting embeddings.
   - `metric_set` (string[]): list of metric codes to compute.
-  - `corpora` (object): optional references for OI and RQ:
-    - `tropes` (array): curated trope corpus entries
-    - `retrieval_queries` (array): query set with relevance labels
+  - `corpora` (object): optional external datasets for specific metrics:
+    - `tropes` (array): curated trope corpus entries for `OI` (DS16). Recommended entry format:
+      - `{ "id": "chosen_one", "text": "A reluctant hero learns they are destined..." }`
+      - or a plain string (treated as `text`)
+    - `retrieval_queries` (array): query set with ground truth for `RQ` (DS18). Recommended entry format:
+      - `{ "id": "q1", "query": "scenes with Anna in danger", "relevant": ["Sc3", "Sc7"], "topK": 5 }`
+  - `human` (object): optional human-evaluation inputs for human-rated metrics:
+    - `overall_ratings` (number[]): 1–5 overall ratings for `NQS` (DS23).
+    - `xai_sessions` (array): session ratings for `XAI` (DS22), each:
+      - `{ "clarity": 1..5, "evidence": 1..5, "actionability": 1..5, "trust": 1..5 }`
   - `strict` (boolean): treat semantic warnings as failures for CPSR if true.
+  - `includeTimestamps` (boolean): if true, add `computed_at` timestamps to reports (default false for strict determinism).
 
 ### 3.2 Outputs
 
 The interpreter produces:
-- `ast`: parsed AST from the CNL parser (structure as per DS11).
+- `ast` (optional): parsed AST from the CNL parser (structure as per DS11). Implementations MAY omit it from the top-level report for size, but MUST make it available to metric plugins as `ctx.ast`.
 - `diagnostics`: parse and semantic diagnostics.
-- `world`: derived world state model (entities, scenes, events, constraints, text).
+- `world`: derived world state **summary** (entities, scenes, events, constraints, text). Implementations MAY include an expanded world model for debugging/host use.
 - `metrics`: computed metric results (per-metric details + aggregate summary).
 
 ### 3.3 Output schema (normative)
@@ -88,16 +96,24 @@ The interpreter produces:
   },
   "metrics": {
     "results": [
-      { "code": "CS", "value": 0.81, "threshold": 0.75, "pass": true, "details": {} }
+      { "code": "CS", "version": "1.0", "value": 0.81, "threshold": 0.75, "pass": true, "details": {} }
     ],
     "summary": {
       "pass": true,
       "failed": [],
-      "computed_at": "2026-02-02T00:00:00Z"
+      "skipped": [],
+      "computed_at": null
     }
   }
 }
 ```
+
+**Metric skipping (normative):**
+- If a metric cannot be computed because required external inputs are missing (e.g., `OI` without `corpora.tropes`), the interpreter MUST return:
+  - `value: null`
+  - `pass: null`
+  - `details.status: "skipped"` with a machine-readable `reason`.
+- Skipped metrics MUST NOT cause the overall `summary.pass` to be false.
 
 ## 4. CNL Execution Model
 
@@ -160,7 +176,8 @@ Many metrics require text. The interpreter MUST construct a canonical text repre
 ### 5.1 Metric codes
 
 Primary metric codes:
-- `NQS`, `CS`, `CAD`, `CAR`, `OI`, `EAP`, `XAI`, `RQ`, `CPSR`, `CSA`
+- `NQS` (hybrid, DS23), `NQS_AUTO` (automated, DS25)
+- `CS`, `CAD`, `CAR`, `OI`, `EAP`, `XAI`, `RQ`, `CPSR`, `CSA`
 
 ### 5.2 Metric plugin interface (normative)
 
@@ -293,7 +310,7 @@ The suite MUST apply these thresholds:
 - `CAD < 0.15`
 - `CAR >= 0.999`
 - `OI > 0.8`
-- `EAP correlation > 0.7`
+- `EAP` correlation `r > 0.7` (equivalently `EAP >= 0.85` when reported normalized to `[0,1]`)
 - `XAI >= 4/5`
 - `RQ MRR > 0.6`
 - `CPSR >= 0.95`

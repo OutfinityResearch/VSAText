@@ -166,22 +166,33 @@ function ensureStructuralCompleteness(project) {
   const { characters, locations, moods } = result.libraries;
   const hero = characters.find(c => c.archetype === 'hero') || characters[0];
   
-  for (const chapter of result.structure.children) {
+  for (let chIndex = 0; chIndex < result.structure.children.length; chIndex++) {
+    const chapter = result.structure.children[chIndex];
+
+    if (!chapter.title || !String(chapter.title).trim()) {
+      chapter.title = `Chapter ${chIndex + 1}`;
+    }
+
     // Ensure chapter has at least one scene
     if (!chapter.children || chapter.children.length === 0) {
       chapter.children = [{
         id: `sc_${Date.now()}`,
         type: 'scene',
         name: `${chapter.name}.1`,
-        title: '',
+        title: `Scene ${chIndex + 1}.1`,
         children: []
       }];
     }
     
-    for (const scene of chapter.children) {
+    for (let scIndex = 0; scIndex < chapter.children.length; scIndex++) {
+      const scene = chapter.children[scIndex];
       if (scene.type !== 'scene') continue;
       
       scene.children = scene.children || [];
+
+      if (!scene.title || !String(scene.title).trim()) {
+        scene.title = `Scene ${chIndex + 1}.${scIndex + 1}`;
+      }
       
       // Ensure scene has at least one character
       const hasChar = scene.children.some(c => c.type === 'character-ref');
@@ -202,6 +213,28 @@ function ensureStructuralCompleteness(project) {
           type: 'location-ref',
           name: locations[0].name,
           refId: locations[0].id
+        });
+      }
+
+      // Ensure scene has a mood
+      const hasMood = scene.children.some(c => c.type === 'mood-ref');
+      if (!hasMood && moods.length > 0) {
+        scene.children.push({
+          id: `ref_${Date.now()}_mood`,
+          type: 'mood-ref',
+          name: moods[0].name,
+          refId: moods[0].id
+        });
+      }
+
+      // Ensure scene has at least one action (gives NL generator ground truth)
+      const hasAction = scene.children.some(c => c.type === 'action');
+      if (!hasAction && hero) {
+        scene.children.push({
+          id: `act_${Date.now()}`,
+          type: 'action',
+          name: `${hero.name} decides`,
+          actionData: { subject: hero.name, action: 'decides', target: '' }
         });
       }
     }

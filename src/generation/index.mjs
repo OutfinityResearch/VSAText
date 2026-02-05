@@ -30,5 +30,8 @@ export {
   regenerateFailedSections
 } from './nl-generator.mjs';
 
+export { sliceCnlToScenes } from './cnl-scene-slicer.mjs';
+export { computeSceneRosterViolations, buildSceneRosterRepairPrompt } from './nl-adherence.mjs';
+
 // Re-export for convenience
 export { generateRandomStory as generateRandom } from './random-generator.mjs';

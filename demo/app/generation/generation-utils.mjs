@@ -92,7 +92,9 @@ export function resetProjectState() {
   state.project.libraries = {
     characters: [], locations: [], objects: [], moods: [],
     emotionalArc: [], themes: [], relationships: [], worldRules: [],
-    dialogues: []
+    dialogues: [],
+    wisdom: [],
+    patterns: []
   };
   
   state.project.blueprint = {

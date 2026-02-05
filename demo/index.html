@@ -330,6 +330,34 @@
                 </div>
               </label>
             </div>
+
+            <!-- LLM Settings (only shown when "With LLM" is selected) -->
+            <div class="llm-settings" id="gen-llm-settings" style="display: none;">
+              <div class="llm-settings-title">LLM Settings</div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Model</label>
+                  <select class="form-select" id="gen-llm-model">
+                    <option value="">Default (auto)</option>
+                  </select>
+                  <div class="form-hint" id="gen-llm-model-hint">Loaded from server (`/v1/models`).</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Prompt</label>
+                  <select class="form-select" id="gen-llm-prompt">
+                    <option value="strict_project_json" selected>Strict JSON (Recommended)</option>
+                    <option value="creative_project_json">Creative JSON</option>
+                    <option value="minimal_project_json">Minimal Skeleton (Fast)</option>
+                  </select>
+                  <div class="form-hint">If JSON parsing fails, try a stricter prompt.</div>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Custom Instructions (optional)</label>
+                <input class="form-input" id="gen-llm-custom-prompt" type="text"
+                       placeholder="E.g. gothic tone, add a twist, focus on dialogue...">
+              </div>
+            </div>
           </div>
         </div>
       </div>

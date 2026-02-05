@@ -19,6 +19,10 @@ Good explanations build trust and help authors improve their work.
 
 Unlike other metrics that are calculated automatically, XAI comes from author surveys after using the system. Authors rate their experience on a 1-5 scale (1 = strongly disagree, 5 = strongly agree).
 
+**Interpreter input (normative)**
+- The interpreter MUST accept XAI session ratings as `options.human.xai_sessions` (DS12).
+- If no session ratings are provided, the metric MUST be **skipped** (`value: null`, `pass: null`).
+
 ## 4. Survey Questions
 
 Authors answer four core questions:
@@ -60,4 +64,3 @@ This means authors generally agree or strongly agree that explanations are helpf
 
 - DS03 — metric intent and threshold
 - DS12 — evaluation suite protocol
-

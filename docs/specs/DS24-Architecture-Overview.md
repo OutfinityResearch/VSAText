@@ -47,6 +47,12 @@ src/
 │   ├── structure-metrics.mjs
 │   └── metrics.mjs
 │
+├── interpreter/          # Normative DS12 metrics interpreter (portable)
+│   ├── interpreter.mjs   # interpretCNL() report generator
+│   ├── world-model.mjs   # derived world state builder
+│   ├── semantic-diagnostics.mjs
+│   └── metrics/          # per-metric plugins (CS/CAD/CSA/…)
+│
 ├── utils/
 │   └── ids.mjs            # Browser-safe ID helpers
 │
@@ -142,10 +148,13 @@ Node-only modules exist for server-side functionality (examples):
 ### 5.1 In Browser
 ```html
 <script type="module">
-  import { parseCNL, extractEntities } from './src/cnl-parser/cnl-parser.mjs';
+  import { parseCNL, extractEntities, interpretCNL } from './src/index.mjs';
   
   const result = parseCNL('Anna is protagonist');
   console.log(result.valid, extractEntities(result.ast));
+
+  const report = interpretCNL('Sc1 group begin\nSc1 group end');
+  console.log(report.metrics.summary);
 </script>
 ```
 

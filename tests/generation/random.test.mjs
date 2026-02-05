@@ -122,3 +122,40 @@ export function testGeneratesRelationships() {
     throw new Error('Expected relationships');
   }
 }
+
+// Test: Chapters/scenes have titles and action targets are included
+export function testRandomStructureHasTitlesAndCoherentTargets() {
+  const result = generateRandomStory({
+    genre: 'fantasy',
+    length: 'short',
+    complexity: 'medium'
+  });
+
+  const charNames = new Set((result.libraries.characters || []).map(c => c.name));
+
+  for (const chapter of result.structure.children || []) {
+    if (!chapter.title || !String(chapter.title).trim()) {
+      throw new Error('Expected chapter title');
+    }
+
+    for (const scene of chapter.children || []) {
+      if (!scene.title || !String(scene.title).trim()) {
+        throw new Error('Expected scene title');
+      }
+
+      const includedChars = new Set(
+        (scene.children || [])
+          .filter(n => n.type === 'character-ref')
+          .map(n => n.name)
+      );
+
+      for (const node of scene.children || []) {
+        if (node.type !== 'action' || !node.actionData?.target) continue;
+        const target = node.actionData.target;
+        if (charNames.has(target) && !includedChars.has(target)) {
+          throw new Error(`Action target character "${target}" not included in scene roster`);
+        }
+      }
+    }
+  }
+}

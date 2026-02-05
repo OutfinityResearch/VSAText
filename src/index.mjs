@@ -89,6 +89,21 @@ export {
 } from './evaluate.mjs';
 
 // ============================================
+// Metrics Interpreter (Normative DS12)
+// ============================================
+export {
+  interpretCNL
+} from './interpreter/interpreter.mjs';
+
+export {
+  buildWorldModel
+} from './interpreter/world-model.mjs';
+
+export {
+  deriveSemanticDiagnostics
+} from './interpreter/semantic-diagnostics.mjs';
+
+// ============================================
 // Services - Guardrails
 // ============================================
 export {

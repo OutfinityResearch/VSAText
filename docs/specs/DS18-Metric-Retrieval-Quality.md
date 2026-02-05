@@ -64,6 +64,21 @@ MRR = (1.0 + 0.33 + 0.5) / 3 = 0.61
 3. **Compare results** to the known correct answers
 4. **Calculate MRR and Recall@k**
 
+### 4.1 Deterministic baseline (normative)
+
+- Index items MUST be **scenes** in canonical story order (`ctx.world.scenes.ordered_ids`, DS12).
+- Each scene MUST be represented by its canonical text (`scene_text`, DS12).
+- Embeddings MUST use the interpreter `profile`:
+  - `vsa`: VSA/HDC embedding + cosine similarity (DS05)
+  - `basic/bow`: bag-of-words cosine similarity
+- Ranking MUST sort scenes by descending cosine similarity.
+- Default `k = 5` unless a query specifies another `topK`.
+- For each labeled query:
+  - `RR = 1 / rank(first relevant)` or `0` if none found
+  - `Recall@k = (# relevant in top k) / (# relevant total)`
+- Final `RQ` value MUST be `MRR = average(RR over labeled queries)`.
+- If no labeled queries are provided, the metric MUST be **skipped** (`value: null`, `pass: null`).
+
 ## 5. Threshold
 
 Acceptance threshold: **MRR > 0.6**
@@ -77,4 +92,3 @@ This means on average, the first relevant result appears within the top 2 positi
 - DS03 — metric intent and threshold
 - DS05 — VSA/HDC embedding backend (optional)
 - DS12 — interpreter item extraction rules
-

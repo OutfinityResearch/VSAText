@@ -300,13 +300,19 @@ function handleStreamEvent(event, setFullStory) {
       );
       break;
     
-    case 'scene_start':
+    case 'scene_start': {
+      const label = event.sceneNumber != null
+        ? 'Scene'
+        : (event.chapterNumber != null ? 'Chapter' : 'Scene');
+      const number = event.sceneNumber ?? event.chapterNumber ?? '';
+      const title = event.title || event.chapterTitle || '';
       updateNLStreamingProgress(
-        `Writing Scene ${event.sceneNumber}: ${event.title || ''}`,
+        `Writing ${label} ${number}: ${title}`.trim(),
         event.progress || 0,
         ''
       );
       break;
+    }
       
     case 'chapter_start':
       updateNLStreamingProgress(
@@ -316,16 +322,21 @@ function handleStreamEvent(event, setFullStory) {
       );
       break;
     
-    case 'scene_complete':
+    case 'scene_complete': {
       streamingChapterCount++;
+      const label = event.sceneNumber != null
+        ? 'Scene'
+        : (event.chapterNumber != null ? 'Chapter' : 'Scene');
+      const number = event.sceneNumber ?? event.chapterNumber ?? '';
       updateNLStreamingProgress(
-        `Scene ${event.sceneNumber} complete`,
+        `${label} ${number} complete`.trim(),
         event.progress || 0,
         ''
       );
       const sceneHtml = parseMarkdown(event.content || '');
       appendNLStreamingContent(sceneHtml, streamingChapterCount === 1);
       break;
+    }
       
     case 'chapter_complete':
       streamingChapterCount++;
@@ -338,17 +349,25 @@ function handleStreamEvent(event, setFullStory) {
       appendNLStreamingContent(chapterHtml, streamingChapterCount === 1);
       break;
     
-    case 'scene_error':
-      showNotification?.(`Error in Scene ${event.sceneNumber}: ${event.error}`, 'error');
+    case 'scene_error': {
+      const label = event.sceneNumber != null
+        ? 'Scene'
+        : (event.chapterNumber != null ? 'Chapter' : 'Scene');
+      const number = event.sceneNumber ?? event.chapterNumber ?? '';
+
+      showNotification?.(`Error in ${label} ${number}: ${event.error}`, 'error');
       failedSections.push({
-        id: `scene_${event.sceneNumber}`,
+        id: `scene_${event.sceneNumber ?? event.chapterNumber ?? ''}`,
         type: 'scene',
+        chapterNumber: event.chapterNumber,
+        sceneNumber: event.sceneNumber,
         title: event.title,
         error: event.error,
         cnl: event.cnl
       });
       appendNLStreamingContent(renderFailedSection(event, 'scene'), false);
       break;
+    }
       
     case 'chapter_error':
       showNotification?.(`Error in Chapter ${event.chapterNumber}: ${event.error}`, 'error');
@@ -387,16 +406,20 @@ function handleStreamEvent(event, setFullStory) {
  * Render a failed section with CNL info and retry option
  */
 function renderFailedSection(event, type) {
-  const title = type === 'scene' 
-    ? `Scene ${event.sceneNumber}: ${event.title || 'Untitled'}`
-    : `Chapter ${event.chapterNumber}: ${event.title || 'Untitled'}`;
+  const isScene = type === 'scene';
+  const isChapterFallback = isScene && event.sceneNumber == null && event.chapterNumber != null;
+  const label = isChapterFallback ? 'Chapter' : (isScene ? 'Scene' : 'Chapter');
+  const number = isScene
+    ? (event.sceneNumber ?? event.chapterNumber ?? '')
+    : (event.chapterNumber ?? '');
+  const title = `${label} ${number}: ${event.title || 'Untitled'}`.trim();
   
   const cnlPreview = event.cnl 
     ? escapeHtml(event.cnl.substring(0, 300)) + (event.cnl.length > 300 ? '...' : '')
     : 'No CNL available';
   
   return `
-    <div class="nl-failed-section" data-section-id="${type}_${event.sceneNumber || event.chapterNumber}">
+    <div class="nl-failed-section" data-section-id="${type}_${event.sceneNumber || event.chapterNumber || ''}">
       <div class="nl-failed-header">
         <span class="nl-failed-icon">!</span>
         <span class="nl-failed-title">${escapeHtml(title)}</span>

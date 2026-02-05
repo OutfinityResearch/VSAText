@@ -1,0 +1,250 @@
+/**
+ * SCRIPTA Demo - Wizard Modal Styles
+ * Story Wizard modal (step indicator + forms).
+ */
+
+/* ============================================ */
+/* Wizard Modal */
+/* ============================================ */
+.wizard-modal {
+  max-width: 700px;
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+.wizard-modal .modal-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem;
+  align-items: center;
+}
+
+.wizard-steps-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.wizard-step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.wizard-step-dot.pending {
+  background: var(--bg-deep);
+  color: var(--text-faded);
+  border: 2px solid var(--bg-elevated);
+}
+
+.wizard-step-dot.active {
+  background: var(--accent-violet);
+  color: white;
+  border: 2px solid var(--accent-violet);
+  transform: scale(1.1);
+}
+
+.wizard-step-dot.completed {
+  background: var(--accent-emerald);
+  color: white;
+  border: 2px solid var(--accent-emerald);
+}
+
+.wizard-step-line {
+  width: 24px;
+  height: 2px;
+  background: var(--bg-elevated);
+}
+
+.wizard-body {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.wizard-step-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.wizard-step-title {
+  font-family: var(--font-title);
+  font-size: var(--fs-lg);
+  color: var(--accent-gold);
+  margin: 0 0 0.25rem 0;
+}
+
+.wizard-step-subtitle {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.wizard-footer {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wizard-step-info {
+  font-size: var(--fs-xs);
+  color: var(--text-faded);
+  font-family: var(--font-mono);
+}
+
+/* Wizard Forms */
+.wizard-form {
+  background: var(--bg-deep);
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid var(--bg-elevated);
+}
+
+.wizard-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.wizard-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.wizard-label {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.wizard-select, .wizard-input {
+  padding: 0.6rem 0.75rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-hover);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: var(--fs-base);
+  font-family: var(--font-body);
+}
+
+.wizard-select:focus, .wizard-input:focus {
+  outline: none;
+  border-color: var(--accent-violet);
+}
+
+.wizard-themes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.wizard-theme-btn {
+  padding: 0.75rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-hover);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.wizard-theme-btn:hover {
+  border-color: var(--accent-violet);
+  transform: translateY(-2px);
+}
+
+.wizard-theme-btn.selected {
+  background: rgba(157, 78, 221, 0.2);
+  border-color: var(--accent-violet);
+  box-shadow: 0 0 12px rgba(157, 78, 221, 0.2);
+}
+
+.wizard-theme-name {
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--text-primary);
+}
+
+.wizard-theme-desc {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.wizard-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.wizard-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-violet);
+}
+
+.wizard-review {
+  background: var(--bg-deep);
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid var(--bg-elevated);
+}
+
+.wizard-review-section {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--bg-elevated);
+}
+
+.wizard-review-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.wizard-review-label {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.25rem;
+}
+
+.wizard-review-value {
+  font-size: var(--fs-base);
+  color: var(--text-secondary);
+}
+
+.wizard-generate-cta {
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(157, 78, 221, 0.1), rgba(6, 214, 160, 0.1));
+  border-radius: 8px;
+  border: 1px solid var(--bg-elevated);
+  margin-top: 1.5rem;
+}
+
+.wizard-generate-cta .wizard-cta-title {
+  font-family: var(--font-title);
+  font-size: var(--fs-lg);
+  color: var(--accent-gold);
+  margin-bottom: 0.5rem;
+}
+
+.wizard-generate-cta .wizard-cta-hint {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}

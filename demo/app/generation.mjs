@@ -34,6 +34,106 @@ window.applyTemplate = (templateKey) => {
 };
 
 // ============================================
+// LLM SETTINGS (Create Specs modal)
+// ============================================
+
+let llmModelsLoaded = false;
+let llmModelsLoadPromise = null;
+
+function getSelectedGenStrategy() {
+  const strategyRadio = document.querySelector('input[name="gen-strategy"]:checked');
+  return strategyRadio ? strategyRadio.value : 'random';
+}
+
+async function loadLLMModelsForSpecs() {
+  if (llmModelsLoaded) return;
+  if (llmModelsLoadPromise) return llmModelsLoadPromise;
+
+  llmModelsLoadPromise = (async () => {
+    const modelSelect = $('#gen-llm-model');
+    const hintEl = $('#gen-llm-model-hint');
+    if (!modelSelect) return;
+
+    modelSelect.disabled = true;
+    modelSelect.innerHTML = '<option value="">Default (auto)</option>';
+    if (hintEl) hintEl.textContent = 'Loading models from server...';
+
+    try {
+      const response = await fetch('/v1/models');
+      if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+      const data = await response.json();
+
+      if (!data.llmAvailable) {
+        if (hintEl) hintEl.textContent = 'LLM not available on server.';
+        return;
+      }
+
+      let firstDeepModelValue = null;
+
+      if (data.models?.deep?.length) {
+        const deepGroup = document.createElement('optgroup');
+        deepGroup.label = 'Deep (Creative)';
+        data.models.deep.forEach((model, idx) => {
+          const option = document.createElement('option');
+          option.value = model.qualifiedName || model.name;
+          option.textContent = `${model.name} (${model.provider})`;
+          deepGroup.appendChild(option);
+          if (idx === 0) firstDeepModelValue = option.value;
+        });
+        modelSelect.appendChild(deepGroup);
+      }
+
+      if (data.models?.fast?.length) {
+        const fastGroup = document.createElement('optgroup');
+        fastGroup.label = 'Fast';
+        data.models.fast.forEach(model => {
+          const option = document.createElement('option');
+          option.value = model.qualifiedName || model.name;
+          option.textContent = `${model.name} (${model.provider})`;
+          fastGroup.appendChild(option);
+        });
+        modelSelect.appendChild(fastGroup);
+      }
+
+      if (firstDeepModelValue) modelSelect.value = firstDeepModelValue;
+      llmModelsLoaded = true;
+      if (hintEl) hintEl.textContent = 'Models loaded.';
+      modelSelect.disabled = false;
+    } catch (err) {
+      if (hintEl) hintEl.textContent = `Could not load models: ${err.message}`;
+    }
+  })();
+
+  return llmModelsLoadPromise;
+}
+
+function updateGenerateModalStrategyPanels() {
+  const strategy = getSelectedGenStrategy();
+  const llmSettings = $('#gen-llm-settings');
+
+  if (llmSettings) {
+    llmSettings.style.display = strategy === 'llm' ? 'block' : 'none';
+  }
+
+  if (strategy === 'llm') {
+    loadLLMModelsForSpecs();
+  }
+}
+
+function initGenerateModalLLMSettings() {
+  if (!document.getElementById('generate-modal')) return;
+
+  document.querySelectorAll('input[name="gen-strategy"]').forEach(radio => {
+    radio.addEventListener('change', updateGenerateModalStrategyPanels);
+  });
+
+  updateGenerateModalStrategyPanels();
+}
+
+initGenerateModalLLMSettings();
+
+// ============================================
 // UI BLOCKING DURING GENERATION
 // ============================================
 
@@ -147,18 +247,24 @@ window.executeGenerate = async () => {
     $('#project-name').value = projectName;
   }
   
-  const options = {
-    genre: $('#gen-genre').value,
-    length: $('#gen-length').value,
-    chars: $('#gen-chars').value,
-    tone: $('#gen-tone').value,
-    complexity: $('#gen-complexity').value,
-    rules: $('#gen-rules').value
-  };
+	  const options = {
+	    genre: $('#gen-genre').value,
+	    length: $('#gen-length').value,
+	    chars: $('#gen-chars').value,
+	    tone: $('#gen-tone').value,
+	    complexity: $('#gen-complexity').value,
+	    rules: $('#gen-rules').value
+	  };
   
-  // Get selected strategy
-  const strategyRadio = document.querySelector('input[name="gen-strategy"]:checked');
-  const strategy = strategyRadio ? strategyRadio.value : 'random';
+	  // Get selected strategy
+	  const strategy = getSelectedGenStrategy();
+
+	  // Add LLM settings if needed
+	  if (strategy === 'llm') {
+	    options.model = $('#gen-llm-model')?.value || undefined;
+	    options.promptKey = $('#gen-llm-prompt')?.value || 'strict_project_json';
+	    options.customPrompt = $('#gen-llm-custom-prompt')?.value?.trim() || undefined;
+	  }
   
   // Strategy display names
   const strategyNames = {

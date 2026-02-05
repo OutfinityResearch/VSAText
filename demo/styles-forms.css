@@ -24,6 +24,23 @@
 .form-hint { font-size: var(--fs-xs); color: var(--text-faded); margin-top: 0.2rem; font-style: italic; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
 
+/* LLM Settings Panel (Create Specs modal) */
+.llm-settings {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(26, 26, 46, 0.5);
+  border: 1px solid var(--bg-elevated);
+  border-radius: 8px;
+}
+.llm-settings-title {
+  font-family: var(--font-title);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.6rem;
+}
+
 .chip-select {
   display: flex;
   flex-wrap: wrap;

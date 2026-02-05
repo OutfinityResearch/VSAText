@@ -6,6 +6,9 @@
  * Actual LLM calls are delegated to an injected provider.
  */
 
+import { generateTextWithContinuation } from './nl-generator-continuation.mjs';
+import { computeSceneRosterViolations, buildSceneRosterRepairPrompt } from './nl-adherence.mjs';
+
 // ============================================
 // SUPPORTED LANGUAGES
 // ============================================
@@ -83,6 +86,11 @@ ${sceneInfo.location || 'See scene specification.'}
 
 MOOD:
 ${sceneInfo.mood || 'Establish appropriate atmosphere.'}
+
+ADHERENCE REQUIREMENTS:
+- Use ONLY the characters listed under "CHARACTERS IN THIS SCENE" (no other named people)
+- Do NOT introduce any new named entities (people/places/organizations) not present in the scene specification
+- If you need extra people, use generic roles (e.g., "a guard") without names
 
 WRITING GUIDELINES:
 - Style: ${options.style || 'narrative'} prose
@@ -233,7 +241,7 @@ export function validateContent(content, minLength = 100) {
   // Check for truncation (ends mid-word)
   const lastChar = trimmed.slice(-1);
   const properEndings = ['.', '!', '?', '"', "'", '—', '…', '*', '_', '\n'];
-  const endsWithIncompleteWord = /[a-zA-Z]$/.test(trimmed) && !properEndings.includes(lastChar);
+  const endsWithIncompleteWord = /\p{L}$/u.test(trimmed) && !properEndings.includes(lastChar);
   
   if (endsWithIncompleteWord) {
     return { valid: false, error: 'Content truncated mid-word', truncated: true };
@@ -328,23 +336,84 @@ export async function generateStoryByScenes(params, callbacks, llmProvider) {
           options
         );
         
-        const content = await llmProvider.generateText(prompt, {
-          maxTokens: 2000,
-          timeout: 60000
+        const content = await generateTextWithContinuation({
+          llmProvider,
+          prompt,
+          llmCallOptions: { maxTokens: 2200, timeout: 60000, model: options.model },
+          continuationCallOptions: { maxTokens: 1400, timeout: 45000, model: options.model },
+          validate: (text) => validateContent(text, 100),
+          sectionLabel: `Scene "${scene.title}" (Chapter ${scene.chapterNumber})`,
+          maxContinuations: 4,
+          options
         });
-        
-        const validation = validateContent(content, 100);
-        if (!validation.valid) {
-          throw new Error(validation.error);
+
+        let finalContent = content.trim();
+        if (options.enforceSceneRoster) {
+          try {
+            const allowedCharacters = Array.isArray(scene.allowedCharacters)
+              ? scene.allowedCharacters
+              : String(scene.characters || '').split(',').map(s => s.trim()).filter(Boolean);
+            const policy = {
+              allowedCharacters,
+              declaredCharacters: scene.declaredCharacters || [],
+              declaredEntityNames: scene.declaredEntityNames || []
+            };
+            const initialViolations = computeSceneRosterViolations(finalContent, policy);
+            const maxRepairs = Number.isInteger(options.maxAdherenceRepairs)
+              ? Math.max(0, options.maxAdherenceRepairs)
+              : 1;
+            if (maxRepairs > 0 && allowedCharacters.length > 0 && initialViolations.hasViolations) {
+              let bestText = finalContent;
+              let bestViolations = initialViolations;
+              for (let r = 0; r < maxRepairs; r++) {
+                const repairPrompt = buildSceneRosterRepairPrompt({
+                  sceneInfo: {
+                    title: scene.title,
+                    chapterNumber: scene.chapterNumber,
+                    chapterTitle: scene.chapterTitle,
+                    cnl: scene.cnl
+                  },
+                  storyContext: { storyName, previousSummary },
+                  options,
+                  draft: bestText,
+                  violations: bestViolations,
+                  allowedCharacters
+                });
+                const repaired = await generateTextWithContinuation({
+                  llmProvider,
+                  prompt: repairPrompt,
+                  llmCallOptions: { maxTokens: 2400, timeout: 75000, model: options.model },
+                  continuationCallOptions: { maxTokens: 1400, timeout: 45000, model: options.model },
+                  validate: (text) => validateContent(text, 100),
+                  sectionLabel: `Scene "${scene.title}" roster repair`,
+                  maxContinuations: 4,
+                  options
+                });
+                const repairedText = repaired.trim();
+                const v = computeSceneRosterViolations(repairedText, policy);
+                if (!v.hasViolations) {
+                  bestText = repairedText;
+                  bestViolations = v;
+                  break;
+                }
+                if (v.score < bestViolations.score) {
+                  bestText = repairedText;
+                  bestViolations = v;
+                }
+              }
+              finalContent = bestText;
+            }
+          } catch {
+          }
         }
-        
-        section.content = content.trim();
+
+        section.content = finalContent;
         section.success = true;
         section.retryCount = attempt;
         success = true;
         
         // Update context for next scene
-        previousSummary += `\n${scene.title}: ${content.substring(0, 150)}...`;
+        previousSummary += `\n${scene.title}: ${finalContent.substring(0, 150)}...`;
         
         if (attempt > 0) {
           result.stats.retried++;
@@ -376,6 +445,8 @@ export async function generateStoryByScenes(params, callbacks, llmProvider) {
       onSceneComplete?.({
         sceneId,
         sceneNumber: i + 1,
+        chapterNumber: scene.chapterNumber,
+        title: scene.title,
         content: section.content,
         progress: Math.round(((i + 1) / scenes.length) * 100)
       });
@@ -391,6 +462,7 @@ export async function generateStoryByScenes(params, callbacks, llmProvider) {
       onSceneError?.({
         sceneId,
         sceneNumber: i + 1,
+        chapterNumber: scene.chapterNumber,
         title: scene.title,
         error: section.error,
         cnl: scene.cnl,
@@ -472,15 +544,16 @@ export async function generateStoryByChapters(params, callbacks, llmProvider) {
           options
         );
         
-        const content = await llmProvider.generateText(prompt, {
-          maxTokens: 6000,
-          timeout: 90000
+        const content = await generateTextWithContinuation({
+          llmProvider,
+          prompt,
+          llmCallOptions: { maxTokens: 6000, timeout: 90000, model: options.model },
+          continuationCallOptions: { maxTokens: 2400, timeout: 60000, model: options.model },
+          validate: (text) => validateContent(text, 200),
+          sectionLabel: `Chapter ${i + 1}: "${chapter.title}"`,
+          maxContinuations: 4,
+          options
         });
-        
-        const validation = validateContent(content, 200);
-        if (!validation.valid) {
-          throw new Error(validation.error);
-        }
         
         section.content = content.trim();
         section.success = true;
@@ -567,15 +640,26 @@ export async function regenerateFailedSections(failedSections, storyContext, opt
         );
     
     try {
-      const content = await llmProvider.generateText(prompt, {
-        maxTokens: isScene ? 2000 : 6000,
-        timeout: isScene ? 60000 : 90000
+      const content = await generateTextWithContinuation({
+        llmProvider,
+        prompt,
+        llmCallOptions: {
+          maxTokens: isScene ? 2200 : 6000,
+          timeout: isScene ? 60000 : 90000,
+          model: options.model
+        },
+        continuationCallOptions: {
+          maxTokens: isScene ? 1400 : 2400,
+          timeout: isScene ? 45000 : 60000,
+          model: options.model
+        },
+        validate: (text) => validateContent(text, isScene ? 100 : 200),
+        sectionLabel: isScene
+          ? `Scene "${section.title}" (Chapter ${section.chapterNumber})`
+          : `Chapter ${section.chapterNumber}: "${section.title}"`,
+        maxContinuations: 4,
+        options
       });
-      
-      const validation = validateContent(content, isScene ? 100 : 200);
-      if (!validation.valid) {
-        throw new Error(validation.error);
-      }
       
       results.push({
         ...section,

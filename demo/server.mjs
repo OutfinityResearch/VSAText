@@ -485,6 +485,8 @@ async function handleNLStoryStream(req, res) {
         sendEvent({ 
           type: 'scene_complete', 
           sceneNumber: data.sceneNumber,
+          chapterNumber: data.chapterNumber,
+          title: data.title,
           content: data.content,
           progress: data.progress
         });
@@ -494,6 +496,7 @@ async function handleNLStoryStream(req, res) {
         sendEvent({ 
           type: 'scene_error', 
           sceneNumber: data.sceneNumber,
+          chapterNumber: data.chapterNumber,
           title: data.title,
           error: data.error,
           cnl: data.cnl,  // Include CNL for retry
@@ -547,9 +550,37 @@ async function handleNLStoryStream(req, res) {
       }
     };
     
+    let effectiveOptions = { ...(options || {}) };
+    let effectiveChapters = Array.isArray(chapters) ? chapters : [];
+    let effectiveScenes = Array.isArray(scenes) ? scenes : [];
+
+    // If the client doesn't provide per-scene CNL, derive scenes from the full CNL.
+    const scenesNeedDerive = effectiveScenes.length === 0 ||
+      effectiveScenes.some(s => !s?.cnl || typeof s.cnl !== 'string' || s.cnl.trim().length < 5);
+
+    if (scenesNeedDerive) {
+      try {
+        const { sliceCnlToScenes } = await import('../src/generation/cnl-scene-slicer.mjs');
+        const sliced = sliceCnlToScenes(cnl);
+        if (sliced.scenes?.length) {
+          effectiveScenes = sliced.scenes;
+          effectiveChapters = []; // force scene-level generator (avoids chapter.cnl === undefined)
+          effectiveOptions = {
+            ...effectiveOptions,
+            enforceSceneRoster: true,
+            maxAdherenceRepairs: Number.isInteger(effectiveOptions.maxAdherenceRepairs)
+              ? effectiveOptions.maxAdherenceRepairs
+              : 1
+          };
+        }
+      } catch (err) {
+        console.warn('Failed to slice CNL into scenes:', err?.message || err);
+      }
+    }
+
     // Call SDK streaming generator
     await llmGenerator.generateStoryStreaming(
-      { cnl, storyName, options, chapters, scenes },
+      { cnl, storyName, options: effectiveOptions, chapters: effectiveChapters, scenes: effectiveScenes },
       callbacks
     );
     

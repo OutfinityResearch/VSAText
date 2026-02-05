@@ -244,3 +244,53 @@
 .dialogue-purpose { color: var(--accent); }
 .dialogue-beat { color: var(--accent-violet); }
 .mini-tension { display: block; }
+
+/* ============================================ */
+/* Blueprint Wizard */
+/* ============================================ */
+.wizard-progress { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.wizard-step {
+  display: flex; align-items: center; gap: 0.3rem;
+  padding: 0.4rem 0.8rem; background: var(--bg-surface);
+  border-radius: 20px; font-size: var(--fs-sm); color: var(--text-muted);
+}
+.wizard-step.active { background: var(--accent); color: var(--bg-deep); }
+.wizard-step.completed { background: var(--accent-green); color: var(--bg-deep); }
+.step-icon { font-size: var(--fs-base); }
+
+.wizard-content { min-height: 300px; margin-bottom: 1rem; }
+.step-content h3 { margin: 0 0 0.5rem; font-size: var(--fs-md); }
+.step-content p { font-size: var(--fs-base); color: var(--text-muted); margin-bottom: 1rem; }
+
+.arc-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; }
+.arc-option { cursor: pointer; }
+.arc-option input { display: none; }
+.arc-card {
+  background: var(--bg-surface); border: 2px solid var(--bg-hover);
+  border-radius: 8px; padding: 0.8rem; transition: all 0.2s;
+}
+.arc-option:hover .arc-card { border-color: var(--accent); }
+.arc-option.selected .arc-card, .arc-option input:checked + .arc-card {
+  border-color: var(--accent); background: var(--bg-hover);
+}
+.arc-card h4 { margin: 0 0 0.3rem; font-size: var(--fs-base); }
+.arc-card p { margin: 0 0 0.3rem; font-size: var(--fs-xs); color: var(--text-muted); }
+.arc-beats { font-size: var(--fs-xs); color: var(--accent); }
+
+.mapping-grid { display: flex; flex-direction: column; gap: 0.5rem; }
+.mapping-item { display: flex; align-items: center; gap: 1rem; }
+.beat-info { flex: 1; }
+.beat-name { font-size: var(--fs-sm); }
+.beat-pos { font-size: var(--fs-xs); color: var(--text-muted); margin-left: 0.5rem; }
+
+.tension-editor { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.tension-presets { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.preset-btn { padding: 0.4rem 0.8rem; font-size: var(--fs-sm); }
+.tension-points { flex: 1; min-width: 250px; }
+.points-list { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.5rem; }
+.point-row { display: flex; align-items: center; gap: 0.5rem; font-size: var(--fs-sm); }
+.tension-slider { flex: 1; }
+.tension-value { width: 20px; text-align: center; color: var(--accent); }
+
+.wizard-nav { display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--bg-hover); }
+.step-counter { font-size: var(--fs-sm); color: var(--text-muted); }

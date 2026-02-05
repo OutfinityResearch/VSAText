@@ -6,6 +6,10 @@
 
 **Target: NQS must improve by >= 25% vs baseline**
 
+**Scope note (normative)**
+- This DS defines the **hybrid, human-in-the-loop** `NQS` metric.
+- For a fully automated proxy score used for rapid UI feedback, see **DS25** (`NQS_AUTO`).
+
 ## 2. Why NQS Combines Human + Machine
 
 Neither automated metrics nor human ratings alone tell the whole story:
@@ -41,6 +45,10 @@ H = (average_rating - 1) / 4
 - Rating 3 → H = 0.5
 - Rating 5 → H = 1.0
 
+**Interpreter input (normative)**
+- The interpreter MUST accept the overall ratings as `options.human.overall_ratings` (DS12).
+- If `overall_ratings` are not provided, the interpreter MUST mark `NQS` as **skipped** (`value: null`, `pass: null`).
+
 ## 4. NQS Formula
 
 ```text
@@ -63,6 +71,9 @@ improvement = (NQS_new - NQS_baseline) / NQS_baseline
 ```
 
 **Target: improvement >= 25%**
+
+**Reporting note (normative)**
+- The improvement threshold is evaluated at the **suite / variant** level, not per single artifact.
 
 **Example:**
 - Baseline NQS (Variant A) = 0.60

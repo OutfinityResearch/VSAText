@@ -40,6 +40,9 @@ We divide the story into windows (chunks of ~10,000 tokens) and extract sentence
 drift = 1 - similarity
 ```
 
+**Range note (normative)**
+- If the embedding backend yields cosine similarity in `[-1, 1]`, the interpreter MUST clamp similarity to `[0, 1]` before computing drift, so that `CAD ∈ [0,1]` and the threshold remains meaningful.
+
 If the portrayal matches the specification, drift is low. If they diverge, drift is high.
 
 ### 3.4 Per-Character and Overall Scores
@@ -107,4 +110,3 @@ The metric report MUST include:
 - DS03 — metric definition and threshold
 - DS05 — VSA/HDC encoding backend (optional)
 - DS12 — interpreter text construction and windowing
-

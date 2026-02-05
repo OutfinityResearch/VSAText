@@ -22,6 +22,13 @@
   --accent-sky: #118ab2;
   --accent-violet: #9d4edd;
   --accent-amber: #fb8500;
+  
+  /* Compatibility aliases (older UI styles) */
+  --accent: var(--accent-gold);
+  --accent-green: var(--accent-emerald);
+  --accent-teal: var(--accent-sky);
+  --accent-coral: var(--accent-rose);
+  --bg-dark: var(--bg-deep);
   --text-primary: #f8f9fa;
   --text-secondary: #c9d1d9;
   --text-muted: #8b949e;
@@ -180,7 +187,7 @@ footer {
   transition: all 0.2s;
 }
 .btn:hover { border-color: var(--accent-violet); color: var(--text-primary); background: var(--bg-elevated); }
-.btn.primary { background: var(--accent-violet); border-color: var(--accent-violet); color: white; }
+.btn.primary, .btn.btn-primary { background: var(--accent-violet); border-color: var(--accent-violet); color: white; }
 .btn.success { background: var(--accent-emerald); border-color: var(--accent-emerald); color: var(--bg-deep); }
 .btn.accent { background: var(--accent-gold); border-color: var(--accent-gold); color: var(--bg-deep); }
 .btn.danger { background: var(--accent-rose); border-color: var(--accent-rose); color: white; }

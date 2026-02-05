@@ -51,6 +51,9 @@ OI = 1 - max_similarity_to_any_trope
 - Story has 0.15 similarity to "Chosen One" trope (highest match)
 - OI = 1 - 0.15 = 0.85 (passes threshold)
 
+**Input availability (normative)**
+- If no trope corpus is provided to the interpreter (`options.corpora.tropes`, DS12), the metric MUST be **skipped** (`value: null`, `pass: null`).
+
 ## 5. Threshold
 
 Acceptance threshold: **OI > 0.8**
@@ -64,4 +67,3 @@ This means the story should be at most 20% similar to any known trope.
 - DS03 — metric intent and threshold
 - DS05 — embedding backend (optional)
 - DS12 — canonical text construction
-

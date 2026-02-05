@@ -184,10 +184,14 @@ dialogueQuality = sum(scores) / totalDialogues
 
 ## 3. Integration with NQS
 
-The Narrative Quality Score now includes coherence analysis:
+**Important:** DS23 defines `NQS` as a **hybrid (human + machine)** metric.
+
+This document defines an **automated proxy score** used for fast feedback, called `NQS_AUTO`.
+
+`NQS_AUTO` includes coherence analysis:
 
 ```text
-NQS = 
+NQS_AUTO = 
   completeness × 0.12 +
   cs × 0.12 + 
   (1 - min(1, cad × 4)) × 0.08 +
@@ -203,6 +207,9 @@ NQS =
 ```
 
 **Total weight for coherence analysis**: 26%
+
+**Threshold (recommended)**
+- `NQS_AUTO >= 0.70` for “good enough” interactive drafts.
 
 ## 4. Diagnostic Interpretation
 

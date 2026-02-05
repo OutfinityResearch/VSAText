@@ -1,0 +1,56 @@
+/**
+ * SCRIPTA Demo - Modal Base Styles
+ * Common modal overlay and container styles.
+ */
+
+/* ============================================ */
+/* Modals */
+/* ============================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 26, 46, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s;
+}
+.modal-overlay.open { opacity: 1; visibility: visible; }
+
+.modal {
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-hover);
+  border-radius: 8px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 85vh;
+  overflow: hidden;
+}
+.modal.wide { max-width: 900px; }
+
+.modal-header {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--bg-elevated);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-elevated);
+}
+.modal-title { font-family: var(--font-title); font-size: var(--fs-md); color: var(--text-primary); }
+
+.modal-close {
+  width: 24px; height: 24px;
+  background: transparent;
+  border: 1px solid var(--bg-hover);
+  border-radius: 50%;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+.modal-close:hover { border-color: var(--accent-rose); color: var(--accent-rose); }
+
+.modal-body { padding: 1rem; max-height: 60vh; overflow-y: auto; }
+.modal-footer { padding: 0.8rem 1rem; border-top: 1px solid var(--bg-elevated); display: flex; justify-content: flex-end; gap: 0.4rem; }

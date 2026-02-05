@@ -1,7 +1,7 @@
 /**
  * SCRIPTA Demo - Metrics Display
  * 
- * Calls server-side evaluation API and displays results.
+ * Uses SDK evaluation locally in browser.
  * Metrics panel is empty until Evaluate is clicked.
  */
 
@@ -9,6 +9,7 @@ import { state } from './state.mjs';
 import { $, showNotification } from './utils.mjs';
 import { countType } from './tree.mjs';
 import { generateCNL } from './cnl.mjs';
+import { evaluateCNL } from '../../src/evaluate.mjs';
 
 export function updateStats() {
   $('#stat-chars').textContent = state.project.libraries.characters.length;
@@ -18,7 +19,8 @@ export function updateStats() {
 }
 
 /**
- * Evaluate metrics by calling server API
+ * Evaluate metrics using local SDK evaluation
+ * Runs entirely in browser - no server call needed
  */
 export async function evaluateMetrics() {
   const metricsContent = $('#metrics-content');
@@ -40,24 +42,13 @@ export async function evaluateMetrics() {
   }
   
   try {
-    // Call server API
-    const response = await fetch('/v1/evaluate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        cnl,
-        prose: state.generation?.generatedStory || null,
-        targetArc: state.project.selectedArc || null
-      })
+    // Use local SDK evaluation (runs in browser)
+    const result = evaluateCNL(cnl, {
+      prose: state.generation?.generatedStory || null,
+      targetArc: state.project.selectedArc || null
     });
     
-    if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.error?.message || 'Evaluation failed');
-    }
-    
-    const result = await response.json();
-    console.log('[Evaluate] Server response:', result);
+    console.log('[Evaluate] Local SDK result:', result);
     
     if (!result.success) {
       throw new Error(result.message || 'Evaluation failed');
@@ -79,7 +70,7 @@ export async function evaluateMetrics() {
 }
 
 /**
- * Render metrics from server response
+ * Render metrics from evaluation result
  */
 function renderServerMetrics(result) {
   const m = result.metrics;
@@ -141,7 +132,7 @@ function renderServerMetrics(result) {
       const v = metric.score || 0;
       const passed = metric.passed;
       const cls = passed ? 'good' : v >= (metric.threshold || 0.5) * 0.6 ? 'warn' : 'bad';
-      const icon = cls === 'good' ? '✓' : cls === 'warn' ? '!' : '✗';
+      const icon = cls === 'good' ? 'OK' : cls === 'warn' ? '!' : 'X';
       return `<div class="metric-card">
         <div class="metric-header"><span class="metric-name">${d.name}</span><span class="metric-value ${cls}">${(v * 100).toFixed(0)}%</span></div>
         <div class="metric-bar"><div class="metric-bar-fill" style="width:${v * 100}%;background:var(--accent-${cls === 'good' ? 'emerald' : cls === 'warn' ? 'amber' : 'rose'})"></div></div>
@@ -205,7 +196,7 @@ function renderServerMetrics(result) {
   // Processing info
   html += `<div class="metrics-footer">
     <span>Evaluated: ${new Date(result.evaluatedAt).toLocaleTimeString()}</span>
-    <span>${result.processingTimeMs}ms</span>
+    <span>${result.processingTimeMs}ms (local)</span>
   </div>`;
   
   $('#metrics-content').innerHTML = html;
@@ -217,7 +208,7 @@ function renderServerMetrics(result) {
 export function renderEmptyMetrics(message = null) {
   $('#metrics-content').innerHTML = `
     <div class="empty-state" style="padding:1.5rem;">
-      <div class="empty-state-icon">⚖</div>
+      <div class="empty-state-icon">Scale</div>
       <div class="empty-state-text">Not Evaluated</div>
       <div class="empty-state-hint">${message || 'Click <strong>Evaluate</strong> button to analyze story quality'}</div>
     </div>

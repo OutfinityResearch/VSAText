@@ -32,7 +32,10 @@ Story has genre horror
 
 ### Identifiers
 
-Simple identifiers start with a letter: `Anna`, `Village`, `Chapter1`
+Simple identifiers start with a letter and may contain letters, digits, underscores, and dots (for hierarchical IDs):
+
+- `Anna`, `Village`, `Chapter1`
+- `Ch1`, `Sc1.1`, `Ch1.Sc2`
 
 Quoted identifiers handle multi-word names: `"The Dark Forest"`, `"inner strength"`
 
@@ -49,6 +52,9 @@ Quoted identifiers handle multi-word names: `"The Dark Forest"`, `"inner strengt
 | `X owns Y` | Ownership | `Anna owns SilverKey` |
 | `X has tone Y` | Tone | `Story has tone hopeful` |
 | `X has max Y Z` | Maximum | `Story has max characters 10` |
+| `X has min Y Z` | Minimum | `Story has min scenes 5` |
+| `X includes Y Z` | Inclusion / reference | `Sc1.1 includes character Anna` |
+| `X describes "text"` | Attached text (artifact/prose) | `Sc1.1 describes "A storm gathers."` |
 | `X references @Y` | Cross-reference | `Chapter2 references @Chapter1` |
 
 ### Groups
@@ -63,6 +69,15 @@ Chapter1 group begin
     Anna discovers artifact
   Scene1 group end
 Chapter1 group end
+```
+
+Group names may be simple identifiers or quoted identifiers. Quoted group names allow spaces and punctuation:
+
+```cnl
+"Chapter 1" group begin
+  "Scene 1.1" group begin
+  "Scene 1.1" group end
+"Chapter 1" group end
 ```
 
 ### Comments

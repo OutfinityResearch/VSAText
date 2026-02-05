@@ -22,6 +22,8 @@ SCRIPTA targets a **browser-first architecture** where core processing can run c
 ### 2.2 Module Structure
 ```
 src/
+├── index.mjs              # Browser-safe SDK entrypoint (portable)
+├── index-node.mjs         # Node.js full SDK entrypoint (fs/crypto + portable exports)
 ├── cnl-parser/           # CNL parsing SDK
 │   ├── cnl-parser.mjs    # Main entry point
 │   ├── cnl-parser-core.mjs
@@ -153,6 +155,20 @@ import { parseCNL, extractEntities } from './src/cnl-parser/cnl-parser.mjs';
 
 const result = parseCNL('Anna is protagonist');
 console.log(result.valid, extractEntities(result.ast));
+```
+
+### 5.3 In Node.js (Full SDK Entrypoint)
+
+Use the Node.js full entrypoint when you need Node-only functionality (filesystem persistence, crypto-backed audit/jobs, VSA index persistence), while still having access to all portable SDK features:
+
+```javascript
+import SDK, { parseCNL, extractEntities } from './src/index-node.mjs';
+
+const result = parseCNL('Anna is protagonist');
+console.log(result.valid, extractEntities(result.ast));
+
+// Node-only features are available as named exports and (optionally) on the default SDK object.
+console.log(SDK.environment);
 ```
 
 ## 6. Configuration

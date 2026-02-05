@@ -2,25 +2,28 @@
  * SCRIPTA Demo - NL (Natural Language) Story Generation
  * 
  * Generates prose story from CNL specifications using LLM API.
- * Supports Markdown output, book-style preview, and version management.
+ * Supports Markdown output, streaming generation, and version management.
  */
 
 import { state, setGeneratedStory, getGeneratedStory } from './state.mjs';
 import { generateCNL } from './cnl.mjs';
 import { $, showNotification } from './utils.mjs';
+import { parseMarkdown, escapeHtml } from '../../src/utils/markdown.mjs';
+import { openBookPreview, closeBookPreview, resetBookPreview } from './book-preview.mjs';
+import {
+  loadStoryVersions,
+  onVersionSelect,
+  deleteCurrentVersion,
+  saveStoryVersion,
+  loadAvailableModels,
+  canImprove,
+  resetVersionState,
+  setCurrentVersionInfo
+} from './nl-versions.mjs';
 
 // Track NL generation state
 let isGenerating = false;
 let hasGeneratedNL = false;
-
-// Book preview state
-let bookPages = [];
-let currentBookPage = 0;
-
-// Current loaded version info
-let currentVersionFilename = null;
-let currentVersionLanguage = null;
-let currentVersionModel = null;
 
 // Lazy import for persistence to avoid circular dependency
 let persistenceModule = null;
@@ -39,96 +42,10 @@ export function getNLGenerationState() {
 }
 
 /**
- * Check if we can improve (same language+model as current version)
+ * Set hasGeneratedNL state (used by version callbacks)
  */
-function canImprove() {
-  if (!hasGeneratedNL && !currentVersionFilename) return false;
-  
-  const selectedLang = $('#nl-language')?.value || 'en';
-  const selectedModel = $('#nl-model')?.value || 'default';
-  
-  // If we have a loaded version, check if settings match
-  if (currentVersionLanguage && currentVersionModel) {
-    return selectedLang === currentVersionLanguage && 
-           (selectedModel || 'default') === currentVersionModel;
-  }
-  
-  return false;
-}
-
-/**
- * Simple Markdown to HTML parser
- */
-function parseMarkdown(markdown) {
-  if (!markdown) return '';
-  
-  let html = markdown;
-  
-  // Escape HTML first
-  html = html
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-  
-  // Headers
-  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-  
-  // Horizontal rules
-  html = html.replace(/^---$/gm, '<hr>');
-  html = html.replace(/^\*\*\*$/gm, '<hr>');
-  
-  // Blockquotes
-  html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
-  
-  // Bold and italic
-  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  html = html.replace(/___(.+?)___/g, '<strong><em>$1</em></strong>');
-  html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
-  html = html.replace(/_(.+?)_/g, '<em>$1</em>');
-  
-  // Paragraphs - wrap text blocks
-  const lines = html.split('\n');
-  let result = [];
-  let currentParagraph = [];
-  
-  for (const line of lines) {
-    const trimmed = line.trim();
-    
-    // Check if it's a block element
-    if (trimmed.startsWith('<h1>') || trimmed.startsWith('<h2>') || 
-        trimmed.startsWith('<h3>') || trimmed.startsWith('<hr>') ||
-        trimmed.startsWith('<blockquote>')) {
-      // Flush current paragraph
-      if (currentParagraph.length > 0) {
-        result.push('<p>' + currentParagraph.join(' ') + '</p>');
-        currentParagraph = [];
-      }
-      result.push(trimmed);
-    } else if (trimmed === '') {
-      // Empty line = paragraph break
-      if (currentParagraph.length > 0) {
-        result.push('<p>' + currentParagraph.join(' ') + '</p>');
-        currentParagraph = [];
-      }
-    } else {
-      currentParagraph.push(trimmed);
-    }
-  }
-  
-  // Flush remaining paragraph
-  if (currentParagraph.length > 0) {
-    result.push('<p>' + currentParagraph.join(' ') + '</p>');
-  }
-  
-  // Merge consecutive blockquotes
-  html = result.join('\n');
-  html = html.replace(/<\/blockquote>\n<blockquote>/g, '\n');
-  
-  return html;
+function setHasGeneratedNL(value) {
+  hasGeneratedNL = value;
 }
 
 /**
@@ -170,7 +87,7 @@ function extractChaptersFromProject() {
  */
 export async function generateNLStory() {
   if (isGenerating) {
-    window.showNotification?.('Generation already in progress', 'info');
+    showNotification?.('Generation already in progress', 'info');
     return;
   }
   
@@ -190,7 +107,7 @@ export async function generateNLStory() {
     const options = getGenerationOptions();
     
     // Check if this is an improvement (same language+model)
-    const isImprovement = canImprove();
+    const isImprovement = canImprove(hasGeneratedNL);
     if (isImprovement) {
       // Include previous version text for improvement
       const previousStory = getGeneratedStory();
@@ -213,7 +130,7 @@ export async function generateNLStory() {
     
   } catch (err) {
     console.error('NL Generation error:', err);
-    window.showNotification?.('Generation failed: ' + err.message, 'error');
+    showNotification?.('Generation failed: ' + err.message, 'error');
     showNLErrorState(err.message);
   } finally {
     isGenerating = false;
@@ -403,7 +320,7 @@ function handleStreamEvent(event, setFullStory) {
       break;
       
     case 'chapter_error':
-      window.showNotification?.(`Error in Chapter ${event.chapterNumber}: ${event.error}`, 'error');
+      showNotification?.(`Error in Chapter ${event.chapterNumber}: ${event.error}`, 'error');
       appendNLStreamingContent(`<p class="nl-error-inline">Error generating chapter ${event.chapterNumber}: ${escapeHtml(event.error)}</p>`, false);
       break;
       
@@ -423,13 +340,9 @@ function handleStreamEvent(event, setFullStory) {
   }
 }
 
-/**
- * Append a chapter to the live display during streaming (legacy, kept for compatibility)
- */
-function appendChapterToDisplay(chapterContent) {
-  const chapterHtml = parseMarkdown(chapterContent || '');
-  appendNLStreamingContent(chapterHtml, false);
-}
+// ============================================
+// UI STATE MANAGEMENT
+// ============================================
 
 /**
  * Show loading state in NL tab
@@ -539,19 +452,6 @@ function updateNLLoadingState(message, progress) {
 }
 
 /**
- * Update loading state for chapter-by-chapter generation
- */
-function updateNLLoadingStateChapter(message, detailText, progress) {
-  const statusEl = $('.nl-loading-status');
-  const progressBar = $('.nl-progress-bar');
-  const textEl = $('.nl-loading-text');
-  
-  if (textEl) textEl.textContent = message;
-  if (statusEl) statusEl.textContent = detailText;
-  if (progressBar) progressBar.style.width = `${progress}%`;
-}
-
-/**
  * Hide loading state
  */
 function hideNLLoadingState() {
@@ -615,7 +515,7 @@ function showNLErrorState(errorMessage) {
   
   content.innerHTML = `
     <div class="nl-error-state">
-      <div class="icon">⚠️</div>
+      <div class="icon">Warning</div>
       <div class="nl-error-title">Generation Failed</div>
       <div class="nl-error-message">${escapeHtml(errorMessage)}</div>
       <div class="nl-error-hint">
@@ -639,7 +539,25 @@ export function updateNLGenerateButton() {
   const btn = $('#btn-nl-generate');
   if (!btn) return;
   
-  btn.textContent = canImprove() ? 'Improve Story' : 'Create Story';
+  btn.textContent = canImprove(hasGeneratedNL) ? 'Improve Story' : 'Create Story';
+}
+
+/**
+ * Reset NL content to empty state
+ */
+function resetNLContent() {
+  const content = $('#nl-content');
+  if (content) {
+    content.innerHTML = `
+      <div class="nl-empty-state">
+        <div class="icon">Book</div>
+        <div>No story generated yet</div>
+        <div style="font-size: 0.9rem; color: var(--text-faded);">
+          Create your specs first, then click "Create Story" to generate prose
+        </div>
+      </div>
+    `;
+  }
 }
 
 /**
@@ -648,11 +566,8 @@ export function updateNLGenerateButton() {
 export function resetNLState() {
   hasGeneratedNL = false;
   isGenerating = false;
-  bookPages = [];
-  currentBookPage = 0;
-  currentVersionFilename = null;
-  currentVersionLanguage = null;
-  currentVersionModel = null;
+  resetVersionState();
+  resetBookPreview();
   
   // Reset version selector
   const versionSelect = $('#nl-version-select');
@@ -663,18 +578,7 @@ export function resetNLState() {
   const deleteBtn = $('#btn-nl-delete-version');
   if (deleteBtn) deleteBtn.disabled = true;
   
-  const content = $('#nl-content');
-  if (content) {
-    content.innerHTML = `
-      <div class="nl-empty-state">
-        <div class="icon">📖</div>
-        <div>No story generated yet</div>
-        <div style="font-size: 0.9rem; color: var(--text-faded);">
-          Create your specs first, then click "Create Story" to generate prose
-        </div>
-      </div>
-    `;
-  }
+  resetNLContent();
   
   // Disable preview button
   $('#btn-nl-preview')?.setAttribute('disabled', 'disabled');
@@ -682,472 +586,9 @@ export function resetNLState() {
   updateNLGenerateButton();
 }
 
-/**
- * Escape HTML entities
- */
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-// ============================================
-// BOOK PREVIEW FUNCTIONALITY
-// ============================================
-
-/**
- * Split content into pages for book view
- * Each "page" is roughly 1500 characters for comfortable reading
- */
-function splitIntoPages(htmlContent) {
-  const CHARS_PER_PAGE = 1800;
-  const pages = [];
-  
-  // Create a temporary container to work with the content
-  const temp = document.createElement('div');
-  temp.innerHTML = htmlContent;
-  
-  // Get all top-level elements
-  const elements = Array.from(temp.children);
-  let currentPage = '';
-  let currentLength = 0;
-  
-  for (const el of elements) {
-    const elHtml = el.outerHTML;
-    const elLength = el.textContent.length;
-    
-    // If it's a chapter header (h1, h2), start a new page
-    if (el.tagName === 'H1' || el.tagName === 'H2') {
-      if (currentPage.trim()) {
-        pages.push(currentPage);
-      }
-      currentPage = elHtml;
-      currentLength = elLength;
-    } 
-    // If adding this element exceeds page limit, start new page
-    else if (currentLength + elLength > CHARS_PER_PAGE && currentPage.trim()) {
-      pages.push(currentPage);
-      currentPage = elHtml;
-      currentLength = elLength;
-    } 
-    // Otherwise add to current page
-    else {
-      currentPage += elHtml;
-      currentLength += elLength;
-    }
-  }
-  
-  // Add remaining content
-  if (currentPage.trim()) {
-    pages.push(currentPage);
-  }
-  
-  // Ensure even number of pages for book view
-  if (pages.length % 2 !== 0) {
-    pages.push('<p style="text-align: center; color: #8b5a2b; font-style: italic; margin-top: 40%;">— The End —</p>');
-  }
-  
-  return pages;
-}
-
-/**
- * Open book preview modal
- */
-export function openBookPreview() {
-  const story = getGeneratedStory();
-  if (!story) {
-    window.showNotification?.('No story to preview. Generate a story first.', 'info');
-    return;
-  }
-  
-  const modal = $('#book-preview-modal');
-  if (!modal) return;
-  
-  // Set title
-  const titleEl = $('#book-preview-title');
-  if (titleEl) {
-    titleEl.textContent = state.project.name || 'Untitled Story';
-  }
-  
-  // Parse markdown and split into pages
-  const htmlContent = parseMarkdown(story);
-  bookPages = splitIntoPages(htmlContent);
-  currentBookPage = 0;
-  
-  // Render first spread
-  renderBookSpread();
-  
-  // Show modal
-  modal.classList.add('active');
-  
-  // Add keyboard navigation
-  document.addEventListener('keydown', handleBookKeyNav);
-}
-
-/**
- * Close book preview modal
- */
-export function closeBookPreview() {
-  const modal = $('#book-preview-modal');
-  if (modal) {
-    modal.classList.remove('active');
-  }
-  document.removeEventListener('keydown', handleBookKeyNav);
-}
-
-/**
- * Render current book spread (two pages)
- */
-function renderBookSpread() {
-  const leftContent = $('#book-page-left-content');
-  const rightContent = $('#book-page-right-content');
-  const leftNum = $('#book-page-left-num');
-  const rightNum = $('#book-page-right-num');
-  const indicator = $('#book-page-indicator');
-  const prevBtn = $('#book-prev-btn');
-  const nextBtn = $('#book-next-btn');
-  
-  // Left page
-  if (leftContent && bookPages[currentBookPage]) {
-    leftContent.innerHTML = bookPages[currentBookPage];
-  } else if (leftContent) {
-    leftContent.innerHTML = '';
-  }
-  
-  // Right page
-  if (rightContent && bookPages[currentBookPage + 1]) {
-    rightContent.innerHTML = bookPages[currentBookPage + 1];
-  } else if (rightContent) {
-    rightContent.innerHTML = '';
-  }
-  
-  // Page numbers
-  if (leftNum) leftNum.textContent = currentBookPage + 1;
-  if (rightNum) rightNum.textContent = currentBookPage + 2;
-  
-  // Page indicator
-  if (indicator) {
-    indicator.textContent = `Pages ${currentBookPage + 1}-${Math.min(currentBookPage + 2, bookPages.length)} of ${bookPages.length}`;
-  }
-  
-  // Enable/disable navigation buttons
-  if (prevBtn) prevBtn.disabled = currentBookPage === 0;
-  if (nextBtn) nextBtn.disabled = currentBookPage + 2 >= bookPages.length;
-}
-
-/**
- * Go to previous page spread
- */
-window.bookPrevPage = function() {
-  if (currentBookPage > 0) {
-    currentBookPage -= 2;
-    renderBookSpread();
-  }
-};
-
-/**
- * Go to next page spread
- */
-window.bookNextPage = function() {
-  if (currentBookPage + 2 < bookPages.length) {
-    currentBookPage += 2;
-    renderBookSpread();
-  }
-};
-
-/**
- * Handle keyboard navigation in book preview
- */
-function handleBookKeyNav(e) {
-  if (!$('#book-preview-modal')?.classList.contains('active')) return;
-  
-  if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
-    window.bookPrevPage();
-    e.preventDefault();
-  } else if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
-    window.bookNextPage();
-    e.preventDefault();
-  } else if (e.key === 'Escape') {
-    closeBookPreview();
-    e.preventDefault();
-  }
-}
-
-// ============================================
-// VERSION MANAGEMENT
-// ============================================
-
-/**
- * Load story versions for current project
- */
-export async function loadStoryVersions() {
-  const versionSelect = $('#nl-version-select');
-  const deleteBtn = $('#btn-nl-delete-version');
-  
-  if (!versionSelect) return;
-  
-  // Clear existing options
-  versionSelect.innerHTML = '<option value="">-- New Generation --</option>';
-  currentVersionFilename = null;
-  
-  // Disable delete button
-  if (deleteBtn) deleteBtn.disabled = true;
-  
-  // Can't load versions without project ID
-  if (!state.project.id) return;
-  
-  try {
-    const response = await fetch(`/v1/projects/${encodeURIComponent(state.project.id)}/versions`);
-    if (!response.ok) return;
-    
-    const data = await response.json();
-    const versions = data.versions || [];
-    
-    if (versions.length === 0) return;
-    
-    // Language names for display
-    const langNames = {
-      en: 'English', fr: 'French', es: 'Spanish', pt: 'Portuguese',
-      it: 'Italian', de: 'German', ro: 'Romanian'
-    };
-    
-    // Add options for each version
-    versions.forEach(v => {
-      const option = document.createElement('option');
-      option.value = v.filename;
-      option.textContent = `v${v.version} - ${langNames[v.language] || v.language} - ${v.model}`;
-      versionSelect.appendChild(option);
-    });
-    
-  } catch (err) {
-    console.error('Failed to load story versions:', err);
-  }
-}
-
-/**
- * Handle version selection change
- */
-async function onVersionSelect(e) {
-  const filename = e.target.value;
-  const deleteBtn = $('#btn-nl-delete-version');
-  
-  if (!filename) {
-    // New generation selected - reset version tracking
-    currentVersionFilename = null;
-    currentVersionLanguage = null;
-    currentVersionModel = null;
-    hasGeneratedNL = false;
-    if (deleteBtn) deleteBtn.disabled = true;
-    resetNLContent();
-    updateNLGenerateButton();
-    return;
-  }
-  
-  if (!state.project.id) return;
-  
-  try {
-    const response = await fetch(`/v1/projects/${encodeURIComponent(state.project.id)}/versions/${encodeURIComponent(filename)}`);
-    if (!response.ok) throw new Error('Failed to load version');
-    
-    const data = await response.json();
-    
-    // Display the story
-    setGeneratedStory(data.content);
-    displayNLContent(data.content);
-    
-    // Track current version info
-    currentVersionFilename = filename;
-    currentVersionLanguage = data.language || 'en';
-    currentVersionModel = data.model || 'default';
-    hasGeneratedNL = true;
-    
-    // Update UI to match version's language and model
-    const langSelect = $('#nl-language');
-    const modelSelect = $('#nl-model');
-    if (langSelect && currentVersionLanguage) {
-      langSelect.value = currentVersionLanguage;
-    }
-    if (modelSelect && currentVersionModel) {
-      // Try to set the model, might not exist in options
-      const modelOption = Array.from(modelSelect.options).find(
-        opt => opt.value === currentVersionModel || opt.value === ''
-      );
-      if (modelOption) {
-        modelSelect.value = currentVersionModel;
-      }
-    }
-    
-    updateNLGenerateButton();
-    enablePreviewButton();
-    
-    if (deleteBtn) deleteBtn.disabled = false;
-    
-  } catch (err) {
-    showNotification('Error loading version: ' + err.message, 'error');
-  }
-}
-
-/**
- * Delete current story version
- */
-async function deleteCurrentVersion() {
-  if (!currentVersionFilename || !state.project.id) return;
-  
-  if (!confirm('Delete this story version permanently?')) return;
-  
-  try {
-    const response = await fetch(
-      `/v1/projects/${encodeURIComponent(state.project.id)}/versions/${encodeURIComponent(currentVersionFilename)}`,
-      { method: 'DELETE' }
-    );
-    
-    if (!response.ok) throw new Error('Failed to delete version');
-    
-    showNotification('Version deleted', 'success');
-    
-    // Reload versions list
-    await loadStoryVersions();
-    
-    // Reset content
-    resetNLContent();
-    
-  } catch (err) {
-    showNotification('Error deleting version: ' + err.message, 'error');
-  }
-}
-
-/**
- * Reset NL content to empty state
- */
-function resetNLContent() {
-  currentVersionFilename = null;
-  const content = $('#nl-content');
-  if (content) {
-    content.innerHTML = `
-      <div class="nl-empty-state">
-        <div class="icon">📖</div>
-        <div>No story generated yet</div>
-        <div style="font-size: 0.9rem; color: var(--text-faded);">
-          Create your specs first, then click "Create Story" to generate prose
-        </div>
-      </div>
-    `;
-  }
-}
-
-/**
- * Save generated story as a new version
- */
-async function saveStoryVersion(content, language, model) {
-  if (!state.project.id) {
-    // Need to create project first
-    const persistence = await getPersistence();
-    const projectName = await persistence.showProjectNameDialog('Save Story - Enter Project Name');
-    if (!projectName) return null;
-    
-    state.project.id = projectName;
-    state.project.name = projectName;
-    $('#project-name').value = projectName;
-    
-    // Save the project first
-    await persistence.saveProject(true);
-  }
-  
-  try {
-    const response = await fetch(`/v1/projects/${encodeURIComponent(state.project.id)}/versions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content, language, model })
-    });
-    
-    if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.error?.message || 'Failed to save version');
-    }
-    
-    const versionInfo = await response.json();
-    
-    // Reload versions list
-    await loadStoryVersions();
-    
-    // Select the new version
-    const versionSelect = $('#nl-version-select');
-    if (versionSelect) {
-      versionSelect.value = versionInfo.filename;
-      currentVersionFilename = versionInfo.filename;
-      const deleteBtn = $('#btn-nl-delete-version');
-      if (deleteBtn) deleteBtn.disabled = false;
-    }
-    
-    return versionInfo;
-    
-  } catch (err) {
-    console.error('Failed to save story version:', err);
-    showNotification('Error saving story: ' + err.message, 'error');
-    return null;
-  }
-}
-
 // ============================================
 // INITIALIZATION
 // ============================================
-
-/**
- * Load available models from server and auto-select first deep model
- */
-async function loadAvailableModels() {
-  try {
-    const response = await fetch('/v1/models');
-    if (!response.ok) return;
-    
-    const data = await response.json();
-    const modelSelect = $('#nl-model');
-    if (!modelSelect) return;
-    
-    // Clear existing options
-    modelSelect.innerHTML = '';
-    
-    let firstDeepModelValue = null;
-    
-    // Add deep models first (preferred for creative writing)
-    if (data.models?.deep?.length) {
-      const deepGroup = document.createElement('optgroup');
-      deepGroup.label = 'Deep (Creative)';
-      data.models.deep.forEach((model, idx) => {
-        const option = document.createElement('option');
-        option.value = model.qualifiedName || model.name;
-        option.textContent = `${model.name} (${model.provider})`;
-        deepGroup.appendChild(option);
-        // Remember first deep model
-        if (idx === 0) {
-          firstDeepModelValue = option.value;
-        }
-      });
-      modelSelect.appendChild(deepGroup);
-    }
-    
-    // Add fast models
-    if (data.models?.fast?.length) {
-      const fastGroup = document.createElement('optgroup');
-      fastGroup.label = 'Fast';
-      data.models.fast.forEach(model => {
-        const option = document.createElement('option');
-        option.value = model.qualifiedName || model.name;
-        option.textContent = `${model.name} (${model.provider})`;
-        fastGroup.appendChild(option);
-      });
-      modelSelect.appendChild(fastGroup);
-    }
-    
-    // Auto-select first deep model (best for creative writing)
-    if (firstDeepModelValue) {
-      modelSelect.value = firstDeepModelValue;
-    }
-    
-  } catch (err) {
-    console.log('[NL Generation] Could not load models:', err.message);
-  }
-}
 
 /**
  * Initialize NL generation event handlers
@@ -1172,13 +613,19 @@ export function initNLGeneration() {
   // Version select handler
   const versionSelect = $('#nl-version-select');
   if (versionSelect) {
-    versionSelect.addEventListener('change', onVersionSelect);
+    versionSelect.addEventListener('change', (e) => onVersionSelect(e, {
+      updateNLGenerateButton,
+      displayNLContent,
+      enablePreviewButton,
+      resetNLContent,
+      setHasGeneratedNL
+    }));
   }
   
   // Delete version button
   const deleteBtn = $('#btn-nl-delete-version');
   if (deleteBtn) {
-    deleteBtn.addEventListener('click', deleteCurrentVersion);
+    deleteBtn.addEventListener('click', () => deleteCurrentVersion(resetNLContent));
   }
   
   // Language/Model change handlers - update button text
@@ -1196,5 +643,6 @@ export function initNLGeneration() {
   loadAvailableModels();
 }
 
-// Export for external use
+// Re-export for external use
+export { loadStoryVersions, openBookPreview, closeBookPreview };
 export default generateNLStory;

@@ -251,6 +251,53 @@ OUTPUT FORMAT (Markdown):
 - Output only the improved story, no commentary`;
   },
 
+  // Prompt for generating a single scene (smaller, more reliable)
+  generateScene: (sceneInfo, storyContext, options) => {
+    const langCode = options.language || 'en';
+    const langInfo = SUPPORTED_LANGUAGES[langCode] || SUPPORTED_LANGUAGES.en;
+    const languageInstruction = langCode === 'en' 
+      ? '' 
+      : `\n\nIMPORTANT: Write in ${langInfo.name} (${langInfo.native}). All text must be in ${langInfo.name}.`;
+    
+    const customInstructions = options.customPrompt 
+      ? `\n\nADDITIONAL AUTHOR INSTRUCTIONS:\n${options.customPrompt}` 
+      : '';
+
+    return `You are a skilled fiction writer. Write ONLY Scene "${sceneInfo.title}" from Chapter ${sceneInfo.chapterNumber}: "${sceneInfo.chapterTitle}".
+
+STORY TITLE: ${storyContext.storyName}
+
+PREVIOUS CONTEXT:
+${storyContext.previousSummary || 'This is the opening scene.'}
+
+THIS SCENE'S SPECIFICATION:
+${sceneInfo.cnl}
+
+CHARACTERS IN THIS SCENE:
+${sceneInfo.characters || 'See scene specification.'}
+
+LOCATION:
+${sceneInfo.location || 'See scene specification.'}
+
+MOOD:
+${sceneInfo.mood || 'Establish appropriate atmosphere.'}
+
+WRITING GUIDELINES:
+- Style: ${options.style || 'narrative'} prose
+- Tone: ${options.tone || 'literary'}
+- Length: ${options.sceneLength || '200-400 words'} for this scene
+- Include at least 1-2 meaningful dialogue exchanges if characters are present
+- End with a natural transition point
+
+CRITICAL: Complete the scene fully. Never stop mid-sentence or mid-word.${languageInstruction}${customInstructions}
+
+OUTPUT FORMAT (Markdown):
+- Start with "### ${sceneInfo.title}" header (h3)
+- Use paragraphs separated by blank lines
+- No meta-commentary
+- Do not wrap in code blocks`;
+  },
+
   // Prompt for generating a single chapter
   generateChapter: (chapterInfo, storyContext, options) => {
     const langCode = options.language || 'en';
@@ -533,6 +580,115 @@ export async function generateChapter(chapterInfo, storyContext, options = {}) {
 }
 
 /**
+ * Generate a single scene from CNL specification (smaller, more reliable than chapters)
+ * @param {Object} sceneInfo - Scene info (title, chapterNumber, chapterTitle, cnl, characters, location, mood)
+ * @param {Object} storyContext - Story context (storyName, previousSummary)
+ * @param {Object} options - Generation options (style, tone, language, model, customPrompt)
+ * @returns {Promise<Object>} Object containing the generated scene text
+ */
+export async function generateScene(sceneInfo, storyContext, options = {}) {
+  if (!agentAvailable) {
+    throw new Error('LLM agent not available.');
+  }
+  
+  const agent = new LLMAgent({
+    name: 'ScriptaSceneWriter',
+    systemPrompt: 'You are a skilled fiction writer. Write one scene at a time. Output only the scene text in Markdown format. CRITICAL: Always complete the scene fully - never stop mid-sentence or mid-word.'
+  });
+  
+  const prompt = PROMPTS.generateScene(sceneInfo, storyContext, options);
+  
+  const completeOptions = {
+    prompt,
+    mode: 'deep',
+    maxTokens: 2000  // Smaller for scenes
+  };
+  
+  if (options.model) {
+    completeOptions.model = options.model;
+  }
+  
+  const response = await agent.complete(completeOptions);
+  
+  // Check if response indicates truncation
+  if (response.finish_reason === 'length' || response.finishReason === 'length') {
+    throw new Error('Scene was truncated due to token limit.');
+  }
+  
+  const content = response.content || response.text || response;
+  
+  if (!content || typeof content !== 'string') {
+    throw new Error('LLM returned empty or invalid response');
+  }
+  
+  const trimmedContent = content.trim();
+  
+  // Minimum length check (scenes are shorter)
+  if (trimmedContent.length < 100) {
+    throw new Error(`Scene content too short (${trimmedContent.length} chars).`);
+  }
+  
+  // Check for truncated content
+  const lastChar = trimmedContent.slice(-1);
+  const properEndings = ['.', '!', '?', '"', "'", '—', '…', '*', '_', '\n'];
+  const endsWithIncompleteWord = /[a-zA-Z]$/.test(trimmedContent) && !properEndings.includes(lastChar);
+  
+  if (endsWithIncompleteWord) {
+    const last50 = trimmedContent.slice(-50);
+    console.error(`[LLM Generator] Scene truncated mid-word: "...${last50}"`);
+    throw new Error('Scene was truncated mid-word.');
+  }
+  
+  return { scene: trimmedContent };
+}
+
+/**
+ * Wrapper with retry logic for generation functions
+ * @param {Function} generatorFn - The generation function to call
+ * @param {Array} args - Arguments to pass to the function
+ * @param {number} maxRetries - Maximum number of retries (default 1)
+ * @param {number} timeout - Timeout in ms (default 60000)
+ * @returns {Promise<Object>} Result from the generation function
+ */
+export async function withRetry(generatorFn, args, maxRetries = 1, timeout = 60000) {
+  let lastError = null;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      // Create a timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Generation timed out')), timeout);
+      });
+      
+      // Race between generation and timeout
+      const result = await Promise.race([
+        generatorFn(...args),
+        timeoutPromise
+      ]);
+      
+      return result;
+    } catch (err) {
+      lastError = err;
+      console.warn(`[LLM Generator] Attempt ${attempt + 1} failed:`, err.message);
+      
+      // Don't retry on certain errors
+      if (err.message.includes('API key') || 
+          err.message.includes('not available') ||
+          err.message.includes('authentication')) {
+        throw err;
+      }
+      
+      // Wait before retry
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    }
+  }
+  
+  throw lastError;
+}
+
+/**
  * Get list of available LLM models
  * @returns {Object} Object with fast and deep model arrays
  */
@@ -616,6 +772,8 @@ export default {
   refineStoryWithLLM,
   generateNLFromCNL,
   generateChapter,
+  generateScene,
+  withRetry,
   isLLMAvailable,
   getAvailableModels,
   getSupportedLanguages,

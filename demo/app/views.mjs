@@ -73,7 +73,12 @@ export function renderRelationshipsView() {
     hero: '#ffd166', mentor: '#9d4edd', shadow: '#e63946', ally: '#06d6a0',
     trickster: '#fb8500', herald: '#4cc9f0', shapeshifter: '#ff6b6b',
     threshold_guardian: '#a8dadc', mother: '#f4a261', father: '#2a9d8f',
-    innocent: '#e9c46a', outcast: '#6c757d'
+    innocent: '#e9c46a', outcast: '#6c757d', femme_fatale: '#c9184a',
+    byronic_hero: '#7b2cbf', everyman: '#4895ef', sage: '#90be6d',
+    ruler: '#fca311', rebel: '#d62828', caregiver: '#43aa8b', explorer: '#4361ee',
+    lover: '#ef476f', magician: '#8338ec', jester: '#ffbe0b', orphan: '#457b9d',
+    warrior: '#e85d04', tyrant: '#9d0208', seducer: '#ff758f', fanatic: '#dc2f02',
+    tragic_villain: '#7209b7'
   };
   
   const nodes = chars.map((c, i) => {
@@ -128,11 +133,33 @@ export function renderRelationshipsView() {
     </g>`;
   });
   
-  const legendItems = [
-    { color: '#ffd166', label: 'Hero' }, { color: '#9d4edd', label: 'Mentor' },
-    { color: '#e63946', label: 'Shadow' }, { color: '#06d6a0', label: 'Ally' },
-    { color: '#fb8500', label: 'Trickster' }
-  ];
+  // Generate legend dynamically based on archetypes used in the project
+  const usedArchetypes = new Set(chars.map(c => c.archetype).filter(Boolean));
+  const legendItems = [];
+  
+  // Archetype labels for legend
+  const archetypeLabels = {
+    hero: 'Hero', mentor: 'Mentor', shadow: 'Shadow', ally: 'Ally',
+    trickster: 'Trickster', herald: 'Herald', shapeshifter: 'Shapeshifter',
+    threshold_guardian: 'Guardian', mother: 'Mother', father: 'Father',
+    innocent: 'Innocent', outcast: 'Outcast', femme_fatale: 'Femme Fatale',
+    byronic_hero: 'Byronic Hero', everyman: 'Everyman', sage: 'Sage',
+    ruler: 'Ruler', rebel: 'Rebel', caregiver: 'Caregiver', explorer: 'Explorer',
+    lover: 'Lover', magician: 'Magician', jester: 'Jester', orphan: 'Orphan',
+    warrior: 'Warrior', tyrant: 'Tyrant', seducer: 'Seducer', fanatic: 'Fanatic',
+    tragic_villain: 'Tragic Villain'
+  };
+  
+  usedArchetypes.forEach(arch => {
+    if (archetypeColors[arch]) {
+      legendItems.push({ color: archetypeColors[arch], label: archetypeLabels[arch] || arch });
+    }
+  });
+  
+  // Fallback if no archetypes are used
+  if (legendItems.length === 0) {
+    legendItems.push({ color: '#118ab2', label: 'Character' });
+  }
   
   let html = `
     <div class="graph-container">
@@ -157,7 +184,9 @@ export function renderRelationshipsView() {
       const to = chars.find(c => c.id === r.toId);
       const relType = VOCAB.RELATIONSHIP_TYPES[r.type];
       if (from && to) {
-        html += `<div class="relationship-card" style="border-left-color:${relType?.color || '#8b949e'}">
+        const hiddenBadge = r.hidden ? '<span class="rel-hidden-badge" title="Secret relationship">🔒</span>' : '';
+        html += `<div class="relationship-card ${r.hidden ? 'hidden-rel' : ''}" style="border-left-color:${relType?.color || '#8b949e'}">
+          ${hiddenBadge}
           <span class="rel-from">${from.name}</span>
           <span class="rel-arrow">→</span>
           <span class="rel-type">${relType?.label || r.type}</span>
@@ -207,13 +236,18 @@ window.addRelationship = () => {
         ).join('')}</optgroup>`
       ).join('')}
     </select></div>
+    <div class="form-group">
+      <label class="form-checkbox"><input type="checkbox" id="rel-hidden"> Mark as hidden (secret relationship)</label>
+      <div class="form-hint">Hidden relationships are not visible to other characters in the story. Use for secrets, conspiracies, or unrevealed connections.</div>
+    </div>
     <div class="form-hint">Tip: Relationships appear as edges in the graph above</div>`;
   $('#btn-modal-save').onclick = () => {
     const fromId = $('#rel-from').value;
     const toId = $('#rel-to').value;
     const type = $('#rel-type').value;
+    const hidden = $('#rel-hidden').checked;
     if (fromId === toId) { alert('Cannot create relationship with self'); return; }
-    state.project.libraries.relationships.push({ id: genId(), fromId, toId, type });
+    state.project.libraries.relationships.push({ id: genId(), fromId, toId, type, hidden });
     closeModal('entity-modal');
     renderRelationshipsView();
     generateCNL();

@@ -12,6 +12,27 @@ import { generateId } from '../utils.mjs';
 let wizardContainer = null;
 let currentStep = 0;
 
+/**
+ * Collect all chapters from structure (handles nested book/chapter structures)
+ */
+function collectChapters(node, chapters = []) {
+  if (!node) return chapters;
+  
+  // If this node is a chapter, add it
+  if (node.type === 'chapter') {
+    chapters.push(node);
+  }
+  
+  // Recursively check children
+  if (node.children && Array.isArray(node.children)) {
+    for (const child of node.children) {
+      collectChapters(child, chapters);
+    }
+  }
+  
+  return chapters;
+}
+
 const STEPS = [
   { id: 'arc', title: 'Choose Narrative Arc', icon: '📐' },
   { id: 'chapters', title: 'Map Chapters to Beats', icon: '📖' },
@@ -114,7 +135,8 @@ function renderArcStep() {
 function renderChaptersStep() {
   const beats = getCurrentArcBeats();
   const structure = state.project.structure;
-  const chapters = structure?.children || [];
+  // Use recursive collection to get all chapters
+  const chapters = collectChapters(structure);
   const mappings = state.project.blueprint.beatMappings;
   
   if (chapters.length === 0) {
@@ -132,7 +154,7 @@ function renderChaptersStep() {
   return `
     <div class="step-content chapters-step">
       <h3>Map Chapters to Beats</h3>
-      <p>Assign each narrative beat to a chapter in your story.</p>
+      <p>Assign each narrative beat to a chapter in your story. Found ${chapters.length} chapters.</p>
       
       <div class="mapping-grid">
         ${beats.map(beat => {

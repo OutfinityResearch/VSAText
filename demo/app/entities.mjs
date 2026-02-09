@@ -59,7 +59,9 @@ export function renderEntityGrid(type) {
   let cards = list.map(e => {
     let tags = '';
     if (e.traits?.length) {
-      tags = `<div class="entity-tags">${e.traits.slice(0, 4).map(t => `<span class="entity-tag">${t}</span>`).join('')}</div>`;
+      const displayTraits = e.traits.slice(0, 4);
+      const moreCount = e.traits.length - 4;
+      tags = `<div class="entity-tags">${displayTraits.map(t => `<span class="entity-tag">${t}</span>`).join('')}${moreCount > 0 ? `<span class="entity-tag more">+${moreCount}</span>` : ''}</div>`;
     }
     if (e.emotions && typeof e.emotions === 'object') {
       const emotionList = Object.entries(e.emotions).slice(0, 3).map(([k, v]) => `<span class="entity-tag">${k}:${v}</span>`);
@@ -118,8 +120,16 @@ function showEntityForm(type, e) {
     html += `<div class="form-group"><label class="form-label">Name</label><input class="form-input" id="e-name" value="${e?.name || pick(VOCAB.NAMES.characters)}"></div>
       <div class="form-group"><label class="form-label">Archetype</label>
       <select class="form-select" id="e-archetype">${Object.entries(VOCAB.CHARACTER_ARCHETYPES).map(([k, v]) => `<option value="${k}" ${e?.archetype === k ? 'selected' : ''}>${v.label} - ${v.desc}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Arc Type</label>
+      <select class="form-select" id="e-arcType">
+        <option value="positive" ${e?.arcType === 'positive' ? 'selected' : ''}>Positive - Character grows and improves</option>
+        <option value="negative" ${e?.arcType === 'negative' ? 'selected' : ''}>Negative - Character corrupts or declines</option>
+        <option value="flat" ${e?.arcType === 'flat' ? 'selected' : ''}>Flat - Character inspires change in others</option>
+      </select></div>
       <div class="form-group"><label class="form-label">Traits</label>
-      <div class="chip-select" id="e-traits">${renderTraitChips(e?.traits || [])}</div></div>`;
+      <div class="chip-select" id="e-traits">${renderTraitChips(e?.traits || [])}</div></div>
+      <div class="form-group"><label class="form-label">Physical Description</label>
+      <textarea class="form-textarea" id="e-description" rows="3" placeholder="Describe the character's appearance...">${e?.description || ''}</textarea></div>`;
   }
   
   if (type === 'locations') {
@@ -169,7 +179,9 @@ function saveEntity(type) {
   if (type === 'characters') {
     e.name = $('#e-name').value || 'Character';
     e.archetype = $('#e-archetype').value;
+    e.arcType = $('#e-arcType').value;
     e.traits = [...$$('#e-traits .chip.selected')].map(c => c.dataset.key);
+    e.description = $('#e-description').value.trim();
   }
   if (type === 'locations') {
     e.name = $('#e-name').value || 'Location';

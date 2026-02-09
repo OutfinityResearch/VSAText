@@ -92,6 +92,7 @@
 .entity-desc { font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.4; margin-bottom: 0.4rem; }
 .entity-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; }
 .entity-tag { font-size: var(--fs-2xs); padding: 0.15rem 0.4rem; background: var(--bg-elevated); border-radius: 3px; color: var(--text-secondary); }
+.entity-tag.more { background: var(--accent); color: white; font-weight: 500; }
 
 .add-entity-card {
   background: transparent;
@@ -149,6 +150,8 @@
   border-left: 3px solid var(--text-muted);
 }
 .relationship-card:hover { background: var(--bg-elevated); }
+.relationship-card.hidden-rel { opacity: 0.7; border-style: dashed; }
+.rel-hidden-badge { font-size: var(--fs-xs); margin-right: 0.3rem; }
 .rel-from, .rel-to { font-weight: 600; color: var(--text-primary); font-size: var(--fs-base); }
 .rel-type { font-size: var(--fs-xs); color: var(--text-muted); text-transform: uppercase; padding: 0.2rem 0.4rem; background: var(--bg-deep); border-radius: 3px; }
 .rel-arrow { color: var(--text-faded); }

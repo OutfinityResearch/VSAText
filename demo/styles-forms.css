@@ -24,6 +24,21 @@
 .form-hint { font-size: var(--fs-xs); color: var(--text-faded); margin-top: 0.2rem; font-style: italic; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
 
+/* Checkbox styling */
+.form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--fs-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.form-checkbox input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
 /* LLM Settings Panel (Create Specs modal) */
 .llm-settings {
   margin-top: 0.75rem;

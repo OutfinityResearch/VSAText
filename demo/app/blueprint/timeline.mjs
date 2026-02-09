@@ -8,6 +8,7 @@ import state from '../state.mjs';
 import { updateBeatMapping, setBlueprintArc } from '../state.mjs';
 import { getArcs, getArc, getCurrentArcBeats, getTensionAtPosition } from './blueprint-state.mjs';
 import { renderTensionCurve } from './tension-curve.mjs';
+import { initSubplots, render as renderSubplots } from './subplots.mjs';
 
 let draggedBeat = null;
 let timelineContainer = null;
@@ -63,10 +64,20 @@ export function render() {
       <h4>Beat Mappings</h4>
       ${renderMappingsList(beats, mappings)}
     </div>
+    
+    <div class="subplots-section" id="subplots-container">
+      <!-- Subplots will be rendered here -->
+    </div>
   `;
   
   attachEventListeners();
   renderTensionCurve(document.getElementById('tension-curve'));
+  
+  // Initialize subplots component
+  const subplotsContainer = document.getElementById('subplots-container');
+  if (subplotsContainer) {
+    initSubplots(subplotsContainer);
+  }
 }
 
 /**
@@ -148,13 +159,46 @@ function renderMappingsList(beats, mappings) {
 }
 
 /**
+ * Collect all chapters from structure (handles nested book/chapter structures)
+ */
+function collectChapters(node, chapters = []) {
+  if (!node) return chapters;
+  
+  // If this node is a chapter, add it
+  if (node.type === 'chapter') {
+    chapters.push(node);
+  }
+  
+  // Recursively check children
+  if (node.children && Array.isArray(node.children)) {
+    for (const child of node.children) {
+      collectChapters(child, chapters);
+    }
+  }
+  
+  return chapters;
+}
+
+/**
  * Render chapter options from structure
  */
 function renderChapterOptions(selectedId) {
   const structure = state.project.structure;
   if (!structure) return '<option value="">No structure</option>';
   
-  const chapters = structure.children || [];
+  // Collect all chapters recursively (handles any structure format)
+  const chapters = collectChapters(structure);
+  
+  if (chapters.length === 0) {
+    // Fallback: try direct children if no typed chapters found
+    const directChildren = structure.children || [];
+    return directChildren.map(ch => `
+      <option value="${ch.id}" ${ch.id === selectedId ? 'selected' : ''}>
+        ${ch.name || ch.id}
+      </option>
+    `).join('');
+  }
+  
   return chapters.map(ch => `
     <option value="${ch.id}" ${ch.id === selectedId ? 'selected' : ''}>
       ${ch.name || ch.id}

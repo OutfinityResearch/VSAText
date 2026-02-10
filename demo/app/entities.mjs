@@ -10,6 +10,7 @@ import { addChild, findNode, renderTree, getUsedBlocks } from './tree.mjs';
 import { generateCNL } from './cnl.mjs';
 import { renderRelationshipsView } from './views.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
+import { parseAnnotationLines, annotationsToEditorText } from './cnl-annotations.mjs';
 
 // ==================== ENTITY DESCRIPTIONS ====================
 const ENTITY_DESCRIPTIONS = {
@@ -167,6 +168,13 @@ function showEntityForm(type, e) {
         <div class="entity-name">${v.label}</div><div class="entity-type">${v.desc}</div>
         <div class="entity-tags">${v.suggestedBlocks.slice(0, 3).map(b => `<span class="entity-tag">${b}</span>`).join('')}</div></div>`).join('')}</div></div>`;
   }
+
+  if (['characters', 'locations', 'objects', 'moods', 'themes'].includes(type)) {
+    html += `<div class="form-group"><label class="form-label">CNL Annotations</label>
+      <textarea class="form-textarea" id="e-annotations" rows="4" placeholder="#hint: Keep tone restrained&#10;#subtext: Hide fear under sarcasm">${annotationsToEditorText(e?.annotations || [])}</textarea>
+      <div class="form-hint">One annotation per line. Supported types: hint, style, avoid, voice, subtext, sensory, pacing, reference, context, contrast, reveal, example.</div>
+    </div>`;
+  }
   
   $('#modal-body').innerHTML = html;
   $('#btn-modal-save').onclick = () => saveEntity(type);
@@ -210,6 +218,11 @@ function saveEntity(type) {
     const t = VOCAB.THEMES[k];
     e.name = t.label;
     e.themeKey = k;
+  }
+
+  const annotationsInput = $('#e-annotations');
+  if (annotationsInput) {
+    e.annotations = parseAnnotationLines(annotationsInput.value);
   }
   
   if (!state.editingEntity) state.project.libraries[type].push(e);
@@ -435,10 +448,14 @@ window.saveAction = (pid) => {
 export function editNodeProps(n) {
   $('#modal-title').textContent = 'Edit ' + n.type;
   $('#modal-body').innerHTML = `<div class="form-group"><label class="form-label">Name</label><input class="form-input" id="edit-name" value="${n.name || ''}"></div>
-    <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="edit-title" value="${n.title || ''}"></div>`;
+    <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="edit-title" value="${n.title || ''}"></div>
+    <div class="form-group"><label class="form-label">CNL Annotations</label>
+    <textarea class="form-textarea" id="edit-annotations" rows="4" placeholder="#hint: Scene should escalate tension">${annotationsToEditorText(n.annotations || [])}</textarea>
+    <div class="form-hint">Annotations are serialized after this node in CNL output.</div></div>`;
   $('#btn-modal-save').onclick = () => {
     n.name = $('#edit-name').value || n.name;
     n.title = $('#edit-title').value || '';
+    n.annotations = parseAnnotationLines($('#edit-annotations').value);
     closeModal('entity-modal');
     renderTree();
   };

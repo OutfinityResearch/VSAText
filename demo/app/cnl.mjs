@@ -8,6 +8,8 @@
 import { state } from './state.mjs';
 import { $ } from './utils.mjs';
 import { serializeToCNL } from '../../src/services/cnl-serializer.mjs';
+import { refreshAllViews, loadCNLIntoState } from './generation/generation-utils.mjs';
+import { updateGenerateButton } from './generation/generation-improve.mjs';
 
 // Track edit mode state
 let isEditMode = false;
@@ -33,15 +35,26 @@ export function toggleEditMode() {
     editBtn.classList.add('btn-edit-active');
     cnlEditor.focus();
   } else {
-    // Switch back to view mode
-    cnlOutput.textContent = cnlEditor.value;
-    cnlEditor.style.display = 'none';
-    cnlOutput.style.display = 'block';
-    editBtn.textContent = 'Edit';
-    editBtn.classList.remove('btn-edit-active');
-    
-    // TODO: Parse edited CNL and update state
-    window.showNotification?.('CNL updated (parsing not yet implemented)', 'info');
+    const editedText = cnlEditor.value;
+    loadCNLIntoState(editedText).then(() => {
+      cnlOutput.textContent = editedText;
+      cnlEditor.style.display = 'none';
+      cnlOutput.style.display = 'block';
+      editBtn.textContent = 'Edit';
+      editBtn.classList.remove('btn-edit-active');
+
+      refreshAllViews();
+      updateGenerateButton();
+      window.showNotification?.('CNL parsed and applied to project state', 'success');
+    }).catch((err) => {
+      isEditMode = true;
+      cnlEditor.style.display = 'block';
+      cnlOutput.style.display = 'none';
+      editBtn.textContent = 'View';
+      editBtn.classList.add('btn-edit-active');
+      cnlEditor.focus();
+      window.showNotification?.(`CNL parse error: ${err.message}`, 'error');
+    });
   }
 }
 
@@ -101,16 +114,18 @@ export function importCNL() {
     
     try {
       const text = await file.text();
-      
+
+      await loadCNLIntoState(text);
+
       // Update CNL output display
       $('#cnl-output').textContent = text;
-      
-      // Show success notification
-      window.showNotification?.(`Imported: ${file.name}`, 'success');
-      
-      // TODO: Parse CNL and update state
-      // This would require a CNL parser to convert text back to project state
-      
+      if (isEditMode) {
+        $('#cnl-editor').value = text;
+      }
+
+      refreshAllViews();
+      updateGenerateButton();
+      window.showNotification?.(`Imported and parsed: ${file.name}`, 'success');
     } catch (err) {
       window.showNotification?.('Error importing file: ' + err.message, 'error');
     }

@@ -37,7 +37,7 @@
 Book group end</code></pre>
 
 <h3>Chapter</h3>
-<p>A major division of the narrative, typically representing a significant portion of the story. Chapters contain scenes and can have their own properties like title, summary, and constraints.</p>
+<p>A major division of the narrative that groups scenes into a coherent movement of the story. Chapter properties support pacing, tonal continuity, and chapter-level progression.</p>
 
 <table>
   <tr>
@@ -46,24 +46,122 @@ Book group end</code></pre>
     <th>Example</th>
   </tr>
   <tr>
-    <td>title</td>
-    <td>Human-readable chapter name</td>
-    <td><code>Chapter1 has title "The Beginning"</code></td>
+    <td>introduction</td>
+    <td>Short introductory text that sets the chapter context</td>
+    <td><code>Chapter1 has introduction "Anna arrives at the village, unaware of the dangers ahead."</code></td>
   </tr>
   <tr>
-    <td>summary</td>
-    <td>Brief description of chapter content</td>
-    <td><code>Chapter1 has summary "Hero discovers the quest"</code></td>
+    <td>theme</td>
+    <td>Central narrative focus of the chapter</td>
+    <td><code>Chapter1 has theme "Discovery and Doubt"</code></td>
   </tr>
   <tr>
-    <td>constraints</td>
-    <td>Rules specific to this chapter</td>
-    <td><code>Chapter1 requires "Anna"</code></td>
+    <td>start_scene</td>
+    <td>First scene included in the chapter</td>
+    <td><code>Chapter1 has start_scene Sc1</code></td>
+  </tr>
+  <tr>
+    <td>end_scene</td>
+    <td>Last scene included in the chapter</td>
+    <td><code>Chapter1 has end_scene Sc5</code></td>
+  </tr>
+  <tr>
+    <td>mood</td>
+    <td>Dominant emotional atmosphere of the chapter</td>
+    <td><code>Chapter1 has mood "Mysterious, tense, hopeful"</code></td>
+  </tr>
+  <tr>
+    <td>word_count</td>
+    <td>Approximate chapter length in words</td>
+    <td><code>Chapter1 has word_count 3000</code></td>
+  </tr>
+  <tr>
+    <td>pacing</td>
+    <td>Relative narrative speed of the chapter</td>
+    <td><code>Chapter1 has pacing fast</code></td>
   </tr>
 </table>
 
 <h3>Scene</h3>
-<p>The fundamental unit of narrative action. A scene represents a continuous sequence of events in a single location and time. Scenes are where characters interact, events occur, and the story advances.</p>
+<p>The fundamental unit of narrative action. A scene represents a continuous sequence of events in a specific time and place, with a clear objective and conflict pressure.</p>
+
+<table>
+  <tr>
+    <th>Property</th>
+    <th>Description</th>
+    <th>Example</th>
+  </tr>
+  <tr>
+    <td>purpose</td>
+    <td>Narrative function of the scene</td>
+    <td><code>Sc1 has purpose Introduce_Mystery</code></td>
+  </tr>
+  <tr>
+    <td>time</td>
+    <td>Temporal context of the scene</td>
+    <td><code>Sc1 has time Early-Morning</code></td>
+  </tr>
+  <tr>
+    <td>goal</td>
+    <td>What the protagonist is trying to achieve</td>
+    <td><code>Sc1 has goal Discover_Truth</code></td>
+  </tr>
+  <tr>
+    <td>conflict</td>
+    <td>Primary obstacle or tension in the scene</td>
+    <td><code>Sc1 has conflict Hidden_Danger</code></td>
+  </tr>
+  <tr>
+    <td>disaster</td>
+    <td>Unexpected disruption that changes the situation</td>
+    <td><code>Sc1 has disaster "The village is attacked by bandits."</code></td>
+  </tr>
+</table>
+
+<p>Scenes still include concrete references such as characters, locations, objects, and actions. The properties above capture the scene's narrative intent and dramatic pressure, and should be applied consistently to every scene (Sc1..ScN).</p>
+
+<h3>Scene Change</h3>
+<p>Scene Change captures what is different after a scene ends. It records concrete consequences in story state, so each scene visibly advances the narrative.</p>
+
+<table>
+  <tr>
+    <th>Property</th>
+    <th>Description</th>
+    <th>Example</th>
+  </tr>
+  <tr>
+    <td>information_change</td>
+    <td>New information discovered or updated</td>
+    <td><code>Sc1 has information_change "Hero learns the artifact is cursed"</code></td>
+  </tr>
+  <tr>
+    <td>emotional_change</td>
+    <td>Shift in emotional state of a key character</td>
+    <td><code>Sc1 has emotional_change "Anna moves from hope to fear"</code></td>
+  </tr>
+  <tr>
+    <td>relationship_change</td>
+    <td>Change in trust, loyalty, or power between characters</td>
+    <td><code>Sc1 has relationship_change "Trust between Anna and Lucas is broken"</code></td>
+  </tr>
+  <tr>
+    <td>stakes_change</td>
+    <td>How the stakes become clearer, higher, or lower</td>
+    <td><code>Sc1 has stakes_change "Failure now means exile from the village"</code></td>
+  </tr>
+</table>
+
+<h3>Beat</h3>
+<p>A story beat is a structural marker in an arc template that explains why a turning point matters in the broader narrative progression.</p>
+
+<div class="info-box">
+  <div class="info-box-title">Scene Flow Units</div>
+  <p><strong>Scene</strong> shows what happens. <strong>Scene Change</strong> shows what changed. <strong>Beat</strong> explains why this turning point matters in arc structure. <strong>Sequel</strong> shows how the character reacts and decides what to do next.</p>
+</div>
+
+<h3>Sequel</h3>
+<p>A sequel is a reaction-focused unit following a scene. It captures emotional processing, reflection, and decision, linking one scene to the next with clear character continuity.</p>
+<p>Scenes are action-focused; sequels are reaction-focused. Together they maintain pacing and make consequences explicit.</p>
 
 <table>
   <tr>
@@ -73,37 +171,43 @@ Book group end</code></pre>
   </tr>
   <tr>
     <td>title</td>
-    <td>Scene name</td>
-    <td><code>Sc1 has title "Morning at the Village"</code></td>
+    <td>Descriptive name of the sequel unit</td>
+    <td><code>Sq1 has title "Processing the Call to Adventure."</code></td>
   </tr>
   <tr>
-    <td>mood</td>
-    <td>Emotional atmosphere</td>
-    <td><code>Sc1 has mood Mysterious</code></td>
+    <td>reaction</td>
+    <td>Dominant emotional reaction of the character</td>
+    <td><code>Sq1 has reaction "Fear and excitement"</code></td>
   </tr>
   <tr>
-    <td>location</td>
-    <td>Where the scene takes place</td>
-    <td><code>Sc1 includes location Village</code></td>
+    <td>reflection</td>
+    <td>Character's interpretation of what happened</td>
+    <td><code>Sq1 has reflection "I must leave now or risk losing everything."</code></td>
   </tr>
   <tr>
-    <td>characters</td>
-    <td>Who appears in the scene</td>
-    <td><code>Sc1 includes character Anna</code></td>
+    <td>dilemma</td>
+    <td>Competing options or constraints the character faces</td>
+    <td><code>Sq1 has dilemma "Leave now or stay and protect family"</code></td>
   </tr>
   <tr>
-    <td>actions</td>
-    <td>What happens</td>
-    <td><code>Anna discovers artifact</code></td>
+    <td>decision</td>
+    <td>Choice that sets up the next action</td>
+    <td><code>Sq1 has decision "Prepare for the journey at dawn"</code></td>
+  </tr>
+  <tr>
+    <td>mapped_scene</td>
+    <td>Scene that this sequel responds to</td>
+    <td><code>Sq1 has mapped_scene Sc3</code></td>
   </tr>
 </table>
 
-<h3>Beat</h3>
-<p>A story beat is a specific moment in a narrative arc that marks a significant plot point or emotional shift. Beats are defined by narrative arc templates (like Hero's Journey) and mapped to scenes through the Blueprint system.</p>
-
-<div class="info-box">
-  <div class="info-box-title">Beats vs. Scenes</div>
-  <p><strong>Beats</strong> are abstract narrative markers ("Call to Adventure", "Midpoint", "Climax") defined by storytelling theory. <strong>Scenes</strong> are concrete containers with locations, characters, and actions. The Blueprint maps beats to scenes, giving your story proper pacing and structure.</p>
+<div class="reference-list">
+  <h4>Design Rationale and Sources</h4>
+  <ul>
+    <li>Chapter properties prioritize setup, continuity, and pacing (Booth, <em>The Rhetoric of Fiction</em>).</li>
+    <li>Scene properties follow goal-conflict-disaster pressure for forward motion (Field, <em>Screenplay</em>; Vogler, <em>The Writer's Journey</em>).</li>
+    <li>Scene Change and Sequel formalize consequence and reaction loops (McKee, <em>Story</em>; Swain, <em>Techniques of the Selling Writer</em>).</li>
+  </ul>
 </div>
 
 <h3>Block</h3>
@@ -186,6 +290,28 @@ SilverKey has significance high
 SilverKey has description "Ancient key that unlocks the forbidden chamber"
 Anna owns SilverKey</code></pre>
 
+<h3>Event</h3>
+<p>A specific occurrence that drives the narrative forward, changes story state, and generates reactions.</p>
+<p>Events define purpose, participating characters, impact on story state, and outcomes that trigger subsequent decisions.</p>
+
+<pre><code>Anna_finds_map is event
+Anna_finds_map has purpose "Anna finds the artifact map, triggering the quest"
+Anna_finds_map has characters_involved Anna, Lucas
+Anna_finds_map has impact "The discovery raises urgency and tension in the story"
+Anna_finds_map has outcome "Anna decides to begin the search immediately"</code></pre>
+
+<h3>Conflict</h3>
+<p>The central tension that challenges characters' objectives and drives narrative interest.</p>
+<p>Conflicts can be internal (emotional, ethical), interpersonal, or external (antagonist, environment, system pressure).</p>
+
+<pre><code>Bandits_attack is conflict
+Bandits_attack has type external
+Bandits_attack has participants Anna, Bandits
+Bandits_attack has stakes "Anna's life and mission are at risk"
+Bandits_attack has resolution_attempt "Anna hides and creates an escape plan"</code></pre>
+
+<p>Event and Conflict are tightly coupled: events trigger state changes, conflicts convert those changes into pressure, and character reactions create the next narrative move.</p>
+
 <h3>Mood</h3>
 <p>An emotional register for scenes. Moods combine multiple emotions with varying intensities to create specific atmospheres like "Mysterious", "Triumphant", or "Melancholic".</p>
 
@@ -242,12 +368,19 @@ P1 has template begin
   $hero discovers "call to adventure"
 P1 has template end</code></pre>
 
-<h3>Relationship</h3>
-<p>A connection between two characters that affects how they interact. Relationships have types (ally, enemy, mentor, sibling, romantic) and can change over the course of the story.</p>
+<h3>Relationships</h3>
+<p>A connection between two characters that affects how they interact.</p>
+<ul>
+  <li><strong>Type</strong>: Nature of the connection (ally, enemy, mentor_student, sibling, romantic, rival)</li>
+  <li><strong>Dynamics</strong>: How the relationship evolves (supportive, competitive, conflicted, transformative)</li>
+  <li><strong>Impact</strong>: Influence on character arcs and story events</li>
+</ul>
 
-<pre><code>Anna relates to Marcus as sibling
-Anna relates to Gandalf as mentor_student
-Marcus relates to Villain as enemy</code></pre>
+<pre><code>Gandalf relates to Anna as mentor_student
+Anna relates to Marcus as sibling
+Marcus relates to Villain as enemy
+Anna relates to Marcus as supportive
+Anna relates to Marcus as conflicted</code></pre>
 
 <h3>Dialogue</h3>
 <p>A structured conversation specification. Dialogues in SCRIPTA are not full scripts but specifications that define:</p>
@@ -259,6 +392,7 @@ Marcus relates to Villain as enemy</code></pre>
 </ul>
 
 <h2>Blueprint Concepts</h2>
+<p>Blueprint concepts connect abstract planning units (arcs, beats, subplots, tension) with concrete narrative content (scene actions, dialogues, and events).</p>
 
 <h3>Narrative Arc</h3>
 <p>A predefined template that describes the emotional and structural journey of a story. SCRIPTA includes multiple arc types:</p>
@@ -308,6 +442,21 @@ Marcus relates to Villain as enemy</code></pre>
 
 <h3>Beat Mapping</h3>
 <p>The assignment of narrative beats to specific chapters and scenes. Beat mappings connect abstract story structure to concrete narrative content.</p>
+
+<h3>Scene</h3>
+<p>A concrete narrative unit where story events unfold. Scenes are continuous sequences of actions in specific places and times, and they carry the visible progression of the plot.</p>
+
+<h3>Scene Change</h3>
+<p>A scene-level state delta that records what was modified by the scene events: information, emotional state, relationships, and stakes.</p>
+
+<h3>Sequel</h3>
+<p>A follow-up unit after a scene that captures reaction, reflection, and decision. Sequels bridge major actions and maintain pacing, emotional depth, and directional clarity.</p>
+
+<h3>Chapter</h3>
+<p>A major narrative division that organizes scenes into a coherent section with its own introductory frame, thematic focus, and pacing profile.</p>
+
+<h3>Block</h3>
+<p>A reusable narrative template representing common story patterns such as revelation, confrontation, escape, sacrifice, betrayal, and similar recurring structures.</p>
 
 <h3>Tension Curve</h3>
 <p>A visual representation of emotional intensity across the story. The tension curve plots how much "pressure" the reader feels at each point, typically rising toward the climax and releasing at resolution.</p>
@@ -369,7 +518,7 @@ Moods       Objects       └──────▶ Scenes       Beats   Tension
 Themes      WorldRules              │            │
 Wisdom      Patterns               ▼            ▼
 Dialogues   Relationships      ┌────────────────────┐
-    │                          │ Beat Mappings link │
+Events      Conflicts          │ Beat Mappings link │
     │                          │ beats to scenes    │
     │                          └────────────────────┘
     │                                   │
@@ -458,12 +607,20 @@ Dialogues   Relationships      ┌───────────────�
     <td>A rule that content must follow (requires, forbids, must, etc.)</td>
   </tr>
   <tr>
+    <td><strong>Conflict</strong></td>
+    <td>The core tension that challenges character objectives and drives narrative momentum</td>
+  </tr>
+  <tr>
     <td><strong>Dialogue</strong></td>
     <td>A structured specification for character conversations</td>
   </tr>
   <tr>
     <td><strong>Entity</strong></td>
     <td>Any declared element: character, location, object, etc.</td>
+  </tr>
+  <tr>
+    <td><strong>Event</strong></td>
+    <td>A specific occurrence that changes story state and triggers character response</td>
   </tr>
   <tr>
     <td><strong>Group</strong></td>
@@ -500,6 +657,14 @@ Dialogues   Relationships      ┌───────────────�
   <tr>
     <td><strong>Scene</strong></td>
     <td>The fundamental unit of narrative action</td>
+  </tr>
+  <tr>
+    <td><strong>Scene Change</strong></td>
+    <td>The concrete state update produced by a scene (information, emotion, relationships, stakes)</td>
+  </tr>
+  <tr>
+    <td><strong>Sequel</strong></td>
+    <td>A reaction unit after a scene containing reflection, dilemma, and decision</td>
   </tr>
   <tr>
     <td><strong>Specification</strong></td>

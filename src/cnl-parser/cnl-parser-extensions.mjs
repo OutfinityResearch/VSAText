@@ -254,12 +254,35 @@ export function processBlueprintDialogueSubplot(statement, ast, lineNo) {
 
       let exchange = dialogue.exchanges.find(e => e.speakerId === speaker && !e._complete);
       if (!exchange) {
-        exchange = { speakerId: speaker, intent: null, emotion: null, sketch: null, line: lineNo };
+        exchange = {
+          speakerId: speaker,
+          intent: null,
+          conflictType: null,
+          emotion: null,
+          subtext: null,
+          information: null,
+          relationshipBetweenCharacters: null,
+          power: null,
+          emotionShift: null,
+          storyDirection: null,
+          readerPerception: null,
+          sketch: null,
+          line: lineNo
+        };
         dialogue.exchanges.push(exchange);
       }
 
       if (propType === 'intent') exchange.intent = propValue;
+      else if (propType === 'conflict_type' || propType === 'conflicttype') exchange.conflictType = propValue;
       else if (propType === 'emotion') exchange.emotion = propValue;
+      else if (propType === 'subtext') exchange.subtext = propValue;
+      else if (propType === 'information') exchange.information = propValue;
+      else if (propType === 'relationship_between' || propType === 'relationship_between_characters') {
+        exchange.relationshipBetweenCharacters = propValue;
+      } else if (propType === 'power') exchange.power = propValue;
+      else if (propType === 'emotion_shift' || propType === 'emotion_change') exchange.emotionShift = propValue;
+      else if (propType === 'story_direction') exchange.storyDirection = propValue;
+      else if (propType === 'reader_perception') exchange.readerPerception = propValue;
       else if (propType === 'sketch') { exchange.sketch = propValue; exchange._complete = true; }
     }
     return;

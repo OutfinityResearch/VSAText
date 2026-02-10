@@ -26,7 +26,7 @@
         
         <div class="info-box">
           <div class="info-box-title">The Evaluate Button</div>
-          <p>Click "Evaluate" in the Metrics panel after generating a story to see detailed quality analysis. The browser console shows additional debugging information.</p>
+          <p>Click "Evaluate" in the Metrics panel after generating a story to see detailed quality analysis and prioritized improvement direction.</p>
         </div>
       </div>
     </div>
@@ -190,46 +190,6 @@
     </div>
   </section>
 
-  <!-- Section 5: Console Debugging -->
-  <section class="accordion-section">
-    <button class="accordion-header" aria-expanded="false">
-      <span class="accordion-icon">&#9654;</span>
-      <span class="accordion-title">Console Debugging</span>
-    </button>
-    <div class="accordion-content">
-      <div class="accordion-body">
-        <p>Open browser developer tools (F12) to see detailed metric calculations:</p>
-        
-        <div class="example-box">
-          <div class="example-title">Console Output Example</div>
-          <pre><code>[Evaluate] Counts: {
-  characters: 4,
-  locations: 3,
-  scenes: 8,
-  chapters: 3,
-  actions: 12,
-  dialogues: 5,
-  themes: 2,
-  relationships: 6,
-  worldRules: 3,
-  wisdom: 2,
-  patterns: 1
-}
-
-[Evaluate] Coherence: {
-  charContinuity: "0.75",
-  locLogic: "0.60",
-  actionCoherence: "0.92",
-  sceneCompleteness: "0.88",
-  relUsage: "0.67",
-  dialogueQuality: "0.70"
-}</code></pre>
-        </div>
-        
-        <p>Use this data to identify exactly which aspects need improvement.</p>
-      </div>
-    </div>
-  </section>
 </div>
 
 <section id="related">
@@ -244,17 +204,3 @@
     <li><a href="#metrics-evaluation" data-page="metrics-evaluation">Human Evaluation</a> - Rating protocols</li>
   </ul>
 </section>
-
-<script>
-// Accordion functionality
-document.querySelectorAll('.accordion-header').forEach(button => {
-  button.addEventListener('click', () => {
-    const section = button.parentElement;
-    const isOpen = section.classList.contains('open');
-    
-    // Toggle current section
-    section.classList.toggle('open');
-    button.setAttribute('aria-expanded', !isOpen);
-  });
-});
-</script>

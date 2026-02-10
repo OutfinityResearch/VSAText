@@ -15,6 +15,7 @@ import {
 } from './generation-utils.mjs';
 import { refineWithLLM } from './generation-llm.mjs';
 import { updateGenerateButton } from './generation-improve.mjs';
+import { applyGenerationAnnotations } from './generation-annotations.mjs';
 
 // Import SDK optimizer
 import { optimizeStory, DEFAULT_CONFIG } from '../../../src/generation/index.mjs';
@@ -66,6 +67,8 @@ export async function generateAdvanced(options) {
       structure: result.project.structure,
       blueprint: result.project.blueprint
     };
+
+    applyGenerationAnnotations(state.project, { strategy: 'advanced', options });
     
     updateGenerationStatus(
       statusEl, 

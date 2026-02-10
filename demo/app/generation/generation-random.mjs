@@ -12,6 +12,7 @@ import {
   refreshAllViews
 } from './generation-utils.mjs';
 import { updateGenerateButton } from './generation-improve.mjs';
+import { applyGenerationAnnotations } from './generation-annotations.mjs';
 
 /**
  * Generate a complete story using SDK random generator
@@ -29,7 +30,14 @@ export function generateRandom(options) {
     length: options.length,
     complexity: options.complexity,
     rules: options.rules,
-    title: state.project.name
+    title: state.project.name,
+    qualityGate: {
+      enabled: true,
+      maxAttempts: 6,
+      minNQS: 0.70,
+      minCoherence: 0.72,
+      minCompleteness: 0.80
+    }
   });
   
   // Apply result to demo state
@@ -56,6 +64,8 @@ export function generateRandom(options) {
     tensionCurve: result.blueprint.tensionCurve,
     subplots: result.blueprint.subplots || []
   };
+
+  applyGenerationAnnotations(state.project, { strategy: 'random', options });
   
   // Finalize UI state
   createSnapshot();

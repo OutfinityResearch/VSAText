@@ -130,6 +130,7 @@
  * @property {Blueprint} blueprint - Story blueprint
  * @property {Libraries} libraries - Entity libraries
  * @property {Object|null} structure - Story structure tree
+ * @property {Object} cnlAnnotations - Optional CNL annotation guidance
  */
 
 // ============================================
@@ -181,7 +182,10 @@ export function createProject(name = 'Untitled Story') {
     selectedArc: 'heros_journey',
     blueprint: createDefaultBlueprint(),
     libraries: createDefaultLibraries(),
-    structure: null
+    structure: null,
+    cnlAnnotations: {
+      global: []
+    }
   };
 }
 
@@ -410,19 +414,23 @@ export function setBlueprintArc(project, arcKey) {
  * @returns {Project}
  */
 export function loadProject(data) {
+  const loaded = data || {};
   return {
-    id: data.id || null,
-    name: data.name || 'Untitled Story',
-    selectedArc: data.selectedArc || 'heros_journey',
+    id: loaded.id || null,
+    name: loaded.name || 'Untitled Story',
+    selectedArc: loaded.selectedArc || 'heros_journey',
     blueprint: {
       ...createDefaultBlueprint(),
-      ...(data.blueprint || {})
+      ...(loaded.blueprint || {})
     },
     libraries: {
       ...createDefaultLibraries(),
-      ...(data.libraries || {})
+      ...(loaded.libraries || {})
     },
-    structure: data.structure || null
+    structure: loaded.structure || null,
+    cnlAnnotations: {
+      global: Array.isArray(loaded?.cnlAnnotations?.global) ? loaded.cnlAnnotations.global : []
+    }
   };
 }
 

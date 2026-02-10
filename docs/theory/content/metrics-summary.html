@@ -87,7 +87,7 @@
         
         <div class="info-box">
           <div class="info-box-title">Technical Specification</div>
-          <p>See <a href="../specs/DS13-Metric-Coherence-Score.md">DS13-Metric-Coherence-Score.md</a> for the complete specification.</p>
+          <p>See <a href="../viewer.html?doc=specs/DS13-Metric-Coherence-Score.md">DS13-Metric-Coherence-Score.md</a> for the complete specification.</p>
         </div>
         
         <h4>Components</h4>
@@ -162,7 +162,7 @@ Logic Violation Penalty:
         
         <div class="info-box">
           <div class="info-box-title">Technical Specification</div>
-          <p>See <a href="../specs/DS17-Metric-Emotional-Arc-Profile.md">DS17-Metric-Emotional-Arc-Profile.md</a> for the complete specification.</p>
+          <p>See <a href="../viewer.html?doc=specs/DS17-Metric-Emotional-Arc-Profile.md">DS17-Metric-Emotional-Arc-Profile.md</a> for the complete specification.</p>
         </div>
         
         <h4>How It Works</h4>
@@ -233,16 +233,3 @@ For reporting: EAP = (r + 1) / 2  // Normalize to 0-1</code></pre>
     <li><a href="#tab-arc" data-page="tab-arc">Arc Tab Guide</a> - Defining emotional arcs</li>
   </ul>
 </section>
-
-<script>
-// Accordion functionality
-document.querySelectorAll('.accordion-header').forEach(button => {
-  button.addEventListener('click', () => {
-    const section = button.parentElement;
-    const isOpen = section.classList.contains('open');
-    
-    section.classList.toggle('open');
-    button.setAttribute('aria-expanded', !isOpen);
-  });
-});
-</script>

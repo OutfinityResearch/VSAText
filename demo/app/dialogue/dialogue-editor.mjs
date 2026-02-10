@@ -7,6 +7,7 @@
 import state from '../state.mjs';
 import { upsertDialogue, removeDialogue, getDialogueById } from '../state.mjs';
 import { generateId } from '../utils.mjs';
+import { parseAnnotationLines, annotationsToEditorText } from '../cnl-annotations.mjs';
 
 let editorContainer = null;
 let selectedDialogueId = null;
@@ -136,6 +137,11 @@ function renderDialogueForm(dialogue) {
           <span id="tension-display">${dialogue.tension || 3}</span>
         </div>
       </div>
+
+      <div class="form-section">
+        <label>CNL Annotations</label>
+        <textarea id="dialogue-annotations" rows="3" placeholder="#hint: Keep tension indirect&#10;#subtext: Loyalty conflict">${escapeHtml(annotationsToEditorText(dialogue.annotations || []))}</textarea>
+      </div>
       
       <div class="form-section">
         <label>Participants</label>
@@ -197,8 +203,40 @@ function renderExchanges(exchanges, characters) {
           <input type="text" class="exchange-intent" value="${escapeHtml(ex.intent || '')}" placeholder="What they want to convey...">
         </div>
         <div class="field">
+          <label>Conflict Type</label>
+          <input type="text" class="exchange-conflict-type" value="${escapeHtml(ex.conflictType || '')}" placeholder="internal, interpersonal, ideological, strategic">
+        </div>
+        <div class="field">
           <label>Emotion</label>
           <input type="text" class="exchange-emotion" value="${escapeHtml(ex.emotion || '')}" placeholder="How they feel...">
+        </div>
+        <div class="field">
+          <label>Subtext</label>
+          <input type="text" class="exchange-subtext" value="${escapeHtml(ex.subtext || '')}" placeholder="What is implied but unsaid...">
+        </div>
+        <div class="field">
+          <label>Information</label>
+          <input type="text" class="exchange-information" value="${escapeHtml(ex.information || '')}" placeholder="New/clarified information">
+        </div>
+        <div class="field">
+          <label>Relationship Between Characters</label>
+          <input type="text" class="exchange-relationship-between" value="${escapeHtml(ex.relationshipBetweenCharacters || '')}" placeholder="Trust shift, rupture, alliance...">
+        </div>
+        <div class="field">
+          <label>Power</label>
+          <input type="text" class="exchange-power" value="${escapeHtml(ex.power || '')}" placeholder="Who controls the interaction now">
+        </div>
+        <div class="field">
+          <label>Emotion Shift</label>
+          <input type="text" class="exchange-emotion-shift" value="${escapeHtml(ex.emotionShift || '')}" placeholder="Calm -> Anger, Hope -> Fear">
+        </div>
+        <div class="field">
+          <label>Story Direction</label>
+          <input type="text" class="exchange-story-direction" value="${escapeHtml(ex.storyDirection || '')}" placeholder="How this changes next events">
+        </div>
+        <div class="field">
+          <label>Reader Perception</label>
+          <input type="text" class="exchange-reader-perception" value="${escapeHtml(ex.readerPerception || '')}" placeholder="How reader interpretation changes">
         </div>
         <div class="field">
           <label>Sketch (placeholder line)</label>
@@ -230,6 +268,11 @@ function collectFormData() {
   
   // Tone
   dialogue.tone = document.getElementById('dialogue-tone')?.value || null;
+
+  // CNL annotations
+  dialogue.annotations = parseAnnotationLines(
+    document.getElementById('dialogue-annotations')?.value || ''
+  );
   
   // Tension
   dialogue.tension = parseInt(document.getElementById('dialogue-tension')?.value) || null;
@@ -249,11 +292,36 @@ function collectFormData() {
   document.querySelectorAll('.exchange-row').forEach(row => {
     const speakerId = row.querySelector('.exchange-speaker')?.value;
     const intent = row.querySelector('.exchange-intent')?.value;
+    const conflictType = row.querySelector('.exchange-conflict-type')?.value;
     const emotion = row.querySelector('.exchange-emotion')?.value;
+    const subtext = row.querySelector('.exchange-subtext')?.value;
+    const information = row.querySelector('.exchange-information')?.value;
+    const relationshipBetweenCharacters = row.querySelector('.exchange-relationship-between')?.value;
+    const power = row.querySelector('.exchange-power')?.value;
+    const emotionShift = row.querySelector('.exchange-emotion-shift')?.value;
+    const storyDirection = row.querySelector('.exchange-story-direction')?.value;
+    const readerPerception = row.querySelector('.exchange-reader-perception')?.value;
     const sketch = row.querySelector('.exchange-sketch')?.value;
     
-    if (speakerId || intent || sketch) {
-      dialogue.exchanges.push({ speakerId, intent, emotion, sketch });
+    if (
+      speakerId || intent || conflictType || emotion || subtext || information ||
+      relationshipBetweenCharacters || power || emotionShift || storyDirection ||
+      readerPerception || sketch
+    ) {
+      dialogue.exchanges.push({
+        speakerId,
+        intent,
+        conflictType,
+        emotion,
+        subtext,
+        information,
+        relationshipBetweenCharacters,
+        power,
+        emotionShift,
+        storyDirection,
+        readerPerception,
+        sketch
+      });
     }
   });
   
@@ -296,7 +364,8 @@ function attachListeners() {
       tension: 3,
       beatKey: null,
       location: null,
-      exchanges: []
+      exchanges: [],
+      annotations: []
     });
     selectedDialogueId = newId;
     render();
@@ -331,7 +400,20 @@ function attachListeners() {
     const dialogue = getDialogueById(selectedDialogueId);
     if (dialogue) {
       dialogue.exchanges = dialogue.exchanges || [];
-      dialogue.exchanges.push({ speakerId: '', intent: '', emotion: '', sketch: '' });
+      dialogue.exchanges.push({
+        speakerId: '',
+        intent: '',
+        conflictType: '',
+        emotion: '',
+        subtext: '',
+        information: '',
+        relationshipBetweenCharacters: '',
+        power: '',
+        emotionShift: '',
+        storyDirection: '',
+        readerPerception: '',
+        sketch: ''
+      });
       upsertDialogue(dialogue);
       render();
     }

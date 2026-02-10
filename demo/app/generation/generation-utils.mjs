@@ -4,7 +4,7 @@
  * Shared utility functions for all generation strategies.
  */
 
-import { state } from '../state.mjs';
+import { state, loadProjectState } from '../state.mjs';
 import { genId } from '../utils.mjs';
 import { renderTree } from '../tree.mjs';
 import { renderEntityGrid } from '../entities.mjs';
@@ -12,6 +12,7 @@ import { renderRelationshipsView, renderEmotionalArcView, renderBlocksView, rend
 import { renderEmptyMetrics } from '../metrics.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
 import { DIALOGUE_TEMPLATES, PURPOSE_TO_TONE, getTensionForBeat } from './generation-config.mjs';
+import { cnlToProjectState } from './cnl-roundtrip.mjs';
 
 // ============================================
 // UI REFRESH
@@ -124,12 +125,14 @@ export function loadProjectData(projectData) {
 }
 
 /**
- * Load CNL string and parse into state
- * (Placeholder - would use CNL parser)
+ * Load CNL string and parse into project state.
+ *
+ * Throws when CNL is invalid.
  */
 export async function loadCNLIntoState(cnlText) {
-  console.log('CNL to parse:', cnlText.substring(0, 200) + '...');
-  // TODO: Integrate with CNL parser when available
+  const { project } = cnlToProjectState(cnlText, state.project);
+  loadProjectState(project);
+  return project;
 }
 
 // ============================================
@@ -152,6 +155,14 @@ export function generateDialogueExchangeStructure(purpose, characters) {
       speakerId: characters[charIndex]?.id || 'unknown',
       intent: t.intent,
       emotion: t.emotion,
+      conflictType: '',
+      subtext: '',
+      information: '',
+      relationshipBetweenCharacters: '',
+      power: '',
+      emotionShift: '',
+      storyDirection: '',
+      readerPerception: '',
       sketch: '' // User must fill in the actual dialogue
     });
   });

@@ -250,6 +250,96 @@ function parseJSONResponse(content) {
   }
 }
 
+function normalizeLLMAnnotations(value) {
+  const allowed = new Set([
+    'example', 'hint', 'style', 'avoid', 'voice', 'subtext',
+    'sensory', 'pacing', 'reference', 'context', 'contrast', 'reveal'
+  ]);
+
+  const items = Array.isArray(value) ? value : [];
+  const out = [];
+  const seen = new Set();
+
+  for (const item of items) {
+    const type = String(item?.type || '').trim().toLowerCase();
+    const content = String(item?.content ?? '').trim();
+    if (!allowed.has(type) || !content) continue;
+
+    const key = `${type}::${content}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ type, content });
+  }
+
+  return out;
+}
+
+function buildAnnotationPrompt(options, project) {
+  const chars = (project?.libraries?.characters || []).slice(0, 8).map(c => c.name).filter(Boolean);
+  const locs = (project?.libraries?.locations || []).slice(0, 6).map(l => l.name).filter(Boolean);
+  const themes = (project?.libraries?.themes || []).slice(0, 6).map(t => t.name).filter(Boolean);
+  const arc = project?.selectedArc || project?.blueprint?.arc || 'heros_journey';
+
+  return `Generate CNL guidance annotations for narrative prose generation.
+
+Return JSON only:
+{
+  "annotations": [
+    { "type": "hint", "content": "..." },
+    { "type": "style", "content": "..." }
+  ]
+}
+
+Rules:
+- 8 to 12 annotations.
+- Use only types: hint, style, avoid, voice, subtext, sensory, pacing, reveal.
+- Content must be precise, actionable, and consistent with declared entities.
+- No markdown, no commentary.
+
+Context:
+- Story name: ${options?.storyName || options?.title || project?.name || 'Untitled Story'}
+- Genre: ${options?.genre || 'unknown'}
+- Tone: ${options?.tone || 'balanced'}
+- Length: ${options?.length || 'medium'}
+- Complexity: ${options?.complexity || 'medium'}
+- Arc: ${arc}
+- Characters: ${chars.join(', ') || 'none'}
+- Locations: ${locs.join(', ') || 'none'}
+- Themes: ${themes.join(', ') || 'none'}
+`;
+}
+
+async function generateLLMAnnotations(options, project) {
+  if (!agentAvailable) return [];
+
+  const agent = new LLMAgent({
+    name: 'ScriptaAnnotationGenerator',
+    systemPrompt: 'You generate concise CNL annotations for story generation guidance. Return valid JSON only.'
+  });
+
+  const prompt = buildAnnotationPrompt(options, project);
+  const completeOptions = {
+    prompt,
+    mode: 'fast',
+    maxTokens: 1800
+  };
+
+  if (options?.model) {
+    completeOptions.model = options.model;
+  }
+
+  try {
+    const response = await agent.complete(completeOptions);
+    const content = response?.content || response?.text || response;
+    const parsed = parseJSONResponse(content);
+    const annotations = normalizeLLMAnnotations(parsed?.annotations);
+    return annotations;
+  } catch (err) {
+    console.warn('[LLM Provider] Annotation generation failed:', err?.message || err);
+    return [];
+  }
+}
+
 async function repairJsonWithLLM({ model, originalContent }) {
   const agent = new LLMAgent({
     name: 'ScriptaJSONRepair',
@@ -313,7 +403,9 @@ export async function generateStoryWithLLM(options) {
     throw new Error('LLM returned JSON but no project payload was found.');
   }
 
-  return { project };
+  const annotations = await generateLLMAnnotations(options, project);
+
+  return { project, annotations };
 }
 
 /**

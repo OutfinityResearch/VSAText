@@ -796,6 +796,20 @@
       return html;
     }
     
+    function initializeAccordions() {
+      const sections = contentEl.querySelectorAll('.accordion-section');
+      sections.forEach(section => {
+        const button = section.querySelector('.accordion-header');
+        if (!button) return;
+        button.setAttribute('aria-expanded', section.classList.contains('open') ? 'true' : 'false');
+        button.addEventListener('click', () => {
+          const isOpen = section.classList.contains('open');
+          section.classList.toggle('open');
+          button.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+        });
+      });
+    }
+    
     const contentEl = document.getElementById('docs-content');
     let currentPageName = null;
     
@@ -832,6 +846,9 @@
         
         // Attach click handlers to in-content links
         attachContentLinkHandlers();
+        
+        // Initialize interactive content widgets
+        initializeAccordions();
         
         // Update URL hash
         history.pushState(null, '', '#' + pageName);

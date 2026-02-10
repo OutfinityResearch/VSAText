@@ -16,6 +16,7 @@ import {
   hideGenerationStatus
 } from './generation-utils.mjs';
 import { updateGenerateButton } from './generation-improve.mjs';
+import { applyGenerationAnnotations } from './generation-annotations.mjs';
 
 /**
  * Generate story using LLM to create CNL specification
@@ -78,6 +79,12 @@ export async function generateLLM(options) {
       updateGenerationStatus(statusEl, 'Loading project data...', 80);
       loadProjectData(projectData);
     }
+
+    applyGenerationAnnotations(state.project, {
+      strategy: 'llm',
+      options,
+      llmAnnotations: result?.annotations || []
+    });
     
     updateGenerationStatus(statusEl, 'Complete!', 100);
     

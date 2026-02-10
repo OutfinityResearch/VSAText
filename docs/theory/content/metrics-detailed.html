@@ -16,7 +16,7 @@
         
         <div class="info-box">
           <div class="info-box-title">Technical Specification</div>
-          <p>See <a href="../specs/DS14-Metric-Character-Attribute-Drift.md">DS14-Metric-Character-Attribute-Drift.md</a></p>
+          <p>See <a href="../viewer.html?doc=specs/DS14-Metric-Character-Attribute-Drift.md">DS14-Metric-Character-Attribute-Drift.md</a></p>
         </div>
         
         <h4>How It Works</h4>
@@ -88,7 +88,7 @@ CAD = average(drift across all characters and windows)</code></pre>
         
         <div class="info-box">
           <div class="info-box-title">Technical Specification</div>
-          <p>See <a href="../specs/DS15-Metric-Compliance-Adherence-Rate.md">DS15-Metric-Compliance-Adherence-Rate.md</a></p>
+          <p>See <a href="../viewer.html?doc=specs/DS15-Metric-Compliance-Adherence-Rate.md">DS15-Metric-Compliance-Adherence-Rate.md</a></p>
         </div>
         
         <h4>Guardrail Categories</h4>
@@ -152,7 +152,7 @@ CAR_lenient = (pass_count + warn_count) / total_artifacts</code></pre>
         
         <div class="info-box">
           <div class="info-box-title">Technical Specification</div>
-          <p>See <a href="../specs/DS16-Metric-Originality-Index.md">DS16-Metric-Originality-Index.md</a></p>
+          <p>See <a href="../viewer.html?doc=specs/DS16-Metric-Originality-Index.md">DS16-Metric-Originality-Index.md</a></p>
         </div>
         
         <h4>How It Works (Full Implementation)</h4>
@@ -219,7 +219,7 @@ CAR_lenient = (pass_count + warn_count) / total_artifacts</code></pre>
         
         <div class="info-box">
           <div class="info-box-title">Technical Specification</div>
-          <p>See <a href="../specs/DS20-Metric-CNL-Parse-Success-Rate.md">DS20-Metric-CNL-Parse-Success-Rate.md</a></p>
+          <p>See <a href="../viewer.html?doc=specs/DS20-Metric-CNL-Parse-Success-Rate.md">DS20-Metric-CNL-Parse-Success-Rate.md</a></p>
         </div>
         
         <h4>What Counts as Success</h4>
@@ -251,7 +251,7 @@ CAR_lenient = (pass_count + warn_count) / total_artifacts</code></pre>
         
         <div class="info-box">
           <div class="info-box-title">Technical Specification</div>
-          <p>See <a href="../specs/DS21-Metric-Constraint-Satisfaction-Accuracy.md">DS21-Metric-Constraint-Satisfaction-Accuracy.md</a></p>
+          <p>See <a href="../viewer.html?doc=specs/DS21-Metric-Constraint-Satisfaction-Accuracy.md">DS21-Metric-Constraint-Satisfaction-Accuracy.md</a></p>
         </div>
         
         <h4>Constraint Types</h4>
@@ -305,7 +305,7 @@ CAR_lenient = (pass_count + warn_count) / total_artifacts</code></pre>
         
         <div class="info-box">
           <div class="info-box-title">Technical Specification</div>
-          <p>See <a href="../specs/DS18-Metric-Retrieval-Quality.md">DS18-Metric-Retrieval-Quality.md</a></p>
+          <p>See <a href="../viewer.html?doc=specs/DS18-Metric-Retrieval-Quality.md">DS18-Metric-Retrieval-Quality.md</a></p>
         </div>
         
         <h4>How It Works</h4>
@@ -348,7 +348,7 @@ Where rank_i is the position of the first relevant result for query i.</code></p
         
         <div class="info-box">
           <div class="info-box-title">Technical Specification</div>
-          <p>See <a href="../specs/DS22-Metric-Explainability-Score.md">DS22-Metric-Explainability-Score.md</a></p>
+          <p>See <a href="../viewer.html?doc=specs/DS22-Metric-Explainability-Score.md">DS22-Metric-Explainability-Score.md</a></p>
         </div>
         
         <h4>Scoring Components (0-5 rating)</h4>
@@ -415,16 +415,3 @@ Where rank_i is the position of the first relevant result for query i.</code></p
     <li><a href="#metrics-diagnostics" data-page="metrics-diagnostics">Diagnostics Guide</a> - Fixing low scores</li>
   </ul>
 </section>
-
-<script>
-// Accordion functionality
-document.querySelectorAll('.accordion-header').forEach(button => {
-  button.addEventListener('click', () => {
-    const section = button.parentElement;
-    const isOpen = section.classList.contains('open');
-    
-    section.classList.toggle('open');
-    button.setAttribute('aria-expanded', !isOpen);
-  });
-});
-</script>

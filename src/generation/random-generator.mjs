@@ -24,6 +24,16 @@ import { NARRATIVE_ARCS, GENRE_CONFIG, MOODS_BY_TONE, COUNTS } from './random-ge
 import { generateBlueprint } from './random-generator-blueprint.mjs';
 import { pick, pickN } from './random-generator-utils.mjs';
 import { generateStructure, applyBeatTitles, ensureAllCharactersAppear } from './random-generator-structure.mjs';
+import { serializeToCNL } from '../services/cnl-serializer.mjs';
+import { evaluateCNL } from '../evaluate.mjs';
+
+const DEFAULT_QUALITY_GATE = {
+  enabled: false,
+  maxAttempts: 6,
+  minNQS: 0.70,
+  minCoherence: 0.72,
+  minCompleteness: 0.80
+};
 
 // ============================================
 // HELPER FUNCTIONS
@@ -224,6 +234,80 @@ function generateWorldRules(config, rulesSetting) {
  * @returns {Object} Complete story structure
  */
 export function generateRandomStory(options = {}) {
+  const qualityGate = normalizeQualityGate(options.qualityGate);
+  if (!qualityGate.enabled) {
+    return generateRandomStoryOnce(options);
+  }
+
+  let bestProject = null;
+  let bestEval = null;
+  let bestScore = -1;
+  let attempts = 0;
+
+  for (let attempt = 1; attempt <= qualityGate.maxAttempts; attempt++) {
+    attempts = attempt;
+    const candidate = generateRandomStoryOnce(options);
+    const evalResult = evaluateCNL(serializeToCNL(candidate));
+    const score = evalResult.success ? (evalResult.summary?.nqs || 0) : 0;
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestProject = candidate;
+      bestEval = evalResult;
+    }
+
+    if (passesQualityGate(evalResult, qualityGate)) {
+      return {
+        ...candidate,
+        qualityGate: {
+          enabled: true,
+          passed: true,
+          attempts,
+          thresholds: qualityGate,
+          summary: evalResult.summary
+        }
+      };
+    }
+  }
+
+  return {
+    ...(bestProject || generateRandomStoryOnce(options)),
+    qualityGate: {
+      enabled: true,
+      passed: false,
+      attempts,
+      thresholds: qualityGate,
+      summary: bestEval?.summary || null
+    }
+  };
+}
+
+function normalizeQualityGate(raw) {
+  if (!raw) return { ...DEFAULT_QUALITY_GATE };
+  if (raw === true) return { ...DEFAULT_QUALITY_GATE, enabled: true };
+  if (typeof raw !== 'object') return { ...DEFAULT_QUALITY_GATE };
+  return {
+    ...DEFAULT_QUALITY_GATE,
+    ...raw,
+    enabled: raw.enabled !== undefined ? Boolean(raw.enabled) : true,
+    maxAttempts: Number.isInteger(raw.maxAttempts) ? Math.max(1, raw.maxAttempts) : DEFAULT_QUALITY_GATE.maxAttempts
+  };
+}
+
+function passesQualityGate(evalResult, gate) {
+  if (!evalResult?.success) return false;
+  const nqs = evalResult.summary?.nqs || 0;
+  const coherence = evalResult.metrics?.coherence?.score || 0;
+  const completeness = evalResult.metrics?.completeness?.score || 0;
+
+  return (
+    nqs >= gate.minNQS &&
+    coherence >= gate.minCoherence &&
+    completeness >= gate.minCompleteness
+  );
+}
+
+function generateRandomStoryOnce(options = {}) {
   const config = getConfig(options.genre);
 
   // Calculate counts
@@ -275,4 +359,3 @@ export function generateRandomStory(options = {}) {
 export { NARRATIVE_ARCS, GENRE_CONFIG, COUNTS };
 
 export default generateRandomStory;
-

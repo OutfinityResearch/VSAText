@@ -25,7 +25,7 @@
   <tr>
     <th>Property</th>
     <th>Description</th>
-    <th>Options</th>
+    <th>Examples</th>
   </tr>
   <tr>
     <td>Name</td>
@@ -57,7 +57,19 @@
     <td>Associated narrative beat</td>
     <td>Any beat from selected arc</td>
   </tr>
+  <tr>
+    <td>Conflict Type</td>
+    <td>Type of conflict expressed in the dialogue</td>
+    <td>internal, interpersonal, ideological, strategic</td>
+  </tr>
+  <tr>
+    <td>Subtext</td>
+    <td>What is implied but not explicitly stated</td>
+    <td>resentment, desire, fear, hidden secrets</td>
+  </tr>
 </table>
+
+<p>The added properties support deeper dialogue analysis by separating explicit speech from implied intent and conflict framing, consistent with scene-driven dialogue craft approaches (McKee, <em>Story</em> and <em>Dialogue</em>).</p>
 
 <h2>Dialogue Purposes</h2>
 
@@ -148,7 +160,39 @@
     <td>Rough version of the line</td>
     <td>"Tell me what really happened!"</td>
   </tr>
+  <tr>
+    <td>Information</td>
+    <td>New information introduced or clarified by the exchange</td>
+    <td>"It wasn't me who betrayed you. It was your brother."</td>
+  </tr>
+  <tr>
+    <td>Relationship Between Characters</td>
+    <td>Shift in emotional or power dynamics between speakers</td>
+    <td>Mentor -> potential adversary</td>
+  </tr>
+  <tr>
+    <td>Power</td>
+    <td>Who gains or loses control in the exchange</td>
+    <td>"Did you forget that I have the letter?"</td>
+  </tr>
+  <tr>
+    <td>Emotion Shift</td>
+    <td>Emotional transition caused by the exchange</td>
+    <td>calm -> anger, trust -> fear</td>
+  </tr>
+  <tr>
+    <td>Story Direction</td>
+    <td>How the exchange redirects the narrative path</td>
+    <td>"I never was. It was all part of my plan."</td>
+  </tr>
+  <tr>
+    <td>Reader Perception</td>
+    <td>How audience interpretation of characters/situation changes</td>
+    <td>ally perceived as manipulator after revelation</td>
+  </tr>
 </table>
+
+<p>All exchange properties are intended to be editable and persistable when creating or updating a dialogue exchange entry.</p>
 
 <h2>Step-by-Step: Creating a Dialogue</h2>
 
@@ -163,7 +207,8 @@
     <ul>
       <li>Select speaker</li>
       <li>Describe their intent</li>
-      <li>Note their emotion</li>
+      <li>Note their emotion and subtext</li>
+      <li>Fill impact fields (information, relationship shift, power, story direction, reader perception)</li>
       <li>Optionally sketch the line</li>
     </ul>
   </li>
@@ -190,6 +235,12 @@ D3 involves Marcus as listener
 D3 exchange begin
   Anna says intent "demand truth"
   Anna says emotion anger
+  Anna says subtext "fear of abandonment"
+  Anna says information "betrayer is Marcus's brother"
+  Anna says relationship_between_characters "mentor to potential adversary"
+  Anna says power "Anna gains leverage"
+  Anna says story_direction "forces immediate confrontation"
+  Anna says reader_perception "Marcus may be complicit"
   Anna says sketch "I know you've been hiding something."
   #avoid: shouting; cold anger is more powerful.
   

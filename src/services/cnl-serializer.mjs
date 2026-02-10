@@ -9,6 +9,42 @@
 
 import { formatId } from '../utils/format.mjs';
 
+const ANNOTATION_TYPES = new Set([
+  'example', 'hint', 'style', 'avoid', 'voice', 'subtext',
+  'sensory', 'pacing', 'reference', 'context', 'contrast', 'reveal'
+]);
+
+function normalizeAnnotations(annotations) {
+  if (!Array.isArray(annotations)) return [];
+  const normalized = [];
+  for (const ann of annotations) {
+    const type = String(ann?.type || '').trim().toLowerCase();
+    const content = String(ann?.content ?? '').trim();
+    if (!ANNOTATION_TYPES.has(type) || !content) continue;
+    normalized.push({ type, content });
+  }
+  return normalized;
+}
+
+function appendAnnotations(lines, annotations, indent = '') {
+  const normalized = normalizeAnnotations(annotations);
+  for (const ann of normalized) {
+    if (ann.content.includes('\n')) {
+      lines.push(`${indent}#${ann.type}: begin`);
+      ann.content.split('\n').forEach(line => lines.push(`${indent}${line}`));
+      lines.push(`${indent}#${ann.type}: end`);
+      continue;
+    }
+    lines.push(`${indent}#${ann.type}: ${ann.content}`);
+  }
+}
+
+function annotationLines(annotations, indent = '') {
+  const lines = [];
+  appendAnnotations(lines, annotations, indent);
+  return lines;
+}
+
 /**
  * Serialize a project to CNL format
  * 
@@ -35,6 +71,7 @@ export function serializeToCNL(project) {
   lines.push(`#hint: Treat this CNL as a deterministic specification. Do not invent new plot events, characters, or world rules.`);
   lines.push(`#hint: Use SVO statements as ground truth (WHAT). Use #example/#voice/#subtext/#style annotations to guide prose (HOW).`);
   lines.push(`#avoid: Adding named entities that are not declared or included in scenes.`);
+  appendAnnotations(lines, project.cnlAnnotations?.global);
   lines.push('');
   
   const libraries = project.libraries || {};
@@ -81,6 +118,7 @@ function serializeBlueprint(lines, blueprint, libraries) {
       let loc = m.chapterId;
       if (m.sceneId) loc += `.${m.sceneId}`;
       lines.push(`Beat ${m.beatKey} mapped to ${loc}`);
+      appendAnnotations(lines, m.annotations);
       if (m.tension) {
         lines.push(`${m.beatKey} has tension ${m.tension}`);
       }
@@ -120,6 +158,7 @@ function serializeDialogues(lines, dialogues, characters) {
       ? `${d.location.chapterId}${d.location.sceneId ? '.' + d.location.sceneId : ''}`
       : 'TBD';
     lines.push(`Dialogue ${d.id} at ${loc}`);
+    appendAnnotations(lines, d.annotations);
     
     if (d.purpose) lines.push(`${d.id} has purpose ${d.purpose}`);
     if (d.tone) lines.push(`${d.id} has tone ${d.tone}`);
@@ -139,8 +178,17 @@ function serializeDialogues(lines, dialogues, characters) {
         const speaker = characters?.find(c => c.id === ex.speakerId);
         const speakerName = speaker ? formatId(speaker.name) : ex.speakerId;
         if (ex.intent) lines.push(`  ${speakerName} says intent "${ex.intent}"`);
+        if (ex.conflictType) lines.push(`  ${speakerName} says conflict_type ${formatId(ex.conflictType)}`);
         if (ex.emotion) lines.push(`  ${speakerName} says emotion ${ex.emotion}`);
+        if (ex.subtext) lines.push(`  ${speakerName} says subtext "${ex.subtext}"`);
+        if (ex.information) lines.push(`  ${speakerName} says information "${ex.information}"`);
+        if (ex.relationshipBetweenCharacters) lines.push(`  ${speakerName} says relationship_between "${ex.relationshipBetweenCharacters}"`);
+        if (ex.power) lines.push(`  ${speakerName} says power "${ex.power}"`);
+        if (ex.emotionShift) lines.push(`  ${speakerName} says emotion_shift "${ex.emotionShift}"`);
+        if (ex.storyDirection) lines.push(`  ${speakerName} says story_direction "${ex.storyDirection}"`);
+        if (ex.readerPerception) lines.push(`  ${speakerName} says reader_perception "${ex.readerPerception}"`);
         if (ex.sketch) lines.push(`  ${speakerName} says sketch "${ex.sketch}"`);
+        appendAnnotations(lines, ex.annotations, '  ');
       });
       lines.push(`${d.id} exchange end`);
     }
@@ -209,7 +257,12 @@ function serializeCharacters(lines, characters) {
   lines.push('// Characters');
   characters.forEach(c => {
     lines.push(`${formatId(c.name)} is ${c.archetype || 'character'}`);
+    appendAnnotations(lines, c.annotations);
     c.traits?.forEach(t => lines.push(`${formatId(c.name)} has trait ${t}`));
+    if (c.motivation) lines.push(`${formatId(c.name)} has motivation "${c.motivation}"`);
+    if (c.backstory) lines.push(`${formatId(c.name)} has backstory "${c.backstory}"`);
+    if (c.objectives) lines.push(`${formatId(c.name)} has goals "${c.objectives}"`);
+    if (c.secrets) lines.push(`${formatId(c.name)} has secrets "${c.secrets}"`);
   });
   lines.push('');
 }
@@ -226,6 +279,7 @@ function serializeRelationships(lines, relationships, characters) {
     const to = characters?.find(c => c.id === r.toId);
     if (from && to) {
       lines.push(`${formatId(from.name)} relates to ${formatId(to.name)} as ${r.type}`);
+      appendAnnotations(lines, r.annotations);
     }
   });
   lines.push('');
@@ -240,6 +294,7 @@ function serializeLocations(lines, locations) {
   lines.push('// Locations');
   locations.forEach(l => {
     lines.push(`${formatId(l.name)} is location`);
+    appendAnnotations(lines, l.annotations);
     if (l.geography) lines.push(`${formatId(l.name)} has geography ${l.geography}`);
     if (l.time) lines.push(`${formatId(l.name)} has era ${l.time}`);
     l.characteristics?.forEach(c => lines.push(`${formatId(l.name)} has characteristic ${c}`));
@@ -256,7 +311,10 @@ function serializeObjects(lines, objects, characters) {
   lines.push('// Objects');
   objects.forEach(o => {
     lines.push(`${formatId(o.name)} is ${o.objectType || 'object'}`);
+    appendAnnotations(lines, o.annotations);
     if (o.significance) lines.push(`${formatId(o.name)} has significance ${o.significance}`);
+    if (o.function) lines.push(`${formatId(o.name)} has function "${o.function}"`);
+    if (o.symbolism) lines.push(`${formatId(o.name)} has symbolism "${o.symbolism}"`);
     if (o.ownerId) {
       const owner = characters?.find(c => c.id === o.ownerId);
       if (owner) lines.push(`${formatId(owner.name)} owns ${formatId(o.name)}`);
@@ -274,6 +332,7 @@ function serializeMoods(lines, moods) {
   lines.push('// Scene Moods');
   moods.forEach(m => {
     lines.push(`${formatId(m.name)} is mood`);
+    appendAnnotations(lines, m.annotations);
     Object.entries(m.emotions || {}).forEach(([e, i]) => 
       lines.push(`${formatId(m.name)} has emotion ${e} ${i}`)
     );
@@ -291,6 +350,7 @@ function serializeThemes(lines, themes) {
   themes.forEach((t, idx) => {
     const role = idx === 0 ? 'primary' : 'secondary';
     lines.push(`Story has theme ${formatId(t.name)} as ${role}`);
+    appendAnnotations(lines, t.annotations);
   });
   lines.push('');
 }
@@ -306,6 +366,7 @@ function serializeWisdom(lines, wisdom) {
     const wid = `W${idx + 1}`;
     lines.push(`${wid} is wisdom`);
     lines.push(`${wid} has label "${w.label}"`);
+    appendAnnotations(lines, w.annotations);
     if (w.category) lines.push(`${wid} has category ${formatId(w.category)}`);
     if (w.insight) {
       lines.push(`${wid} has insight "${w.insight}"`);
@@ -330,6 +391,7 @@ function serializePatterns(lines, patterns) {
     const pid = `P${idx + 1}`;
     lines.push(`${pid} is pattern`);
     lines.push(`${pid} has label "${p.label}"`);
+    appendAnnotations(lines, p.annotations);
     if (p.patternType) {
       lines.push(`${pid} has type ${formatId(p.patternType)}`);
       lines.push('#hint: Patterns constrain plot shape; avoid random twists that break the declared pattern.');
@@ -373,6 +435,9 @@ function serializeNode(node, depth) {
     if (node.title) {
       result += `${indent}  ${formatId(node.name)} has title "${node.title}"\n`;
     }
+    for (const annLine of annotationLines(node.annotations || [], `${indent}  `)) {
+      result += `${annLine}\n`;
+    }
     
     (node.children || []).forEach(child => {
       if (child.type === 'action') {
@@ -380,6 +445,9 @@ function serializeNode(node, depth) {
         result += `${indent}  ${formatId(act.subject)} ${formatActionVerb(act.action)}`;
         if (act.target) result += ` ${formatId(act.target)}`;
         result += '\n';
+        for (const annLine of annotationLines(child.annotations || [], `${indent}  `)) {
+          result += `${annLine}\n`;
+        }
       } else if (child.type === 'dialogue' && child.dialogueData) {
         // Inline dialogue node
         const dd = child.dialogueData;

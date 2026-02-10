@@ -51,6 +51,11 @@
   cursor: pointer;
 }
 .modal-close:hover { border-color: var(--accent-rose); color: var(--accent-rose); }
+.modal-close:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
 
 .modal-body { padding: 1rem; max-height: 60vh; overflow-y: auto; }
 .modal-footer { padding: 0.8rem 1rem; border-top: 1px solid var(--bg-elevated); display: flex; justify-content: flex-end; gap: 0.4rem; }

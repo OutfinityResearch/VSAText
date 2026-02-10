@@ -182,17 +182,7 @@ function switchToGroup(groupKey, preferredView = null) {
   showLeafView(targetView, groupKey);
 }
 
-// ==================== INITIALIZATION ====================
-async function init() {
-  // Load blueprint data
-  await loadBlueprintData();
-  
-  // Initialize persistence (autosave, beforeunload)
-  initPersistence();
-  
-  // Setup context menu
-  setupContextMenu();
-  
+function bindCoreButtons() {
   // Header buttons
   $('#btn-load').onclick = loadProjectsList;
   $('#btn-generate').onclick = () => {
@@ -205,6 +195,25 @@ async function init() {
   $('#btn-new').onclick = newProject;
   $('#btn-evaluate').onclick = evaluateMetrics;
   $('#btn-docs')?.addEventListener('click', () => window.open('/docs/theory/index.html', '_blank'));
+}
+
+// ==================== INITIALIZATION ====================
+async function init() {
+  // Bind critical actions first so UI remains responsive even if async bootstrapping is slow/fails.
+  bindCoreButtons();
+
+  // Load blueprint data
+  try {
+    await loadBlueprintData();
+  } catch (err) {
+    console.error('Blueprint data bootstrap failed:', err);
+  }
+  
+  // Initialize persistence (autosave, beforeunload)
+  initPersistence();
+  
+  // Setup context menu
+  setupContextMenu();
   
   // Zoom controls
   setupZoomControls();

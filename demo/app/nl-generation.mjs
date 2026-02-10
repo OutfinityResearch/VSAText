@@ -24,6 +24,85 @@ import {
 // Track NL generation state
 let isGenerating = false;
 let hasGeneratedNL = false;
+let activeGeneration = null;
+let isRetryingFailedSections = false;
+let retryController = null;
+
+function makeAbortError(message = 'Generation cancelled') {
+  const err = new Error(message);
+  err.name = 'AbortError';
+  return err;
+}
+
+function isAbortError(err) {
+  if (!err) return false;
+  if (err.name === 'AbortError') return true;
+  const msg = String(err.message || '').toLowerCase();
+  return msg.includes('abort') || msg.includes('cancel');
+}
+
+function ensureNotAborted(signal) {
+  if (signal?.aborted) {
+    throw makeAbortError();
+  }
+}
+
+function startNLGenerationSession() {
+  const controller = new AbortController();
+  activeGeneration = {
+    controller,
+    cancelledByUser: false,
+    previousStory: getGeneratedStory() || '',
+    previousHasGeneratedNL: hasGeneratedNL
+  };
+  return activeGeneration;
+}
+
+function restoreBeforeGeneration(session) {
+  if (!session) return;
+
+  hasGeneratedNL = Boolean(session.previousHasGeneratedNL);
+
+  if (session.previousStory && session.previousStory.trim().length > 0) {
+    setGeneratedStory(session.previousStory);
+    displayNLContent(session.previousStory);
+    enablePreviewButton();
+  } else {
+    setGeneratedStory('');
+    resetNLContent();
+    $('#btn-nl-preview')?.setAttribute('disabled', 'disabled');
+  }
+
+  updateNLGenerateButton();
+}
+
+export function cancelNLGeneration(notify = true) {
+  if (!isGenerating || !activeGeneration) return;
+  if (activeGeneration.cancelledByUser) return;
+
+  activeGeneration.cancelledByUser = true;
+  try {
+    activeGeneration.controller.abort();
+  } catch {
+    // Ignore abort errors.
+  }
+
+  if (notify) {
+    showNotification?.('Stopping story generation...', 'warning');
+  }
+}
+
+function cancelRetryGeneration(notify = true) {
+  if (!isRetryingFailedSections || !retryController) return;
+  try {
+    retryController.abort();
+  } catch {
+    // Ignore abort errors.
+  }
+  if (notify) {
+    showNotification?.('Stopping retry generation...', 'warning');
+  }
+}
 
 // Lazy import for persistence to avoid circular dependency
 let persistenceModule = null;
@@ -87,12 +166,12 @@ function extractChaptersFromProject() {
  */
 export async function generateNLStory() {
   if (isGenerating) {
-    showNotification?.('Generation already in progress', 'info');
+    cancelNLGeneration(true);
     return;
   }
-  
-  // Block interface
+
   isGenerating = true;
+  const session = startNLGenerationSession();
   showNLLoadingState();
   
   try {
@@ -122,18 +201,24 @@ export async function generateNLStory() {
     
     if (chapters.length > 1) {
       // Use streaming generation for multi-chapter stories
-      await generateNLStoryStreaming(cnl, options, chapters);
+      await generateNLStoryStreaming(cnl, options, chapters, session.controller.signal);
     } else {
       // Use regular generation for single chapter or no structure
-      await generateNLStorySingle(cnl, options);
+      await generateNLStorySingle(cnl, options, session.controller.signal);
     }
     
   } catch (err) {
-    console.error('NL Generation error:', err);
-    showNotification?.('Generation failed: ' + err.message, 'error');
-    showNLErrorState(err.message);
+    if (session.cancelledByUser || isAbortError(err)) {
+      restoreBeforeGeneration(session);
+      showNotification?.('Generation cancelled. In-progress output was discarded.', 'warning');
+    } else {
+      console.error('NL Generation error:', err);
+      showNotification?.('Generation failed: ' + err.message, 'error');
+      showNLErrorState(err.message);
+    }
   } finally {
     isGenerating = false;
+    activeGeneration = null;
     hideNLLoadingState();
   }
 }
@@ -141,7 +226,8 @@ export async function generateNLStory() {
 /**
  * Generate story using single API call (for simple stories)
  */
-async function generateNLStorySingle(cnl, options) {
+async function generateNLStorySingle(cnl, options, signal) {
+  ensureNotAborted(signal);
   updateNLLoadingState('Connecting to LLM API...', 10);
   
   const response = await fetch('/v1/generate/nl-story', {
@@ -151,8 +237,10 @@ async function generateNLStorySingle(cnl, options) {
       cnl: cnl,
       storyName: state.project.name,
       options
-    })
+    }),
+    signal
   });
+  ensureNotAborted(signal);
   
   updateNLLoadingState('Generating story...', 40);
   
@@ -162,6 +250,7 @@ async function generateNLStorySingle(cnl, options) {
   }
   
   const result = await response.json();
+  ensureNotAborted(signal);
   
   if (!result.story) {
     throw new Error('No story generated. Check API configuration.');
@@ -173,6 +262,7 @@ async function generateNLStorySingle(cnl, options) {
   const language = options.language || 'en';
   const model = options.model || 'default';
   await saveStoryVersion(result.story, language, model);
+  ensureNotAborted(signal);
   
   updateNLLoadingState('Rendering story...', 95);
   
@@ -196,87 +286,106 @@ async function generateNLStorySingle(cnl, options) {
 /**
  * Generate story using SSE streaming (chapter by chapter)
  */
-async function generateNLStoryStreaming(cnl, options, chapters) {
-  return new Promise((resolve, reject) => {
-    const requestBody = JSON.stringify({
-      cnl,
-      storyName: state.project.name,
-      options,
-      chapters
-    });
-    
-    // We need to use fetch with POST and manually handle SSE
-    // because EventSource only supports GET
-    fetch('/v1/generate/nl-story/stream', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: requestBody
-    }).then(async response => {
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({ error: { message: 'Server error' } }));
-        throw new Error(err.error?.message || `Server error: ${response.status}`);
-      }
-      
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let fullStory = '';
-      
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        buffer += decoder.decode(value, { stream: true });
-        
-        // Process SSE events
-        const lines = buffer.split('\n');
-        buffer = lines.pop(); // Keep incomplete line in buffer
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const event = JSON.parse(line.slice(6));
-              handleStreamEvent(event, (story) => { fullStory = story; });
-            } catch (e) {
-              console.warn('Failed to parse SSE event:', e);
-            }
-          }
-        }
-      }
-      
-      // Process any remaining buffer
-      if (buffer.startsWith('data: ')) {
-        try {
-          const event = JSON.parse(buffer.slice(6));
-          handleStreamEvent(event, (story) => { fullStory = story; });
-        } catch (e) {
-          // Ignore
-        }
-      }
-      
-      if (fullStory) {
-        // Save as a new version
-        const language = options.language || 'en';
-        const model = options.model || 'default';
-        await saveStoryVersion(fullStory, language, model);
-        
-        setGeneratedStory(fullStory);
-        displayNLContent(fullStory);
-        hasGeneratedNL = true;
-        updateNLGenerateButton();
-        enablePreviewButton();
-        
-        // Mark project as dirty (lazy import)
-        const persistence = await getPersistence();
-        persistence.markDirty();
-        
-        showNotification?.('Story generated and saved!', 'success');
-      }
-      
-      resolve();
-      
-    }).catch(reject);
+async function generateNLStoryStreaming(cnl, options, chapters, signal) {
+  ensureNotAborted(signal);
+
+  const requestBody = JSON.stringify({
+    cnl,
+    storyName: state.project.name,
+    options,
+    chapters
   });
+  
+  // We need to use fetch with POST and manually handle SSE
+  // because EventSource only supports GET
+  const response = await fetch('/v1/generate/nl-story/stream', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: requestBody,
+    signal
+  });
+  ensureNotAborted(signal);
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ error: { message: 'Server error' } }));
+    throw new Error(err.error?.message || `Server error: ${response.status}`);
+  }
+
+  const reader = response.body?.getReader?.();
+  if (!reader) {
+    throw new Error('Streaming response not available');
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let fullStory = '';
+
+  while (true) {
+    ensureNotAborted(signal);
+    const { done, value } = await reader.read();
+    if (done) break;
+    
+    buffer += decoder.decode(value, { stream: true });
+    
+    // Process SSE events
+    const lines = buffer.split('\n');
+    buffer = lines.pop(); // Keep incomplete line in buffer
+    
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+
+      const payload = line.slice(6);
+      let event = null;
+      try {
+        event = JSON.parse(payload);
+      } catch (e) {
+        console.warn('Failed to parse SSE event:', e);
+        continue;
+      }
+
+      const fatalError = handleStreamEvent(event, (story) => { fullStory = story; });
+      if (fatalError) {
+        throw fatalError;
+      }
+    }
+  }
+
+  // Process any remaining buffer
+  if (buffer.startsWith('data: ')) {
+    try {
+      const event = JSON.parse(buffer.slice(6));
+      const fatalError = handleStreamEvent(event, (story) => { fullStory = story; });
+      if (fatalError) throw fatalError;
+    } catch (e) {
+      if (!isAbortError(e)) {
+        console.warn('Failed to parse trailing SSE event:', e);
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  ensureNotAborted(signal);
+
+  if (fullStory) {
+    // Save as a new version
+    const language = options.language || 'en';
+    const model = options.model || 'default';
+    await saveStoryVersion(fullStory, language, model);
+    ensureNotAborted(signal);
+    
+    setGeneratedStory(fullStory);
+    displayNLContent(fullStory);
+    hasGeneratedNL = true;
+    updateNLGenerateButton();
+    enablePreviewButton();
+    
+    // Mark project as dirty (lazy import)
+    const persistence = await getPersistence();
+    persistence.markDirty();
+    
+    showNotification?.('Story generated and saved!', 'success');
+  }
 }
 
 /**
@@ -398,8 +507,10 @@ function handleStreamEvent(event, setFullStory) {
       break;
       
     case 'error':
-      throw new Error(event.message || 'Generation failed');
+      return new Error(event.message || 'Generation failed');
   }
+
+  return null;
 }
 
 /**
@@ -467,13 +578,22 @@ window.retryFailedSections = async function() {
     showNotification?.('No failed sections to retry', 'info');
     return;
   }
-  
+
+  if (isRetryingFailedSections) {
+    cancelRetryGeneration(true);
+    return;
+  }
+
   const retryBtn = document.querySelector('.nl-retry-section .btn');
   if (retryBtn) {
-    retryBtn.disabled = true;
-    retryBtn.textContent = 'Retrying...';
+    retryBtn.disabled = false;
+    retryBtn.classList.add('danger');
+    retryBtn.textContent = 'Stop Retry';
   }
-  
+
+  isRetryingFailedSections = true;
+  retryController = new AbortController();
+
   try {
     const response = await fetch('/v1/generate/nl-story/retry', {
       method: 'POST',
@@ -482,7 +602,8 @@ window.retryFailedSections = async function() {
         failedSections: sections,
         storyName: state.project.name,
         options: getGenerationOptions()
-      })
+      }),
+      signal: retryController.signal
     });
     
     if (!response.ok) {
@@ -520,18 +641,25 @@ window.retryFailedSections = async function() {
     } else {
       showNotification?.(`${successCount} sections regenerated, ${stillFailed.length} still failed`, 'warning');
       window._failedSections = stillFailed;
-      if (retryBtn) {
-        retryBtn.disabled = false;
-        retryBtn.textContent = `Retry Failed Sections (${stillFailed.length})`;
-      }
     }
     
   } catch (err) {
+    if (isAbortError(err)) {
+      showNotification?.('Retry cancelled.', 'warning');
+      return;
+    }
+
     console.error('Retry error:', err);
     showNotification?.('Retry failed: ' + err.message, 'error');
-    if (retryBtn) {
-      retryBtn.disabled = false;
-      retryBtn.textContent = `Retry Failed Sections (${sections.length})`;
+  } finally {
+    isRetryingFailedSections = false;
+    retryController = null;
+    const activeRetryBtn = document.querySelector('.nl-retry-section .btn');
+    if (activeRetryBtn) {
+      activeRetryBtn.disabled = false;
+      activeRetryBtn.classList.remove('danger');
+      const remaining = window._failedSections?.length || sections.length;
+      activeRetryBtn.textContent = `Retry Failed Sections (${remaining})`;
     }
   }
 };
@@ -548,10 +676,11 @@ function showNLLoadingState() {
   const content = $('#nl-content');
   
   if (btn) {
-    btn.disabled = true;
-    btn.classList.add('loading');
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.classList.add('danger');
     btn.dataset.originalText = btn.textContent;
-    btn.textContent = 'Generating...';
+    btn.textContent = 'Stop Story';
   }
   
   // Disable other NL buttons
@@ -568,8 +697,11 @@ function showNLLoadingState() {
           <div class="nl-progress-bar" style="width: 0%"></div>
         </div>
         <div class="nl-loading-status">Initializing...</div>
+        <button class="btn danger" id="btn-nl-stop-inline">Stop Generation</button>
       </div>
     `;
+
+    bindNLStopButton();
   }
 }
 
@@ -591,6 +723,9 @@ function showNLStreamingState() {
           <div class="nl-loading-progress">
             <div class="nl-progress-bar" style="width: 0%"></div>
           </div>
+          <div class="nl-streaming-actions">
+            <button class="btn danger small" id="btn-nl-stop-inline">Stop Generation</button>
+          </div>
         </div>
       </div>
       <div class="nl-streaming-content nl-markdown-content">
@@ -601,6 +736,8 @@ function showNLStreamingState() {
       </div>
     </div>
   `;
+
+  bindNLStopButton();
 }
 
 /**
@@ -656,14 +793,20 @@ function hideNLLoadingState() {
   if (btn) {
     btn.disabled = false;
     btn.classList.remove('loading');
-    if (btn.dataset.originalText) {
-      btn.textContent = hasGeneratedNL ? 'Improve Story' : 'Create Story';
-    }
+    btn.classList.remove('danger');
+    updateNLGenerateButton();
   }
   
   // Re-enable other buttons
   $('#btn-nl-copy')?.removeAttribute('disabled');
   $('#btn-nl-export')?.removeAttribute('disabled');
+}
+
+function bindNLStopButton() {
+  const inlineStopBtn = $('#btn-nl-stop-inline');
+  if (inlineStopBtn) {
+    inlineStopBtn.onclick = () => cancelNLGeneration(true);
+  }
 }
 
 /**
@@ -734,7 +877,14 @@ function showNLErrorState(errorMessage) {
 export function updateNLGenerateButton() {
   const btn = $('#btn-nl-generate');
   if (!btn) return;
-  
+
+  if (isGenerating) {
+    btn.textContent = 'Stop Story';
+    btn.classList.add('danger');
+    return;
+  }
+
+  btn.classList.remove('danger');
   btn.textContent = canImprove(hasGeneratedNL) ? 'Improve Story' : 'Create Story';
 }
 
@@ -760,8 +910,18 @@ function resetNLContent() {
  * Reset NL generation state (called on new project)
  */
 export function resetNLState() {
+  if (isGenerating) {
+    cancelNLGeneration(false);
+  }
+  if (isRetryingFailedSections) {
+    cancelRetryGeneration(false);
+  }
+
   hasGeneratedNL = false;
   isGenerating = false;
+  activeGeneration = null;
+  isRetryingFailedSections = false;
+  retryController = null;
   resetVersionState();
   resetBookPreview();
   
@@ -838,6 +998,8 @@ export function initNLGeneration() {
   // Load available models
   loadAvailableModels();
 }
+
+window.cancelNLGeneration = () => cancelNLGeneration(true);
 
 // Re-export for external use
 export { loadStoryVersions, openBookPreview, closeBookPreview };

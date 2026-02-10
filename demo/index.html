@@ -348,8 +348,33 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn" onclick="closeModal('generate-modal')">Cancel</button>
-        <button class="btn primary" onclick="executeGenerate()">Generate</button>
+        <button class="btn" id="btn-generate-cancel">Cancel</button>
+        <button class="btn primary" id="btn-generate-execute" onclick="executeGenerate()">Generate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Blocking Generation Progress Modal (LLM initial specs) -->
+  <div class="modal-overlay" id="generation-progress-modal">
+    <div class="modal" style="max-width: 560px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="generation-progress-title">Generating Specs with LLM</h2>
+      </div>
+      <div class="modal-body">
+        <div class="generation-progress-phase" id="generation-progress-phase">Initializing...</div>
+        <div class="generation-progress-meta">
+          <span>Elapsed: <strong id="generation-progress-elapsed">0s</strong></span>
+          <span>ETA: <strong id="generation-progress-eta">--</strong></span>
+        </div>
+        <div class="progress-bar-container" style="margin-top: 0.8rem;">
+          <div class="progress-bar" id="generation-progress-bar" style="width: 0%"></div>
+        </div>
+        <div class="generation-progress-hint" id="generation-progress-hint">
+          ETA adapts based on measured phase durations.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn danger" id="btn-generation-progress-cancel">Cancel</button>
       </div>
     </div>
   </div>

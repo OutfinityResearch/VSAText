@@ -78,6 +78,8 @@
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn.primary { background: var(--accent-violet); border-color: var(--accent-violet); }
     .btn.primary:hover { background: #8b3ecc; }
+    .btn.danger { background: rgba(255, 111, 97, 0.15); border-color: var(--accent-coral); color: var(--accent-coral); }
+    .btn.danger:hover { background: rgba(255, 111, 97, 0.25); }
     
     .status {
       padding: 0.4rem 0.8rem;
@@ -91,6 +93,7 @@
     .status.running { background: rgba(157, 78, 221, 0.2); color: var(--accent-violet); }
     .status.done { background: rgba(6, 214, 160, 0.2); color: var(--accent-emerald); }
     .status.error { background: rgba(255, 111, 97, 0.2); color: var(--accent-coral); }
+    .status.stopped { background: rgba(255, 209, 102, 0.2); color: var(--accent-gold); }
     
     /* Progress Section */
     .progress-section {
@@ -347,6 +350,7 @@
       <div class="controls">
         <span class="status idle" id="status">Idle</span>
         <button class="btn primary" id="btn-run">Run Evaluation</button>
+        <button class="btn danger" id="btn-stop" disabled>Stop</button>
         <button class="btn" id="btn-back" onclick="window.close()">Close</button>
       </div>
     </header>
@@ -532,12 +536,15 @@
     }
     
     function runEvaluation() {
+      if (eventSource) return;
+
       // Reset
       results = [];
       document.getElementById('empty-state')?.remove();
       document.getElementById('progress-section').style.display = 'block';
       document.getElementById('summary-section').classList.remove('visible');
       document.getElementById('btn-run').disabled = true;
+      document.getElementById('btn-stop').disabled = false;
       setStatus('running');
       initLogEntries();
       updateProgress(0, TEST_CONFIGS.length);
@@ -567,30 +574,47 @@
         
         if (data.type === 'complete') {
           eventSource.close();
+          eventSource = null;
           setStatus('done');
           document.getElementById('btn-run').disabled = false;
+          document.getElementById('btn-stop').disabled = true;
           document.getElementById('current-test').textContent = 'Evaluation complete!';
           showSummary(data.summary);
         }
         
         if (data.type === 'error') {
           eventSource.close();
+          eventSource = null;
           setStatus('error');
           document.getElementById('btn-run').disabled = false;
+          document.getElementById('btn-stop').disabled = true;
           document.getElementById('current-test').textContent = 'Error: ' + data.message;
         }
       };
       
       eventSource.onerror = () => {
         eventSource.close();
+        eventSource = null;
         setStatus('error');
         document.getElementById('btn-run').disabled = false;
+        document.getElementById('btn-stop').disabled = true;
         document.getElementById('current-test').textContent = 'Connection error. Server may be unavailable.';
       };
+    }
+
+    function stopEvaluation() {
+      if (!eventSource) return;
+      eventSource.close();
+      eventSource = null;
+      setStatus('stopped');
+      document.getElementById('btn-run').disabled = false;
+      document.getElementById('btn-stop').disabled = true;
+      document.getElementById('current-test').textContent = 'Evaluation stopped by user.';
     }
     
     // Event listeners
     document.getElementById('btn-run').addEventListener('click', runEvaluation);
+    document.getElementById('btn-stop').addEventListener('click', stopEvaluation);
     
     // Auto-run if ?auto query param
     if (new URLSearchParams(window.location.search).has('auto')) {

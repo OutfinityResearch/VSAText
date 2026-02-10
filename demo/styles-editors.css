@@ -273,3 +273,29 @@
 #generate-modal-body {
   position: relative;
 }
+
+/* Blocking LLM generation modal */
+#generation-progress-modal {
+  z-index: 1200;
+}
+
+.generation-progress-phase {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.generation-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-top: 0.6rem;
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+}
+
+.generation-progress-hint {
+  margin-top: 0.75rem;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}

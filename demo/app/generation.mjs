@@ -11,11 +11,20 @@ import { TEMPLATES } from './generation/generation-config.mjs';
 import { generateRandom } from './generation/generation-random.mjs';
 import { generateLLM } from './generation/generation-llm.mjs';
 import { generateAdvanced } from './generation/generation-advanced.mjs';
-import { updateGenerateButton, showImproveModal, applyImprovements } from './generation/generation-improve.mjs';
-import { showProjectNameDialog, saveProject, markDirty } from './persistence.mjs';
+import './generation/generation-improve.mjs';
+import {
+  isGenerationInProgress,
+  startGenerationSession,
+  finishGenerationSession,
+  initGenerationModalActions
+} from './generation/generation-session.mjs';
 
-// Track generation state
-let isGeneratingSpecs = false;
+function isAbortError(err) {
+  if (!err) return false;
+  if (err.name === 'AbortError') return true;
+  const msg = String(err.message || '').toLowerCase();
+  return msg.includes('abort') || msg.includes('cancel');
+}
 
 // ============================================
 // TEMPLATE APPLICATION
@@ -132,96 +141,7 @@ function initGenerateModalLLMSettings() {
 }
 
 initGenerateModalLLMSettings();
-
-// ============================================
-// UI BLOCKING DURING GENERATION
-// ============================================
-
-/**
- * Show loading state in generate modal
- */
-function showGeneratingState(strategyName) {
-  isGeneratingSpecs = true;
-  
-  // Disable sidebar button
-  const sidebarBtn = $('#btn-generate');
-  if (sidebarBtn) {
-    sidebarBtn.disabled = true;
-    sidebarBtn.classList.add('loading');
-  }
-  
-  // Disable modal Generate button and show loading
-  const modalBtn = $('#generate-modal .modal-footer .btn.primary');
-  if (modalBtn) {
-    modalBtn.disabled = true;
-    modalBtn.dataset.originalText = modalBtn.textContent;
-    modalBtn.textContent = `Generating (${strategyName})...`;
-    modalBtn.classList.add('loading');
-  }
-  
-  // Disable all strategy radio buttons
-  document.querySelectorAll('input[name="gen-strategy"]').forEach(r => {
-    r.disabled = true;
-  });
-  
-  // Disable template buttons
-  document.querySelectorAll('#generate-modal-body .btn.small').forEach(b => {
-    b.disabled = true;
-  });
-  
-  // Add loading overlay to modal body
-  const modalBody = $('#generate-modal-body');
-  if (modalBody && !modalBody.querySelector('.generation-loading-overlay')) {
-    const overlay = document.createElement('div');
-    overlay.className = 'generation-loading-overlay';
-    overlay.innerHTML = `
-      <div class="generation-loading-content">
-        <div class="nl-spinner"></div>
-        <div class="generation-loading-text">Generating specs with ${strategyName}...</div>
-        <div class="generation-loading-hint">This may take a moment</div>
-      </div>
-    `;
-    modalBody.appendChild(overlay);
-  }
-}
-
-/**
- * Hide loading state
- */
-function hideGeneratingState() {
-  isGeneratingSpecs = false;
-  
-  // Re-enable sidebar button
-  const sidebarBtn = $('#btn-generate');
-  if (sidebarBtn) {
-    sidebarBtn.disabled = false;
-    sidebarBtn.classList.remove('loading');
-  }
-  
-  // Re-enable modal Generate button
-  const modalBtn = $('#generate-modal .modal-footer .btn.primary');
-  if (modalBtn) {
-    modalBtn.disabled = false;
-    if (modalBtn.dataset.originalText) {
-      modalBtn.textContent = modalBtn.dataset.originalText;
-    }
-    modalBtn.classList.remove('loading');
-  }
-  
-  // Re-enable strategy radio buttons
-  document.querySelectorAll('input[name="gen-strategy"]').forEach(r => {
-    r.disabled = false;
-  });
-  
-  // Re-enable template buttons
-  document.querySelectorAll('#generate-modal-body .btn.small').forEach(b => {
-    b.disabled = false;
-  });
-  
-  // Remove loading overlay
-  const overlay = document.querySelector('.generation-loading-overlay');
-  if (overlay) overlay.remove();
-}
+initGenerationModalActions();
 
 // ============================================
 // MAIN GENERATION DISPATCHER
@@ -229,13 +149,14 @@ function hideGeneratingState() {
 
 window.executeGenerate = async () => {
   // Prevent double execution
-  if (isGeneratingSpecs) {
+  if (isGenerationInProgress()) {
     showNotification('Generation already in progress', 'info');
     return;
   }
   
   // If no project ID, ask for project name first
   if (!state.project.id) {
+    const { showProjectNameDialog } = await import('./persistence.mjs');
     closeModal('generate-modal');
     const projectName = await showProjectNameDialog('Create Specs - Enter Project Name');
     if (!projectName) {
@@ -273,22 +194,39 @@ window.executeGenerate = async () => {
     advanced: 'Advanced',
     wizard: 'Wizard'
   };
-  
+
+  let session = null;
+  let shouldPersist = false;
+  let markDirty = null;
+  let saveProject = null;
+
   try {
     switch (strategy) {
       case 'llm':
-        showGeneratingState(strategyNames.llm);
-        await generateLLM(options);
-        hideGeneratingState();
+        session = startGenerationSession('llm', strategyNames.llm);
         closeModal('generate-modal');
+        session.onPhase({ key: 'connect', label: 'Connecting to LLM API...' });
+        await generateLLM(options, {
+          signal: session.controller.signal,
+          isCancelled: () => session.isCancelled(),
+          onPhase: (phase) => session.onPhase(phase)
+        });
+        finishGenerationSession(session, 'success');
+        shouldPersist = true;
         showNotification('Specs generated with LLM', 'success');
         break;
         
       case 'advanced':
-        showGeneratingState(strategyNames.advanced);
-        await generateAdvanced(options);
-        hideGeneratingState();
+        session = startGenerationSession('advanced', strategyNames.advanced);
+        session.onPhase({ key: 'optimize', label: 'Running SDK optimizer...' });
+        await generateAdvanced(options, {
+          signal: session.controller.signal,
+          isCancelled: () => session.isCancelled(),
+          onPhase: (phase) => session.onPhase(phase)
+        });
+        finishGenerationSession(session, 'success');
         closeModal('generate-modal');
+        shouldPersist = true;
         showNotification('Specs generated with Advanced optimization', 'success');
         break;
       
@@ -306,17 +244,32 @@ window.executeGenerate = async () => {
       default:
         closeModal('generate-modal');
         generateRandom(options);
+        shouldPersist = true;
         showNotification('Specs generated', 'success');
         break;
     }
     
-    // Mark as dirty and trigger autosave
-    markDirty();
-    saveProject(true); // silent save
+    if (shouldPersist) {
+      if (!markDirty || !saveProject) {
+        ({ markDirty, saveProject } = await import('./persistence.mjs'));
+      }
+      // Mark as dirty and trigger autosave
+      markDirty();
+      saveProject(true); // silent save
+    }
     
   } catch (err) {
+    if (isAbortError(err)) {
+      if (session && !session.finished) {
+        finishGenerationSession(session, 'cancelled', false);
+      }
+      return;
+    }
+
     console.error('Generation error:', err);
-    hideGeneratingState();
+    if (session && !session.finished) {
+      finishGenerationSession(session, 'failed', false);
+    }
     closeModal('generate-modal');
     showNotification('Generation failed: ' + err.message, 'error');
   }

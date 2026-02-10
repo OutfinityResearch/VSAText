@@ -251,6 +251,12 @@
   gap: 0.75rem;
 }
 
+.nl-streaming-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.35rem;
+}
+
 .nl-streaming-chapter {
   font-weight: 600;
   color: var(--accent-gold);

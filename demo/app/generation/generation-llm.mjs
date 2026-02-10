@@ -18,18 +18,48 @@ import {
 import { updateGenerateButton } from './generation-improve.mjs';
 import { applyGenerationAnnotations } from './generation-annotations.mjs';
 
+function makeAbortError(message = 'Generation cancelled') {
+  const err = new Error(message);
+  err.name = 'AbortError';
+  return err;
+}
+
+function isAbortError(err) {
+  if (!err) return false;
+  if (err.name === 'AbortError') return true;
+  const msg = String(err.message || '').toLowerCase();
+  return msg.includes('abort') || msg.includes('cancel');
+}
+
+function throwIfCancelled(control) {
+  if (control?.signal?.aborted || control?.isCancelled?.()) {
+    throw makeAbortError();
+  }
+}
+
+function emitPhase(control, statusEl, phaseKey, message, progress = null) {
+  control?.onPhase?.({ key: phaseKey, label: message, progress });
+  if (statusEl) {
+    const pct = Number.isFinite(progress) ? progress : 0;
+    updateGenerationStatus(statusEl, message, pct);
+  }
+}
+
 /**
  * Generate story using LLM to create CNL specification
  * @param {Object} options - Generation options
+ * @param {Object} control - Cancellation/progress controls
  */
-export async function generateLLM(options) {
-  const statusEl = showGenerationStatus('Connecting to LLM API...');
+export async function generateLLM(options, control = {}) {
+  const useLegacyStatus = !control?.onPhase;
+  const statusEl = useLegacyStatus
+    ? showGenerationStatus('Connecting to LLM API...')
+    : null;
   
   try {
-    // Reset demo state to avoid merging old libraries/structure with LLM output
-    resetProjectState();
-
-    updateGenerationStatus(statusEl, 'Generating CNL specification...', 20);
+    throwIfCancelled(control);
+    emitPhase(control, statusEl, 'connect', 'Connecting to LLM API...', 5);
+    emitPhase(control, statusEl, 'request_specs', 'Generating CNL specification...', 20);
     
     // Call server API for LLM generation
     const response = await fetch('/v1/generate/llm', {
@@ -46,28 +76,26 @@ export async function generateLLM(options) {
         model: options.model || undefined,
         promptKey: options.promptKey || undefined,
         customPrompt: options.customPrompt || undefined
-      })
+      }),
+      signal: control?.signal
     });
+
+    throwIfCancelled(control);
     
     if (!response.ok) {
       const err = await response.json().catch(() => ({ error: { message: 'Server error' } }));
       throw new Error(err.error?.message || 'LLM generation failed');
     }
     
-    updateGenerationStatus(statusEl, 'Parsing response...', 60);
+    emitPhase(control, statusEl, 'parse_response', 'Parsing response...', 70);
     
     const result = await response.json();
+    throwIfCancelled(control);
 
     if (result && result._fallback) {
       showNotification('LLM unavailable — generated a fallback story instead.', 'warning');
     }
-    
-    // Handle CNL response
-    if (result.cnl) {
-      updateGenerationStatus(statusEl, 'Loading CNL into editor...', 80);
-      await loadCNLIntoState(result.cnl);
-    }
-    
+
     // Handle direct project data
     const projectData = result?.project || (
       result?.libraries && (result?.structure || result?.blueprint)
@@ -75,10 +103,20 @@ export async function generateLLM(options) {
         : null
     );
 
+    // Apply only after full response is valid to keep old state intact on cancel/error.
+    emitPhase(control, statusEl, 'apply_result', 'Applying generated specs...', 90);
+    resetProjectState();
+
+    // Handle CNL response
+    if (result.cnl) {
+      await loadCNLIntoState(result.cnl);
+    }
+
     if (projectData) {
-      updateGenerationStatus(statusEl, 'Loading project data...', 80);
       loadProjectData(projectData);
     }
+
+    throwIfCancelled(control);
 
     applyGenerationAnnotations(state.project, {
       strategy: 'llm',
@@ -86,39 +124,51 @@ export async function generateLLM(options) {
       llmAnnotations: result?.annotations || []
     });
     
-    updateGenerationStatus(statusEl, 'Complete!', 100);
+    emitPhase(control, statusEl, 'complete', 'Complete!', 100);
     
     // Finalize
     createSnapshot();
     updateGenerateButton();
     refreshAllViews();
     
-    setTimeout(() => hideGenerationStatus(statusEl), 1000);
+    if (statusEl) {
+      setTimeout(() => hideGenerationStatus(statusEl), 1000);
+    }
     
   } catch (err) {
-    hideGenerationStatus(statusEl);
+    if (statusEl) {
+      hideGenerationStatus(statusEl);
+    }
+    if (isAbortError(err)) {
+      throw makeAbortError();
+    }
     console.error('LLM Generation Error:', err);
     showNotification('LLM Generation failed: ' + err.message, 'error');
-    throw err; // Re-throw so caller can handle
+    throw err;
   }
 }
 
 /**
  * Attempt to refine story with LLM suggestions
  * @param {Object} options - Original generation options
+ * @param {Object} control - Cancellation controls
  */
-export async function refineWithLLM(options) {
+export async function refineWithLLM(options, control = {}) {
+  throwIfCancelled(control);
   const response = await fetch('/v1/generate/refine', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       project: state.project,
       options
-    })
+    }),
+    signal: control?.signal
   });
+  throwIfCancelled(control);
   
   if (response.ok) {
     const result = await response.json();
+    throwIfCancelled(control);
     if (result.suggestions) {
       applySuggestions(result.suggestions);
     }

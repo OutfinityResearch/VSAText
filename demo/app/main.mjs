@@ -41,6 +41,147 @@ import { initEvalRunner } from './eval-runner.mjs';
 
 let currentBlueprintView = 'timeline';
 
+const TAB_GROUPS = [
+  {
+    key: 'storycore',
+    views: [
+      { key: 'blueprint', label: 'Blueprint' },
+      { key: 'emotionalarc', label: 'Arc' },
+      { key: 'themes', label: 'Themes' },
+      { key: 'wisdom', label: 'Wisdom' }
+    ]
+  },
+  {
+    key: 'narrativedesign',
+    views: [
+      { key: 'patterns', label: 'Patterns' },
+      { key: 'templates', label: 'Templates' },
+      { key: 'blocks', label: 'Blocks' }
+    ]
+  },
+  {
+    key: 'cast',
+    views: [
+      { key: 'characters', label: 'Characters' },
+      { key: 'relationships', label: 'Relations' }
+    ]
+  },
+  {
+    key: 'world',
+    views: [
+      { key: 'worldrules', label: 'World' },
+      { key: 'locations', label: 'Locations' },
+      { key: 'objects', label: 'Objects' }
+    ]
+  },
+  {
+    key: 'scenecraft',
+    views: [
+      { key: 'moods', label: 'Moods' },
+      { key: 'dialogues', label: 'Dialogues' }
+    ]
+  },
+  {
+    key: 'results',
+    views: [
+      { key: 'cnl', label: 'CNL' },
+      { key: 'nl', label: 'NL' }
+    ]
+  }
+];
+
+const VIEW_TO_GROUP = new Map(
+  TAB_GROUPS.flatMap(group => group.views.map(view => [view.key, group.key]))
+);
+
+let activeGroupKey = 'results';
+let activeViewKey = 'cnl';
+
+function getGroup(groupKey) {
+  return TAB_GROUPS.find(g => g.key === groupKey) || null;
+}
+
+function activateTopTab(groupKey) {
+  $$('.tab').forEach(t => t.classList.remove('active'));
+  const activeTab = $(`.tab[data-view="${groupKey}"]`);
+  if (activeTab) activeTab.classList.add('active');
+}
+
+function setActiveSubtab(viewKey) {
+  const subtabs = $('#subtabs');
+  if (!subtabs) return;
+  subtabs.querySelectorAll('.subtab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.view === viewKey);
+  });
+}
+
+function renderViewSpecificContent(viewName) {
+  if (viewName === 'relationships') renderRelationshipsView();
+  if (viewName === 'emotionalarc') renderEmotionalArcView();
+  if (viewName === 'blocks') renderBlocksView();
+  if (viewName === 'worldrules') renderWorldRulesView();
+  if (viewName === 'blueprint') initBlueprintView();
+  if (viewName === 'templates') initTemplatesView();
+  if (viewName === 'dialogues') initDialogueEditor($('#dialogues-container'));
+  if (viewName === 'wisdom') renderWisdomView();
+  if (viewName === 'patterns') renderPatternsView();
+}
+
+function showLeafView(viewName, groupKey = activeGroupKey) {
+  activeGroupKey = groupKey;
+  activeViewKey = viewName;
+  activateTopTab(groupKey);
+  setActiveSubtab(viewName);
+
+  $$('.view').forEach(v => v.classList.remove('active'));
+  const viewEl = $(`#view-${viewName}`);
+  if (!viewEl) return;
+  viewEl.classList.add('active');
+  renderViewSpecificContent(viewName);
+}
+
+function renderSubtabs(groupKey, preferredView = null) {
+  const subtabs = $('#subtabs');
+  if (!subtabs) return;
+
+  const group = getGroup(groupKey);
+  if (!group) {
+    subtabs.innerHTML = '';
+    return;
+  }
+
+  const availableViewKeys = group.views.map(v => v.key);
+  const selectedView = availableViewKeys.includes(preferredView)
+    ? preferredView
+    : (availableViewKeys.includes(activeViewKey) ? activeViewKey : availableViewKeys[0]);
+
+  subtabs.innerHTML = group.views.map(v => `
+    <button class="subtab ${v.key === selectedView ? 'active' : ''}" data-view="${v.key}">
+      ${v.label}
+    </button>
+  `).join('');
+
+  subtabs.querySelectorAll('.subtab').forEach(tab => {
+    tab.onclick = () => showLeafView(tab.dataset.view, groupKey);
+  });
+}
+
+function switchToGroup(groupKey, preferredView = null) {
+  const group = getGroup(groupKey);
+  if (!group) return;
+
+  activeGroupKey = groupKey;
+  activateTopTab(groupKey);
+  renderSubtabs(groupKey, preferredView);
+
+  const availableViewKeys = group.views.map(v => v.key);
+  const targetView = availableViewKeys.includes(preferredView)
+    ? preferredView
+    : (availableViewKeys.includes(activeViewKey) ? activeViewKey : availableViewKeys[0]);
+
+  showLeafView(targetView, groupKey);
+}
+
 // ==================== INITIALIZATION ====================
 async function init() {
   // Load blueprint data
@@ -90,26 +231,13 @@ async function init() {
     $('#add-menu')?.classList.remove('open');
   });
   
-  // Tab switching
+  // Group-level tab switching
   $$('.tab').forEach(tab => {
-    tab.onclick = () => {
-      $$('.tab').forEach(t => t.classList.remove('active'));
-      $$('.view').forEach(v => v.classList.remove('active'));
-      tab.classList.add('active');
-      $(`#view-${tab.dataset.view}`).classList.add('active');
-      
-      // Render view-specific content
-      if (tab.dataset.view === 'relationships') renderRelationshipsView();
-      if (tab.dataset.view === 'emotionalarc') renderEmotionalArcView();
-      if (tab.dataset.view === 'blocks') renderBlocksView();
-      if (tab.dataset.view === 'worldrules') renderWorldRulesView();
-      if (tab.dataset.view === 'blueprint') initBlueprintView();
-      if (tab.dataset.view === 'templates') initTemplatesView();
-      if (tab.dataset.view === 'dialogues') initDialogueEditor($('#dialogues-container'));
-      if (tab.dataset.view === 'wisdom') renderWisdomView();
-      if (tab.dataset.view === 'patterns') renderPatternsView();
-    };
+    tab.onclick = () => switchToGroup(tab.dataset.view);
   });
+
+  // Initialize grouped tabs (Results -> CNL)
+  switchToGroup('results', 'cnl');
   
   // Listen for blueprint changes
   document.addEventListener('blueprint-changed', () => {
@@ -153,24 +281,9 @@ function initTemplatesView() {
  * @param {string} viewName - The data-view value of the tab to switch to
  */
 export function switchToTab(viewName) {
-  const tab = $(`.tab[data-view="${viewName}"]`);
-  if (!tab) return;
-  
-  $$('.tab').forEach(t => t.classList.remove('active'));
-  $$('.view').forEach(v => v.classList.remove('active'));
-  tab.classList.add('active');
-  $(`#view-${viewName}`).classList.add('active');
-  
-  // Render view-specific content
-  if (viewName === 'relationships') renderRelationshipsView();
-  if (viewName === 'emotionalarc') renderEmotionalArcView();
-  if (viewName === 'blocks') renderBlocksView();
-  if (viewName === 'worldrules') renderWorldRulesView();
-  if (viewName === 'blueprint') initBlueprintView();
-  if (viewName === 'templates') initTemplatesView();
-  if (viewName === 'dialogues') initDialogueEditor($('#dialogues-container'));
-  if (viewName === 'wisdom') renderWisdomView();
-  if (viewName === 'patterns') renderPatternsView();
+  const groupKey = VIEW_TO_GROUP.get(viewName);
+  if (!groupKey) return;
+  switchToGroup(groupKey, viewName);
 }
 
 // Make switchToTab available globally for tree navigation

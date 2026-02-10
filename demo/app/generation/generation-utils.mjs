@@ -13,6 +13,7 @@ import { renderEmptyMetrics } from '../metrics.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
 import { DIALOGUE_TEMPLATES, PURPOSE_TO_TONE, getTensionForBeat } from './generation-config.mjs';
 import { cnlToProjectState } from './cnl-roundtrip.mjs';
+import { normalizeAnnotations } from '../cnl-annotations.mjs';
 
 // ============================================
 // UI REFRESH
@@ -104,12 +105,22 @@ export function resetProjectState() {
     tensionCurve: [],
     subplots: []
   };
+
+  state.project.cnlAnnotations = {
+    global: []
+  };
 }
 
 /**
  * Load project data directly into state
  */
 export function loadProjectData(projectData) {
+  if (projectData.name) {
+    state.project.name = projectData.name;
+  }
+  if (projectData.selectedArc) {
+    state.project.selectedArc = projectData.selectedArc;
+  }
   if (projectData.libraries) {
     state.project.libraries = {
       ...state.project.libraries,
@@ -121,6 +132,12 @@ export function loadProjectData(projectData) {
   }
   if (projectData.blueprint) {
     state.project.blueprint = projectData.blueprint;
+  }
+  if (projectData.cnlAnnotations) {
+    state.project.cnlAnnotations = {
+      ...(state.project.cnlAnnotations || {}),
+      global: normalizeAnnotations(projectData.cnlAnnotations.global || [])
+    };
   }
 }
 

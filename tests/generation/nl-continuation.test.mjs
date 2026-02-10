@@ -78,3 +78,15 @@ export async function testNonTruncationValidationErrorDoesNotRetry() {
   }
 }
 
+// Test: Provider/system error text is surfaced explicitly
+export function testValidateContentDetectsProviderErrorText() {
+  const text = 'All model invocations failed: claude-opus-4-5-thinking: quota exceeded';
+  const result = validateContent(text, 100);
+
+  if (result.valid) {
+    throw new Error('Expected provider error text to fail validation');
+  }
+  if (!String(result.error || '').includes('LLM provider returned an error message')) {
+    throw new Error(`Expected provider error message, got: ${result.error}`);
+  }
+}

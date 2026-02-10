@@ -23,6 +23,26 @@ export const SUPPORTED_LANGUAGES = {
   ro: { name: 'Romanian', native: 'Română' }
 };
 
+const PROVIDER_ERROR_PATTERNS = [
+  /all model invocations failed/i,
+  /\bapi error\b/i,
+  /\brate limit\b/i,
+  /\bquota\b/i,
+  /missing api key/i,
+  /invalid api key/i,
+  /\bfetch failed\b/i,
+  /\bmodel\b.{0,40}\bnot\b.{0,20}\b(available|found|configured)\b/i,
+  /^claude\s+opus\b.{0,60}\b(not|cannot|can't|unavailable)\b/i
+];
+
+function detectProviderErrorMessage(content) {
+  const normalized = String(content ?? '').replace(/\s+/g, ' ').trim();
+  if (!normalized) return null;
+  if (normalized.length > 400) return null;
+  if (!PROVIDER_ERROR_PATTERNS.some(re => re.test(normalized))) return null;
+  return normalized.length > 220 ? `${normalized.slice(0, 220)}...` : normalized;
+}
+
 // ============================================
 // GENERATION RESULT TYPES
 // ============================================
@@ -233,6 +253,15 @@ export function validateContent(content, minLength = 100) {
   }
   
   const trimmed = content.trim();
+
+  const providerError = detectProviderErrorMessage(trimmed);
+  if (providerError) {
+    return {
+      valid: false,
+      error: `LLM provider returned an error message: ${providerError}`,
+      providerError: true
+    };
+  }
   
   if (trimmed.length < minLength) {
     return { valid: false, error: `Content too short (${trimmed.length} chars, min ${minLength})` };

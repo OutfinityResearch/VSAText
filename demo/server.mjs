@@ -281,6 +281,30 @@ async function handleVersionRoutes(method, p, req, res) {
 }
 
 async function handleLLMRoutes(method, p, req, res) {
+  const buildFallbackSpecsResult = async (body, reason, sourceError = null) => {
+    const gen = await import('../src/generation/index.mjs');
+    const options = {
+      genre: body.genre,
+      tone: body.tone,
+      chars: body.characters || body.chars,
+      length: body.length,
+      complexity: body.complexity,
+      rules: body.worldRules || body.rules,
+      title: body.storyName || body.title || 'Untitled Story'
+    };
+
+    const optimized = gen.quickOptimize(options);
+    const project = optimized?.project || gen.generateRandomStory(options);
+    return {
+      project,
+      _fallback: true,
+      strategy: optimized?.project ? 'advanced' : 'random',
+      score: optimized?.score ?? null,
+      fallbackReason: reason,
+      fallbackError: sourceError ? String(sourceError) : null
+    };
+  };
+
   // Generate story with LLM
   if (method === 'POST' && p === '/v1/generate/llm') {
     const body = await parseBody(req);
@@ -290,25 +314,8 @@ async function handleLLMRoutes(method, p, req, res) {
       if (!llmGenerator.isLLMAvailable()) {
         // DS08 fallback: enhanced random generation when LLM is unavailable.
         try {
-          const gen = await import('../src/generation/index.mjs');
-          const options = {
-            genre: body.genre,
-            tone: body.tone,
-            chars: body.characters || body.chars,
-            length: body.length,
-            complexity: body.complexity,
-            rules: body.worldRules || body.rules,
-            title: body.storyName || body.title || 'Untitled Story'
-          };
-
-          const optimized = gen.quickOptimize(options);
-          const project = optimized?.project || gen.generateRandomStory(options);
-          return jsonResponse(res, 200, {
-            project,
-            _fallback: true,
-            strategy: 'advanced',
-            score: optimized?.score ?? null
-          });
+          const fallback = await buildFallbackSpecsResult(body, 'llm_unavailable');
+          return jsonResponse(res, 200, fallback);
         } catch (err) {
           console.error('LLM fallback generation error:', err);
           return errorResponse(res, 503, 'llm_unavailable', 'LLM agent not available (fallback failed).');
@@ -319,7 +326,13 @@ async function handleLLMRoutes(method, p, req, res) {
       return jsonResponse(res, 200, result);
     } catch (err) {
       console.error('LLM generation error:', err);
-      return errorResponse(res, 500, 'llm_error', err.message);
+      try {
+        const fallback = await buildFallbackSpecsResult(body, 'llm_generation_failed', err?.message || err);
+        return jsonResponse(res, 200, fallback);
+      } catch (fallbackErr) {
+        console.error('LLM fallback generation error:', fallbackErr);
+        return errorResponse(res, 500, 'llm_error', err.message);
+      }
     }
   }
   

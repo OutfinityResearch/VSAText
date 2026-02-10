@@ -50,6 +50,109 @@ try {
   console.log('[LLM Provider] LLM generation features will be disabled');
 }
 
+const ERROR_TEXT_PATTERNS = [
+  /all model invocations failed/i,
+  /\bapi error\b/i,
+  /\brate limit\b/i,
+  /\bquota\b/i,
+  /missing api key/i,
+  /invalid api key/i,
+  /\bfetch failed\b/i,
+  /\bmodel\b.{0,40}\bnot\b.{0,20}\b(available|found|configured)\b/i,
+  /^claude\s+opus\b.{0,60}\b(not|cannot|can't|unavailable)\b/i
+];
+
+function compactText(value, max = 220) {
+  const txt = String(value ?? '').replace(/\s+/g, ' ').trim();
+  if (txt.length <= max) return txt;
+  return `${txt.slice(0, max)}...`;
+}
+
+function isErrorLikeLLMText(value) {
+  const txt = String(value ?? '').replace(/\s+/g, ' ').trim();
+  if (!txt) return false;
+  if (txt.length > 400) return false;
+  return ERROR_TEXT_PATTERNS.some(re => re.test(txt));
+}
+
+function ensureUsableLLMText(value, contextLabel = 'LLM response') {
+  if (!value || typeof value !== 'string') {
+    throw new Error('LLM returned empty or invalid response');
+  }
+
+  if (isErrorLikeLLMText(value)) {
+    throw new Error(`${contextLabel}: ${compactText(value)}`);
+  }
+
+  return value;
+}
+
+function hasUnbalancedJsonBrackets(text) {
+  const src = String(text ?? '');
+  let inString = false;
+  let escape = false;
+  let curly = 0;
+  let square = 0;
+
+  for (let i = 0; i < src.length; i += 1) {
+    const ch = src[i];
+
+    if (inString) {
+      if (escape) {
+        escape = false;
+        continue;
+      }
+      if (ch === '\\') {
+        escape = true;
+        continue;
+      }
+      if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+    if (ch === '{') curly += 1;
+    else if (ch === '}') curly -= 1;
+    else if (ch === '[') square += 1;
+    else if (ch === ']') square -= 1;
+  }
+
+  return inString || curly !== 0 || square !== 0;
+}
+
+function isLikelyTruncatedJsonError(error, content) {
+  const msg = String(error?.message || '').toLowerCase();
+  if (
+    msg.includes('unterminated string') ||
+    msg.includes('unexpected end of json') ||
+    msg.includes('unexpected end of input') ||
+    msg.includes('unexpected end')
+  ) {
+    return true;
+  }
+
+  const txt = String(content ?? '').trim();
+  if (!txt) return false;
+  if (!(txt.startsWith('{') || txt.startsWith('[') || txt.startsWith('```'))) return false;
+  return hasUnbalancedJsonBrackets(txt);
+}
+
+async function completeWithTimeout(agent, completeOptions, timeoutMs) {
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Generation timed out')), timeoutMs);
+  });
+
+  return Promise.race([
+    agent.complete(completeOptions),
+    timeoutPromise
+  ]);
+}
+
 // ============================================
 // LLM PROVIDER (for SDK integration)
 // ============================================
@@ -74,40 +177,50 @@ const llmProvider = {
       systemPrompt: 'You are a skilled fiction writer. Output only the story text in Markdown format. Never stop mid-sentence or mid-word. Always complete your response fully.'
     });
 
-    const completeOptions = {
+    const desiredMaxTokens = Number.isFinite(options.maxTokens) ? Number(options.maxTokens) : 4000;
+    const baseCompleteOptions = {
       prompt,
       mode: 'deep',
-      maxTokens: options.maxTokens || 4000
+      maxTokens: desiredMaxTokens,
+      params: {
+        max_tokens: desiredMaxTokens,
+        max_completion_tokens: desiredMaxTokens
+      }
     };
 
-    if (options.model) {
-      completeOptions.model = options.model;
-    }
-
-    // Create timeout wrapper
     const timeoutMs = options.timeout || 60000;
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Generation timed out')), timeoutMs);
-    });
 
-    const response = await Promise.race([
-      agent.complete(completeOptions),
-      timeoutPromise
-    ]);
+    const runCompletion = async (modelOverride) => {
+      const completeOptions = { ...baseCompleteOptions };
+      if (modelOverride) completeOptions.model = modelOverride;
+      const response = await completeWithTimeout(agent, completeOptions, timeoutMs);
+      const content = ensureUsableLLMText(
+        response?.content || response?.text || response,
+        'LLM provider returned an error message instead of generated content'
+      );
+      return { response, content };
+    };
 
-    const content = response?.content || response?.text || response;
+    try {
+      const { response, content } = await runCompletion(options.model);
 
-    if (!content || typeof content !== 'string') {
-      throw new Error('LLM returned empty or invalid response');
-    }
+      // Some providers return a finish reason; prefer returning partial content so
+      // the SDK continuation logic can attempt a repair.
+      if (response?.finish_reason === 'length' || response?.finishReason === 'length') {
+        return content;
+      }
 
-    // Some providers return a finish reason; prefer returning partial content so
-    // the SDK continuation logic can attempt a repair.
-    if (response?.finish_reason === 'length' || response?.finishReason === 'length') {
+      return content;
+    } catch (err) {
+      if (!options.model) throw err;
+
+      console.warn('[LLM Provider] Selected model failed, retrying with provider auto-selection:', err?.message || err);
+      const { response, content } = await runCompletion(undefined);
+      if (response?.finish_reason === 'length' || response?.finishReason === 'length') {
+        return content;
+      }
       return content;
     }
-
-    return content;
   }
 };
 
@@ -242,11 +355,21 @@ export async function retryFailedSections(failedSections, storyContext, options)
 // ============================================
 
 function parseJSONResponse(content) {
+  ensureUsableLLMText(
+    typeof content === 'string' ? content : String(content ?? ''),
+    'LLM provider returned an error message instead of JSON payload'
+  );
+
   try {
     return parseLLMJson(content);
   } catch (err) {
+    const preview = compactText(content, 180);
     console.error('Failed to parse LLM response as JSON:', err.message);
-    throw new Error('Invalid JSON response from LLM');
+    throw new Error(
+      preview
+        ? `Invalid JSON response from LLM. Preview: ${preview}`
+        : 'Invalid JSON response from LLM'
+    );
   }
 }
 
@@ -274,7 +397,7 @@ function normalizeLLMAnnotations(value) {
   return out;
 }
 
-function buildAnnotationPrompt(options, project) {
+function buildAnnotationPrompt(options, project, strict = false) {
   const chars = (project?.libraries?.characters || []).slice(0, 8).map(c => c.name).filter(Boolean);
   const locs = (project?.libraries?.locations || []).slice(0, 6).map(l => l.name).filter(Boolean);
   const themes = (project?.libraries?.themes || []).slice(0, 6).map(t => t.name).filter(Boolean);
@@ -291,9 +414,10 @@ Return JSON only:
 }
 
 Rules:
-- 8 to 12 annotations.
+- ${strict ? 'Exactly 10 annotations.' : '8 to 12 annotations.'}
 - Use only types: hint, style, avoid, voice, subtext, sensory, pacing, reveal.
 - Content must be precise, actionable, and consistent with declared entities.
+- Keep each annotation under 160 characters.
 - No markdown, no commentary.
 
 Context:
@@ -309,6 +433,25 @@ Context:
 `;
 }
 
+async function parseLLMAnnotationPayload(content, model) {
+  let parsed = null;
+  try {
+    parsed = parseJSONResponse(content);
+  } catch (err) {
+    if (isErrorLikeLLMText(content)) {
+      throw err;
+    }
+    const repairedText = await repairJsonWithLLM({
+      model,
+      originalContent: content
+    });
+    parsed = parseJSONResponse(repairedText);
+  }
+
+  const annotations = normalizeLLMAnnotations(parsed?.annotations);
+  return annotations.slice(0, 12);
+}
+
 async function generateLLMAnnotations(options, project) {
   if (!agentAvailable) return [];
 
@@ -317,27 +460,47 @@ async function generateLLMAnnotations(options, project) {
     systemPrompt: 'You generate concise CNL annotations for story generation guidance. Return valid JSON only.'
   });
 
-  const prompt = buildAnnotationPrompt(options, project);
-  const completeOptions = {
-    prompt,
-    mode: 'fast',
-    maxTokens: 1800
-  };
+  const desiredMaxTokens = 1800;
+  const prompts = [
+    buildAnnotationPrompt(options, project, false),
+    buildAnnotationPrompt(options, project, true)
+  ];
 
-  if (options?.model) {
-    completeOptions.model = options.model;
+  let best = [];
+
+  for (let i = 0; i < prompts.length; i += 1) {
+    const completeOptions = {
+      prompt: prompts[i],
+      mode: 'fast',
+      maxTokens: desiredMaxTokens,
+      params: {
+        max_tokens: desiredMaxTokens,
+        max_completion_tokens: desiredMaxTokens
+      }
+    };
+
+    if (options?.model) {
+      completeOptions.model = options.model;
+    }
+
+    try {
+      const response = await agent.complete(completeOptions);
+      const content = response?.content || response?.text || response;
+      const annotations = await parseLLMAnnotationPayload(content, options?.model);
+
+      if (annotations.length > best.length) {
+        best = annotations;
+      }
+
+      if (annotations.length >= 8) {
+        return annotations;
+      }
+    } catch (err) {
+      console.warn('[LLM Provider] Annotation generation attempt failed:', err?.message || err);
+    }
   }
 
-  try {
-    const response = await agent.complete(completeOptions);
-    const content = response?.content || response?.text || response;
-    const parsed = parseJSONResponse(content);
-    const annotations = normalizeLLMAnnotations(parsed?.annotations);
-    return annotations;
-  } catch (err) {
-    console.warn('[LLM Provider] Annotation generation failed:', err?.message || err);
-    return [];
-  }
+  return best;
 }
 
 async function repairJsonWithLLM({ model, originalContent }) {
@@ -346,16 +509,117 @@ async function repairJsonWithLLM({ model, originalContent }) {
     systemPrompt: 'You repair JSON. Return valid JSON only. No markdown. No commentary.'
   });
 
+  const desiredMaxTokens = 7000;
   const completeOptions = {
     prompt: buildJsonRepairPrompt(originalContent),
     mode: 'fast',
-    maxTokens: 5000
+    maxTokens: desiredMaxTokens,
+    params: {
+      max_tokens: desiredMaxTokens,
+      max_completion_tokens: desiredMaxTokens
+    }
   };
 
   if (model) completeOptions.model = model;
 
   const response = await agent.complete(completeOptions);
   return response?.content || response?.text || response;
+}
+
+async function continueJsonWithLLM({ model, originalContent, reason = '' }) {
+  const agent = new LLMAgent({
+    name: 'ScriptaJSONContinuation',
+    systemPrompt: 'Continue truncated JSON exactly where it ended. Return continuation text only, no markdown, no explanation.'
+  });
+
+  const tail = String(originalContent || '').slice(-2200);
+  const desiredMaxTokens = 3000;
+  const prompt = `The JSON output below appears truncated (${reason || 'incomplete'}).
+
+Continue it from exactly where it ends.
+
+Rules:
+- Return only the continuation text.
+- Do not repeat previous text.
+- Do not add markdown or commentary.
+- Ensure final combined text is valid JSON.
+
+TRUNCATED JSON TAIL:
+${tail}
+`;
+
+  const completeOptions = {
+    prompt,
+    mode: 'fast',
+    maxTokens: desiredMaxTokens,
+    params: {
+      max_tokens: desiredMaxTokens,
+      max_completion_tokens: desiredMaxTokens
+    }
+  };
+  if (model) completeOptions.model = model;
+
+  const response = await agent.complete(completeOptions);
+  return ensureUsableLLMText(
+    response?.content || response?.text || response,
+    'LLM provider returned an error message instead of JSON continuation'
+  );
+}
+
+async function requestSpecsContent(agent, { prompt, mode = 'deep', maxTokens = 6500, model = null } = {}) {
+  const desiredMaxTokens = Number.isFinite(maxTokens) ? Number(maxTokens) : 6500;
+  const completeOptions = {
+    prompt,
+    mode,
+    maxTokens: desiredMaxTokens,
+    params: {
+      max_tokens: desiredMaxTokens,
+      max_completion_tokens: desiredMaxTokens
+    }
+  };
+  if (model) completeOptions.model = model;
+  const response = await agent.complete(completeOptions);
+  return ensureUsableLLMText(
+    response?.content || response?.text || response,
+    'LLM provider returned an error message instead of story specs JSON'
+  );
+}
+
+async function parseSpecsPayload(content, modelForRepair) {
+  let workingContent = content;
+
+  try {
+    return parseJSONResponse(workingContent);
+  } catch (err) {
+    if (isErrorLikeLLMText(workingContent)) {
+      throw err;
+    }
+
+    if (isLikelyTruncatedJsonError(err, workingContent)) {
+      const reason = String(err?.message || 'truncated_json');
+      for (let i = 0; i < 2; i += 1) {
+        try {
+          const continuation = await continueJsonWithLLM({
+            model: modelForRepair,
+            originalContent: workingContent,
+            reason
+          });
+          workingContent = `${workingContent}${continuation}`;
+          return parseJSONResponse(workingContent);
+        } catch (continueErr) {
+          if (!isLikelyTruncatedJsonError(continueErr, workingContent)) {
+            break;
+          }
+        }
+      }
+    }
+
+    const repairedText = await repairJsonWithLLM({
+      model: modelForRepair,
+      originalContent: workingContent
+    });
+    return parseJSONResponse(repairedText);
+  }
 }
 
 /**
@@ -376,31 +640,49 @@ export async function generateStoryWithLLM(options) {
     systemPrompt
   });
 
-  const completeOptions = {
-    prompt,
-    mode: 'deep',
-    maxTokens: 6500
-  };
-  if (options.model) completeOptions.model = options.model;
+  const projectName = options.storyName || options.title || 'Untitled Story';
+  const minimalPrompt = buildSpecsPrompt({
+    promptKey: 'minimal_project_json',
+    options
+  }).prompt;
 
-  const response = await agent.complete(completeOptions);
-  const content = response?.content || response?.text || response;
+  const attempts = [
+    { label: 'selected-model', model: options.model || null, prompt },
+    { label: 'auto-model', model: null, prompt },
+    { label: 'minimal-auto', model: null, prompt: minimalPrompt }
+  ];
 
-  let parsed;
-  try {
-    parsed = parseJSONResponse(content);
-  } catch {
-    const repairedText = await repairJsonWithLLM({
-      model: options.model,
-      originalContent: content
-    });
-    parsed = parseJSONResponse(repairedText);
+  let project = null;
+  let lastError = null;
+  const attemptedKeys = new Set();
+
+  for (const attempt of attempts) {
+    const key = `${attempt.model || 'auto'}::${attempt.prompt === prompt ? 'main' : 'minimal'}`;
+    if (attemptedKeys.has(key)) continue;
+    attemptedKeys.add(key);
+
+    try {
+      const content = await requestSpecsContent(agent, {
+        prompt: attempt.prompt,
+        mode: 'deep',
+        maxTokens: 9000,
+        model: attempt.model
+      });
+
+      const parsed = await parseSpecsPayload(content, attempt.model || options.model || null);
+      project = normalizeSpecsProject(parsed, projectName);
+      if (!project) {
+        throw new Error('LLM returned JSON but no project payload was found.');
+      }
+      break;
+    } catch (err) {
+      lastError = err;
+      console.warn(`[LLM Provider] Specs generation attempt "${attempt.label}" failed:`, err?.message || err);
+    }
   }
 
-  const projectName = options.storyName || options.title || 'Untitled Story';
-  const project = normalizeSpecsProject(parsed, projectName);
   if (!project) {
-    throw new Error('LLM returned JSON but no project payload was found.');
+    throw lastError || new Error('LLM failed to generate valid story specs JSON.');
   }
 
   const annotations = await generateLLMAnnotations(options, project);

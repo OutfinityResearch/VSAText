@@ -36,7 +36,7 @@ let agentAvailable = false;
 let listModelsFromCache = null;
 
 try {
-  const achilles = await import('achillesAgentLib');
+  const achilles = await import('achillesAgentLib/LLMAgents');
   LLMAgent = achilles.LLMAgent;
   agentAvailable = true;
   console.log('[LLM Provider] AchillesAgentLib loaded successfully');

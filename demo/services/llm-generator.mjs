@@ -36,14 +36,12 @@ let agentAvailable = false;
 let listModelsFromCache = null;
 
 try {
-  const achillesPath = path.resolve(__dirname, '../../../AchillesAgentLib/index.mjs');
-  const achilles = await import(achillesPath);
+  const achilles = await import('achillesAgentLib');
   LLMAgent = achilles.LLMAgent;
   agentAvailable = true;
   console.log('[LLM Provider] AchillesAgentLib loaded successfully');
 
-  const llmClientPath = path.resolve(__dirname, '../../../AchillesAgentLib/utils/LLMClient.mjs');
-  const llmClient = await import(llmClientPath);
+  const llmClient = await import('achillesAgentLib/utils/LLMClient.mjs');
   listModelsFromCache = llmClient.listModelsFromCache;
 } catch (err) {
   console.log('[LLM Provider] AchillesAgentLib not available:', err.message);
@@ -252,17 +250,17 @@ export function getAvailableModels() {
 
   try {
     const models = listModelsFromCache();
+    const ALLOWED_PROVIDER = 'axiologic_proxy';
+    const filterProvider = list => list
+      .filter(m => m.providerKey === ALLOWED_PROVIDER)
+      .map(m => ({
+        name: m.name,
+        provider: m.providerKey,
+        qualifiedName: m.qualifiedName || `${m.providerKey}/${m.name}`
+      }));
     return {
-      fast: models.fast.map(m => ({
-        name: m.name,
-        provider: m.providerKey,
-        qualifiedName: m.qualifiedName || `${m.providerKey}/${m.name}`
-      })),
-      deep: models.deep.map(m => ({
-        name: m.name,
-        provider: m.providerKey,
-        qualifiedName: m.qualifiedName || `${m.providerKey}/${m.name}`
-      })),
+      fast: filterProvider(models.fast),
+      deep: filterProvider(models.deep),
       available: true
     };
   } catch (err) {

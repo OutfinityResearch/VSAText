@@ -17,6 +17,37 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
+
+// Load .env before any achillesAgentLib imports (which read process.env at import time).
+// Walks up from cwd() until it finds a .env file, matching the envAutoConfig pattern.
+{
+  let dir = path.resolve(process.cwd());
+  const { root } = path.parse(dir);
+  let envFile = null;
+  while (true) {
+    const candidate = path.join(dir, '.env');
+    try { if (fs.statSync(candidate).isFile()) { envFile = candidate; break; } } catch {}
+    if (dir === root) break;
+    dir = path.dirname(dir);
+  }
+  if (envFile) {
+    const content = fs.readFileSync(envFile, 'utf8');
+    for (const line of content.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const match = trimmed.match(/^([A-Za-z_]\w*)\s*=\s*(.*)$/);
+      if (!match) continue;
+      const [, key, rawVal] = match;
+      if (!Object.prototype.hasOwnProperty.call(process.env, key)) {
+        process.env[key] = rawVal.replace(/^['"]|['"]$/g, '');
+      }
+    }
+    console.log(`[Demo Server] Loaded environment from ${envFile}`);
+  } else {
+    console.log('[Demo Server] No .env file found in parent directories');
+  }
+}
+
 import { printDemoServerBanner } from './server-banner.mjs';
 
 // Import storage modules

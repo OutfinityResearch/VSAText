@@ -25,6 +25,9 @@
   ],
   "author": "ACHILLES Project",
   "license": "MIT",
+  "dependencies": {
+    "achillesAgentLib": "file:../ploinky/node_modules/achillesAgentLib"
+  },
   "engines": {
     "node": ">=18.0.0"
   },

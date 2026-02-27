@@ -151,7 +151,11 @@ function createServer() {
 // MAIN
 // ============================================
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const isMainModule = process.argv[1]
+  ? fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
+  : false;
+
+if (isMainModule) {
   const port = process.env.PORT ? Number(process.env.PORT) : 3001;
   const server = createServer();
   

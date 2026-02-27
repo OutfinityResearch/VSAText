@@ -127,6 +127,57 @@ function setHasGeneratedNL(value) {
   hasGeneratedNL = value;
 }
 
+function buildHookPromptInstructions() {
+  const hooks = state.project?.blueprint?.hooks;
+  if (!hooks || typeof hooks !== 'object') return '';
+
+  const lines = [];
+  const opening = hooks.opening || null;
+  if (opening && (opening.hookText || opening.hookType || opening.sceneGoal)) {
+    const openingTechniques = Array.isArray(opening.hookTechniques) ? opening.hookTechniques.filter(Boolean).join(', ') : '';
+    const mainCharacter = (state.project?.libraries?.characters || []).find(c => c.id === opening.mainCharacterId)?.name || '';
+    lines.push('OPENING HOOK (highest priority for story start):');
+    if (opening.hookText) lines.push(`- Hook text: ${opening.hookText}`);
+    if (opening.hookType) lines.push(`- Hook type: ${opening.hookType}`);
+    lines.push(`- Emotional intensity: ${opening.emotionalIntensity || 3}/5`);
+    if (mainCharacter) lines.push(`- Main character: ${mainCharacter}`);
+    if (opening.keyObjectOrEvent) lines.push(`- Key object/event: ${opening.keyObjectOrEvent}`);
+    if (opening.sceneGoal) lines.push(`- Scene goal: ${opening.sceneGoal}`);
+    if (opening.sceneMood) lines.push(`- Scene mood: ${opening.sceneMood}`);
+    if (opening.sceneTheme) lines.push(`- Scene theme: ${opening.sceneTheme}`);
+    if (openingTechniques) lines.push(`- Technique: ${openingTechniques}`);
+    if (opening.curiositySeeds) lines.push(`- Curiosity seeds: ${opening.curiositySeeds}`);
+    if (opening.conflictStakes) lines.push(`- Conflict/stakes: ${opening.conflictStakes}`);
+  }
+
+  const midHooks = Array.isArray(hooks.mid) ? hooks.mid : [];
+  const activeMidHooks = midHooks.filter(h => h && (h.hookText || h.hookType || h.sceneGoal));
+  if (activeMidHooks.length) {
+    lines.push('');
+    lines.push('MID-STORY HOOKS (use to sustain momentum in middle sections):');
+    activeMidHooks.slice(0, 5).forEach((hook, index) => {
+      const techniques = Array.isArray(hook.hookTechniques) ? hook.hookTechniques.filter(Boolean).join(', ') : '';
+      const mainCharacter = (state.project?.libraries?.characters || []).find(c => c.id === hook.mainCharacterId)?.name || '';
+      lines.push(`- Mid Hook ${index + 1}:`);
+      if (hook.hookText) lines.push(`  • Text: ${hook.hookText}`);
+      if (hook.hookType) lines.push(`  • Type: ${hook.hookType}`);
+      lines.push(`  • Emotional intensity: ${hook.emotionalIntensity || 3}/5`);
+      if (mainCharacter) lines.push(`  • Main character: ${mainCharacter}`);
+      if (hook.keyObjectOrEvent) lines.push(`  • Key object/event: ${hook.keyObjectOrEvent}`);
+      if (hook.sceneGoal) lines.push(`  • Scene goal: ${hook.sceneGoal}`);
+      if (hook.sceneMood) lines.push(`  • Scene mood: ${hook.sceneMood}`);
+      if (hook.sceneTheme) lines.push(`  • Scene theme: ${hook.sceneTheme}`);
+      if (techniques) lines.push(`  • Technique: ${techniques}`);
+      if (hook.curiositySeeds) lines.push(`  • Curiosity seeds: ${hook.curiositySeeds}`);
+      if (hook.conflictStakes) lines.push(`  • Conflict/stakes: ${hook.conflictStakes}`);
+      if (hook.targetSceneId) lines.push(`  • Target scene: ${hook.targetSceneId}`);
+      if (hook.targetBeatKey) lines.push(`  • Target beat: ${hook.targetBeatKey}`);
+    });
+  }
+
+  return lines.join('\n').trim();
+}
+
 /**
  * Get current generation options from UI
  */
@@ -134,6 +185,8 @@ function getGenerationOptions() {
   const language = $('#nl-language')?.value || 'en';
   const model = $('#nl-model')?.value || '';
   const customPrompt = $('#nl-custom-prompt')?.value?.trim() || '';
+  const hookPrompt = buildHookPromptInstructions();
+  const mergedPrompt = [customPrompt, hookPrompt].filter(Boolean).join('\n\n');
   
   return {
     style: 'narrative',
@@ -141,7 +194,7 @@ function getGenerationOptions() {
     length: 'full',
     language,
     model: model || undefined,
-    customPrompt: customPrompt || undefined
+    customPrompt: mergedPrompt || undefined
   };
 }
 
@@ -261,7 +314,10 @@ async function generateNLStorySingle(cnl, options, signal) {
   // Save as a new version
   const language = options.language || 'en';
   const model = options.model || 'default';
-  await saveStoryVersion(result.story, language, model);
+  const versionInfo = await saveStoryVersion(result.story, language, model);
+  if (!versionInfo) {
+    setCurrentVersionInfo(null, language, model);
+  }
   ensureNotAborted(signal);
   
   updateNLLoadingState('Rendering story...', 95);
@@ -280,7 +336,11 @@ async function generateNLStorySingle(cnl, options, signal) {
   persistence.markDirty();
   
   // Success notification
-  showNotification?.('Story generated and saved!', 'success');
+  if (versionInfo) {
+    showNotification?.('Story generated and saved!', 'success');
+  } else {
+    showNotification?.('Story generated. Version not saved, but Improve is available for current settings.', 'warning');
+  }
 }
 
 /**
@@ -371,7 +431,10 @@ async function generateNLStoryStreaming(cnl, options, chapters, signal) {
     // Save as a new version
     const language = options.language || 'en';
     const model = options.model || 'default';
-    await saveStoryVersion(fullStory, language, model);
+    const versionInfo = await saveStoryVersion(fullStory, language, model);
+    if (!versionInfo) {
+      setCurrentVersionInfo(null, language, model);
+    }
     ensureNotAborted(signal);
     
     setGeneratedStory(fullStory);
@@ -384,7 +447,11 @@ async function generateNLStoryStreaming(cnl, options, chapters, signal) {
     const persistence = await getPersistence();
     persistence.markDirty();
     
-    showNotification?.('Story generated and saved!', 'success');
+    if (versionInfo) {
+      showNotification?.('Story generated and saved!', 'success');
+    } else {
+      showNotification?.('Story generated. Version not saved, but Improve is available for current settings.', 'warning');
+    }
   }
 }
 

@@ -63,7 +63,7 @@ export function render() {
     </div>
     
     <div class="templates-actions-bar">
-      <button class="btn" id="btn-create-template">+ Create Custom Template</button>
+      <button class="btn" id="btn-create-template">+ New Template</button>
     </div>
     
     ${customTemplates.length > 0 ? `
@@ -127,7 +127,13 @@ function renderCustomTemplateCard(template) {
   
   return `
     <div class="template-card custom-template ${isSelected ? 'selected' : ''}" data-custom-id="${template.id}">
-      <div class="template-icon">${template.icon || '📝'}</div>
+      <div class="template-card-header-row">
+        <div class="template-icon">${template.icon || '📝'}</div>
+        <div class="template-card-tools">
+          <button class="btn-edit-custom btn-icon" data-custom-id="${template.id}" title="Edit">✏️</button>
+          <button class="btn-delete-custom btn-icon" data-custom-id="${template.id}" title="Delete">×</button>
+        </div>
+      </div>
       <div class="template-info">
         <h4 class="template-name">${template.label}</h4>
         <p class="template-desc">${template.description || 'Custom template'}</p>
@@ -138,8 +144,6 @@ function renderCustomTemplateCard(template) {
       </div>
       <div class="template-actions">
         <button class="btn-apply-custom ${isSelected ? 'applied' : ''}" data-custom-id="${template.id}">${isSelected ? 'Applied' : 'Apply'}</button>
-        <button class="btn-edit-custom btn-icon" data-custom-id="${template.id}" title="Edit">✏️</button>
-        <button class="btn-delete-custom btn-icon" data-custom-id="${template.id}" title="Delete">🗑️</button>
       </div>
     </div>
   `;
@@ -354,7 +358,7 @@ function showTemplateForm(template) {
   
   if (!modalTitle || !modalBody) return;
   
-  modalTitle.textContent = isEdit ? 'Edit Custom Template' : 'Create Custom Template';
+  modalTitle.textContent = isEdit ? 'Edit Template' : 'New Template';
   
   const icons = ['📖', '⚔️', '🔍', '💕', '🎭', '🚀', '🌱', '👥', '🌸', '🔮', '🏰', '🌙', '⭐', '🎪', '🎯'];
   

@@ -292,23 +292,39 @@ Anna owns SilverKey</code></pre>
 
 <h3>Event</h3>
 <p>A specific occurrence that drives the narrative forward, changes story state, and generates reactions.</p>
-<p>Events define purpose, participating characters, impact on story state, and outcomes that trigger subsequent decisions.</p>
+<p>Events define:</p>
+<ul>
+  <li><strong>Purpose</strong>: Why this event happens (plot progression, conflict initiation, revelation)</li>
+  <li><strong>Characters involved</strong>: Who is directly affected or participates</li>
+  <li><strong>Impact</strong>: How the event changes the story state (information, emotion, relationships, stakes)</li>
+  <li><strong>Outcome</strong>: Consequences for characters or plot</li>
+</ul>
+
+<p><strong>Example</strong></p>
 
 <pre><code>Anna_finds_map is event
 Anna_finds_map has purpose "Anna finds the artifact map, triggering the quest"
 Anna_finds_map has characters_involved Anna, Lucas
 Anna_finds_map has impact "The discovery raises urgency and tension in the story"
-Anna_finds_map has outcome "Anna decides to begin the search immediately"</code></pre>
+Anna_finds_map has outcome "Anna decides to begin the search immediately</code></pre>
 
 <h3>Conflict</h3>
-<p>The central tension that challenges characters' objectives and drives narrative interest.</p>
-<p>Conflicts can be internal (emotional, ethical), interpersonal, or external (antagonist, environment, system pressure).</p>
+<p>The central tension that challenges characters’ objectives and drives narrative interest.</p>
+<p>Conflicts have:</p>
+<ul>
+  <li><strong>Type</strong>: internal (emotional/moral) or external(antagonist, environment)</li>
+  <li><strong>Participants</strong>: characters involved in the tension</li>
+  <li><strong>Stakes</strong>: What’s at risk if conflict is unresolved</li>
+  <li><strong>Resolution attempt</strong>: How characters respond</li>
+</ul>
+
+<p><strong>Example</strong></p>
 
 <pre><code>Bandits_attack is conflict
 Bandits_attack has type external
 Bandits_attack has participants Anna, Bandits
 Bandits_attack has stakes "Anna's life and mission are at risk"
-Bandits_attack has resolution_attempt "Anna hides and creates an escape plan"</code></pre>
+        Bandits_attack has resolution_attempt "Anna hides and creates an escape plan"</code></pre>
 
 <p>Event and Conflict are tightly coupled: events trigger state changes, conflicts convert those changes into pressure, and character reactions create the next narrative move.</p>
 

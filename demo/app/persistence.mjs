@@ -10,6 +10,7 @@ import { $, openModal, closeModal, showNotification } from './utils.mjs';
 import { renderTree } from './tree.mjs';
 import { renderEntityGrid } from './entities.mjs';
 import { renderRelationshipsView, renderEmotionalArcView, renderBlocksView, renderWorldRulesView } from './views.mjs';
+import { renderFrameworkView } from './framework.mjs';
 import { renderEmptyMetrics } from './metrics.mjs';
 import { generateCNL } from './cnl.mjs';
 import { updateGenerateButton } from './generation.mjs';
@@ -200,6 +201,7 @@ window.loadProject = async (id) => {
     
     renderTree();
     ['characters', 'locations', 'objects', 'moods', 'themes'].forEach(renderEntityGrid);
+    renderFrameworkView();
     renderRelationshipsView();
     renderEmotionalArcView();
     renderBlocksView();
@@ -318,6 +320,7 @@ function executeNewProject(projectName) {
   $('#project-name').value = projectName;
   renderTree();
   ['characters', 'locations', 'objects', 'moods', 'themes'].forEach(renderEntityGrid);
+  renderFrameworkView();
   renderRelationshipsView();
   renderEmotionalArcView();
   renderBlocksView();

@@ -78,7 +78,30 @@
 .dialogue-main { flex: 1; background: var(--bg-surface); border-radius: 8px; padding: 1rem; overflow: auto; }
 .no-selection { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); }
 
-.dialogue-form h3 { margin: 0 0 1rem; font-size: var(--fs-md); }
+.dialogue-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.dialogue-form h3 { margin: 0; font-size: var(--fs-md); }
+
+.dialogue-close-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--bg-hover);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.dialogue-close-btn:hover { color: var(--accent-coral); border-color: var(--accent-coral); }
 .form-section { margin-bottom: 1rem; }
 .form-section label { display: block; font-size: var(--fs-sm); color: var(--text-muted); margin-bottom: 0.3rem; }
 .form-row { display: flex; gap: 1rem; }
@@ -121,7 +144,27 @@
 }
 .exchange-sketch { font-family: 'Crimson Text', serif; font-style: italic; }
 
-.form-actions { display: flex; gap: 0.5rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--bg-hover); }
+.exchange-fields input,
+.exchange-fields textarea,
+.exchange-fields select,
+#dialogue-text,
+#dialogue-annotations,
+#dialogue-tone {
+  width: 100%;
+  padding: 0.45rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-hover);
+  color: var(--text-primary);
+  border-radius: 4px;
+  font-size: var(--fs-sm);
+}
+
+.form-actions { display: flex; gap: 0.5rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--bg-hover); justify-content: flex-end; }
+
+.form-actions-inline {
+  display: flex;
+  justify-content: flex-end;
+}
 
 .btn-small { padding: 0.3rem 0.6rem; font-size: var(--fs-sm); }
 .btn-remove, .btn-remove-participant, .btn-remove-exchange, .btn-delete {

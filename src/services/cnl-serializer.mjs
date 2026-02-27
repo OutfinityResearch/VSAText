@@ -82,6 +82,7 @@ export function serializeToCNL(project) {
   serializeDialogues(lines, libraries.dialogues, libraries.characters);
   serializeSubplots(lines, blueprint.subplots, libraries.characters);
   serializeWorldRules(lines, libraries.worldRules);
+  serializeWorldLayers(lines, libraries.worldLayers);
   serializeCharacters(lines, libraries.characters);
   serializeRelationships(lines, libraries.relationships, libraries.characters);
   serializeLocations(lines, libraries.locations);
@@ -245,6 +246,45 @@ function serializeWorldRules(lines, worldRules) {
     lines.push(`World includes rule ${rid}`);
     lines.push('');
   });
+  lines.push('');
+}
+
+/**
+ * Serialize world layers section
+ */
+function serializeWorldLayers(lines, worldLayers) {
+  if (!worldLayers || typeof worldLayers !== 'object') return;
+
+  const categoryOrder = ['societies', 'history', 'rules', 'economy', 'conflicts'];
+  const labelByCategory = {
+    societies: 'Societies/Cultures',
+    history: 'History/Timeline',
+    rules: 'Rules of the World',
+    economy: 'Economy/Resources',
+    conflicts: 'Conflicts/Tensions'
+  };
+
+  const hasAny = categoryOrder.some(cat => Array.isArray(worldLayers[cat]) && worldLayers[cat].length > 0);
+  if (!hasAny) return;
+
+  lines.push('// === WORLD LAYERS ===');
+  for (const cat of categoryOrder) {
+    const entries = Array.isArray(worldLayers[cat]) ? worldLayers[cat] : [];
+    if (!entries.length) continue;
+    lines.push(`// ${labelByCategory[cat]}`);
+    entries.forEach((entry, idx) => {
+      const wid = `${cat.slice(0, 2).toUpperCase()}${idx + 1}`;
+      lines.push(`${wid} is world_layer`);
+      lines.push(`${wid} has category ${formatId(cat)}`);
+      Object.entries(entry || {}).forEach(([key, value]) => {
+        if (key === 'id') return;
+        const text = String(value ?? '').trim();
+        if (!text) return;
+        lines.push(`${wid} has ${formatId(key)} "${text.replace(/"/g, '\\"')}"`);
+      });
+      lines.push('');
+    });
+  }
   lines.push('');
 }
 

@@ -8,8 +8,8 @@ import state from '../state.mjs';
 import { setTensionCurve } from '../state.mjs';
 import { getCurrentArcBeats, getTensionAtPosition } from './blueprint-state.mjs';
 
-const CURVE_WIDTH = 600;
-const CURVE_HEIGHT = 120;
+const CURVE_WIDTH = 960;
+const CURVE_HEIGHT = 150;
 const PADDING = 20;
 
 let curveContainer = null;
@@ -28,27 +28,35 @@ export function renderTensionCurve(container) {
   const beats = getCurrentArcBeats();
   
   container.innerHTML = `
-    <div class="tension-curve-wrapper">
-      <div class="tension-label">Tension</div>
-      <svg class="tension-svg" 
-           width="${CURVE_WIDTH}" 
-           height="${CURVE_HEIGHT}"
-           viewBox="0 0 ${CURVE_WIDTH} ${CURVE_HEIGHT}">
-        <!-- Grid -->
-        ${renderGrid()}
-        
-        <!-- Beat markers -->
-        ${renderBeatMarkers(beats)}
-        
-        <!-- Curve path -->
-        ${renderCurvePath(curve)}
-        
-        <!-- Control points -->
-        ${renderControlPoints(curve)}
-      </svg>
-      <div class="tension-actions">
-        <button id="add-tension-point" class="btn-small">+ Add Point</button>
-        <button id="reset-tension" class="btn-small">Reset</button>
+    <div class="tension-panel">
+      <div class="tension-panel-header">
+        <h4>Tension Curve</h4>
+        <p>Adjust pacing intensity across the story timeline.</p>
+      </div>
+      <div class="tension-curve-wrapper">
+        <div class="tension-label">Tension</div>
+        <div class="tension-main">
+          <svg class="tension-svg" 
+               width="${CURVE_WIDTH}" 
+               height="${CURVE_HEIGHT}"
+               viewBox="0 0 ${CURVE_WIDTH} ${CURVE_HEIGHT}">
+            <!-- Grid -->
+            ${renderGrid()}
+            
+            <!-- Beat markers -->
+            ${renderBeatMarkers(beats)}
+            
+            <!-- Curve path -->
+            ${renderCurvePath(curve)}
+            
+            <!-- Control points -->
+            ${renderControlPoints(curve)}
+          </svg>
+          <div class="tension-actions">
+            <button id="add-tension-point" class="btn small">+ Add Point</button>
+            <button id="reset-tension" class="btn small">Reset</button>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -100,6 +108,7 @@ function renderBeatMarkers(beats) {
     }).join('')}
   </g>`;
 }
+
 
 /**
  * Render the curve path

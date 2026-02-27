@@ -44,7 +44,7 @@ function showGeneratingState(strategyName, canCancel = true) {
     r.disabled = true;
   });
 
-  document.querySelectorAll('#generate-modal-body .btn.small').forEach(b => {
+  document.querySelectorAll('#generate-modal-body .btn.small, #generate-modal-body [data-template-key]').forEach(b => {
     b.disabled = true;
   });
 
@@ -99,7 +99,7 @@ function hideGeneratingState() {
     r.disabled = false;
   });
 
-  document.querySelectorAll('#generate-modal-body .btn.small').forEach(b => {
+  document.querySelectorAll('#generate-modal-body .btn.small, #generate-modal-body [data-template-key]').forEach(b => {
     b.disabled = false;
   });
 
@@ -273,4 +273,3 @@ export default {
   cancelActiveGeneration,
   initGenerationModalActions
 };
-

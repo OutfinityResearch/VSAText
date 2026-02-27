@@ -7,10 +7,10 @@
 import { state } from './state.mjs';
 import { $, $$, genId, openModal } from './utils.mjs';
 import { renderTree, findNode, addChild } from './tree.mjs';
-import { renderEntityGrid, showSelectModal, showBlockModal, showActionModal } from './entities.mjs';
-import { renderRelationshipsView, renderEmotionalArcView, renderBlocksView, renderWorldRulesView } from './views.mjs';
+import { renderEntityGrid, renderBackdropView, showSelectModal, showBlockModal, showActionModal } from './entities.mjs';
+import { renderRelationshipsView, renderBlocksView, renderWorldRulesView } from './views.mjs';
 import { evaluateMetrics, renderEmptyMetrics, initMetrics } from './metrics.mjs';
-import { exportCNL, importCNL, toggleEditMode } from './cnl.mjs';
+import { exportCNL, importCNL, toggleEditMode, setCNLViewMode, generateCNL } from './cnl.mjs';
 import { loadProjectsList, newProject, initPersistence } from './persistence.mjs';
 import { setupContextMenu } from './context-menu.mjs';
 
@@ -25,6 +25,9 @@ import { initDialogueEditor } from './dialogue/dialogue-editor.mjs';
 // Wisdom and Patterns imports
 import { renderWisdomView } from './entities-wisdom.mjs';
 import { renderPatternsView } from './entities-patterns.mjs';
+import { renderFrameworkView } from './framework.mjs';
+import { renderWorldLayersView } from './world-layers.mjs';
+import { renderHooksView } from './hooks.mjs';
 
 // Import to register generation functions
 import './generation.mjs';
@@ -46,8 +49,7 @@ const TAB_GROUPS = [
     key: 'storycore',
     views: [
       { key: 'blueprint', label: 'Blueprint' },
-      { key: 'emotionalarc', label: 'Arc' },
-      { key: 'themes', label: 'Themes' },
+      { key: 'framework', label: 'Framework' },
       { key: 'wisdom', label: 'Wisdom' }
     ]
   },
@@ -69,16 +71,22 @@ const TAB_GROUPS = [
   {
     key: 'world',
     views: [
-      { key: 'worldrules', label: 'World' },
-      { key: 'locations', label: 'Locations' },
-      { key: 'objects', label: 'Objects' }
+      { key: 'backdrop', label: 'Backdrop' },
+      { key: 'worldlayers', label: 'World Layers' }
+    ]
+  },
+  {
+    key: 'hooks',
+    views: [
+      { key: 'openinghook', label: 'Opening Hook' },
+      { key: 'midhooks', label: 'Mid-Story Hooks' }
     ]
   },
   {
     key: 'scenecraft',
     views: [
-      { key: 'moods', label: 'Moods' },
-      { key: 'dialogues', label: 'Dialogues' }
+      { key: 'dialogues', label: 'Dialogues' },
+      { key: 'moods', label: 'Moods' }
     ]
   },
   {
@@ -117,7 +125,6 @@ function setActiveSubtab(viewKey) {
 
 function renderViewSpecificContent(viewName) {
   if (viewName === 'relationships') renderRelationshipsView();
-  if (viewName === 'emotionalarc') renderEmotionalArcView();
   if (viewName === 'blocks') renderBlocksView();
   if (viewName === 'worldrules') renderWorldRulesView();
   if (viewName === 'blueprint') initBlueprintView();
@@ -125,6 +132,12 @@ function renderViewSpecificContent(viewName) {
   if (viewName === 'dialogues') initDialogueEditor($('#dialogues-container'));
   if (viewName === 'wisdom') renderWisdomView();
   if (viewName === 'patterns') renderPatternsView();
+  if (viewName === 'framework') renderFrameworkView();
+  if (viewName === 'backdrop') renderBackdropView();
+  if (viewName === 'worldlayers') renderWorldLayersView();
+  if (viewName === 'openinghook') renderHooksView('opening');
+  if (viewName === 'midhooks') renderHooksView('mid');
+  if (viewName === 'moods') renderEntityGrid('moods');
 }
 
 function showLeafView(viewName, groupKey = activeGroupKey) {
@@ -222,6 +235,7 @@ async function init() {
   $('#btn-edit-cnl').onclick = toggleEditMode;
   $('#btn-export-cnl').onclick = exportCNL;
   $('#btn-import-cnl').onclick = importCNL;
+  $('#btn-cnl-view-formatted').onclick = () => setCNLViewMode('formatted');
   
   // NL tab buttons
   $('#btn-nl-generate').onclick = generateNLStory;
@@ -256,11 +270,12 @@ async function init() {
   // Initial render
   ['characters', 'locations', 'objects', 'moods', 'themes'].forEach(renderEntityGrid);
   renderTree();
+  renderFrameworkView();
   renderRelationshipsView();
-  renderEmotionalArcView();
   renderBlocksView();
   renderWorldRulesView();
   renderEmptyMetrics();
+  generateCNL();
   
   // Initialize eval runner
   initEvalRunner();
@@ -297,6 +312,7 @@ export function switchToTab(viewName) {
 
 // Make switchToTab available globally for tree navigation
 window.switchToTab = switchToTab;
+window.renderBackdropView = renderBackdropView;
 
 // ==================== ADD MENU (Plus Button) ====================
 
@@ -324,8 +340,11 @@ function showAddMenu(e) {
     // Show options based on selected node type
     const type = selectedNode.type;
     
-    if (type === 'book' || type === 'chapter') {
+    if (type === 'book') {
       items.push({ a: 'add-chapter', l: '📑 Add Chapter' });
+    }
+
+    if (type === 'book' || type === 'chapter') {
       items.push({ a: 'add-scene', l: '🎬 Add Scene' });
     }
     
@@ -402,7 +421,9 @@ function handleAddMenuAction(action) {
   if (!selectedNode) return;
   
   if (action === 'add-chapter') {
-    addChild(selectedNode, { type: 'chapter', name: `Ch${(selectedNode.children?.length || 0) + 1}`, title: '', children: [] });
+    if (selectedNode.type === 'book') {
+      addChild(selectedNode, { type: 'chapter', name: `Ch${(selectedNode.children?.length || 0) + 1}`, title: '', children: [] });
+    }
   }
   if (action === 'add-scene') {
     addChild(selectedNode, { type: 'scene', name: `Sc${(selectedNode.children?.length || 0) + 1}`, title: '', children: [] });

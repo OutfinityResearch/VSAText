@@ -46,17 +46,21 @@
         <button class="tab" data-view="narrativedesign">Narrative Design</button>
         <button class="tab" data-view="cast">Cast</button>
         <button class="tab" data-view="world">World</button>
+        <button class="tab" data-view="hooks">Hooks</button>
         <button class="tab" data-view="scenecraft">Scene Craft</button>
         <button class="tab active" data-view="results">Results</button>
       </div>
       <div class="tab-content">
         <div class="subtabs" id="subtabs"></div>
+        <div class="view" id="view-framework"><div class="framework-view" id="framework-view"></div></div>
         <div class="view active" id="view-cnl">
           <div class="cnl-toolbar">
+            <button class="btn btn-edit-active" id="btn-cnl-view-formatted" title="Show CNL visual view">CNL View</button>
             <button class="btn" id="btn-edit-cnl" title="Toggle edit mode">Edit</button>
             <button class="btn" id="btn-import-cnl">Import CNL</button>
             <button class="btn success" id="btn-export-cnl">Export CNL</button>
           </div>
+          <div class="cnl-visual" id="cnl-visual"></div>
           <div class="cnl-output" id="cnl-output">// CNL auto-generated from visual structure</div>
           <textarea class="cnl-editor" id="cnl-editor" style="display: none;" placeholder="Edit CNL here..."></textarea>
         </div>
@@ -128,11 +132,12 @@
         </div>
         <div class="view" id="view-characters"><div class="entity-grid" id="characters-grid"></div></div>
         <div class="view" id="view-relationships"><div class="relationships-view" id="relationships-view"></div></div>
-        <div class="view" id="view-locations"><div class="entity-grid" id="locations-grid"></div></div>
-        <div class="view" id="view-objects"><div class="entity-grid" id="objects-grid"></div></div>
+        <div class="view" id="view-backdrop"><div class="backdrop-view" id="backdrop-view"></div></div>
+        <div class="view" id="view-worldlayers"><div class="world-layers-view" id="worldlayers-view"></div></div>
+        <div class="view" id="view-openinghook"><div class="hooks-view" id="hooks-opening-view"></div></div>
+        <div class="view" id="view-midhooks"><div class="hooks-view" id="hooks-mid-view"></div></div>
         <div class="view" id="view-moods"><div class="entity-grid" id="moods-grid"></div></div>
         <div class="view" id="view-dialogues"><div class="dialogues-editor-container" id="dialogues-container"></div></div>
-        <div class="view" id="view-emotionalarc"><div class="emotional-arc-view" id="emotionalarc-view"></div></div>
         <div class="view" id="view-blocks"><div class="blocks-view" id="blocks-view"></div></div>
         <div class="view" id="view-worldrules"><div class="rules-grid" id="worldrules-grid"></div></div>
         <div class="view" id="view-themes"><div class="entity-grid" id="themes-grid"></div></div>
@@ -172,7 +177,8 @@
       </div>
       <div class="modal-body" id="modal-body"></div>
       <div class="modal-footer">
-        <button class="btn" onclick="closeModal('entity-modal')">Cancel</button>
+        <button class="btn danger" id="btn-modal-delete" style="display:none;">Delete</button>
+        <button class="btn" id="btn-modal-cancel" onclick="closeModal('entity-modal')">Cancel</button>
         <button class="btn primary" id="btn-modal-save">Save</button>
       </div>
     </div>
@@ -202,122 +208,318 @@
     </div>
   </div>
 
-  <!-- Generate Modal -->
-  <div class="modal-overlay" id="generate-modal">
-    <div class="modal wide">
-      <div class="modal-header">
-        <h2 class="modal-title">Create Specs</h2>
-        <button class="modal-close" onclick="closeModal('generate-modal')">x</button>
+  <!-- Create Specs Full Page -->
+  <div class="specs-page-overlay" id="generate-modal">
+    <div class="specs-page">
+      <div class="specs-page-header">
+        <div class="specs-page-header-content">
+          <h2 class="specs-page-title">Create Story Specification</h2>
+          <div class="specs-page-subtitle">Fill in as many details as possible to generate a clear and coherent story.</div>
+        </div>
+        <button class="modal-close specs-header-close" type="button" onclick="closeModal('generate-modal')" aria-label="Close">x</button>
       </div>
-      <div class="modal-body" id="generate-modal-body">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-          <div>
-            <div class="form-group">
-              <label class="form-label">Genre</label>
-              <select class="form-select" id="gen-genre">
-                <option value="fantasy">Fantasy</option>
-                <option value="scifi">Science Fiction</option>
-                <option value="mystery">Mystery / Thriller</option>
-                <option value="romance">Romance</option>
-                <option value="horror">Horror</option>
-                <option value="adventure">Adventure</option>
-                <option value="drama">Drama</option>
-                <option value="comedy">Comedy</option>
-              </select>
+
+      <div class="specs-page-body" id="generate-modal-body">
+        <details class="spec-card" open>
+          <summary class="spec-card-summary"><span>Store core</span><span class="spec-card-hint" aria-hidden="true"></span></summary>
+          <div class="spec-card-content">
+            <div class="spec-grid-6">
+              <div class="form-group">
+                <label class="form-label">Genre</label>
+                <select class="form-select" id="gen-genre">
+                  <option value="fantasy">Fantasy</option>
+                  <option value="scifi">Science Fiction</option>
+                  <option value="romance">Romance</option>
+                  <option value="mystery">Mystery</option>
+                  <option value="thriller">Thriller</option>
+                  <option value="horror">Horror</option>
+                  <option value="historical">Historical</option>
+                  <option value="adventure">Adventure</option>
+                  <option value="crime">Crime</option>
+                  <option value="drama">Drama</option>
+                  <option value="young_adult">Young Adult</option>
+                  <option value="dystopian">Dystopian</option>
+                  <option value="urban_fantasy">Urban Fantasy</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tone</label>
+                <select class="form-select" id="gen-tone">
+                  <option value="dark">Dark</option>
+                  <option value="light">Optimistic</option>
+                  <option value="balanced">Tense</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Complexity</label>
+                <select class="form-select" id="gen-complexity">
+                  <option value="simple">Simple (linear plot)</option>
+                  <option value="moderate" selected>Moderate (some twists)</option>
+                  <option value="complex">Complex (multiple threads)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Story Length</label>
+                <select class="form-select" id="gen-length">
+                  <option value="short">Short (3-5 scenes)</option>
+                  <option value="medium" selected>Medium (8-12 scenes)</option>
+                  <option value="long">Long (15-20 scenes)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Number of Characters</label>
+                <select class="form-select" id="gen-chars">
+                  <option value="few">Few (2-3)</option>
+                  <option value="medium" selected>Medium (4-6)</option>
+                  <option value="many">Many (7-10)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">World Rules</label>
+                <select class="form-select" id="gen-rules">
+                  <option value="none">None</option>
+                  <option value="few" selected>Few</option>
+                  <option value="many">Rich</option>
+                </select>
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Story Length</label>
-              <select class="form-select" id="gen-length">
-                <option value="short">Short (3-5 scenes)</option>
-                <option value="medium" selected>Medium (8-12 scenes)</option>
-                <option value="long">Long (15-20 scenes)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Number of Characters</label>
-              <select class="form-select" id="gen-chars">
-                <option value="few">Few (2-3)</option>
-                <option value="medium" selected>Medium (4-6)</option>
-                <option value="many">Many (7-10)</option>
-              </select>
+            <div class="spec-grid-2">
+              <div class="form-group">
+                <label class="form-label">Theme</label>
+                <textarea class="form-textarea" id="gen-theme" placeholder="Core theme, moral axis, central question..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Wisdom</label>
+                <textarea class="form-textarea" id="gen-wisdom" placeholder="What should the reader learn or feel?"></textarea>
+              </div>
             </div>
           </div>
-          <div>
-            <div class="form-group">
-              <label class="form-label">Tone</label>
-              <select class="form-select" id="gen-tone">
-                <option value="dark">Dark / Serious</option>
-                <option value="balanced" selected>Balanced</option>
-                <option value="light">Light / Hopeful</option>
-                <option value="comedic">Comedic</option>
-              </select>
+        </details>
+
+        <details class="spec-card" open>
+          <summary class="spec-card-summary"><span>Characters</span><span class="spec-card-hint" aria-hidden="true"></span></summary>
+          <div class="spec-card-content">
+            <div class="spec-grid-4 spec-characters-grid">
+              <div class="spec-subcard">
+                <h4 class="spec-subcard-title">Protagonist</h4>
+                <div class="form-group">
+                  <label class="form-label">Archetype</label>
+                  <select class="form-select" id="gen-protagonist-archetype">
+                    <option value="hero">Hero</option>
+                    <option value="seeker">Seeker</option>
+                    <option value="caregiver">Caregiver</option>
+                    <option value="rebel">Rebel</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Traits (multi-select)</label>
+                  <select class="form-select" id="gen-protagonist-traits" multiple size="6">
+                    <option value="brave">Brave</option>
+                    <option value="loyal">Loyal</option>
+                    <option value="curious">Curious</option>
+                    <option value="impulsive">Impulsive</option>
+                    <option value="empathetic">Empathetic</option>
+                    <option value="resilient">Resilient</option>
+                    <option value="idealistic">Idealistic</option>
+                    <option value="resourceful">Resourceful</option>
+                    <option value="strategic">Strategic</option>
+                    <option value="compassionate">Compassionate</option>
+                    <option value="stubborn">Stubborn</option>
+                    <option value="self_doubting">Self-doubting</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="spec-subcard">
+                <h4 class="spec-subcard-title">Antagonist</h4>
+                <div class="form-group">
+                  <label class="form-label">Archetype</label>
+                  <select class="form-select" id="gen-antagonist-archetype">
+                    <option value="shadow">Shadow</option>
+                    <option value="ruler">Ruler</option>
+                    <option value="trickster">Trickster</option>
+                    <option value="destroyer">Destroyer</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Traits (multi-select)</label>
+                  <select class="form-select" id="gen-antagonist-traits" multiple size="6">
+                    <option value="cold">Cold</option>
+                    <option value="strategic">Strategic</option>
+                    <option value="charismatic">Charismatic</option>
+                    <option value="vengeful">Vengeful</option>
+                    <option value="obsessive">Obsessive</option>
+                    <option value="manipulative">Manipulative</option>
+                    <option value="ruthless">Ruthless</option>
+                    <option value="calculating">Calculating</option>
+                    <option value="fanatical">Fanatical</option>
+                    <option value="deceptive">Deceptive</option>
+                    <option value="domineering">Domineering</option>
+                    <option value="patient">Patient</option>
+                  </select>
+                </div>
+              </div>
+
+            <div class="spec-subcard spec-subcard-secondary">
+              <h4 class="spec-subcard-title">Secondary Characters</h4>
+              <div class="spec-secondary-list" id="gen-secondary-characters"></div>
+              <button class="btn small" id="btn-add-secondary-character" type="button">+ Add Character</button>
             </div>
-            <div class="form-group">
-              <label class="form-label">Complexity</label>
-              <select class="form-select" id="gen-complexity">
-                <option value="simple">Simple (linear plot)</option>
-                <option value="moderate" selected>Moderate (some twists)</option>
-                <option value="complex">Complex (multiple threads)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">World Rules</label>
-              <select class="form-select" id="gen-rules">
-                <option value="none">None (realistic)</option>
-                <option value="few" selected>Few special rules</option>
-                <option value="many">Rich world-building</option>
-              </select>
+
+            <div class="spec-subcard spec-subcard-relationships">
+              <h4 class="spec-subcard-title">Relationships</h4>
+              <div class="form-group">
+                <label class="form-label">Relationship Type</label>
+                <select class="form-select" id="gen-relationships">
+                  <option value="alliance">Alliance</option>
+                  <option value="rivalry">Rivalry</option>
+                  <option value="betrayal">Betrayal</option>
+                  <option value="mentor">Mentor / Apprentice</option>
+                  <option value="family">Family Ties</option>
+                  <option value="friendship">Friendship</option>
+                  <option value="romance">Romance</option>
+                  <option value="loyalty">Loyalty</option>
+                  <option value="enmity">Enmity</option>
+                  <option value="dependency">Dependency</option>
+                </select>
+              </div>
+              <div class="spec-relationship-list" id="gen-relationship-list"></div>
+              <button class="btn small" id="btn-add-relationship" type="button">+ Add Relationship</button>
             </div>
           </div>
-        </div>
-        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--bg-elevated);">
-          <div class="form-group">
-            <label class="form-label">Quick Templates</label>
-            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
-              <button class="btn small" onclick="applyTemplate('classic_hero')">Classic Hero Quest</button>
-              <button class="btn small" onclick="applyTemplate('mystery')">Murder Mystery</button>
-              <button class="btn small" onclick="applyTemplate('romance')">Romance Drama</button>
-              <button class="btn small" onclick="applyTemplate('scifi')">Space Adventure</button>
-              <button class="btn small" onclick="applyTemplate('horror')">Horror Survival</button>
-              <button class="btn small" onclick="applyTemplate('minimal')">Minimal (Empty)</button>
+        </details>
+
+        <details class="spec-card" open>
+          <summary class="spec-card-summary"><span>The World and Locations</span><span class="spec-card-hint" aria-hidden="true"></span></summary>
+          <div class="spec-card-content">
+            <div class="spec-grid-4 spec-world-grid">
+              <div class="form-group">
+                <label class="form-label">Geography</label>
+                <select class="form-select" id="gen-geography">
+                  <option value="forest">Forest</option>
+                  <option value="mountain">Mountain</option>
+                  <option value="ocean">Ocean</option>
+                  <option value="desert">Desert</option>
+                  <option value="city">City</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Time Period</label>
+                <select class="form-select" id="gen-time-period">
+                  <option value="medieval">Medieval</option>
+                  <option value="modern">Modern</option>
+                  <option value="future">Future</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Objects & Artifacts Type</label>
+                <select class="form-select" id="gen-object-types">
+                  <option value="document">Document</option>
+                  <option value="key">Key</option>
+                  <option value="weapon">Weapon</option>
+                  <option value="jewel">Jewelry</option>
+                  <option value="treasure">Treasure</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Significance</label>
+                <select class="form-select" id="gen-object-importance">
+                  <option value="minor">Minor</option>
+                  <option value="central">Central</option>
+                  <option value="important">Important</option>
+                </select>
+              </div>
             </div>
           </div>
-        </div>
-        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--bg-elevated);">
-          <div class="form-group">
-            <label class="form-label">Generation Strategy</label>
+        </details>
+
+        <details class="spec-card" open>
+          <summary class="spec-card-summary"><span>Narrative Structure</span><span class="spec-card-hint" aria-hidden="true"></span></summary>
+          <div class="spec-card-content">
+            <div class="spec-grid-3">
+              <div class="form-group">
+                <label class="form-label">Protagonist's Arc</label>
+                <select class="form-select" id="gen-protagonist-arc">
+                  <option value="heros_journey" selected>Hero's Journey - the classic hero arc, featuring adventures and transformation.</option>
+                  <option value="coming_of_age">Coming of Age - the protagonist grows from naivety to maturity.</option>
+                  <option value="redemption">Redemption - the protagonist seeks to atone for past mistakes.</option>
+                  <option value="tragedy">Tragedy - the protagonist suffers major losses or failures.</option>
+                  <option value="revenge">Revenge - the protagonist pursues vengeance for an injustice.</option>
+                  <option value="transformation">Transformation - a major change in personality or life occurs.</option>
+                  <option value="underdog_triumph">Underdog Triumph - the seemingly weak protagonist overcomes obstacles.</option>
+                  <option value="love_and_sacrifice">Love and Sacrifice - an arc focused on relationships and emotional decisions.</option>
+                  <option value="quest">Quest - the protagonist embarks on a clearly defined mission.</option>
+                  <option value="self_discovery">Self-Discovery - the protagonist learns who they truly are.</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Subplots</label>
+                <select class="form-select" id="gen-subplots-arc">
+                  <option value="romance" selected>Romance - a parallel love story.</option>
+                  <option value="friendship">Friendship - friendships and their development.</option>
+                  <option value="betrayal">Betrayal - betrayal or conflicts between secondary characters.</option>
+                  <option value="mystery_investigation">Mystery / Investigation - a subplot involving mystery, investigation, or discovery.</option>
+                  <option value="rivalry_competition">Rivalry / Competition - rivalries between characters or groups.</option>
+                  <option value="mentorship">Mentorship - a mentor-student relationship that influences the main story.</option>
+                  <option value="revenge_justice">Revenge / Justice - a subplot involving revenge or justice.</option>
+                  <option value="personal_growth_self_discovery">Personal Growth / Self-Discovery - development of a secondary character.</option>
+                  <option value="comedy_lighthearted">Comedy / Lighthearted - lighthearted moments to balance the tone.</option>
+                  <option value="tragedy_loss">Tragedy / Loss - losses or dramatic events affecting secondary characters.</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Conflict & Resolution</label>
+                <select class="form-select" id="gen-conflict-resolution">
+                  <option value="internal_conflict" selected>Internal Conflict - struggles within the protagonist's mind or emotions.</option>
+                  <option value="external_conflict">External Conflict - struggles with outside forces (people, society, nature).</option>
+                  <option value="moral_dilemma">Moral Dilemma - protagonist faces tough ethical choices.</option>
+                  <option value="obstacle_challenge">Obstacle / Challenge - a major hurdle the protagonist must overcome.</option>
+                  <option value="rising_tension">Rising Tension - increasing stakes leading to a turning point.</option>
+                  <option value="climax">Climax - the peak of the story where conflict reaches its highest point.</option>
+                  <option value="resolution_outcome">Resolution / Outcome - how the conflict is ultimately resolved.</option>
+                  <option value="twist_unexpected_event">Twist / Unexpected Event - a surprising change that affects the story.</option>
+                  <option value="confrontation">Confrontation - direct confrontation between opposing forces or characters.</option>
+                  <option value="sacrifice_loss">Sacrifice / Loss - a significant cost or loss as part of resolution.</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="spec-card spec-card-key" open>
+          <summary class="spec-card-summary"><span>Generation Strategy</span><span class="spec-card-hint" aria-hidden="true"></span></summary>
+          <div class="spec-card-content">
             <div class="strategy-options">
               <label class="strategy-option">
                 <input type="radio" name="gen-strategy" value="random" checked>
                 <div class="strategy-content">
-                  <div class="strategy-title">Random (Fast)</div>
-                  <div class="strategy-desc">Quick generation using randomized templates and vocabularies. Instant results.</div>
+                  <div class="strategy-title">Random</div>
+                  <div class="strategy-desc">Fast randomized specs generation.</div>
                 </div>
               </label>
               <label class="strategy-option">
                 <input type="radio" name="gen-strategy" value="llm">
                 <div class="strategy-content">
                   <div class="strategy-title">With LLM</div>
-                  <div class="strategy-desc">AI generates CNL specification. Requires API key. More creative but slower.</div>
+                  <div class="strategy-desc">AI-generated specs for richer narrative variants.</div>
                 </div>
               </label>
               <label class="strategy-option">
                 <input type="radio" name="gen-strategy" value="advanced">
                 <div class="strategy-content">
-                  <div class="strategy-title">Advanced (Optimized)</div>
-                  <div class="strategy-desc">Multi-pass generation with constraint solving and metric optimization. Best quality.</div>
+                  <div class="strategy-title">Advanced</div>
+                  <div class="strategy-desc">Optimization-first generation pass.</div>
                 </div>
               </label>
               <label class="strategy-option">
                 <input type="radio" name="gen-strategy" value="wizard">
                 <div class="strategy-content">
-                  <div class="strategy-title">Guided Wizard</div>
-                  <div class="strategy-desc">Step-by-step wizard for precise control. Choose arc, map chapters, set tension curve.</div>
+                  <div class="strategy-title">Expert / Guided</div>
+                  <div class="strategy-desc">Step-by-step wizard control.</div>
                 </div>
               </label>
             </div>
 
-            <!-- LLM Settings (only shown when "With LLM" is selected) -->
             <div class="llm-settings" id="gen-llm-settings" style="display: none;">
               <div class="llm-settings-title">LLM Settings</div>
               <div class="form-row">
@@ -345,9 +547,42 @@
               </div>
             </div>
           </div>
-        </div>
+        </details>
+
+        <details class="spec-card" open>
+          <summary class="spec-card-summary"><span>Quick Templates</span><span class="spec-card-hint" aria-hidden="true"></span></summary>
+          <div class="spec-card-content">
+            <div class="spec-template-grid">
+              <button class="spec-template-card" type="button" data-template-key="classic_hero">
+                <span class="spec-template-title">Classic Hero Quest</span>
+                <span class="spec-template-desc">A call to adventure, trials, sacrifice, return.</span>
+              </button>
+              <button class="spec-template-card" type="button" data-template-key="mystery">
+                <span class="spec-template-title">Murder Mystery</span>
+                <span class="spec-template-desc">Investigation loop, suspects, clues, reveal.</span>
+              </button>
+              <button class="spec-template-card" type="button" data-template-key="romance">
+                <span class="spec-template-title">Romance Drama</span>
+                <span class="spec-template-desc">Emotional stakes, misunderstandings, intimacy arc.</span>
+              </button>
+              <button class="spec-template-card" type="button" data-template-key="scifi">
+                <span class="spec-template-title">Space Adventure</span>
+                <span class="spec-template-desc">Exploration, unknown threats, survival decisions.</span>
+              </button>
+              <button class="spec-template-card" type="button" data-template-key="horror">
+                <span class="spec-template-title">Horror Survival</span>
+                <span class="spec-template-desc">Escalating danger, shrinking options, last stand.</span>
+              </button>
+              <button class="spec-template-card" type="button" data-template-key="minimal">
+                <span class="spec-template-title">Minimal</span>
+                <span class="spec-template-desc">Bare skeleton for manual expansion.</span>
+              </button>
+            </div>
+          </div>
+        </details>
       </div>
-      <div class="modal-footer">
+
+      <div class="specs-page-footer">
         <button class="btn" id="btn-generate-cancel">Cancel</button>
         <button class="btn primary" id="btn-generate-execute" onclick="executeGenerate()">Generate</button>
       </div>

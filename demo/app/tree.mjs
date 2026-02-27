@@ -17,10 +17,10 @@ let draggedNodeId = null;
  */
 const NODE_TO_TAB = {
   'character-ref': { tab: 'characters', entityType: 'characters' },
-  'location-ref': { tab: 'locations', entityType: 'locations' },
-  'object-ref': { tab: 'objects', entityType: 'objects' },
+  'location-ref': { tab: 'backdrop', entityType: 'locations' },
+  'object-ref': { tab: 'backdrop', entityType: 'objects' },
   'mood-ref': { tab: 'moods', entityType: 'moods' },
-  'dialogue-ref': { tab: 'dialogues', entityType: 'dialogues' },
+  'dialogue-ref': { tab: 'dialogues', entityType: null },
   'dialogue': { tab: 'dialogues', entityType: null },
   'block-ref': { tab: 'blocks', entityType: null },
   'action': { tab: null, entityType: null }
@@ -100,11 +100,23 @@ export function selectNode(id, navigate = true) {
   state.selectedNode = id;
   
   const node = findNode(id);
+  if (node?.type === 'action' || node?.type === 'scene') {
+    setTimeout(() => {
+      window.editNodeProps?.(node);
+    }, 50);
+  }
+
   if (node && navigate) {
     const mapping = NODE_TO_TAB[node.type];
     if (mapping && mapping.tab) {
       // Navigate to the corresponding tab
       window.switchToTab?.(mapping.tab);
+
+      if (node.type === 'dialogue-ref' && node.refId) {
+        setTimeout(() => {
+          document.dispatchEvent(new CustomEvent('open-dialogue-editor', { detail: { dialogueId: node.refId } }));
+        }, 50);
+      }
       
       // If this is a reference node with an entity, open the entity editor
       if (mapping.entityType && node.refId) {

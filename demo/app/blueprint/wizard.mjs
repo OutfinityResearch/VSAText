@@ -13,24 +13,35 @@ let wizardContainer = null;
 let currentStep = 0;
 
 /**
- * Collect all chapters from structure (handles nested book/chapter structures)
+ * Collect chapter candidates from structure, including legacy/mixed nodes.
  */
-function collectChapters(node, chapters = []) {
+function collectChapters(node, chapters = [], parentType = null) {
   if (!node) return chapters;
-  
-  // If this node is a chapter, add it
-  if (node.type === 'chapter') {
+
+  const nodeName = String(node.name || '').trim();
+  const nodeTitle = String(node.title || '').trim();
+  const hasSceneChildren = Array.isArray(node.children) && node.children.some(child => child?.type === 'scene');
+  const looksLikeChapter = /^(ch|chapter)\b/i.test(nodeName) || /^(ch|chapter)\b/i.test(nodeTitle);
+  const isChapterNode = node.type === 'chapter' || (parentType === 'book' && (hasSceneChildren || looksLikeChapter));
+
+  if (isChapterNode) {
     chapters.push(node);
   }
-  
-  // Recursively check children
-  if (node.children && Array.isArray(node.children)) {
+
+  if (Array.isArray(node.children)) {
     for (const child of node.children) {
-      collectChapters(child, chapters);
+      collectChapters(child, chapters, node.type || null);
     }
   }
-  
+
   return chapters;
+}
+
+function chapterSortValue(chapter) {
+  const label = String(chapter.name || chapter.title || '').trim();
+  const numberMatch = label.match(/(\d+)/);
+  if (numberMatch) return parseInt(numberMatch[1], 10);
+  return Number.POSITIVE_INFINITY;
 }
 
 const STEPS = [
@@ -136,7 +147,14 @@ function renderChaptersStep() {
   const beats = getCurrentArcBeats();
   const structure = state.project.structure;
   // Use recursive collection to get all chapters
-  const chapters = collectChapters(structure);
+  const chapterCandidates = collectChapters(structure);
+  const chaptersById = new Map();
+  for (const chapter of chapterCandidates) {
+    if (!chapter?.id || chaptersById.has(chapter.id)) continue;
+    chaptersById.set(chapter.id, chapter);
+  }
+  const chapters = Array.from(chaptersById.values())
+    .sort((a, b) => chapterSortValue(a) - chapterSortValue(b));
   const mappings = state.project.blueprint.beatMappings;
   
   if (chapters.length === 0) {

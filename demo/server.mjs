@@ -827,7 +827,11 @@ function createDemoServer() {
 // MAIN
 // ============================================
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const isMainModule = process.argv[1]
+  ? fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
+  : false;
+
+if (isMainModule) {
   const argPort = process.argv[2] ? Number(process.argv[2]) : null;
   const envPort = process.env.PORT ? Number(process.env.PORT) : null;
   const port = argPort || envPort || 3000;

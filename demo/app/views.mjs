@@ -99,28 +99,42 @@ export function renderRelationshipsView() {
     </defs>
   `;
   
+  const relGroups = new Map();
   rels.forEach(r => {
-    const from = nodes.find(n => n.id === r.fromId);
-    const to = nodes.find(n => n.id === r.toId);
-    if (!from || !to) return;
-    const relType = VOCAB.RELATIONSHIP_TYPES[r.type];
-    const color = relType?.color || '#8b949e';
-    
-    const dx = to.x - from.x;
-    const dy = to.y - from.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const nodeRadius = 44;
-    
-    const startX = from.x + (dx / dist) * nodeRadius;
-    const startY = from.y + (dy / dist) * nodeRadius;
-    const endX = to.x - (dx / dist) * nodeRadius;
-    const endY = to.y - (dy / dist) * nodeRadius;
-    
-    const midX = (startX + endX) / 2;
-    const midY = (startY + endY) / 2 - 12;
-    
-    edgesHtml += `<line class="graph-edge" x1="${startX}" y1="${startY}" x2="${endX}" y2="${endY}" stroke="${color}" marker-end="url(#arrowhead)" />`;
-    edgesHtml += `<text class="graph-edge-label" x="${midX}" y="${midY}" text-anchor="middle">${relType?.label || r.type}</text>`;
+    const key = `${r.fromId}->${r.toId}`;
+    if (!relGroups.has(key)) relGroups.set(key, []);
+    relGroups.get(key).push(r);
+  });
+
+  relGroups.forEach(group => {
+    group.forEach((r, index) => {
+      const from = nodes.find(n => n.id === r.fromId);
+      const to = nodes.find(n => n.id === r.toId);
+      if (!from || !to) return;
+      const relType = VOCAB.RELATIONSHIP_TYPES[r.type];
+      const color = relType?.color || '#8b949e';
+
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (!dist) return;
+      const nodeRadius = 44;
+
+      const nx = -dy / dist;
+      const ny = dx / dist;
+      const offset = (index - (group.length - 1) / 2) * 14;
+
+      const startX = from.x + (dx / dist) * nodeRadius + nx * offset;
+      const startY = from.y + (dy / dist) * nodeRadius + ny * offset;
+      const endX = to.x - (dx / dist) * nodeRadius + nx * offset;
+      const endY = to.y - (dy / dist) * nodeRadius + ny * offset;
+
+      const midX = (startX + endX) / 2 + nx * 4;
+      const midY = (startY + endY) / 2 + ny * 4 - 8;
+
+      edgesHtml += `<line class="graph-edge" x1="${startX}" y1="${startY}" x2="${endX}" y2="${endY}" stroke="${color}" marker-end="url(#arrowhead)" />`;
+      edgesHtml += `<text class="graph-edge-label" x="${midX}" y="${midY}" text-anchor="middle">${relType?.label || r.type}</text>`;
+    });
   });
   
   let nodesHtml = '';
@@ -241,12 +255,34 @@ window.addRelationship = () => {
       <div class="form-hint">Hidden relationships are not visible to other characters in the story. Use for secrets, conspiracies, or unrevealed connections.</div>
     </div>
     <div class="form-hint">Tip: Relationships appear as edges in the graph above</div>`;
+  const relTypeSelect = $('#rel-type');
+  const relHiddenCheckbox = $('#rel-hidden');
+  const syncHiddenWithType = () => {
+    const selectedType = relTypeSelect?.value;
+    const meta = VOCAB.RELATIONSHIP_TYPES[selectedType];
+    if (relHiddenCheckbox && meta && meta.hidden === true) {
+      relHiddenCheckbox.checked = true;
+    }
+  };
+  relTypeSelect?.addEventListener('change', syncHiddenWithType);
+  syncHiddenWithType();
+
   $('#btn-modal-save').onclick = () => {
     const fromId = $('#rel-from').value;
     const toId = $('#rel-to').value;
     const type = $('#rel-type').value;
     const hidden = $('#rel-hidden').checked;
     if (fromId === toId) { alert('Cannot create relationship with self'); return; }
+    const duplicate = state.project.libraries.relationships.find(r =>
+      r.fromId === fromId && r.toId === toId && r.type === type
+    );
+    if (duplicate) {
+      duplicate.hidden = hidden;
+      closeModal('entity-modal');
+      renderRelationshipsView();
+      generateCNL();
+      return;
+    }
     state.project.libraries.relationships.push({ id: genId(), fromId, toId, type, hidden });
     closeModal('entity-modal');
     renderRelationshipsView();
@@ -258,6 +294,7 @@ window.addRelationship = () => {
 // ==================== EMOTIONAL ARC VIEW ====================
 export function renderEmotionalArcView() {
   const container = $('#emotionalarc-view');
+  if (!container) return;
   const arc = VOCAB.NARRATIVE_ARCS[state.project.selectedArc];
   const emotionalArc = state.project.libraries.emotionalArc;
   
@@ -408,6 +445,8 @@ window.setBlocksFilter = (filter) => {
 window.showBlockDetails = (key) => {
   const block = VOCAB.NARRATIVE_BLOCKS[key];
   if (!block) return;
+  const blockNotes = state.project.libraries.blockNotes || {};
+  const existingNote = blockNotes[key] || '';
   
   $('#modal-title').textContent = block.label;
   $('#modal-body').innerHTML = `
@@ -431,10 +470,21 @@ window.showBlockDetails = (key) => {
         ${block.themes.map(t => `<span class="entity-tag">${t}</span>`).join('')}
       </div>
     </div>
+    <div style="margin-top:1rem;">
+      <label class="form-label">Custom Notes</label>
+      <textarea class="form-textarea" id="block-note" rows="4" placeholder="Add project-specific notes for this block...">${existingNote}</textarea>
+    </div>
   `;
-  $('#btn-modal-save').style.display = 'none';
+  $('#btn-modal-save').style.display = '';
+  $('#btn-modal-save').textContent = 'Save';
+  $('#btn-modal-save').onclick = () => {
+    if (!state.project.libraries.blockNotes) {
+      state.project.libraries.blockNotes = {};
+    }
+    state.project.libraries.blockNotes[key] = $('#block-note')?.value?.trim() || '';
+    closeModal('entity-modal');
+  };
   openModal('entity-modal');
-  setTimeout(() => { $('#btn-modal-save').style.display = ''; }, 100);
 };
 
 // ==================== WORLD RULES VIEW ====================
@@ -458,9 +508,12 @@ export function renderWorldRulesView() {
     });
   }
   
-  cardsHtml += `<div class="add-entity-card" onclick="addWorldRule()"><div class="icon">+</div><span>Add World Rule</span></div>`;
-  
   container.innerHTML = descHtml + `<div class="rules-grid-cards">${cardsHtml}</div>`;
+}
+
+function refreshWorldRuleViews() {
+  renderWorldRulesView();
+  window.renderBackdropView?.();
 }
 
 window.addWorldRule = () => {
@@ -474,7 +527,7 @@ window.editWorldRule = (id) => {
 };
 
 function showWorldRuleForm(r) {
-  const isEdit = !!r;
+  const isEdit = !!r?.id;
   $('#modal-title').textContent = (isEdit ? 'Edit' : 'Add') + ' World Rule';
   
   const categories = ['physics', 'magic', 'society', 'technology', 'biology', 'time', 'geography', 'other'];
@@ -514,7 +567,7 @@ function showWorldRuleForm(r) {
     
     if (!isEdit) state.project.libraries.worldRules.push(rule);
     closeModal('entity-modal');
-    renderWorldRulesView();
+    refreshWorldRuleViews();
     updateStats();
     generateCNL();
   };
@@ -525,7 +578,18 @@ window.deleteWorldRule = (id) => {
   if (!confirm('Delete this rule?')) return;
   state.project.libraries.worldRules = state.project.libraries.worldRules.filter(r => r.id !== id);
   closeModal('entity-modal');
-  renderWorldRulesView();
+  refreshWorldRuleViews();
   updateStats();
   generateCNL();
+};
+
+window.addWorldRuleFromTemplate = (template) => {
+  if (!template) return;
+  state.editingEntity = null;
+  showWorldRuleForm({
+    name: template.name || '',
+    category: template.category || 'other',
+    description: template.description || '',
+    scope: template.scope || ''
+  });
 };

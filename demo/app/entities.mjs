@@ -23,8 +23,8 @@ const ENTITY_DESCRIPTIONS = {
     description: 'The places where your story unfolds. Locations set the mood and atmosphere, provide context for actions, and can become characters themselves. Define geography, time period, and distinctive characteristics.'
   },
   objects: {
-    title: 'Objects & Plot Elements',
-    description: 'Items with narrative significance: artifacts, secrets, MacGuffins, or symbolic objects. These drive plot, reveal character, or represent themes. Not every prop—only objects that matter to the story.'
+    title: 'Objects',
+    description: 'Narratively significant items: artifacts, keys, documents, or symbolic objects. They influence scenes, reveal character, and reinforce themes. Focus only on items that matter to the story.'
   },
   moods: {
     title: 'Moods & Atmospheres',
@@ -36,10 +36,33 @@ const ENTITY_DESCRIPTIONS = {
   }
 };
 
+const WORLD_RULE_TEMPLATES = [
+  { category: 'society', name: 'Status drives access', description: 'Institutions gate resources and opportunity.' },
+  { category: 'technology', name: 'Memory leaves traces', description: 'Actions persist in systems and records.' },
+  { category: 'magic', name: 'Power has a cost', description: 'Every extraordinary act demands sacrifice.' },
+  { category: 'time', name: 'Deadlines amplify risk', description: 'Delays escalate irreversible consequences.' },
+  { category: 'geography', name: 'Borders shape conflict', description: 'Movement rules alter alliances and threat.' }
+];
+
 // ==================== ENTITY GRIDS ====================
-export function renderEntityGrid(type) {
-  const c = $(`#${type}-grid`);
+export function renderEntityGrid(type, containerIdOrOptions = null, maybeOptions = null) {
+  let containerId = `${type}-grid`;
+  let options = {};
+
+  if (typeof containerIdOrOptions === 'string') {
+    containerId = containerIdOrOptions;
+    if (maybeOptions && typeof maybeOptions === 'object') options = maybeOptions;
+  } else if (
+    containerIdOrOptions &&
+    typeof containerIdOrOptions === 'object' &&
+    !Array.isArray(containerIdOrOptions)
+  ) {
+    options = containerIdOrOptions;
+  }
+
+  const c = $(`#${containerId}`);
   if (!c) return;
+  const { includeAddCard = true } = options;
   const list = state.project.libraries[type];
   const desc = ENTITY_DESCRIPTIONS[type];
   
@@ -53,7 +76,10 @@ export function renderEntityGrid(type) {
   }
   
   if (list.length === 0) {
-    c.innerHTML = descHtml + `<div class="entity-grid-cards"><div class="add-entity-card" onclick="addEntity('${type}')"><div class="icon">+</div><span>Add ${type.slice(0, -1)}</span></div></div>`;
+    const addCard = includeAddCard
+      ? `<div class="add-entity-card" onclick="addEntity('${type}')"><div class="icon">+</div><span>Add ${type.slice(0, -1)}</span></div>`
+      : '';
+    c.innerHTML = descHtml + `<div class="entity-grid-cards">${addCard}</div>`;
     return;
   }
   
@@ -68,14 +94,116 @@ export function renderEntityGrid(type) {
       const emotionList = Object.entries(e.emotions).slice(0, 3).map(([k, v]) => `<span class="entity-tag">${k}:${v}</span>`);
       tags = `<div class="entity-tags">${emotionList.join('')}</div>`;
     }
+    if (type === 'locations' && Array.isArray(e.characteristics) && e.characteristics.length) {
+      const displayChars = e.characteristics.slice(0, 4).map(c => humanizeLabel(c));
+      const moreCount = e.characteristics.length - 4;
+      tags = `<div class="entity-tags">${displayChars.map(c => `<span class="entity-tag">${c}</span>`).join('')}${moreCount > 0 ? `<span class="entity-tag more">+${moreCount}</span>` : ''}</div>`;
+    }
     let sub = e.archetype || e.geography || e.objectType || e.themeKey || '';
+    if (type === 'locations') {
+      const geo = e.geography ? humanizeLabel(e.geography) : '';
+      const era = e.time ? humanizeLabel(e.time) : '';
+      sub = [geo, era].filter(Boolean).join(' • ') || 'Location';
+    }
     const cardType = type === 'objects' ? 'object' : type.slice(0, -1);
+    const quickDelete = (type === 'characters' || type === 'locations' || type === 'objects')
+      ? `<button class="entity-delete-btn" type="button" title="Delete" onclick="event.stopPropagation(); window.deleteEntity('${type}','${e.id}')">×</button>`
+      : '';
     return `<div class="entity-card ${cardType}" onclick="editEntity('${type}','${e.id}')">
+      ${quickDelete}
       <div class="entity-name">${e.name}</div><div class="entity-type">${sub}</div>${tags}</div>`;
   }).join('');
   
-  cards += `<div class="add-entity-card" onclick="addEntity('${type}')"><div class="icon">+</div><span>Add ${type.slice(0, -1)}</span></div>`;
+  if (includeAddCard) {
+    cards += `<div class="add-entity-card" onclick="addEntity('${type}')"><div class="icon">+</div><span>Add ${type.slice(0, -1)}</span></div>`;
+  }
   c.innerHTML = descHtml + `<div class="entity-grid-cards">${cards}</div>`;
+}
+
+export function renderBackdropView() {
+  const container = $('#backdrop-view');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="view-description-header">
+      <div class="view-description-title">Backdrop</div>
+      <div class="view-description-text">
+        In literary writing, backdrop means the story setting: place, time, and meaningful objects that shape atmosphere, conflict, and character choices.
+      </div>
+    </div>
+    <div class="backdrop-layout">
+      <section class="backdrop-section">
+        <div class="backdrop-section-header">
+          <h3>Locations (Place & Time)</h3>
+          <button class="btn small" type="button" onclick="window.addEntity('locations')">+ Add Location</button>
+        </div>
+        <div class="backdrop-section-note">Define place, geography, atmosphere, and era/time period for scene context.</div>
+        <div class="entity-grid" id="backdrop-locations-grid"></div>
+      </section>
+      <section class="backdrop-section">
+        <div class="backdrop-section-header">
+          <h3>Story Objects</h3>
+          <button class="btn small" type="button" onclick="window.addEntity('objects')">+ Add Object</button>
+        </div>
+        <div class="backdrop-section-note">Track story-relevant artifacts, tools, keys, and symbolic items.</div>
+        <div class="entity-grid" id="backdrop-objects-grid"></div>
+      </section>
+      <section class="backdrop-section">
+        <div class="backdrop-section-header">
+          <h3>World Rules</h3>
+          <button class="btn small" type="button" onclick="window.addWorldRule()">+ Add World Rule</button>
+        </div>
+        <div class="backdrop-section-note">Define social, magical, technological, and physical constraints that govern the world.</div>
+        <div class="rules-grid-cards" id="backdrop-worldrules-grid"></div>
+      </section>
+    </div>
+  `;
+
+  renderEntityGrid('locations', 'backdrop-locations-grid', { includeAddCard: false });
+  renderEntityGrid('objects', 'backdrop-objects-grid', { includeAddCard: false });
+  renderBackdropWorldRules();
+}
+
+function renderBackdropWorldRules() {
+  const container = $('#backdrop-worldrules-grid');
+  if (!container) return;
+
+  const rules = state.project.libraries.worldRules || [];
+  let cardsHtml = '';
+
+  if (rules.length > 0) {
+    rules.forEach(r => {
+      cardsHtml += `
+        <div class="rule-card" onclick="window.editWorldRule('${r.id}')">
+          <div class="rule-category">${r.category}</div>
+          <div class="rule-name">${r.name}</div>
+          <div class="rule-desc">${r.description}</div>
+          ${r.scope ? `<div class="rule-scope">Applies to: ${r.scope}</div>` : ''}
+        </div>
+      `;
+    });
+  }
+
+  const suggestedHtml = WORLD_RULE_TEMPLATES.map((tpl, idx) => `
+    <div class="rule-card suggested" data-world-template="${idx}">
+      <div class="rule-category">${humanizeLabel(tpl.category)}</div>
+      <div class="rule-name">${tpl.name}</div>
+      <div class="rule-desc">${tpl.description}</div>
+      <div class="rule-scope">Template</div>
+    </div>
+  `).join('');
+
+  container.innerHTML = cardsHtml + suggestedHtml;
+
+  container.querySelectorAll('[data-world-template]').forEach((el) => {
+    el.addEventListener('click', () => {
+      const index = Number(el.getAttribute('data-world-template'));
+      const template = WORLD_RULE_TEMPLATES[index];
+      if (template) {
+        window.addWorldRuleFromTemplate?.(template);
+      }
+    });
+  });
 }
 
 window.addEntity = type => { 
@@ -95,6 +223,7 @@ window.deleteEntity = (type, id) => {
   removeEntityRefs(state.project.structure, id);
   closeModal('entity-modal');
   renderEntityGrid(type);
+  if (type === 'locations' || type === 'objects') window.renderBackdropView?.();
   renderTree();
 };
 
@@ -111,11 +240,6 @@ function showEntityForm(type, e) {
   const isEdit = !!e;
   $('#modal-title').textContent = (isEdit ? 'Edit ' : 'Add ') + type.slice(0, -1);
   let html = '';
-  
-  if (isEdit) {
-    html += `<div style="display:flex;justify-content:flex-end;margin-bottom:0.8rem;">
-      <button class="btn danger" onclick="deleteEntity('${type}','${e.id}')">Delete</button></div>`;
-  }
   
   if (type === 'characters') {
     html += `<div class="form-group"><label class="form-label">Name</label><input class="form-input" id="e-name" value="${e?.name || pick(VOCAB.NAMES.characters)}"></div>
@@ -138,7 +262,7 @@ function showEntityForm(type, e) {
       <div class="form-row">
         <div class="form-group"><label class="form-label">Geography</label>
         <select class="form-select" id="e-geography">${Object.entries(VOCAB.LOCATION_GEOGRAPHY).map(([k, v]) => `<option value="${k}" ${e?.geography === k ? 'selected' : ''}>${v.label}</option>`).join('')}</select></div>
-        <div class="form-group"><label class="form-label">Time Period</label>
+        <div class="form-group"><label class="form-label">Era / Time Period</label>
         <select class="form-select" id="e-time">${Object.entries(VOCAB.LOCATION_TIME).map(([k, v]) => `<option value="${k}" ${e?.time === k ? 'selected' : ''}>${v.label}</option>`).join('')}</select></div>
       </div>
       <div class="form-group"><label class="form-label">Characteristics</label>
@@ -155,7 +279,9 @@ function showEntityForm(type, e) {
       </div>
       <div class="form-group"><label class="form-label">Owner</label>
       <select class="form-select" id="e-owner"><option value="">-- None --</option>
-      ${state.project.libraries.characters.map(c => `<option value="${c.id}" ${e?.ownerId === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div>`;
+      ${state.project.libraries.characters.map(c => `<option value="${c.id}" ${e?.ownerId === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Description</label>
+      <textarea class="form-textarea" id="e-description" rows="3" placeholder="Describe the object appearance and narrative role...">${e?.description || ''}</textarea></div>`;
   }
   
   if (type === 'moods') {
@@ -178,6 +304,16 @@ function showEntityForm(type, e) {
   
   $('#modal-body').innerHTML = html;
   $('#btn-modal-save').onclick = () => saveEntity(type);
+  const deleteBtn = $('#btn-modal-delete');
+  if (deleteBtn) {
+    if (isEdit) {
+      deleteBtn.style.display = 'inline-flex';
+      deleteBtn.onclick = () => deleteEntity(type, e.id);
+    } else {
+      deleteBtn.style.display = 'none';
+      deleteBtn.onclick = null;
+    }
+  }
   openModal('entity-modal');
 }
 
@@ -202,6 +338,7 @@ function saveEntity(type) {
     e.objectType = $('#e-objectType').value;
     e.significance = $('#e-significance').value;
     e.ownerId = $('#e-owner').value || null;
+    e.description = $('#e-description').value.trim();
   }
   if (type === 'moods') {
     e.name = $('#e-mood-name').value || 'Mood';
@@ -228,6 +365,8 @@ function saveEntity(type) {
   if (!state.editingEntity) state.project.libraries[type].push(e);
   closeModal('entity-modal');
   renderEntityGrid(type);
+  if (type === 'locations' || type === 'objects') window.renderBackdropView?.();
+  if (type === 'themes' || type === 'moods') window.renderFrameworkView?.();
   if (type === 'characters') renderRelationshipsView();
   generateCNL();
 }
@@ -253,6 +392,22 @@ function renderLocationChips(selected) {
   return Object.entries(cats).map(([cat, chars]) => 
     `<div class="chip-category">${cat}</div>` + chars.map(c => `<div class="chip ${c.sel ? 'selected' : ''}" data-key="${c.k}" onclick="toggleChip(this)" title="${c.desc}">${c.label}</div>`).join('')
   ).join('');
+}
+
+function humanizeLabel(value) {
+  return String(value || '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase())
+    .trim();
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 window.toggleChip = el => el.classList.toggle('selected');
@@ -356,9 +511,10 @@ function updateMoodPreview() {
 // ==================== SELECT MODALS ====================
 export function showSelectModal(type, parent) {
   const list = state.project.libraries[type];
+  const tabLabel = (type === 'locations' || type === 'objects') ? 'Backdrop' : type;
   $('#select-modal-title').textContent = 'Select ' + type.slice(0, -1);
   if (!list.length) {
-    $('#select-modal-body').innerHTML = `<div class="empty-state"><div class="empty-state-text">No ${type} yet</div><div class="empty-state-hint">Create some in the ${type} tab first</div></div>`;
+    $('#select-modal-body').innerHTML = `<div class="empty-state"><div class="empty-state-text">No ${type} yet</div><div class="empty-state-hint">Create some in the ${tabLabel} tab first</div></div>`;
   } else {
     $('#select-modal-body').innerHTML = list.map(e => `<div class="entity-card ${type.slice(0, -1)}" onclick="addRef('${type}','${e.id}','${parent.id}')" style="margin-bottom:0.5rem;">
       <div class="entity-name">${e.name}</div><div class="entity-type">${e.archetype || e.geography || e.objectType || ''}</div></div>`).join('');
@@ -430,7 +586,10 @@ export function showActionModal(parent) {
     <select class="form-select" id="action-target"><option value="">--</option>${chars.map(c => `<option value="${c.name}">${c.name}</option>`).join('')}
     ${state.project.libraries.locations.map(l => `<option value="${l.name}">${l.name} (location)</option>`).join('')}
     ${state.project.libraries.objects.map(o => `<option value="${o.name}">${o.name} (object)</option>`).join('')}</select></div>
-    <button class="btn primary" onclick="saveAction('${parent.id}')">Add Action</button>`;
+    <div class="select-modal-actions">
+      <button class="btn" type="button" onclick="closeModal('select-modal')">Cancel</button>
+      <button class="btn primary" type="button" onclick="saveAction('${parent.id}')">Add Action</button>
+    </div>`;
   $('#select-modal-body').innerHTML = html;
   openModal('select-modal');
 }
@@ -447,17 +606,69 @@ window.saveAction = (pid) => {
 
 export function editNodeProps(n) {
   $('#modal-title').textContent = 'Edit ' + n.type;
-  $('#modal-body').innerHTML = `<div class="form-group"><label class="form-label">Name</label><input class="form-input" id="edit-name" value="${n.name || ''}"></div>
+  let html = `<div class="form-group"><label class="form-label">Name</label><input class="form-input" id="edit-name" value="${n.name || ''}"></div>
     <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="edit-title" value="${n.title || ''}"></div>
     <div class="form-group"><label class="form-label">CNL Annotations</label>
     <textarea class="form-textarea" id="edit-annotations" rows="4" placeholder="#hint: Scene should escalate tension">${annotationsToEditorText(n.annotations || [])}</textarea>
     <div class="form-hint">Annotations are serialized after this node in CNL output.</div></div>`;
+
+  if (n.type === 'scene') {
+    const moods = state.project.libraries.moods || [];
+    const moodOptions = moods.map(m => `
+      <option value="${escapeHtml(m.name || '')}" ${(n.mood || '') === (m.name || '') ? 'selected' : ''}>${escapeHtml(m.name || 'Mood')}</option>
+    `).join('');
+    html += `<div class="form-group"><label class="form-label">Scene Mood</label>
+      <select class="form-select" id="edit-scene-mood">
+        <option value="">-- None --</option>
+        ${moodOptions}
+      </select>
+      ${moods.length === 0 ? '<div class="form-hint">Create moods first in Backdrop to use scene mood.</div>' : ''}
+    </div>`;
+  }
+
+  if (n.type === 'action' && n.actionData) {
+    html += `<div class="form-row">
+      <div class="form-group"><label class="form-label">Subject</label><input class="form-input" id="edit-action-subject" value="${n.actionData.subject || ''}"></div>
+      <div class="form-group"><label class="form-label">Target</label><input class="form-input" id="edit-action-target" value="${n.actionData.target || ''}"></div>
+    </div>`;
+  }
+
+  if (n.type === 'dialogue' && n.dialogueData) {
+    html += `<div class="form-group"><label class="form-label">Dialogue Text</label>
+      <textarea class="form-textarea" id="edit-dialogue-text" rows="4" placeholder="Dialogue content...">${n.dialogueData.sketch || ''}</textarea></div>`;
+  }
+
+  if (n.type === 'block-ref') {
+    html += `<div class="form-group"><label class="form-label">Block Notes</label>
+      <textarea class="form-textarea" id="edit-block-note" rows="3" placeholder="Optional notes for this block...">${n.note || ''}</textarea></div>`;
+  }
+
+  $('#modal-body').innerHTML = html;
   $('#btn-modal-save').onclick = () => {
     n.name = $('#edit-name').value || n.name;
     n.title = $('#edit-title').value || '';
     n.annotations = parseAnnotationLines($('#edit-annotations').value);
+    if (n.type === 'scene') n.mood = $('#edit-scene-mood')?.value || '';
+
+    if (n.type === 'action' && n.actionData) {
+      n.actionData.subject = $('#edit-action-subject')?.value || n.actionData.subject;
+      n.actionData.target = $('#edit-action-target')?.value || '';
+      n.name = `${n.actionData.subject} ${n.actionData.action || ''}`.trim();
+    }
+
+    if (n.type === 'dialogue' && n.dialogueData) {
+      n.dialogueData.sketch = $('#edit-dialogue-text')?.value || '';
+    }
+
+    if (n.type === 'block-ref') {
+      n.note = $('#edit-block-note')?.value || '';
+    }
+
     closeModal('entity-modal');
     renderTree();
+    generateCNL();
   };
   openModal('entity-modal');
 }
+
+window.editNodeProps = editNodeProps;

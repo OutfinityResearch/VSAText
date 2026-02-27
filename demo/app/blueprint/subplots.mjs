@@ -50,10 +50,16 @@ export function render() {
     
     <div class="subplots-list">
       ${subplots.length === 0 ? `
-        <div class="empty-state">
-          <div class="empty-icon">📝</div>
-          <p>No subplots defined yet</p>
-          <p class="hint">Add subplots to create richer story dynamics</p>
+        <div class="subplots-empty">
+          <div class="subplots-empty-icon" aria-hidden="true">📝</div>
+          <h4 class="subplots-empty-title">No subplots defined yet</h4>
+          <p class="subplots-empty-text">Add subplot threads to deepen character dynamics and strengthen thematic contrast.</p>
+          <div class="subplots-empty-tags">
+            <span>Romance</span>
+            <span>Mystery</span>
+            <span>Growth</span>
+            <span>Rivalry</span>
+          </div>
         </div>
       ` : subplots.map(subplot => renderSubplotCard(subplot, characters, beats)).join('')}
     </div>
@@ -101,7 +107,9 @@ function renderSubplotCard(subplot, characters, beats) {
           <span class="value">${resolveBeat?.label || 'Not set'}</span>
         </div>
       </div>
-      <button class="btn btn-small btn-edit-subplot" data-id="${subplot.id}">Edit</button>
+      <div class="subplot-card-actions">
+        <button class="btn btn-small btn-edit-subplot" data-id="${subplot.id}">Edit</button>
+      </div>
     </div>
   `;
 }
@@ -146,9 +154,11 @@ function showSubplotModal(subplot = null) {
     <div class="form-group">
       <label class="form-label">Involved Characters</label>
       <div class="checkbox-grid" id="subplot-characters">
-        ${characters.map(c => `
-          <label class="checkbox-item">
-            <input type="checkbox" value="${c.id}" 
+        ${characters.length === 0 ? `
+          <div class="subplot-char-empty">No characters available, add characters first in Cast.</div>
+        ` : characters.map(c => `
+          <label class="checkbox-item subplot-char-option ${selectedCharIds.includes(c.id) ? 'selected' : ''}">
+            <input class="subplot-char-checkbox" type="checkbox" value="${c.id}" 
                    ${selectedCharIds.includes(c.id) ? 'checked' : ''}>
             <span>${c.name} (${c.archetype || 'character'})</span>
           </label>
@@ -182,6 +192,16 @@ function showSubplotModal(subplot = null) {
       </div>
     </div>
   `;
+
+  // Keep selection visibly synced for character options.
+  document.querySelectorAll('#subplot-characters .subplot-char-checkbox').forEach((checkbox) => {
+    const syncSelectedState = () => {
+      const row = checkbox.closest('.subplot-char-option');
+      if (row) row.classList.toggle('selected', checkbox.checked);
+    };
+    checkbox.addEventListener('change', syncSelectedState);
+    syncSelectedState();
+  });
   
   saveBtn.onclick = () => {
     const name = document.getElementById('subplot-name').value.trim();
@@ -190,7 +210,7 @@ function showSubplotModal(subplot = null) {
     const resolveBeat = document.getElementById('subplot-resolve').value;
     
     const characterIds = [];
-    document.querySelectorAll('#subplot-characters input:checked').forEach(cb => {
+    document.querySelectorAll('#subplot-characters .subplot-char-checkbox:checked').forEach(cb => {
       characterIds.push(cb.value);
     });
     

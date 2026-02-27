@@ -131,7 +131,11 @@ export function removeSubplot(id) {
 export function updateBeatMapping(beatKey, mapping) {
   const existing = state.project.blueprint.beatMappings.findIndex(b => b.beatKey === beatKey);
   if (existing >= 0) {
-    state.project.blueprint.beatMappings[existing] = { beatKey, ...mapping };
+    state.project.blueprint.beatMappings[existing] = {
+      ...state.project.blueprint.beatMappings[existing],
+      ...mapping,
+      beatKey
+    };
   } else {
     state.project.blueprint.beatMappings.push({ beatKey, ...mapping });
   }

@@ -67,8 +67,10 @@ export function canImprove(hasGeneratedNL) {
     return selectedLang === currentVersionLanguage && 
            (selectedModel || 'default') === currentVersionModel;
   }
-  
-  return false;
+
+  // Fallback: if story exists but version metadata is unavailable,
+  // allow improve instead of forcing "Create Story".
+  return Boolean(hasGeneratedNL);
 }
 
 /**

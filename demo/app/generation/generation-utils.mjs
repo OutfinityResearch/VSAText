@@ -9,6 +9,7 @@ import { genId } from '../utils.mjs';
 import { renderTree } from '../tree.mjs';
 import { renderEntityGrid } from '../entities.mjs';
 import { renderRelationshipsView, renderEmotionalArcView, renderBlocksView, renderWorldRulesView } from '../views.mjs';
+import { renderFrameworkView } from '../framework.mjs';
 import { renderEmptyMetrics } from '../metrics.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
 import { DIALOGUE_TEMPLATES, PURPOSE_TO_TONE, getTensionForBeat } from './generation-config.mjs';
@@ -25,6 +26,7 @@ import { normalizeAnnotations } from '../cnl-annotations.mjs';
 export function refreshAllViews() {
   renderTree();
   ['characters', 'locations', 'objects', 'moods', 'themes'].forEach(renderEntityGrid);
+  renderFrameworkView();
   renderRelationshipsView();
   renderEmotionalArcView();
   renderBlocksView();

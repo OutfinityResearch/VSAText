@@ -1,0 +1,160 @@
+<h1>Create Story Specification</h1>
+
+<p>The Create Story Specification page is the full-screen planning workspace for story setup before generation. It centralizes story core, cast, world setup, narrative structure, strategy, and quick templates in one place.</p>
+
+<div class="info-box">
+  <div class="info-box-title">When to Use This Page</div>
+  <p>Use this page at the beginning of a project, or whenever you need a full regenerate with improved constraints and higher specification clarity.</p>
+</div>
+
+<h2>What This Page Does</h2>
+
+<ul>
+  <li>Collects high-level story constraints (genre, tone, complexity, length, cast size, world rules)</li>
+  <li>Captures character archetypes and trait sets</li>
+  <li>Defines location and artifact context</li>
+  <li>Sets narrative intent through structured dropdowns</li>
+  <li>Selects the generation strategy (Random, LLM, Advanced, Expert/Guided)</li>
+  <li>Applies quick templates for rapid initialization</li>
+</ul>
+
+<h2>Page Sections</h2>
+
+<table>
+  <tr>
+    <th>Section</th>
+    <th>Purpose</th>
+    <th>Main Inputs</th>
+  </tr>
+  <tr>
+    <td>Store Core</td>
+    <td>Define base narrative constraints</td>
+    <td>Genre, tone, complexity, story length, number of characters, world rules, theme, wisdom</td>
+  </tr>
+  <tr>
+    <td>Characters</td>
+    <td>Shape cast behavior and dynamics</td>
+    <td>Protagonist, antagonist, secondary characters, relationships</td>
+  </tr>
+  <tr>
+    <td>The World and Locations</td>
+    <td>Constrain setting and important objects</td>
+    <td>Geography, time period, object types, significance</td>
+  </tr>
+  <tr>
+    <td>Narrative Structure</td>
+    <td>Set structural direction</td>
+    <td>Protagonist's Arc, Subplots, Conflict & Resolution</td>
+  </tr>
+  <tr>
+    <td>Generation Strategy</td>
+    <td>Choose generation engine behavior</td>
+    <td>Random, With LLM, Advanced, Expert / Guided</td>
+  </tr>
+  <tr>
+    <td>Quick Templates</td>
+    <td>Apply one-click presets</td>
+    <td>Classic Hero Quest, Murder Mystery, Romance Drama, Space Adventure, Horror Survival, Minimal</td>
+  </tr>
+</table>
+
+<h2>How to Use (Step by Step)</h2>
+
+<ol>
+  <li>Open <strong>Create Specs</strong> from the left sidebar.</li>
+  <li>Fill <strong>Store Core</strong> first. This establishes global constraints used by all strategies.</li>
+  <li>Define <strong>Characters</strong> with archetypes and traits. Add secondary characters only when needed.</li>
+  <li>Set <strong>The World and Locations</strong> so scenes and objects have clear context.</li>
+  <li>Pick <strong>Narrative Structure</strong> dropdowns to lock structural intent.</li>
+  <li>Choose a <strong>Generation Strategy</strong> based on speed vs quality needs.</li>
+  <li>Optionally apply a <strong>Quick Template</strong> if you need a starting scaffold.</li>
+  <li>Click <strong>Generate</strong> to produce or regenerate the specification.</li>
+</ol>
+
+<h2>Strategy Selection Guide</h2>
+
+<table>
+  <tr>
+    <th>Strategy</th>
+    <th>Best Use Case</th>
+    <th>Tradeoff</th>
+  </tr>
+  <tr>
+    <td>Random</td>
+    <td>Fast ideation and rapid iteration</td>
+    <td>Lower semantic depth</td>
+  </tr>
+  <tr>
+    <td>With LLM</td>
+    <td>Richer semantics and creative variation</td>
+    <td>Depends on model/API availability</td>
+  </tr>
+  <tr>
+    <td>Advanced</td>
+    <td>Higher structural coherence and optimization</td>
+    <td>Higher compute time</td>
+  </tr>
+  <tr>
+    <td>Expert / Guided</td>
+    <td>Manual control with wizard flow</td>
+    <td>More user input required</td>
+  </tr>
+</table>
+
+<h2>Example Input Bundle</h2>
+
+<pre><code>Store Core
+- Genre: Fantasy
+- Tone: Dark
+- Complexity: Moderate
+- Story Length: Medium (8-12 scenes)
+- Number of Characters: Medium (4-6)
+- World Rules: Few
+- Theme: "Duty versus personal freedom"
+- Wisdom: "Power without restraint destroys trust"
+
+Characters
+- Protagonist: Seeker (curious, resilient, strategic)
+- Antagonist: Ruler (calculating, manipulative, patient)
+- Secondary: Mentor + Rival
+- Relationships: alliance, rivalry
+
+World and Locations
+- Geography: mountain, city
+- Time Period: medieval
+- Objects: key, document
+- Significance: central
+
+Narrative Structure
+- Protagonist's Arc: Hero's Journey
+- Subplots: Betrayal
+- Conflict & Resolution: Rising Tension</code></pre>
+
+<h2>CNL and NL Impact</h2>
+
+<ul>
+  <li>More complete inputs generally increase CNL specificity and reduce ambiguity.</li>
+  <li>Clear cast/world constraints improve character consistency and setting coherence.</li>
+  <li>Narrative dropdowns improve structural intent passed to generation and refinement.</li>
+  <li>Strategy choice affects speed, determinism, and output richness.</li>
+</ul>
+
+<h2>Best Practices</h2>
+
+<ol>
+  <li>Fill Store Core before touching templates or strategy.</li>
+  <li>Keep trait selections focused; avoid selecting too many contradictory traits.</li>
+  <li>Use secondary characters only when they serve a clear subplot purpose.</li>
+  <li>Prefer one strong structural arc choice over mixed intent.</li>
+  <li>If output quality drops, re-open this page and tighten constraints before regenerate.</li>
+</ol>
+
+<h2>Related Documentation</h2>
+
+<ul>
+  <li><a href="#generation" data-page="generation">Generation Strategies</a> - Detailed strategy behavior</li>
+  <li><a href="#tab-blueprint" data-page="tab-blueprint">Blueprint Tab</a> - Beat mapping and tension planning</li>
+  <li><a href="#tab-cnl" data-page="tab-cnl">CNL Tab</a> - Inspect generated specification</li>
+  <li><a href="#tab-nl" data-page="tab-nl">NL Tab</a> - Generate prose from specification</li>
+  <li><a href="#metrics-overview" data-page="metrics-overview">Metrics Overview</a> - Understand quality indicators</li>
+</ul>

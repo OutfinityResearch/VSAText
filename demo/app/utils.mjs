@@ -21,6 +21,13 @@ export function openModal(id) {
 
 export function closeModal(id) {
   document.getElementById(id).classList.remove('open');
+  if (id === 'entity-modal') {
+    const deleteBtn = document.getElementById('btn-modal-delete');
+    if (deleteBtn) {
+      deleteBtn.style.display = 'none';
+      deleteBtn.onclick = null;
+    }
+  }
 }
 
 // Format identifier for CNL

@@ -27,8 +27,11 @@ window.showCtx = (e, id) => {
   const m = $('#context-menu');
   let items = [];
   
-  if (n.type === 'book' || n.type === 'chapter') {
+  if (n.type === 'book') {
     items.push({ a: 'add-chapter', l: '+ Chapter' }, { a: 'add-scene', l: '+ Scene' });
+  }
+  if (n.type === 'chapter') {
+    items.push({ a: 'add-scene', l: '+ Scene' });
   }
   if (n.type === 'scene') {
     items.push(
@@ -58,7 +61,9 @@ function handleContextAction(action, id) {
   if (!n) return;
   
   if (action === 'add-chapter') {
-    addChild(n, { type: 'chapter', name: `Ch${(n.children?.length || 0) + 1}`, title: '', children: [] });
+    if (n.type === 'book') {
+      addChild(n, { type: 'chapter', name: `Ch${(n.children?.length || 0) + 1}`, title: '', children: [] });
+    }
   }
   if (action === 'add-scene') {
     addChild(n, { type: 'scene', name: `Sc${(n.children?.length || 0) + 1}`, title: '', children: [] });
@@ -69,7 +74,19 @@ function handleContextAction(action, id) {
   if (action === 'add-mood') showSelectModal('moods', n);
   if (action === 'add-block') showBlockModal(n);
   if (action === 'add-action') showActionModal(n);
-  if (action === 'edit') editNodeProps(n);
+  if (action === 'edit') {
+    if (n.type === 'dialogue-ref' && n.refId) {
+      window.switchToTab?.('dialogues');
+      document.dispatchEvent(new CustomEvent('open-dialogue-editor', { detail: { dialogueId: n.refId } }));
+      return;
+    }
+    if (n.type === 'dialogue' && n.dialogueData?.id) {
+      window.switchToTab?.('dialogues');
+      document.dispatchEvent(new CustomEvent('open-dialogue-editor', { detail: { dialogueId: n.dialogueData.id } }));
+      return;
+    }
+    editNodeProps(n);
+  }
   if (action === 'delete') {
     if (state.project.structure?.id === id) {
       state.project.structure = null;

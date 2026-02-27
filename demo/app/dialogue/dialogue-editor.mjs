@@ -11,6 +11,7 @@ import { parseAnnotationLines, annotationsToEditorText } from '../cnl-annotation
 
 let editorContainer = null;
 let selectedDialogueId = null;
+let globalOpenHandlerAttached = false;
 
 // Dialogue purposes with descriptions
 const PURPOSES = {
@@ -40,6 +41,14 @@ const TONES = [
  */
 export function initDialogueEditor(container) {
   editorContainer = container;
+  if (!globalOpenHandlerAttached) {
+    document.addEventListener('open-dialogue-editor', (event) => {
+      const dialogueId = event?.detail?.dialogueId;
+      if (dialogueId) selectedDialogueId = dialogueId;
+      render();
+    });
+    globalOpenHandlerAttached = true;
+  }
   render();
 }
 
@@ -107,7 +116,10 @@ function renderDialogueForm(dialogue) {
   
   return `
     <div class="dialogue-form">
-      <h3>Edit Dialogue</h3>
+      <div class="dialogue-form-header">
+        <h3>Edit Dialogue</h3>
+        <button id="close-dialogue-top" class="dialogue-close-btn" title="Close">×</button>
+      </div>
       
       <div class="form-section">
         <label>Purpose</label>
@@ -136,6 +148,11 @@ function renderDialogueForm(dialogue) {
           <input type="range" id="dialogue-tension" min="1" max="5" value="${dialogue.tension || 3}">
           <span id="tension-display">${dialogue.tension || 3}</span>
         </div>
+      </div>
+
+      <div class="form-section">
+        <label>Dialogue Text</label>
+        <textarea id="dialogue-text" rows="4" placeholder="Write or edit the dialogue text...">${escapeHtml(dialogue.text || '')}</textarea>
       </div>
 
       <div class="form-section">
@@ -169,12 +186,14 @@ function renderDialogueForm(dialogue) {
         <div class="exchanges-list" id="exchanges-list">
           ${renderExchanges(dialogue.exchanges || [], characters)}
         </div>
-        <button id="add-exchange" class="btn-small">+ Add Exchange</button>
+        <div class="form-actions-inline">
+          <button id="add-exchange" class="btn-small">+ Add Exchange</button>
+        </div>
       </div>
       
       <div class="form-actions">
-        <button id="save-dialogue" class="btn btn-primary">Save Changes</button>
         <button id="cancel-dialogue" class="btn">Cancel</button>
+        <button id="save-dialogue" class="btn btn-primary">Save Changes</button>
       </div>
     </div>
   `;
@@ -268,6 +287,7 @@ function collectFormData() {
   
   // Tone
   dialogue.tone = document.getElementById('dialogue-tone')?.value || null;
+  dialogue.text = document.getElementById('dialogue-text')?.value || '';
 
   // CNL annotations
   dialogue.annotations = parseAnnotationLines(
@@ -329,6 +349,29 @@ function collectFormData() {
 }
 
 /**
+ * Validate participant roles for two-person dialogues.
+ * A dialogue with exactly two participants cannot have identical roles.
+ */
+function validateParticipantRoles(dialogue) {
+  const participants = (dialogue?.participants || []).filter(p => p?.characterId);
+  if (participants.length !== 2) return true;
+
+  const [first, second] = participants;
+  if (first.role && second.role && first.role === second.role) {
+    const roleLabel = first.role;
+    const message = `Invalid dialogue setup: with 2 participants, roles must differ. Both are set to "${roleLabel}".`;
+    if (typeof window.showNotification === 'function') {
+      window.showNotification(message, 'error');
+    } else {
+      alert(message);
+    }
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * Attach event listeners
  */
 function attachListeners() {
@@ -359,6 +402,7 @@ function attachListeners() {
     upsertDialogue({
       id: newId,
       purpose: 'revelation',
+      text: '',
       participants: [],
       tone: null,
       tension: 3,
@@ -394,6 +438,19 @@ function attachListeners() {
       render();
     }
   });
+
+  // Remove participant
+  document.querySelectorAll('.btn-remove-participant').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const index = parseInt(btn.dataset.index, 10);
+      const dialogue = getDialogueById(selectedDialogueId);
+      if (!dialogue || Number.isNaN(index)) return;
+      dialogue.participants = (dialogue.participants || []).filter((_, i) => i !== index);
+      upsertDialogue(dialogue);
+      render();
+    });
+  });
   
   // Add exchange
   document.getElementById('add-exchange')?.addEventListener('click', () => {
@@ -418,11 +475,25 @@ function attachListeners() {
       render();
     }
   });
+
+  // Remove exchange
+  document.querySelectorAll('.btn-remove-exchange').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const index = parseInt(btn.dataset.index, 10);
+      const dialogue = getDialogueById(selectedDialogueId);
+      if (!dialogue || Number.isNaN(index)) return;
+      dialogue.exchanges = (dialogue.exchanges || []).filter((_, i) => i !== index);
+      upsertDialogue(dialogue);
+      render();
+    });
+  });
   
   // Save
   document.getElementById('save-dialogue')?.addEventListener('click', () => {
     const dialogue = collectFormData();
     if (dialogue) {
+      if (!validateParticipantRoles(dialogue)) return;
       upsertDialogue(dialogue);
       document.dispatchEvent(new CustomEvent('dialogue-changed'));
       alert('Dialogue saved!');
@@ -431,6 +502,12 @@ function attachListeners() {
   
   // Cancel
   document.getElementById('cancel-dialogue')?.addEventListener('click', () => {
+    selectedDialogueId = null;
+    render();
+  });
+
+  // Close (top-right)
+  document.getElementById('close-dialogue-top')?.addEventListener('click', () => {
     selectedDialogueId = null;
     render();
   });

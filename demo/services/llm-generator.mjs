@@ -250,9 +250,14 @@ export function getAvailableModels() {
 
   try {
     const models = listModelsFromCache();
-    const ALLOWED_PROVIDER = 'axiologic_proxy';
+    const ALLOWED_PROVIDER = 'soul_gateway';
+    const HIDDEN_MODELS = new Set([
+      'kImi-k2.5', 'kimi-k2.5',
+      'openrouter-gemini-3.1-pro', 'openrouter-gpt-5.3-codex',
+      'copilot-opus-4.6',
+    ]);
     const filterProvider = list => list
-      .filter(m => m.providerKey === ALLOWED_PROVIDER)
+      .filter(m => m.providerKey === ALLOWED_PROVIDER && !HIDDEN_MODELS.has(m.name))
       .map(m => ({
         name: m.name,
         provider: m.providerKey,

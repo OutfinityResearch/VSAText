@@ -256,12 +256,17 @@ export function getAvailableModels() {
       'openrouter-gemini-3.1-pro', 'openrouter-gpt-5.3-codex',
       'copilot-opus-4.6',
     ]);
+    // Copilot models included in Pro+ that don't consume premium requests
+    const FREE_MODELS = new Set([
+      'copilot-gpt-4o', 'copilot-gpt-4.1', 'copilot-gpt-5-mini',
+    ]);
     const filterProvider = list => list
       .filter(m => m.providerKey === ALLOWED_PROVIDER && !HIDDEN_MODELS.has(m.name))
       .map(m => ({
         name: m.name,
         provider: m.providerKey,
-        qualifiedName: m.qualifiedName || `${m.providerKey}/${m.name}`
+        qualifiedName: m.qualifiedName || `${m.providerKey}/${m.name}`,
+        free: FREE_MODELS.has(m.name),
       }));
     return {
       fast: filterProvider(models.fast),

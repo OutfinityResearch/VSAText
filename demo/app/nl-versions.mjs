@@ -9,8 +9,6 @@ import { state, setGeneratedStory, getGeneratedStory } from './state.mjs';
 import { $, showNotification } from './utils.mjs';
 import { parseMarkdown } from '../../src/utils/markdown.mjs';
 
-const DEFAULT_STORY_MODEL = 'copilot-gpt-4o';
-
 // Current loaded version info
 let currentVersionFilename = null;
 let currentVersionLanguage = null;
@@ -23,11 +21,6 @@ async function getPersistence() {
     persistenceModule = await import('./persistence.mjs');
   }
   return persistenceModule;
-}
-
-function isPreferredModel(value, label = '') {
-  const text = `${value} ${label}`.toLowerCase();
-  return text.includes('copilot-gpt-4o') && !text.includes('mini');
 }
 
 /**
@@ -67,12 +60,12 @@ export function canImprove(hasGeneratedNL) {
   if (!hasGeneratedNL && !currentVersionFilename) return false;
   
   const selectedLang = $('#nl-language')?.value || 'en';
-  const selectedModel = $('#nl-model')?.value || DEFAULT_STORY_MODEL;
+  const selectedModel = $('#nl-model')?.value || 'default';
   
   // If we have a loaded version, check if settings match
   if (currentVersionLanguage && currentVersionModel) {
     return selectedLang === currentVersionLanguage && 
-           (selectedModel || DEFAULT_STORY_MODEL) === currentVersionModel;
+           (selectedModel || 'default') === currentVersionModel;
   }
 
   // Fallback: if story exists but version metadata is unavailable,
@@ -167,7 +160,7 @@ export async function onVersionSelect(e, callbacks) {
     // Track current version info
     currentVersionFilename = filename;
     currentVersionLanguage = data.language || 'en';
-    currentVersionModel = data.model || DEFAULT_STORY_MODEL;
+    currentVersionModel = data.model || 'default';
     setHasGeneratedNL(true);
     
     // Update UI to match version's language and model
@@ -295,53 +288,44 @@ export async function loadAvailableModels() {
     const modelSelect = $('#nl-model');
     if (!modelSelect) return;
     
-    // Clear existing options and keep an explicit default entry.
+    // Clear existing options
     modelSelect.innerHTML = '';
-    const defaultOption = document.createElement('option');
-    defaultOption.value = DEFAULT_STORY_MODEL;
-    defaultOption.textContent = `${DEFAULT_STORY_MODEL} (default)`;
-    modelSelect.appendChild(defaultOption);
     
+    const DEFAULT_MODEL = 'copilot-gpt-4o';
+    let defaultModelValue = null;
     let firstDeepModelValue = null;
-    let preferredModelValue = null;
-    
+
+    const addModelOption = (group, model) => {
+      const option = document.createElement('option');
+      option.value = model.qualifiedName || model.name;
+      const freeLabel = model.free ? ' (Free)' : '';
+      option.textContent = `${model.name}${freeLabel}`;
+      group.appendChild(option);
+      if (model.name === DEFAULT_MODEL) defaultModelValue = option.value;
+      return option;
+    };
+
     // Add deep models first (preferred for creative writing)
     if (data.models?.deep?.length) {
       const deepGroup = document.createElement('optgroup');
       deepGroup.label = 'Deep (Creative)';
       data.models.deep.forEach((model, idx) => {
-        const option = document.createElement('option');
-        option.value = model.qualifiedName || model.name;
-        option.textContent = `${model.name} (${model.provider})`;
-        deepGroup.appendChild(option);
-        // Remember first deep model
-        if (idx === 0) {
-          firstDeepModelValue = option.value;
-        }
-        if (option.value === DEFAULT_STORY_MODEL || isPreferredModel(option.value, option.textContent)) {
-          preferredModelValue = option.value;
-        }
+        addModelOption(deepGroup, model);
+        if (idx === 0) firstDeepModelValue = model.qualifiedName || model.name;
       });
       modelSelect.appendChild(deepGroup);
     }
-    
+
     // Add fast models
     if (data.models?.fast?.length) {
       const fastGroup = document.createElement('optgroup');
       fastGroup.label = 'Fast';
-      data.models.fast.forEach(model => {
-        const option = document.createElement('option');
-        option.value = model.qualifiedName || model.name;
-        option.textContent = `${model.name} (${model.provider})`;
-        fastGroup.appendChild(option);
-        if (option.value === DEFAULT_STORY_MODEL || isPreferredModel(option.value, option.textContent)) {
-          preferredModelValue = option.value;
-        }
-      });
+      data.models.fast.forEach(model => addModelOption(fastGroup, model));
       modelSelect.appendChild(fastGroup);
     }
-    
-    modelSelect.value = preferredModelValue || DEFAULT_STORY_MODEL;
+
+    // Default to copilot-gpt-4o, fall back to first deep model
+    modelSelect.value = defaultModelValue || firstDeepModelValue || '';
     
   } catch (err) {
     console.log('[NL Generation] Could not load models:', err.message);

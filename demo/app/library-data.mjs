@@ -55,6 +55,77 @@ function ensureFrameworkProfileState() {
   return libraries.frameworkProfile;
 }
 
+function ensureLibraryUXState() {
+  const libraries = state.project.libraries || (state.project.libraries = {});
+  const ux = libraries.libraryUx || {};
+  libraries.libraryUx = {
+    favorites: Array.isArray(ux.favorites) ? ux.favorites : [],
+    customSaved: Array.isArray(ux.customSaved) ? ux.customSaved : [],
+    applications: Array.isArray(ux.applications) ? ux.applications : []
+  };
+  return libraries.libraryUx;
+}
+
+function normalizeEntry(entry = {}) {
+  return {
+    kind: String(entry.kind || ''),
+    key: String(entry.key || ''),
+    type: String(entry.type || ''),
+    id: String(entry.id || ''),
+    title: String(entry.title || ''),
+    description: String(entry.description || ''),
+    structure: Array.isArray(entry.structure) ? entry.structure : [],
+    meta: Array.isArray(entry.meta) ? entry.meta : []
+  };
+}
+
+function entryRef(entry) {
+  const n = normalizeEntry(entry);
+  return [n.kind, n.key, n.type, n.id].join('::');
+}
+
+function targetLabel(target = {}) {
+  if (target.targetLabel) return target.targetLabel;
+  if (target.targetType === 'book') {
+    return state.project.structure?.title || state.project.structure?.name || state.project.name || 'Book';
+  }
+  if (target.targetType === 'chapter' || target.targetType === 'scene') {
+    const node = target.targetId ? findNode(target.targetId) : null;
+    return node?.title || node?.name || humanize(target.targetType);
+  }
+  if (target.targetType === 'character') {
+    const character = (state.project.libraries.characters || []).find(c => c.id === target.targetId);
+    return character?.name || 'Character';
+  }
+  return 'Book';
+}
+
+function recordApplication(entry, target = {}) {
+  const ux = ensureLibraryUXState();
+  const n = normalizeEntry(entry);
+  ux.applications.unshift({
+    id: genId(),
+    ref: entryRef(n),
+    kind: n.kind,
+    title: n.title || humanize(n.key || n.id || 'item'),
+    targetType: target.targetType || 'book',
+    targetId: target.targetId || '',
+    targetLabel: targetLabel(target),
+    appliedAt: new Date().toISOString()
+  });
+  ux.applications = ux.applications.slice(0, 80);
+}
+
+function resolveTargetNode(target = {}) {
+  if (target.targetType === 'chapter' || target.targetType === 'scene') {
+    return target.targetId ? findNode(target.targetId) : null;
+  }
+  if (target.targetType === 'book') {
+    return state.project.structure;
+  }
+  return null;
+}
+
 export function getWisdomCatalog() {
   return WISDOM_SECTIONS.map(section => {
     const items = Object.entries(section.items).map(([itemKey, item]) => ({
@@ -107,6 +178,96 @@ export function getThemePresetCatalog() {
   }));
 }
 
+const THEME_CATEGORY_DEFS = [
+  {
+    key: 'personal-transformation',
+    label: 'Personal Transformation',
+    themeKeys: [
+      'redemption',
+      'growth',
+      'identity',
+      'innocence_lost',
+      'memory_and_past',
+      'the_outsider',
+      'appearance_vs_reality',
+      'truth'
+    ]
+  },
+  {
+    key: 'power-conflict',
+    label: 'Power and Conflict',
+    themeKeys: [
+      'power',
+      'justice',
+      'revenge',
+      'corruption',
+      'good_vs_evil',
+      'war_and_peace',
+      'ambition',
+      'hubris'
+    ]
+  },
+  {
+    key: 'human-bonds',
+    label: 'Human Bonds',
+    themeKeys: [
+      'love',
+      'sacrifice',
+      'betrayal',
+      'family',
+      'legacy',
+      'isolation'
+    ]
+  },
+  {
+    key: 'survival-existence',
+    label: 'Survival and Existence',
+    themeKeys: [
+      'survival',
+      'mortality',
+      'hope_vs_despair',
+      'forbidden_knowledge',
+      'fate_vs_free_will'
+    ]
+  },
+  {
+    key: 'society-world',
+    label: 'Society and World',
+    themeKeys: [
+      'freedom',
+      'class_society',
+      'nature_vs_nurture',
+      'nature_civilization'
+    ]
+  }
+];
+
+export function getThemeCatalogByCategory() {
+  const themes = getThemePresetCatalog();
+  const byKey = new Map(themes.map(theme => [theme.key, theme]));
+  const used = new Set();
+
+  const categories = THEME_CATEGORY_DEFS.map(category => {
+    const items = category.themeKeys
+      .map(themeKey => byKey.get(themeKey))
+      .filter(Boolean);
+    items.forEach(item => used.add(item.key));
+    return {
+      key: category.key,
+      label: category.label,
+      items
+    };
+  });
+
+  // Keep all themes visible even if new keys appear in vocab.
+  const remainder = themes.filter(theme => !used.has(theme.key));
+  if (remainder.length > 0) {
+    categories[categories.length - 1].items.push(...remainder);
+  }
+
+  return categories;
+}
+
 export function getSavedThemes() {
   return state.project.libraries.themes || [];
 }
@@ -125,98 +286,204 @@ export function getUsedBlocksCatalog() {
   return getUsedBlocks();
 }
 
-export function applyWisdom(type, key) {
+export function getFavoriteLibraryItems() {
+  const ux = ensureLibraryUXState();
+  return ux.favorites;
+}
+
+export function getCustomSavedLibraryItems() {
+  const ux = ensureLibraryUXState();
+  return ux.customSaved;
+}
+
+export function getRecentLibraryApplications() {
+  const ux = ensureLibraryUXState();
+  return ux.applications;
+}
+
+export function isFavoriteLibraryItem(entry) {
+  const ux = ensureLibraryUXState();
+  const ref = entryRef(entry);
+  return ux.favorites.some(item => item.ref === ref);
+}
+
+export function toggleFavoriteLibraryItem(entry) {
+  const ux = ensureLibraryUXState();
+  const normalized = normalizeEntry(entry);
+  const ref = entryRef(normalized);
+  const idx = ux.favorites.findIndex(item => item.ref === ref);
+
+  if (idx >= 0) {
+    ux.favorites.splice(idx, 1);
+    notify('Removed from favorites', 'info');
+    return false;
+  }
+
+  ux.favorites.unshift({
+    id: genId(),
+    ref,
+    ...normalized,
+    savedAt: new Date().toISOString()
+  });
+  ux.favorites = ux.favorites.slice(0, 120);
+  notify('Added to favorites', 'success');
+  return true;
+}
+
+export function saveCustomLibraryItem(entry) {
+  const ux = ensureLibraryUXState();
+  const normalized = normalizeEntry(entry);
+  const duplicate = ux.customSaved.some(item => item.ref === entryRef(normalized));
+  if (duplicate) {
+    notify('Already saved in custom items', 'info');
+    return false;
+  }
+
+  ux.customSaved.unshift({
+    id: genId(),
+    ref: entryRef(normalized),
+    ...normalized,
+    savedAt: new Date().toISOString()
+  });
+  ux.customSaved = ux.customSaved.slice(0, 120);
+  notify('Saved to custom library', 'success');
+  return true;
+}
+
+export function applyWisdom(type, key, target = { targetType: 'book', targetId: '' }) {
   const source = WISDOM_SECTIONS.find(section => section.key === type)?.items?.[key];
   if (!source) return;
 
   const existing = (state.project.libraries.wisdom || []).find(item => item.sourceType === type && item.sourceKey === key);
-  if (existing) {
-    notify('Wisdom already added', 'info');
-    return;
+  if (!existing) {
+    const wisdom = {
+      id: genId(),
+      category: type === 'tradition' ? 'philosophical' : (type === 'lesson' ? 'practical' : 'moral'),
+      sourceType: type,
+      sourceKey: key,
+      label: source.label || source.lesson || humanize(key),
+      insight: source.corePrinciple || source.insight || source.principle || source.lesson || '',
+      application: Array.isArray(source.storyApplications) ? source.storyApplications.join('; ') : null,
+      examples: source.examples || null
+    };
+    state.project.libraries.wisdom.push(wisdom);
+    generateCNL();
   }
 
-  const wisdom = {
-    id: genId(),
-    category: type === 'tradition' ? 'philosophical' : (type === 'lesson' ? 'practical' : 'moral'),
-    sourceType: type,
-    sourceKey: key,
-    label: source.label || source.lesson || humanize(key),
-    insight: source.corePrinciple || source.insight || source.principle || source.lesson || '',
-    application: Array.isArray(source.storyApplications) ? source.storyApplications.join('; ') : null,
-    examples: source.examples || null
-  };
-  state.project.libraries.wisdom.push(wisdom);
-  generateCNL();
-  notify(`Applied wisdom: ${wisdom.label}`, 'success');
+  recordApplication({
+    kind: 'wisdom',
+    key,
+    type,
+    title: source.label || source.lesson || humanize(key),
+    description: source.corePrinciple || source.insight || source.principle || source.lesson || ''
+  }, target);
+
+  notify(`Applied wisdom to ${targetLabel(target)}`, 'success');
 }
 
-export function applyThemePreset(key) {
+export function applyThemePreset(key, target = { targetType: 'book', targetId: '' }) {
   const theme = VOCAB.THEMES?.[key];
   if (!theme) return;
   const existing = (state.project.libraries.themes || []).find(item => item.themeKey === key);
   const profile = ensureFrameworkProfileState();
+  let themeId = '';
+
   if (existing) {
     profile.coreTheme.selectedThemeId = existing.id;
-    notify(`Using saved theme: ${existing.name}`, 'success');
-    return;
+    themeId = existing.id;
+  } else {
+    const created = {
+      id: genId(),
+      name: theme.label,
+      themeKey: key,
+      annotations: []
+    };
+    state.project.libraries.themes.push(created);
+    profile.coreTheme.selectedThemeId = created.id;
+    themeId = created.id;
+    renderEntityGrid('themes');
+    generateCNL();
   }
 
-  const created = {
-    id: genId(),
-    name: theme.label,
-    themeKey: key,
-    annotations: []
-  };
-  state.project.libraries.themes.push(created);
-  profile.coreTheme.selectedThemeId = created.id;
-  renderEntityGrid('themes');
-  generateCNL();
-  notify(`Applied theme: ${created.name}`, 'success');
+  recordApplication({
+    kind: 'theme-preset',
+    key,
+    id: themeId,
+    title: theme.label,
+    description: theme.desc,
+    structure: theme.suggestedBlocks || []
+  }, target);
+
+  notify(`Applied theme to ${targetLabel(target)}`, 'success');
 }
 
-export function applySavedTheme(themeId) {
+export function applySavedTheme(themeId, target = { targetType: 'book', targetId: '' }) {
   const theme = (state.project.libraries.themes || []).find(item => item.id === themeId);
   if (!theme) return;
   const profile = ensureFrameworkProfileState();
   profile.coreTheme.selectedThemeId = theme.id;
-  notify(`Using saved theme: ${theme.name || 'Theme'}`, 'success');
+
+  recordApplication({
+    kind: 'theme-saved',
+    id: theme.id,
+    title: theme.name || 'Theme',
+    description: theme.themeKey ? humanize(theme.themeKey) : 'Custom theme'
+  }, target);
+
+  notify(`Using saved theme for ${targetLabel(target)}`, 'success');
 }
 
-export function applyPattern(key) {
+export function applyPattern(key, target = { targetType: 'book', targetId: '' }) {
   const source = MASTER_PLOTS[key];
   if (!source) return;
   const existing = (state.project.libraries.patterns || []).find(item => item.patternType === 'plot' && item.sourceKey === key);
-  if (existing) {
-    notify('Pattern already added', 'info');
-    return;
+
+  if (!existing) {
+    state.project.libraries.patterns.push({
+      id: genId(),
+      patternType: 'plot',
+      sourceKey: key,
+      label: source.label,
+      description: source.desc,
+      structure: source.structure,
+      suggestedThemes: source.suggestedThemes,
+      keyQuestion: source.keyQuestion,
+      examples: source.examples
+    });
+    generateCNL();
   }
 
-  state.project.libraries.patterns.push({
-    id: genId(),
-    patternType: 'plot',
-    sourceKey: key,
-    label: source.label,
+  recordApplication({
+    kind: 'pattern',
+    key,
+    title: source.label,
     description: source.desc,
-    structure: source.structure,
-    suggestedThemes: source.suggestedThemes,
-    keyQuestion: source.keyQuestion,
-    examples: source.examples
-  });
-  generateCNL();
-  notify(`Applied pattern: ${source.label}`, 'success');
+    structure: source.structure || []
+  }, target);
+
+  notify(`Applied pattern to ${targetLabel(target)}`, 'success');
 }
 
-export function applyBuiltInTemplate(key) {
+export function applyBuiltInTemplate(key, target = { targetType: 'book', targetId: '' }) {
   const template = getTemplate(key);
   if (!template) return;
   const ok = applyTemplate(key);
   if (!ok) return;
   state.project.blueprint.selectedTemplate = key;
   document.dispatchEvent(new CustomEvent('blueprint-changed'));
-  notify(`Applied template: ${template.label}`, 'success');
+
+  recordApplication({
+    kind: 'template-builtin',
+    key,
+    title: template.label,
+    description: template.description || '',
+    structure: template.structure || []
+  }, target);
+
+  notify(`Applied template to ${targetLabel(target)}`, 'success');
 }
 
-export function applyCustomTemplate(templateId) {
+export function applyCustomTemplate(templateId, target = { targetType: 'book', targetId: '' }) {
   const template = (state.project.libraries.customTemplates || []).find(item => item.id === templateId);
   if (!template) return;
 
@@ -229,27 +496,57 @@ export function applyCustomTemplate(templateId) {
   }
   state.project.blueprint.selectedTemplate = `custom_${template.id}`;
   document.dispatchEvent(new CustomEvent('blueprint-changed'));
-  notify(`Applied template: ${template.label}`, 'success');
+
+  recordApplication({
+    kind: 'template-custom',
+    key: template.id,
+    id: template.id,
+    title: template.label || 'Custom Template',
+    description: template.description || '',
+    structure: template.structure || []
+  }, target);
+
+  notify(`Applied template to ${targetLabel(target)}`, 'success');
 }
 
-export function applyBlock(key) {
+export function applyBlock(key, target = { targetType: 'book', targetId: '' }) {
   const block = VOCAB.NARRATIVE_BLOCKS?.[key];
   if (!block) return;
 
-  const selectedNode = state.selectedNode ? findNode(state.selectedNode) : null;
-  const target = (selectedNode && ['book', 'chapter', 'scene'].includes(selectedNode.type))
-    ? selectedNode
-    : state.project.structure;
-  if (!target) return;
+  let resolvedTarget = resolveTargetNode(target);
+  if (!resolvedTarget) {
+    const selectedNode = state.selectedNode ? findNode(state.selectedNode) : null;
+    resolvedTarget = (selectedNode && ['book', 'chapter', 'scene'].includes(selectedNode.type))
+      ? selectedNode
+      : state.project.structure;
+  }
 
-  const alreadyUsed = (target.children || []).some(child => child.type === 'block-ref' && child.blockKey === key);
-  if (alreadyUsed) {
-    notify(`Block already applied on "${target.title || target.name || target.type}"`, 'info');
+  if (!resolvedTarget || !['book', 'chapter', 'scene'].includes(resolvedTarget.type || 'book')) {
+    notify('Create a book/chapter/scene before applying blocks', 'error');
     return;
   }
 
-  addChild(target, { type: 'block-ref', name: block.label, blockKey: key });
-  notify(`Applied block: ${block.label}`, 'success');
+  const alreadyUsed = (resolvedTarget.children || []).some(child => child.type === 'block-ref' && child.blockKey === key);
+  if (alreadyUsed) {
+    notify(`Block already applied on "${resolvedTarget.title || resolvedTarget.name || resolvedTarget.type}"`, 'info');
+    return;
+  }
+
+  addChild(resolvedTarget, { type: 'block-ref', name: block.label, blockKey: key });
+
+  recordApplication({
+    kind: 'block',
+    key,
+    title: block.label,
+    description: block.desc,
+    structure: [block.phase, block.scope]
+  }, {
+    targetType: resolvedTarget.type || 'book',
+    targetId: resolvedTarget.id || '',
+    targetLabel: resolvedTarget.title || resolvedTarget.name || resolvedTarget.type || 'Book'
+  });
+
+  notify(`Applied block to ${resolvedTarget.title || resolvedTarget.name || resolvedTarget.type}`, 'success');
 }
 
 export function buildPreview(kind, key, type, id) {
@@ -260,6 +557,7 @@ export function buildPreview(kind, key, type, id) {
       kind: 'Wisdom',
       title: source.label || source.lesson || humanize(key),
       description: source.corePrinciple || source.insight || source.principle || source.lesson || '',
+      structure: Array.isArray(source.storyApplications) ? source.storyApplications.slice(0, 4) : [],
       meta: [type, source.origin || source.source || '']
     };
   }
@@ -271,6 +569,7 @@ export function buildPreview(kind, key, type, id) {
       kind: 'Theme',
       title: source.label,
       description: source.desc,
+      structure: source.suggestedBlocks || [],
       meta: (source.suggestedBlocks || []).slice(0, 3).map(humanize)
     };
   }
@@ -282,6 +581,7 @@ export function buildPreview(kind, key, type, id) {
       kind: 'Saved Theme',
       title: source.name || 'Theme',
       description: source.themeKey ? humanize(source.themeKey) : 'Custom',
+      structure: source.annotations || [],
       meta: [source.id]
     };
   }
@@ -293,6 +593,7 @@ export function buildPreview(kind, key, type, id) {
       kind: 'Pattern',
       title: source.label,
       description: source.desc,
+      structure: source.structure || [],
       meta: (source.structure || []).slice(0, 4)
     };
   }
@@ -304,6 +605,7 @@ export function buildPreview(kind, key, type, id) {
       kind: 'Template',
       title: source.label,
       description: source.description || '',
+      structure: source.structure || [],
       meta: [source.arc || '', `${source.chapters || 0} chapters`]
     };
   }
@@ -315,6 +617,7 @@ export function buildPreview(kind, key, type, id) {
       kind: 'Custom Template',
       title: source.label || 'Custom Template',
       description: source.description || '',
+      structure: source.structure || [],
       meta: [source.arc || '', `${source.chapters || 0} chapters`]
     };
   }
@@ -326,6 +629,7 @@ export function buildPreview(kind, key, type, id) {
       kind: 'Block',
       title: source.label,
       description: source.desc,
+      structure: [humanize(source.phase), humanize(source.scope)],
       meta: [source.phase, source.scope]
     };
   }

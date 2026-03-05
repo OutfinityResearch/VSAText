@@ -10,6 +10,10 @@
   gap: 1rem;
 }
 
+.world-layers-layout.embedded {
+  gap: 0.7rem;
+}
+
 .world-layers-intro {
   background: var(--bg-surface);
   border: 1px solid var(--bg-elevated);
@@ -37,6 +41,10 @@
   gap: 0.9rem;
 }
 
+.world-layers-layout.embedded .world-layers-grid {
+  gap: 0.7rem;
+}
+
 .world-layer-card {
   background: var(--bg-surface);
   border: 1px solid var(--bg-elevated);
@@ -48,6 +56,11 @@
 }
 
 .world-layer-card:hover {
+  border-color: var(--bg-hover);
+}
+
+.world-layers-layout.embedded .world-layer-card {
+  background: var(--bg-deep);
   border-color: var(--bg-hover);
 }
 

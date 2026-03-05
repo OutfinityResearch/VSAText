@@ -10,12 +10,6 @@ const DRAFT_KEY = 'scripta-new-project-wizard';
 const TOTAL_STEPS = 4;
 const DEFAULT_STORY_MODEL = 'copilot-gpt-4o';
 
-const stepTitles = [
-  'Basic Info',
-  'Core Ideas',
-  'Generation Strategy',
-  'Create Story (NL)'
-];
 
 const defaultData = {
   projectName: '',
@@ -34,19 +28,34 @@ const strategies = [
   {
     key: 'random',
     label: 'Random',
-    desc: 'LLM generates the structure with minimal guidance and maximum creativity.',
+    desc: 'Fast start with high creative freedom.',
+    points: [
+      'Best when you want exploratory ideas quickly.',
+      'Uses minimal constraints and maximizes variation.',
+      'Good for early concept discovery.'
+    ],
     badge: 'Creative'
   },
   {
     key: 'with-llm',
     label: 'With LLM',
-    desc: 'LLM suggests base structures and scene ideas.',
+    desc: 'Balanced guidance with practical structure support.',
+    points: [
+      'LLM proposes a coherent base structure.',
+      'Offers scene-level suggestions with thematic alignment.',
+      'Recommended for most standard projects.'
+    ],
     badge: 'Assisted'
   },
   {
     key: 'advanced',
     label: 'Advanced',
-    desc: 'You set rules/arcs/tone manually, then LLM suggests scenarios.',
+    desc: 'Maximum control for precise narrative planning.',
+    points: [
+      'You define stricter rules, arcs, and creative constraints.',
+      'LLM works within your explicit structure decisions.',
+      'Useful for production-ready and repeatable workflows.'
+    ],
     badge: 'Control'
   }
 ];
@@ -77,19 +86,16 @@ overlay.innerHTML = `
       <button class="wizard-close" id="wizard-close" aria-label="Close wizard">×</button>
     </header>
 
-    <div class="wizard-progress-track" aria-hidden="true">
-      <div class="wizard-progress-fill" id="wizard-progress-fill"></div>
-      <div class="wizard-progress-inline-label" id="wizard-progress-label">Step 1 of ${TOTAL_STEPS}</div>
-    </div>
-
-    <div class="wizard-steps-row" id="wizard-steps-row"></div>
-
     <div class="wizard-body" id="wizard-body"></div>
 
     <footer class="wizard-footer">
       <div class="wizard-footer-actions">
         <button class="btn" id="wizard-back">Back</button>
         <button class="btn primary" id="wizard-next">Next</button>
+      </div>
+      <div class="wizard-progress-track" aria-hidden="true">
+        <div class="wizard-progress-fill" id="wizard-progress-fill"></div>
+        <div class="wizard-progress-inline-label" id="wizard-progress-label">Step 1 of ${TOTAL_STEPS}</div>
       </div>
     </footer>
   </div>
@@ -104,7 +110,6 @@ function isPreferredModel(value, label = '') {
 const wizardBody = overlay.querySelector('#wizard-body');
 const progressFill = overlay.querySelector('#wizard-progress-fill');
 const progressLabel = overlay.querySelector('#wizard-progress-label');
-const progressSteps = overlay.querySelector('#wizard-steps-row');
 const btnBack = overlay.querySelector('#wizard-back');
 const btnNext = overlay.querySelector('#wizard-next');
 const btnClose = overlay.querySelector('#wizard-close');
@@ -143,23 +148,6 @@ function saveDraft() {
   window.localStorage.setItem(DRAFT_KEY, JSON.stringify(state));
 }
 
-function renderStepChips() {
-  progressSteps.innerHTML = stepTitles.map((title, idx) => {
-    const status = idx < state.step ? 'completed' : idx === state.step ? 'active' : 'pending';
-    return `<button type="button" class="wizard-step-chip ${status}" data-step-jump="${idx}">${idx + 1}. ${title}</button>`;
-  }).join('');
-
-  progressSteps.querySelectorAll('[data-step-jump]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = Number(btn.dataset.stepJump);
-      if (!Number.isFinite(target)) return;
-      state.step = Math.max(0, Math.min(TOTAL_STEPS - 1, target));
-      saveDraft();
-      renderStep();
-    });
-  });
-}
-
 function renderBasicInfo() {
   const genres = [
     'Fantasy',
@@ -193,7 +181,7 @@ function renderBasicInfo() {
 
   return `
     <div class="wizard-step-section">
-      <p class="wizard-step-summary">Step 1: Basic Info</p>
+      <p class="wizard-step-summary">Step 2: Basic Info</p>
 
       <div class="wizard-grid">
         <label class="wizard-field">
@@ -229,7 +217,7 @@ function renderBasicInfo() {
 function renderCoreIdeas() {
   return `
     <div class="wizard-step-section">
-      <p class="wizard-step-summary">Step 2: Core Ideas</p>
+      <p class="wizard-step-summary">Step 3: Core Ideas</p>
 
       <div class="wizard-grid wizard-grid-ideas">
         <label class="wizard-field">
@@ -256,18 +244,21 @@ function renderCoreIdeas() {
 function renderStrategy() {
   return `
     <div class="wizard-step-section">
-      <p class="wizard-step-summary">Step 3: Generation Strategy</p>
+      <p class="wizard-step-summary">Step 1: Generation Strategy</p>
 
       <div class="strategy-radio-group" role="radiogroup" aria-label="Generation Strategy">
         ${strategies.map(strategy => `
-              <label class="strategy-radio-row ${state.data.strategy === strategy.key ? 'selected' : ''}">
-                <input class="strategy-radio-input" type="radio" name="wizard-strategy" value="${strategy.key}" ${state.data.strategy === strategy.key ? 'checked' : ''}>
-                <div class="strategy-radio-content">
-                  <div class="strategy-radio-head">
-                    <strong>${strategy.label}</strong>
-                    <span class="strategy-badge">${strategy.badge}</span>
-                  </div>
+          <label class="strategy-radio-row ${state.data.strategy === strategy.key ? 'selected' : ''}">
+            <input class="strategy-radio-input" type="radio" name="wizard-strategy" value="${strategy.key}" ${state.data.strategy === strategy.key ? 'checked' : ''}>
+            <div class="strategy-radio-content">
+              <div class="strategy-radio-head">
+                <strong>${strategy.label}</strong>
+                <span class="strategy-badge">${strategy.badge}</span>
+              </div>
               <p>${strategy.desc}</p>
+              <ul class="strategy-points">
+                ${strategy.points.map(point => `<li>${point}</li>`).join('')}
+              </ul>
             </div>
           </label>
         `).join('')}
@@ -288,7 +279,7 @@ function renderCreateStoryNL() {
 
   return `
     <div class="wizard-step-section">
-      <p class="wizard-step-summary">Step 4: Create Story (NL)</p>
+      <p class="wizard-step-summary">Step 4: Create Story</p>
 
       <div class="wizard-grid wizard-grid-small">
         <label class="wizard-field">
@@ -323,7 +314,7 @@ function renderCreateStoryNL() {
   `;
 }
 
-const steps = [renderBasicInfo, renderCoreIdeas, renderStrategy, renderCreateStoryNL];
+const steps = [renderStrategy, renderBasicInfo, renderCoreIdeas, renderCreateStoryNL];
 
 function renderStep() {
   const renderer = steps[state.step];
@@ -336,7 +327,6 @@ function renderStep() {
   btnBack.disabled = state.step === 0;
   btnNext.textContent = state.step === TOTAL_STEPS - 1 ? 'Create Project' : 'Next';
 
-  renderStepChips();
   attachListeners();
 }
 
@@ -378,7 +368,7 @@ function updateField(el) {
 function ensureRequiredFields() {
   if (state.data.projectName.trim()) return true;
   showNotification('Project Name is required.', 'error');
-  state.step = 0;
+  state.step = 1;
   saveDraft();
   renderStep();
   return false;

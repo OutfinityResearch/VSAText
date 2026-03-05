@@ -116,6 +116,28 @@
   color: #ffd997;
 }
 
+.navigator-subgroup {
+  border: 1px solid rgba(151, 168, 220, 0.12);
+  border-radius: 8px;
+  background: rgba(18, 24, 47, 0.58);
+  overflow: hidden;
+}
+
+.navigator-subgroup > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.45rem 0.65rem;
+  font-family: var(--font-title);
+  font-size: 0.64rem;
+  letter-spacing: 0.05em;
+  color: rgba(209, 218, 246, 0.84);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.navigator-subgroup > summary::-webkit-details-marker {
+  display: none;
+}
+
 .navigator-items {
   position: relative;
   display: flex;

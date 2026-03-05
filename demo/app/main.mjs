@@ -7,12 +7,13 @@
 import { state } from './state.mjs';
 import { $, $$, genId, openModal } from './utils.mjs';
 import { renderTree, findNode, addChild } from './tree.mjs';
-import { renderEntityGrid, renderBackdropView, showSelectModal, showBlockModal, showActionModal } from './entities.mjs';
+import { renderEntityGrid, renderBackdropView, renderCharactersCastView, showSelectModal, showBlockModal, showActionModal } from './entities.mjs';
 import { renderRelationshipsView, renderBlocksView, renderWorldRulesView } from './views.mjs';
 import { evaluateMetrics, renderEmptyMetrics, initMetrics } from './metrics.mjs';
 import { exportCNL, importCNL, toggleEditMode, setCNLViewMode, generateCNL } from './cnl.mjs';
 import { loadProjectsList, initPersistence } from './persistence.mjs';
 import { setupContextMenu } from './context-menu.mjs';
+import { getThemeCatalogByCategory } from './library-data.mjs';
 
 // Blueprint imports
 import { loadBlueprintData } from './blueprint/blueprint-state.mjs';
@@ -28,7 +29,7 @@ import { renderPatternsView } from './entities-patterns.mjs';
 import { renderFrameworkView } from './framework.mjs';
 import { renderWorldLayersView } from './world-layers.mjs';
 import { renderHooksView } from './hooks.mjs';
-import { renderLibraryView } from './library.mjs';
+import { renderLibraryView, setLibrarySelection, getLibrarySelection } from './library.mjs';
 import { renderNarrativeDesignMacroView } from './narrative-design.mjs';
 import { renderManuscriptStudioView, renderStoryMapView, focusStoryMapSection } from './writing-studio.mjs';
 import { getOrderedChapters, getChapterScenes } from './structure-navigation.mjs';
@@ -109,6 +110,8 @@ const VIEW_TO_GROUP = new Map(
 
 let activeGroupKey = 'results';
 let activeViewKey = 'cnl';
+let navigatorMode = 'project';
+let projectNavigatorMarkup = '';
 
 function getGroup(groupKey) {
   return TAB_GROUPS.find(g => g.key === groupKey) || null;
@@ -144,13 +147,14 @@ function renderViewSpecificContent(viewName) {
   if (viewName === 'midhooks') renderHooksView('mid');
   if (viewName === 'moods') renderEntityGrid('moods');
   if (viewName === 'themes') renderEntityGrid('themes');
+  if (viewName === 'characters') renderCharactersCastView();
   if (viewName === 'library') renderLibraryView();
   if (viewName === 'narrative-design') renderNarrativeDesignMacroView();
   if (viewName === 'manuscript') renderManuscriptStudioView();
   if (viewName === 'storymap') renderStoryMapView();
 }
 
-function setActiveNavigatorItem(viewName, action = '') {
+function setActiveNavigatorItem(viewName, action = '', librarySelect = '') {
   const items = $$('.navigator-item');
   if (!items.length) return;
   items.forEach(item => item.classList.remove('active'));
@@ -162,26 +166,116 @@ function setActiveNavigatorItem(viewName, action = '') {
   if (!activeItem) {
     activeItem = document.querySelector(`.navigator-item[data-target-view="${viewName}"]`);
   }
+  if (librarySelect) {
+    activeItem = document.querySelector(`.navigator-item[data-library-select="${librarySelect}"]`);
+  }
   if (activeItem) activeItem.classList.add('active');
 }
 
 function setActiveHeaderAction(viewName) {
   const libraryBtn = $('#btn-library');
-  if (!libraryBtn) return;
-  libraryBtn.classList.toggle('active', viewName === 'library');
+  const projectBtn = $('#btn-project');
+  if (libraryBtn) libraryBtn.classList.toggle('active', navigatorMode === 'library' || viewName === 'library');
+  if (projectBtn) projectBtn.classList.toggle('active', navigatorMode === 'project' && viewName !== 'library');
+}
+
+function setNavigatorTitle(title) {
+  const titleEl = document.querySelector('.navigator-header .panel-title');
+  if (titleEl) titleEl.textContent = title;
+}
+
+function renderProjectNavigatorPanel() {
+  const navigatorContent = $('#navigator-content');
+  if (!navigatorContent || !projectNavigatorMarkup) return;
+  navigatorContent.innerHTML = projectNavigatorMarkup;
+  navigatorMode = 'project';
+  setNavigatorTitle('Book Navigator');
+  renderManuscriptNavigatorDetails();
+}
+
+function renderLibraryNavigatorPanel() {
+  const navigatorContent = $('#navigator-content');
+  if (!navigatorContent) return;
+  const themeCategories = getThemeCatalogByCategory();
+  const themeSections = themeCategories.map((category, index) => {
+    if (category.key === 'personal-transformation') {
+      return `
+        <button class="navigator-item" data-target-view="library" data-library-select="themes:cat_${category.key}">
+          ${esc(category.label)}
+        </button>
+      `;
+    }
+
+    return `
+      <details class="navigator-subgroup" ${index === 0 ? 'open' : ''}>
+        <summary data-target-view="library" data-library-select="themes:cat_${category.key}">${esc(category.label)}</summary>
+        <div class="navigator-items">
+          <button class="navigator-item" data-target-view="library" data-library-select="themes:cat_${category.key}">
+            All ${esc(category.label)}
+          </button>
+          ${category.items.map(theme => `
+            <button class="navigator-item" data-target-view="library" data-library-select="themes:${theme.key}">
+              ${esc(theme.label)}
+            </button>
+          `).join('')}
+        </div>
+      </details>
+    `;
+  }).join('');
+
+  navigatorContent.innerHTML = `
+    <details class="navigator-group" open>
+      <summary>Wisdom</summary>
+      <div class="navigator-items">
+        <button class="navigator-item" data-target-view="library" data-library-select="wisdom:tradition">Philosophical Traditions</button>
+        <button class="navigator-item" data-target-view="library" data-library-select="wisdom:moral">Moral Insights</button>
+        <button class="navigator-item" data-target-view="library" data-library-select="wisdom:psychological">Psychological Insights</button>
+        <button class="navigator-item" data-target-view="library" data-library-select="wisdom:scientific">Scientific Insights</button>
+        <button class="navigator-item" data-target-view="library" data-library-select="wisdom:humanist">Humanist Principles</button>
+        <button class="navigator-item" data-target-view="library" data-library-select="wisdom:lesson">Life Lessons</button>
+      </div>
+    </details>
+    <details class="navigator-group" open>
+      <summary>Themes</summary>
+      <div class="navigator-items" style="padding:0;">
+        ${themeSections}
+        <button class="navigator-item" data-target-view="library" data-library-select="themes:saved">Saved Themes</button>
+      </div>
+    </details>
+    <details class="navigator-group" open>
+      <summary>Narrative Design</summary>
+      <div class="navigator-items">
+        <button class="navigator-item" data-target-view="library" data-library-select="narrative:patterns">Patterns</button>
+        <button class="navigator-item" data-target-view="library" data-library-select="narrative:templates">Templates</button>
+        <button class="navigator-item" data-target-view="library" data-library-select="narrative:blocks">Blocks</button>
+      </div>
+    </details>
+  `;
+  navigatorMode = 'library';
+  setNavigatorTitle('Library');
 }
 
 function showStandaloneView(viewName) {
+  if (viewName === 'library') {
+    renderLibraryNavigatorPanel();
+  } else if (navigatorMode !== 'project') {
+    renderProjectNavigatorPanel();
+  }
+
   $$('.view').forEach(v => v.classList.remove('active'));
   const viewEl = $(`#view-${viewName}`);
   if (!viewEl) return;
   viewEl.classList.add('active');
   renderViewSpecificContent(viewName);
-  setActiveNavigatorItem(viewName);
+  setActiveNavigatorItem(viewName, '', viewName === 'library' ? getLibrarySelection() : '');
   setActiveHeaderAction(viewName);
 }
 
 function showLeafView(viewName, groupKey = activeGroupKey) {
+  if (navigatorMode !== 'project') {
+    renderProjectNavigatorPanel();
+  }
+
   activeGroupKey = groupKey;
   activeViewKey = viewName;
   activateTopTab(groupKey);
@@ -223,6 +317,10 @@ function renderSubtabs(groupKey, preferredView = null) {
 }
 
 function switchToGroup(groupKey, preferredView = null) {
+  if (navigatorMode !== 'project') {
+    renderProjectNavigatorPanel();
+  }
+
   const group = getGroup(groupKey);
   if (!group) return;
 
@@ -249,7 +347,18 @@ function bindCoreButtons() {
     }
   };
   $('#btn-new').onclick = openNewProjectWizard;
-  $('#btn-library').onclick = () => showStandaloneView('library');
+  $('#btn-project')?.addEventListener('click', () => {
+    renderProjectNavigatorPanel();
+    if (activeViewKey === 'library') {
+      switchToGroup('results', 'cnl');
+    } else {
+      setActiveHeaderAction(activeViewKey);
+    }
+  });
+  $('#btn-library').onclick = () => {
+    renderLibraryNavigatorPanel();
+    showStandaloneView('library');
+  };
   $('#btn-evaluate').onclick = evaluateMetrics;
   $('#btn-docs')?.addEventListener('click', () => window.open('/docs/theory/index.html', '_blank'));
 }
@@ -316,6 +425,7 @@ async function handleNavigatorItemClick(item) {
   const targetView = item.dataset.targetView;
   const action = item.dataset.action || '';
   const storyMapSection = item.dataset.storymapSection || '';
+  const librarySelect = item.dataset.librarySelect || '';
   if (!targetView) return;
 
   if (action === 'generate-story') {
@@ -340,7 +450,13 @@ async function handleNavigatorItemClick(item) {
   if (mappedGroup) {
     switchToGroup(mappedGroup, targetView);
   } else {
+    if (targetView === 'library' && librarySelect) {
+      setLibrarySelection(librarySelect);
+    }
     showStandaloneView(targetView);
+    if (targetView === 'library') {
+      setActiveNavigatorItem('library', '', librarySelect || getLibrarySelection());
+    }
   }
 }
 
@@ -359,6 +475,18 @@ function bindNavigatorPanel() {
   if (!navigatorContent || navigatorContent.dataset.boundClick === '1') return;
 
   navigatorContent.addEventListener('click', (event) => {
+    const librarySummary = event.target.closest('summary[data-library-select]');
+    if (librarySummary) {
+      const targetView = librarySummary.dataset.targetView || 'library';
+      const librarySelect = librarySummary.dataset.librarySelect || '';
+      if (targetView === 'library' && librarySelect) {
+        setLibrarySelection(librarySelect);
+        showStandaloneView('library');
+        setActiveNavigatorItem('library', '', librarySelect);
+      }
+      return;
+    }
+
     const summary = event.target.closest('summary[data-open-view]');
     if (!summary) return;
     const targetView = summary.dataset.openView;
@@ -427,6 +555,7 @@ async function init() {
   });
 
   // Left navigator panel
+  projectNavigatorMarkup = $('#navigator-content')?.innerHTML || '';
   bindNavigatorPanel();
   renderManuscriptNavigatorDetails();
 
@@ -444,7 +573,8 @@ async function init() {
   });
   
   // Initial render
-  ['characters', 'locations', 'objects', 'moods', 'themes'].forEach(renderEntityGrid);
+  ['locations', 'objects', 'moods', 'themes'].forEach(renderEntityGrid);
+  renderCharactersCastView();
   renderTree();
   renderFrameworkView();
   renderRelationshipsView();
@@ -489,6 +619,12 @@ export function switchToTab(viewName) {
 // Make switchToTab available globally for tree navigation
 window.switchToTab = switchToTab;
 window.renderBackdropView = renderBackdropView;
+window.openLibraryThemes = () => {
+  renderLibraryNavigatorPanel();
+  setLibrarySelection('themes:all');
+  showStandaloneView('library');
+  setActiveNavigatorItem('library', '', 'themes:all');
+};
 
 // ==================== ADD MENU (Plus Button) ====================
 

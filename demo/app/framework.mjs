@@ -196,6 +196,13 @@ function renderThemeSection(profile) {
         <p>Core meaning axis and thematic templates.</p>
         <div class="framework-header-actions">
           <button class="framework-inline-btn" type="button" onclick="window.addEntity('themes')">+ Add Theme</button>
+          <button
+            class="framework-inline-btn"
+            type="button"
+            onclick="if (typeof window.openLibraryThemes === 'function') window.openLibraryThemes(); else window.addEntity('themes');"
+          >
+            Add from Library
+          </button>
         </div>
       </div>
       <div class="framework-theme-rail-wrap">

@@ -9,6 +9,7 @@ import { $, $$, genId, openModal, closeModal, pick } from './utils.mjs';
 import { addChild, findNode, renderTree, getUsedBlocks } from './tree.mjs';
 import { generateCNL } from './cnl.mjs';
 import { renderRelationshipsView } from './views.mjs';
+import { renderWorldLayersView } from './world-layers.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
 import { parseAnnotationLines, annotationsToEditorText } from './cnl-annotations.mjs';
 
@@ -70,7 +71,9 @@ export function renderEntityGrid(type, containerIdOrOptions = null, maybeOptions
   let descHtml = '';
   if (desc) {
     descHtml = `<div class="entity-grid-header">
-      <div class="entity-grid-title">${desc.title}</div>
+      <div class="entity-grid-header-top">
+        <div class="entity-grid-title">${desc.title}</div>
+      </div>
       <div class="entity-grid-desc">${desc.description}</div>
     </div>`;
   }
@@ -124,6 +127,8 @@ export function renderBackdropView() {
   const container = $('#backdrop-view');
   if (!container) return;
 
+  const worldSpec = getWorldSpecValuesFromProject();
+
   container.innerHTML = `
     <div class="view-description-header">
       <div class="view-description-title">Backdrop</div>
@@ -132,6 +137,49 @@ export function renderBackdropView() {
       </div>
     </div>
     <div class="backdrop-layout">
+      <details class="spec-card" open>
+        <summary class="spec-card-summary"><span>The World and Locations</span><span class="spec-card-hint" aria-hidden="true"></span></summary>
+        <div class="spec-card-content">
+          <div class="spec-grid-4 spec-world-grid">
+            <div class="form-group">
+              <label class="form-label">Geography</label>
+              <select class="form-select" id="worldspec-geography">
+                <option value="forest" ${worldSpec.geography === 'forest' ? 'selected' : ''}>Forest</option>
+                <option value="mountain" ${worldSpec.geography === 'mountain' ? 'selected' : ''}>Mountain</option>
+                <option value="ocean" ${worldSpec.geography === 'ocean' ? 'selected' : ''}>Ocean</option>
+                <option value="desert" ${worldSpec.geography === 'desert' ? 'selected' : ''}>Desert</option>
+                <option value="city" ${worldSpec.geography === 'city' ? 'selected' : ''}>City</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Time Period</label>
+              <select class="form-select" id="worldspec-time-period">
+                <option value="medieval" ${worldSpec.timePeriod === 'medieval' ? 'selected' : ''}>Medieval</option>
+                <option value="modern" ${worldSpec.timePeriod === 'modern' ? 'selected' : ''}>Modern</option>
+                <option value="future" ${worldSpec.timePeriod === 'future' ? 'selected' : ''}>Future</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Objects & Artifacts Type</label>
+              <select class="form-select" id="worldspec-object-types">
+                <option value="document" ${worldSpec.objectType === 'document' ? 'selected' : ''}>Document</option>
+                <option value="key" ${worldSpec.objectType === 'key' ? 'selected' : ''}>Key</option>
+                <option value="weapon" ${worldSpec.objectType === 'weapon' ? 'selected' : ''}>Weapon</option>
+                <option value="jewel" ${worldSpec.objectType === 'jewel' ? 'selected' : ''}>Jewelry</option>
+                <option value="treasure" ${worldSpec.objectType === 'treasure' ? 'selected' : ''}>Treasure</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Significance</label>
+              <select class="form-select" id="worldspec-object-importance">
+                <option value="minor" ${worldSpec.objectSignificance === 'minor' ? 'selected' : ''}>Minor</option>
+                <option value="central" ${worldSpec.objectSignificance === 'central' ? 'selected' : ''}>Central</option>
+                <option value="important" ${worldSpec.objectSignificance === 'important' ? 'selected' : ''}>Important</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </details>
       <section class="backdrop-section">
         <div class="backdrop-section-header">
           <h3>Locations (Place & Time)</h3>
@@ -156,12 +204,539 @@ export function renderBackdropView() {
         <div class="backdrop-section-note">Define social, magical, technological, and physical constraints that govern the world.</div>
         <div class="rules-grid-cards" id="backdrop-worldrules-grid"></div>
       </section>
+      <section class="backdrop-section">
+        <div class="backdrop-section-header">
+          <h3>World Layers</h3>
+        </div>
+        <div class="backdrop-section-note">Model societies, history, rules, economy, and conflicts directly in World.</div>
+        <div id="backdrop-worldlayers-view"></div>
+      </section>
     </div>
   `;
 
   renderEntityGrid('locations', 'backdrop-locations-grid', { includeAddCard: false });
   renderEntityGrid('objects', 'backdrop-objects-grid', { includeAddCard: false });
   renderBackdropWorldRules();
+  renderWorldLayersView({
+    containerId: 'backdrop-worldlayers-view',
+    showIntro: false,
+    embedded: true,
+    idPrefix: 'wle'
+  });
+  bindWorldSpecControls();
+}
+
+function getWorldSpecValuesFromProject() {
+  const locations = state.project?.libraries?.locations || [];
+  const objects = state.project?.libraries?.objects || [];
+
+  const worldLocation = locations.find(loc => loc?.source === 'world-spec') || locations[0];
+  const worldObject = objects.find(obj => obj?.source === 'world-spec') || objects[0];
+
+  return {
+    geography: worldLocation?.geography || 'forest',
+    timePeriod: worldLocation?.time || 'medieval',
+    objectType: worldObject?.objectType || 'document',
+    objectSignificance: worldObject?.significance || 'minor'
+  };
+}
+
+function upsertWorldSpecEntities() {
+  const geography = $('#worldspec-geography')?.value || 'forest';
+  const timePeriod = $('#worldspec-time-period')?.value || 'medieval';
+  const objectType = $('#worldspec-object-types')?.value || 'document';
+  const objectSignificance = $('#worldspec-object-importance')?.value || 'minor';
+
+  const locations = state.project.libraries.locations || (state.project.libraries.locations = []);
+  const objects = state.project.libraries.objects || (state.project.libraries.objects = []);
+
+  let worldLocation = locations.find(loc => loc?.source === 'world-spec');
+  if (!worldLocation) {
+    worldLocation = locations[0];
+  }
+  if (!worldLocation) {
+    worldLocation = { id: genId(), name: 'World Location', characteristics: [] };
+    locations.push(worldLocation);
+  }
+  worldLocation.source = 'world-spec';
+  worldLocation.geography = geography;
+  worldLocation.time = timePeriod;
+  if (!Array.isArray(worldLocation.characteristics)) worldLocation.characteristics = [];
+
+  let worldObject = objects.find(obj => obj?.source === 'world-spec');
+  if (!worldObject) {
+    worldObject = objects[0];
+  }
+  if (!worldObject) {
+    worldObject = { id: genId(), name: 'World Object' };
+    objects.push(worldObject);
+  }
+  worldObject.source = 'world-spec';
+  worldObject.objectType = objectType;
+  worldObject.significance = objectSignificance;
+
+  renderEntityGrid('locations', 'backdrop-locations-grid', { includeAddCard: false });
+  renderEntityGrid('objects', 'backdrop-objects-grid', { includeAddCard: false });
+  generateCNL();
+}
+
+function bindWorldSpecControls() {
+  ['#worldspec-geography', '#worldspec-time-period', '#worldspec-object-types', '#worldspec-object-importance']
+    .forEach(selector => {
+      const el = $(selector);
+      el?.addEventListener('change', upsertWorldSpecEntities);
+    });
+}
+
+function inferCharacterRole(character) {
+  const explicit = String(character?.role || '').toLowerCase();
+  if (['protagonist', 'antagonist', 'secondary'].includes(explicit)) return explicit;
+
+  const archetype = String(character?.archetype || '').toLowerCase();
+  if (['hero', 'seeker', 'caregiver', 'innocent', 'explorer', 'creator'].includes(archetype)) return 'protagonist';
+  if (['shadow', 'villain', 'ruler', 'destroyer', 'trickster'].includes(archetype)) return 'antagonist';
+  return 'secondary';
+}
+
+function castOptions(options, selected = []) {
+  return options.map(option => `
+    <option value="${escapeHtml(option.value)}" ${selected.includes(option.value) ? 'selected' : ''}>
+      ${escapeHtml(option.label)}
+    </option>
+  `).join('');
+}
+
+const PROTAGONIST_ARCHETYPES = [
+  { value: 'hero', label: 'Hero' },
+  { value: 'seeker', label: 'Seeker' },
+  { value: 'caregiver', label: 'Caregiver' },
+  { value: 'rebel', label: 'Rebel' }
+];
+
+const ANTAGONIST_ARCHETYPES = [
+  { value: 'shadow', label: 'Shadow' },
+  { value: 'ruler', label: 'Ruler' },
+  { value: 'trickster', label: 'Trickster' },
+  { value: 'destroyer', label: 'Destroyer' }
+];
+
+const PROTAGONIST_TRAITS = [
+  { value: 'brave', label: 'Brave' },
+  { value: 'loyal', label: 'Loyal' },
+  { value: 'curious', label: 'Curious' },
+  { value: 'impulsive', label: 'Impulsive' },
+  { value: 'empathetic', label: 'Empathetic' },
+  { value: 'resilient', label: 'Resilient' },
+  { value: 'idealistic', label: 'Idealistic' },
+  { value: 'resourceful', label: 'Resourceful' },
+  { value: 'strategic', label: 'Strategic' },
+  { value: 'compassionate', label: 'Compassionate' },
+  { value: 'stubborn', label: 'Stubborn' },
+  { value: 'self_doubting', label: 'Self-doubting' }
+];
+
+const ANTAGONIST_TRAITS = [
+  { value: 'cold', label: 'Cold' },
+  { value: 'strategic', label: 'Strategic' },
+  { value: 'charismatic', label: 'Charismatic' },
+  { value: 'vengeful', label: 'Vengeful' },
+  { value: 'obsessive', label: 'Obsessive' },
+  { value: 'manipulative', label: 'Manipulative' },
+  { value: 'ruthless', label: 'Ruthless' },
+  { value: 'calculating', label: 'Calculating' },
+  { value: 'fanatical', label: 'Fanatical' },
+  { value: 'deceptive', label: 'Deceptive' },
+  { value: 'domineering', label: 'Domineering' },
+  { value: 'patient', label: 'Patient' }
+];
+
+const SECONDARY_ARCHETYPES = [
+  { value: 'ally', label: 'Ally' },
+  { value: 'mentor', label: 'Mentor' },
+  { value: 'guardian', label: 'Guardian' },
+  { value: 'trickster', label: 'Trickster' }
+];
+
+const SECONDARY_TRAITS = [
+  { value: 'bold', label: 'Bold' },
+  { value: 'reserved', label: 'Reserved' },
+  { value: 'witty', label: 'Witty' },
+  { value: 'fearful', label: 'Fearful' },
+  { value: 'pragmatic', label: 'Pragmatic' },
+  { value: 'loyal', label: 'Loyal' },
+  { value: 'protective', label: 'Protective' },
+  { value: 'skeptical', label: 'Skeptical' },
+  { value: 'ambitious', label: 'Ambitious' },
+  { value: 'idealistic', label: 'Idealistic' },
+  { value: 'sarcastic', label: 'Sarcastic' },
+  { value: 'reckless', label: 'Reckless' },
+  { value: 'patient', label: 'Patient' }
+];
+
+const SPEC_RELATION_TYPES = [
+  { value: 'alliance', label: 'Alliance' },
+  { value: 'rivalry', label: 'Rivalry' },
+  { value: 'betrayal', label: 'Betrayal' },
+  { value: 'mentor', label: 'Mentor / Apprentice' },
+  { value: 'family', label: 'Family Ties' },
+  { value: 'friendship', label: 'Friendship' },
+  { value: 'romance', label: 'Romance' },
+  { value: 'loyalty', label: 'Loyalty' },
+  { value: 'enmity', label: 'Enmity' },
+  { value: 'dependency', label: 'Dependency' }
+];
+
+let castDropdownListenerBound = false;
+
+function closeCastMultiDropdowns(except = null) {
+  document.querySelectorAll('#characters-grid .multi-dropdown.open').forEach(dropdown => {
+    if (dropdown !== except) {
+      dropdown.classList.remove('open');
+      const toggle = dropdown.querySelector('.multi-dropdown-toggle');
+      if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
+function enhanceCastMultiSelectDropdown(selectEl) {
+  if (!selectEl || selectEl.dataset.enhancedMultiDropdown === 'true') return;
+
+  selectEl.dataset.enhancedMultiDropdown = 'true';
+  selectEl.classList.add('multi-dropdown-native');
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'multi-dropdown';
+
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'multi-dropdown-toggle';
+  toggle.setAttribute('aria-expanded', 'false');
+
+  const panel = document.createElement('div');
+  panel.className = 'multi-dropdown-panel';
+
+  const options = Array.from(selectEl.options || []);
+  const uid = Math.random().toString(36).slice(2, 8);
+
+  const updateToggleLabel = () => {
+    const selected = options.filter(option => option.selected).map(option => option.textContent.trim());
+    const fullLabel = selected.length ? selected.join(', ') : 'Select options';
+    if (selected.length <= 2) {
+      toggle.textContent = fullLabel;
+    } else {
+      toggle.textContent = `${selected.slice(0, 2).join(', ')} +${selected.length - 2} more`;
+    }
+    toggle.title = fullLabel;
+  };
+
+  options.forEach((option, idx) => {
+    const row = document.createElement('label');
+    row.className = 'multi-dropdown-option';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = Boolean(option.selected);
+    checkbox.value = option.value;
+    checkbox.id = `${selectEl.id || `cast_traits_${uid}`}_multi_${idx}`;
+
+    checkbox.addEventListener('change', () => {
+      option.selected = checkbox.checked;
+      updateToggleLabel();
+      selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    const text = document.createElement('span');
+    text.textContent = option.textContent;
+
+    row.appendChild(checkbox);
+    row.appendChild(text);
+    panel.appendChild(row);
+  });
+
+  toggle.addEventListener('click', (event) => {
+    event.preventDefault();
+    const willOpen = !wrapper.classList.contains('open');
+    closeCastMultiDropdowns(wrapper);
+    wrapper.classList.toggle('open', willOpen);
+    toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+  });
+
+  wrapper.appendChild(toggle);
+  wrapper.appendChild(panel);
+  selectEl.insertAdjacentElement('afterend', wrapper);
+  updateToggleLabel();
+}
+
+function createSecondarySpecRow(character = null, removable = true) {
+  const row = document.createElement('div');
+  row.className = `spec-secondary-item${removable ? '' : ' no-delete'}`;
+  row.dataset.characterId = character?.id || '';
+  row.innerHTML = `
+    ${removable ? '<button class="spec-secondary-delete" type="button" title="Delete character" aria-label="Delete character">×</button>' : ''}
+    <div class="spec-secondary-fields">
+      <div class="form-group">
+        <label class="form-label">Archetype</label>
+        <select class="form-select cast-secondary-archetype">
+          ${castOptions(SECONDARY_ARCHETYPES, [character?.archetype || 'ally'])}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Traits</label>
+        <select class="form-select cast-secondary-traits" multiple size="6">
+          ${castOptions(SECONDARY_TRAITS, Array.isArray(character?.traits) ? character.traits : [])}
+        </select>
+      </div>
+    </div>
+  `;
+  row.querySelector('.spec-secondary-delete')?.addEventListener('click', () => {
+    if (character?.id) {
+      state.project.libraries.characters = state.project.libraries.characters.filter(c => c.id !== character.id);
+      removeEntityRefs(state.project.structure, character.id);
+    }
+    row.remove();
+    renderRelationshipsView();
+    generateCNL();
+  });
+  enhanceCastMultiSelectDropdown(row.querySelector('.cast-secondary-traits'));
+  return row;
+}
+
+function createRelationshipSpecRow(type = 'alliance') {
+  const row = document.createElement('div');
+  row.className = 'spec-relationship-item';
+  row.innerHTML = `
+    <button class="spec-secondary-delete" type="button" title="Delete relationship" aria-label="Delete relationship">×</button>
+    <select class="form-select cast-relationship-type">
+      ${castOptions(SPEC_RELATION_TYPES, [type])}
+    </select>
+  `;
+  row.querySelector('.spec-secondary-delete')?.addEventListener('click', () => {
+    row.remove();
+    syncCastRelationshipsFromUI();
+  });
+  row.querySelector('.cast-relationship-type')?.addEventListener('change', () => syncCastRelationshipsFromUI());
+  return row;
+}
+
+function upsertPrimaryCharacter(role, fallbackName, defaultArchetype, archetypeId, traitsId) {
+  const archetype = $(archetypeId)?.value || defaultArchetype;
+  const traits = Array.from($(traitsId)?.selectedOptions || []).map(option => option.value);
+  let character = (state.project.libraries.characters || []).find(c => inferCharacterRole(c) === role);
+  if (!character) {
+    character = { id: genId() };
+    state.project.libraries.characters.push(character);
+  }
+  character.name = character.name || fallbackName;
+  character.role = role;
+  character.archetype = archetype;
+  character.traits = traits;
+  if (!character.arcType) {
+    character.arcType = role === 'antagonist' ? 'negative' : 'positive';
+  }
+  return character;
+}
+
+function syncCastRelationshipsFromUI() {
+  const protagonist = (state.project.libraries.characters || []).find(c => inferCharacterRole(c) === 'protagonist');
+  const antagonist = (state.project.libraries.characters || []).find(c => inferCharacterRole(c) === 'antagonist');
+  if (!protagonist || !antagonist) return;
+
+  const selectedTypes = Array.from(document.querySelectorAll('#cast-relationship-list .cast-relationship-type'))
+    .map(select => select.value)
+    .filter(Boolean);
+
+  const types = Array.from(new Set(selectedTypes));
+  const old = state.project.libraries.relationships || [];
+  const kept = old.filter(rel => !(rel.fromId === protagonist.id && rel.toId === antagonist.id));
+  const mapped = types.map(type => ({ id: genId(), fromId: protagonist.id, toId: antagonist.id, type, hidden: false }));
+  state.project.libraries.relationships = [...kept, ...mapped];
+  renderRelationshipsView();
+  generateCNL();
+}
+
+function bindCastSpecEvents() {
+  const protagonistArchetype = $('#cast-protagonist-archetype');
+  const protagonistTraits = $('#cast-protagonist-traits');
+  const antagonistArchetype = $('#cast-antagonist-archetype');
+  const antagonistTraits = $('#cast-antagonist-traits');
+  const secondaryList = $('#cast-secondary-characters');
+  const addSecondaryBtn = $('#cast-btn-add-secondary-character');
+  const relSelect = $('#cast-relationships');
+  const relList = $('#cast-relationship-list');
+  const addRelBtn = $('#cast-btn-add-relationship');
+
+  const syncPrimary = () => {
+    upsertPrimaryCharacter('protagonist', 'Protagonist', 'hero', '#cast-protagonist-archetype', '#cast-protagonist-traits');
+    upsertPrimaryCharacter('antagonist', 'Antagonist', 'shadow', '#cast-antagonist-archetype', '#cast-antagonist-traits');
+    syncCastRelationshipsFromUI();
+    renderRelationshipsView();
+    generateCNL();
+  };
+
+  [protagonistArchetype, protagonistTraits, antagonistArchetype, antagonistTraits].forEach(control => {
+    control?.addEventListener('change', syncPrimary);
+  });
+  enhanceCastMultiSelectDropdown(protagonistTraits);
+  enhanceCastMultiSelectDropdown(antagonistTraits);
+
+  const secondaryCharacters = (state.project.libraries.characters || []).filter(c => inferCharacterRole(c) === 'secondary');
+  secondaryList.innerHTML = '';
+  if (!secondaryCharacters.length) {
+    secondaryList.appendChild(createSecondarySpecRow(null, false));
+  } else {
+    secondaryCharacters.forEach(character => secondaryList.appendChild(createSecondarySpecRow(character, true)));
+  }
+
+  const syncSecondary = () => {
+    const rows = Array.from(secondaryList.querySelectorAll('.spec-secondary-item'));
+    const saved = [];
+    rows.forEach((row, index) => {
+      const archetype = row.querySelector('.cast-secondary-archetype')?.value || 'ally';
+      const traits = Array.from(row.querySelector('.cast-secondary-traits')?.selectedOptions || []).map(option => option.value);
+      let characterId = row.dataset.characterId || '';
+      let character = characterId
+        ? state.project.libraries.characters.find(c => c.id === characterId)
+        : null;
+      if (!character) {
+        character = { id: genId() };
+        characterId = character.id;
+        row.dataset.characterId = characterId;
+      }
+      character.name = character.name || `Secondary ${index + 1}`;
+      character.role = 'secondary';
+      character.archetype = archetype;
+      character.traits = traits;
+      character.arcType = character.arcType || 'flat';
+      saved.push(character);
+    });
+    state.project.libraries.characters = [
+      ...state.project.libraries.characters.filter(c => inferCharacterRole(c) !== 'secondary'),
+      ...saved
+    ];
+    renderRelationshipsView();
+    generateCNL();
+  };
+
+  secondaryList.addEventListener('change', (event) => {
+    if (!event.target.closest('.spec-secondary-item')) return;
+    syncSecondary();
+  });
+
+  addSecondaryBtn?.addEventListener('click', () => {
+    secondaryList.appendChild(createSecondarySpecRow(null, true));
+  });
+
+  relList.innerHTML = '';
+  const protagonist = (state.project.libraries.characters || []).find(c => inferCharacterRole(c) === 'protagonist');
+  const antagonist = (state.project.libraries.characters || []).find(c => inferCharacterRole(c) === 'antagonist');
+  const betweenPrimary = protagonist && antagonist
+    ? (state.project.libraries.relationships || []).filter(rel => rel.fromId === protagonist.id && rel.toId === antagonist.id)
+    : [];
+  if (betweenPrimary.length) {
+    betweenPrimary.forEach(rel => relList.appendChild(createRelationshipSpecRow(rel.type)));
+  }
+
+  addRelBtn?.addEventListener('click', () => {
+    const selectedType = relSelect?.value || 'alliance';
+    relList.appendChild(createRelationshipSpecRow(selectedType));
+    syncCastRelationshipsFromUI();
+  });
+
+  relSelect?.addEventListener('change', () => syncCastRelationshipsFromUI());
+
+  if (!castDropdownListenerBound) {
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('#characters-grid .multi-dropdown')) {
+        closeCastMultiDropdowns();
+      }
+    });
+    castDropdownListenerBound = true;
+  }
+}
+
+function renderCharactersSpecBlock() {
+  const protagonist = (state.project.libraries.characters || []).find(c => inferCharacterRole(c) === 'protagonist');
+  const antagonist = (state.project.libraries.characters || []).find(c => inferCharacterRole(c) === 'antagonist');
+
+  return `
+    <div class="cast-spec-rows">
+      <div class="spec-characters-grid">
+        <div class="spec-subcard">
+          <h4 class="spec-subcard-title">Protagonist</h4>
+          <div class="form-group">
+            <label class="form-label">Archetype</label>
+            <select class="form-select" id="cast-protagonist-archetype">
+              ${castOptions(PROTAGONIST_ARCHETYPES, [protagonist?.archetype || 'hero'])}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Traits (multi-select)</label>
+            <select class="form-select" id="cast-protagonist-traits" multiple size="6">
+              ${castOptions(PROTAGONIST_TRAITS, Array.isArray(protagonist?.traits) ? protagonist.traits : [])}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec-characters-grid">
+        <div class="spec-subcard">
+          <h4 class="spec-subcard-title">Antagonist</h4>
+          <div class="form-group">
+            <label class="form-label">Archetype</label>
+            <select class="form-select" id="cast-antagonist-archetype">
+              ${castOptions(ANTAGONIST_ARCHETYPES, [antagonist?.archetype || 'shadow'])}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Traits (multi-select)</label>
+            <select class="form-select" id="cast-antagonist-traits" multiple size="6">
+              ${castOptions(ANTAGONIST_TRAITS, Array.isArray(antagonist?.traits) ? antagonist.traits : [])}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec-characters-grid">
+        <div class="spec-subcard spec-subcard-secondary">
+          <h4 class="spec-subcard-title">Secondary Characters</h4>
+          <div class="spec-secondary-list" id="cast-secondary-characters"></div>
+          <button class="btn small" id="cast-btn-add-secondary-character" type="button">+ Add Character</button>
+        </div>
+      </div>
+
+      <div class="spec-characters-grid">
+        <div class="spec-subcard spec-subcard-relationships">
+          <h4 class="spec-subcard-title">Relationships</h4>
+          <div class="form-group">
+            <label class="form-label">Relationship Type</label>
+            <select class="form-select" id="cast-relationships">
+              ${castOptions(SPEC_RELATION_TYPES, ['alliance'])}
+            </select>
+          </div>
+          <div class="spec-relationship-list" id="cast-relationship-list"></div>
+          <button class="btn small" id="cast-btn-add-relationship" type="button">+ Add Relationship</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+let pendingCharacterRole = 'secondary';
+
+export function renderCharactersCastView() {
+  const container = $('#characters-grid');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="view-description-header">
+      <div class="view-description-title">Cast</div>
+      <div class="view-description-text">
+        Configure your story cast in one place: protagonist, antagonist, secondary characters, and relationships.
+      </div>
+    </div>
+    ${renderCharactersSpecBlock()}
+  `;
+  bindCastSpecEvents();
 }
 
 function renderBackdropWorldRules() {
@@ -207,8 +782,24 @@ function renderBackdropWorldRules() {
 }
 
 window.addEntity = type => { 
+  if (type === 'characters') pendingCharacterRole = 'secondary';
   state.editingEntity = null; 
   showEntityForm(type, null); 
+};
+
+window.addThemeFromLibrary = () => {
+  if (typeof window.openLibraryThemes === 'function') {
+    window.openLibraryThemes();
+    return;
+  }
+  state.editingEntity = null;
+  showEntityForm('themes', null);
+};
+
+window.addCharacterWithRole = (role) => {
+  pendingCharacterRole = ['protagonist', 'antagonist', 'secondary'].includes(role) ? role : 'secondary';
+  state.editingEntity = null;
+  showEntityForm('characters', null);
 };
 
 window.editEntity = (type, id) => { 
@@ -222,7 +813,8 @@ window.deleteEntity = (type, id) => {
   state.project.libraries[type] = state.project.libraries[type].filter(e => e.id !== id);
   removeEntityRefs(state.project.structure, id);
   closeModal('entity-modal');
-  renderEntityGrid(type);
+  if (type === 'characters') renderCharactersCastView();
+  else renderEntityGrid(type);
   if (type === 'locations' || type === 'objects') window.renderBackdropView?.();
   renderTree();
 };
@@ -243,6 +835,12 @@ function showEntityForm(type, e) {
   
   if (type === 'characters') {
     html += `<div class="form-group"><label class="form-label">Name</label><input class="form-input" id="e-name" value="${e?.name || pick(VOCAB.NAMES.characters)}"></div>
+      <div class="form-group"><label class="form-label">Role</label>
+      <select class="form-select" id="e-role">
+        <option value="protagonist" ${(e?.role || pendingCharacterRole) === 'protagonist' ? 'selected' : ''}>Protagonist</option>
+        <option value="antagonist" ${(e?.role || pendingCharacterRole) === 'antagonist' ? 'selected' : ''}>Antagonist</option>
+        <option value="secondary" ${(e?.role || pendingCharacterRole || 'secondary') === 'secondary' ? 'selected' : ''}>Secondary</option>
+      </select></div>
       <div class="form-group"><label class="form-label">Archetype</label>
       <select class="form-select" id="e-archetype">${Object.entries(VOCAB.CHARACTER_ARCHETYPES).map(([k, v]) => `<option value="${k}" ${e?.archetype === k ? 'selected' : ''}>${v.label} - ${v.desc}</option>`).join('')}</select></div>
       <div class="form-group"><label class="form-label">Arc Type</label>
@@ -322,10 +920,12 @@ function saveEntity(type) {
   
   if (type === 'characters') {
     e.name = $('#e-name').value || 'Character';
+    e.role = $('#e-role')?.value || e.role || pendingCharacterRole || 'secondary';
     e.archetype = $('#e-archetype').value;
     e.arcType = $('#e-arcType').value;
     e.traits = [...$$('#e-traits .chip.selected')].map(c => c.dataset.key);
     e.description = $('#e-description').value.trim();
+    pendingCharacterRole = 'secondary';
   }
   if (type === 'locations') {
     e.name = $('#e-name').value || 'Location';
@@ -364,7 +964,8 @@ function saveEntity(type) {
   
   if (!state.editingEntity) state.project.libraries[type].push(e);
   closeModal('entity-modal');
-  renderEntityGrid(type);
+  if (type === 'characters') renderCharactersCastView();
+  else renderEntityGrid(type);
   if (type === 'locations' || type === 'objects') window.renderBackdropView?.();
   if (type === 'themes' || type === 'moods') window.renderFrameworkView?.();
   if (type === 'characters') renderRelationshipsView();

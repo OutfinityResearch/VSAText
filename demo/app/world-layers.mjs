@@ -112,8 +112,8 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-function renderField(field, value, categoryKey, itemId) {
-  const id = `wl-${categoryKey}-${itemId}-${field.key}`;
+function renderField(field, value, categoryKey, itemId, idPrefix = 'wl') {
+  const id = `${idPrefix}-${categoryKey}-${itemId}-${field.key}`;
   if (field.type === 'select') {
     const optionsHtml = field.options.map((opt) => `
       <option value="${escapeHtml(opt)}" ${value === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>
@@ -145,8 +145,8 @@ function renderField(field, value, categoryKey, itemId) {
   `;
 }
 
-function renderLayerItem(categoryKey, item, config) {
-  const fieldsHtml = config.fields.map(field => renderField(field, item[field.key], categoryKey, item.id)).join('');
+function renderLayerItem(categoryKey, item, config, idPrefix = 'wl') {
+  const fieldsHtml = config.fields.map(field => renderField(field, item[field.key], categoryKey, item.id, idPrefix)).join('');
   return `
     <article class="world-layer-item" data-category="${categoryKey}" data-item-id="${item.id}">
       <button class="world-layer-delete" type="button" title="Delete layer" aria-label="Delete layer" data-action="delete-layer" data-category="${categoryKey}" data-item-id="${item.id}">×</button>
@@ -155,9 +155,9 @@ function renderLayerItem(categoryKey, item, config) {
   `;
 }
 
-function renderCategoryCard(categoryKey, config, items) {
+function renderCategoryCard(categoryKey, config, items, idPrefix = 'wl') {
   const itemsHtml = items.length
-    ? items.map(item => renderLayerItem(categoryKey, item, config)).join('')
+    ? items.map(item => renderLayerItem(categoryKey, item, config, idPrefix)).join('')
     : `<div class="world-layer-empty">No entries yet. Use ${config.addLabel}.</div>`;
 
   return `
@@ -234,23 +234,30 @@ function attachListeners(container) {
   });
 }
 
-export function renderWorldLayersView() {
-  const container = $('#worldlayers-view');
+export function renderWorldLayersView(options = {}) {
+  const {
+    containerId = 'worldlayers-view',
+    showIntro = true,
+    embedded = false,
+    idPrefix = 'wl'
+  } = options;
+
+  const container = $(`#${containerId}`);
   if (!container) return;
 
   const worldLayers = ensureWorldLayersState();
   if (!worldLayers) return;
 
   const cardsHtml = Object.entries(CATEGORY_CONFIG)
-    .map(([categoryKey, config]) => renderCategoryCard(categoryKey, config, worldLayers[categoryKey]))
+    .map(([categoryKey, config]) => renderCategoryCard(categoryKey, config, worldLayers[categoryKey], idPrefix))
     .join('');
 
   container.innerHTML = `
-    <div class="world-layers-layout">
-      <section class="world-layers-intro">
+    <div class="world-layers-layout${embedded ? ' embedded' : ''}">
+      ${showIntro ? `<section class="world-layers-intro">
         <h2>World Layers</h2>
         <p>Model social, historical, economic, and conflict systems that shape decisions, stakes, and long-term narrative pressure.</p>
-      </section>
+      </section>` : ''}
       <div class="world-layers-grid">
         ${cardsHtml}
       </div>

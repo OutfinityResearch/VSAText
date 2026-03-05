@@ -29,13 +29,16 @@ const NODE_TO_TAB = {
 // ==================== TREE RENDERING ====================
 export function renderTree() {
   const c = $('#tree-container');
+  if (!c) return;
   if (!state.project.structure) {
     c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📖</div><div class="empty-state-text">No structure yet</div><div class="empty-state-hint">Click Generate Story or + to start</div></div>';
+    document.dispatchEvent(new CustomEvent('structure-changed'));
     return;
   }
   c.innerHTML = renderNode(state.project.structure);
   updateStats();
   generateCNL();
+  document.dispatchEvent(new CustomEvent('structure-changed'));
 }
 
 function renderNode(n, d = 0) {

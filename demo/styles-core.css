@@ -194,6 +194,11 @@ footer {
 .btn.random { background: linear-gradient(135deg, var(--accent-amber), var(--accent-rose)); border: none; color: white; }
 .btn.wizard-trigger { background: linear-gradient(135deg, var(--accent-violet), var(--accent-sky)); border: none; color: white; }
 .btn.small { font-size: var(--fs-2xs); padding: 0.3rem 0.5rem; }
+.header-actions .btn.active {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+  background: rgba(255, 209, 102, 0.12);
+}
 
 /* Loading button state */
 .btn.loading {
@@ -241,4 +246,78 @@ footer {
 @keyframes fadeOut { 
   from { opacity: 1; } 
   to { opacity: 0; } 
+}
+
+@media (max-width: 1280px) {
+  .app {
+    grid-template-columns: 250px 1fr 280px;
+  }
+
+  .header-actions {
+    gap: 0.3rem;
+  }
+
+  .btn {
+    padding: 0.35rem 0.65rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .app {
+    grid-template-columns: 220px 1fr;
+  }
+
+  .metrics-panel {
+    display: none;
+  }
+
+  header {
+    padding: 0 0.6rem;
+    gap: 0.4rem;
+  }
+
+  .logo h1 {
+    font-size: var(--fs-base);
+    letter-spacing: 0.04em;
+  }
+
+  .project-name {
+    min-width: 120px;
+    max-width: 180px;
+  }
+}
+
+@media (max-width: 760px) {
+  .app {
+    grid-template-columns: 180px 1fr;
+  }
+
+  .zoom-controls {
+    display: none;
+  }
+
+  .header-actions {
+    gap: 0.2rem;
+  }
+
+  .header-actions .btn {
+    font-size: var(--fs-2xs);
+    letter-spacing: 0.03em;
+    padding: 0.3rem 0.45rem;
+  }
+
+  .project-name {
+    min-width: 96px;
+    max-width: 120px;
+    font-size: var(--fs-xs);
+  }
+
+  footer {
+    padding: 0 0.5rem;
+  }
+
+  .footer-stats {
+    gap: 0.45rem;
+    font-size: var(--fs-2xs);
+  }
 }

@@ -11,7 +11,7 @@ import { renderEntityGrid, renderBackdropView, showSelectModal, showBlockModal, 
 import { renderRelationshipsView, renderBlocksView, renderWorldRulesView } from './views.mjs';
 import { evaluateMetrics, renderEmptyMetrics, initMetrics } from './metrics.mjs';
 import { exportCNL, importCNL, toggleEditMode, setCNLViewMode, generateCNL } from './cnl.mjs';
-import { loadProjectsList, newProject, initPersistence } from './persistence.mjs';
+import { loadProjectsList, initPersistence } from './persistence.mjs';
 import { setupContextMenu } from './context-menu.mjs';
 
 // Blueprint imports
@@ -28,6 +28,10 @@ import { renderPatternsView } from './entities-patterns.mjs';
 import { renderFrameworkView } from './framework.mjs';
 import { renderWorldLayersView } from './world-layers.mjs';
 import { renderHooksView } from './hooks.mjs';
+import { renderLibraryView } from './library.mjs';
+import { renderNarrativeDesignMacroView } from './narrative-design.mjs';
+import { renderManuscriptStudioView, renderStoryMapView, focusStoryMapSection } from './writing-studio.mjs';
+import { getOrderedChapters, getChapterScenes } from './structure-navigation.mjs';
 
 // Import to register generation functions
 import './generation.mjs';
@@ -38,6 +42,7 @@ import { generateNLStory, resetNLState, initNLGeneration } from './nl-generation
 
 // Wizard
 import { openWizard } from './wizard.mjs';
+import { openNewProjectWizard } from './new-project-wizard.mjs';
 
 // Eval runner
 import { initEvalRunner } from './eval-runner.mjs';
@@ -138,6 +143,42 @@ function renderViewSpecificContent(viewName) {
   if (viewName === 'openinghook') renderHooksView('opening');
   if (viewName === 'midhooks') renderHooksView('mid');
   if (viewName === 'moods') renderEntityGrid('moods');
+  if (viewName === 'themes') renderEntityGrid('themes');
+  if (viewName === 'library') renderLibraryView();
+  if (viewName === 'narrative-design') renderNarrativeDesignMacroView();
+  if (viewName === 'manuscript') renderManuscriptStudioView();
+  if (viewName === 'storymap') renderStoryMapView();
+}
+
+function setActiveNavigatorItem(viewName, action = '') {
+  const items = $$('.navigator-item');
+  if (!items.length) return;
+  items.forEach(item => item.classList.remove('active'));
+
+  let activeItem = null;
+  if (action) {
+    activeItem = document.querySelector(`.navigator-item[data-action="${action}"]`);
+  }
+  if (!activeItem) {
+    activeItem = document.querySelector(`.navigator-item[data-target-view="${viewName}"]`);
+  }
+  if (activeItem) activeItem.classList.add('active');
+}
+
+function setActiveHeaderAction(viewName) {
+  const libraryBtn = $('#btn-library');
+  if (!libraryBtn) return;
+  libraryBtn.classList.toggle('active', viewName === 'library');
+}
+
+function showStandaloneView(viewName) {
+  $$('.view').forEach(v => v.classList.remove('active'));
+  const viewEl = $(`#view-${viewName}`);
+  if (!viewEl) return;
+  viewEl.classList.add('active');
+  renderViewSpecificContent(viewName);
+  setActiveNavigatorItem(viewName);
+  setActiveHeaderAction(viewName);
 }
 
 function showLeafView(viewName, groupKey = activeGroupKey) {
@@ -151,6 +192,8 @@ function showLeafView(viewName, groupKey = activeGroupKey) {
   if (!viewEl) return;
   viewEl.classList.add('active');
   renderViewSpecificContent(viewName);
+  setActiveNavigatorItem(viewName);
+  setActiveHeaderAction(viewName);
 }
 
 function renderSubtabs(groupKey, preferredView = null) {
@@ -205,9 +248,130 @@ function bindCoreButtons() {
       openModal('generate-modal');
     }
   };
-  $('#btn-new').onclick = newProject;
+  $('#btn-new').onclick = openNewProjectWizard;
+  $('#btn-library').onclick = () => showStandaloneView('library');
   $('#btn-evaluate').onclick = evaluateMetrics;
   $('#btn-docs')?.addEventListener('click', () => window.open('/docs/theory/index.html', '_blank'));
+}
+
+function getChapterNodes() {
+  return getOrderedChapters(state.project.structure);
+}
+
+function getSceneNodes(chapter) {
+  return getChapterScenes(chapter);
+}
+
+function esc(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderManuscriptNavigatorDetails() {
+  const container = $('#nav-manuscript-items');
+  if (!container) return;
+
+  const book = state.project.structure;
+  const chapters = getChapterNodes();
+  const sceneCount = chapters.reduce((sum, chapter) => sum + getSceneNodes(chapter).length, 0);
+
+  const bookSummary = book
+    ? `<div class="navigator-note">Book: ${esc(book.title || state.project.name || 'Untitled Story')} • ${chapters.length} chapter(s) • ${sceneCount} scene(s)</div>`
+    : '<div class="navigator-note">No manuscript structure yet. Create Specs or add chapters to see details.</div>';
+
+  const chapterRows = !chapters.length
+    ? ''
+    : `
+      <div class="navigator-subtree">
+        ${chapters.map((chapter, index) => {
+          const scenes = getSceneNodes(chapter);
+          return `
+            <button class="navigator-item navigator-item-chapter" data-target-view="manuscript" data-chapter-id="${chapter.id}">
+              Chapter ${index + 1}: ${esc(chapter.title || chapter.name || 'Untitled')}
+              <span class="navigator-inline-meta">${scenes.length} scene(s)</span>
+            </button>
+            ${scenes.map((scene, sceneIndex) => `
+              <button class="navigator-item navigator-item-scene" data-target-view="manuscript" data-chapter-id="${chapter.id}" data-scene-id="${scene.id}">
+                Scene ${sceneIndex + 1}: ${esc(scene.title || scene.name || 'Untitled')}
+              </button>
+            `).join('')}
+          `;
+        }).join('')}
+      </div>
+    `;
+
+  container.innerHTML = `
+    <button class="navigator-item" data-target-view="manuscript">Chapters List</button>
+    <button class="navigator-item" data-target-view="dialogues">Dialogue Mode</button>
+    ${bookSummary}
+    ${chapterRows}
+  `;
+}
+
+async function handleNavigatorItemClick(item) {
+  const targetView = item.dataset.targetView;
+  const action = item.dataset.action || '';
+  const storyMapSection = item.dataset.storymapSection || '';
+  if (!targetView) return;
+
+  if (action === 'generate-story') {
+    switchToGroup('results', 'nl');
+    setActiveNavigatorItem('nl', action);
+    await generateNLStory();
+    return;
+  }
+
+  if (targetView === 'storymap') {
+    showStandaloneView('storymap');
+    if (storyMapSection) {
+      setTimeout(() => {
+        focusStoryMapSection(storyMapSection);
+      }, 0);
+      setActiveNavigatorItem('storymap', action);
+    }
+    return;
+  }
+
+  const mappedGroup = VIEW_TO_GROUP.get(targetView);
+  if (mappedGroup) {
+    switchToGroup(mappedGroup, targetView);
+  } else {
+    showStandaloneView(targetView);
+  }
+}
+
+function bindNavigatorPanel() {
+  const groups = $$('.navigator-group');
+  groups.forEach(group => {
+    group.addEventListener('toggle', () => {
+      if (!group.open) return;
+      groups.forEach(other => {
+        if (other !== group) other.open = false;
+      });
+    });
+  });
+
+  const navigatorContent = $('#navigator-content');
+  if (!navigatorContent || navigatorContent.dataset.boundClick === '1') return;
+
+  navigatorContent.addEventListener('click', (event) => {
+    const summary = event.target.closest('summary[data-open-view]');
+    if (!summary) return;
+    const targetView = summary.dataset.openView;
+    if (!targetView) return;
+    showStandaloneView(targetView);
+  });
+
+  navigatorContent.addEventListener('click', async (event) => {
+    const item = event.target.closest('.navigator-item');
+    if (!item) return;
+    await handleNavigatorItemClick(item);
+  });
+  navigatorContent.dataset.boundClick = '1';
 }
 
 // ==================== INITIALIZATION ====================
@@ -244,10 +408,13 @@ async function init() {
   initNLGeneration(); // Initialize preview button and modal handlers
   
   // Add button with contextual menu
-  $('#btn-add-root').onclick = (e) => {
-    e.stopPropagation();
-    showAddMenu(e);
-  };
+  const addRootBtn = $('#btn-add-root');
+  if (addRootBtn) {
+    addRootBtn.onclick = (e) => {
+      e.stopPropagation();
+      showAddMenu(e);
+    };
+  }
   
   // Close add menu on click outside
   document.addEventListener('click', () => {
@@ -259,12 +426,21 @@ async function init() {
     tab.onclick = () => switchToGroup(tab.dataset.view);
   });
 
+  // Left navigator panel
+  bindNavigatorPanel();
+  renderManuscriptNavigatorDetails();
+
   // Initialize grouped tabs (Results -> CNL)
   switchToGroup('results', 'cnl');
   
   // Listen for blueprint changes
   document.addEventListener('blueprint-changed', () => {
     renderTimeline();
+    renderManuscriptNavigatorDetails();
+  });
+
+  document.addEventListener('structure-changed', () => {
+    renderManuscriptNavigatorDetails();
   });
   
   // Initial render

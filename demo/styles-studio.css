@@ -1,0 +1,386 @@
+/**
+ * SCRIPTA Demo - Writing Studio and Story Map Styles
+ */
+
+.studio-layout,
+.storymap-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.studio-layout {
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.studio-nav-panel {
+  width: 320px;
+  min-width: 280px;
+  max-width: 360px;
+}
+
+.studio-detail-panel {
+  flex: 1;
+  border: 1px solid var(--bg-elevated);
+  border-radius: 8px;
+  background: rgba(54, 54, 99, 0.35);
+  padding: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.studio-section,
+.storymap-card {
+  border: 1px solid var(--bg-elevated);
+  border-radius: 8px;
+  background: rgba(54, 54, 99, 0.35);
+  padding: 0.7rem;
+}
+
+.studio-section-head h3,
+.storymap-card h3 {
+  font-family: var(--font-title);
+  font-size: var(--fs-sm);
+  color: var(--accent-gold);
+}
+
+.studio-section-head p {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.chapter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.studio-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.studio-nav-chapter {
+  border: 1px solid var(--bg-hover);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+
+.studio-nav-chapter > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.52rem 0.6rem;
+}
+
+.studio-nav-title {
+  font-family: var(--font-title);
+  font-size: var(--fs-xs);
+  color: var(--text-primary);
+}
+
+.studio-nav-meta {
+  font-size: var(--fs-2xs);
+  color: var(--text-muted);
+}
+
+.studio-scene-list {
+  border-top: 1px solid var(--bg-hover);
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.studio-scene-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.studio-scene-item {
+  border: 1px solid var(--bg-hover);
+  border-radius: 5px;
+  background: rgba(34, 36, 71, 0.58);
+  color: var(--text-secondary);
+  font-size: var(--fs-2xs);
+  text-align: left;
+  padding: 0.35rem 0.45rem;
+  cursor: pointer;
+}
+
+.studio-scene-item:hover {
+  border-color: var(--accent-violet);
+  color: var(--text-primary);
+}
+
+.studio-scene-children {
+  margin-left: 0.65rem;
+  padding-left: 0.5rem;
+  border-left: 1px solid rgba(88, 98, 164, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.studio-scene-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
+  align-items: center;
+  border: 1px solid rgba(88, 98, 164, 0.32);
+  border-radius: 4px;
+  padding: 0.22rem 0.35rem;
+  background: rgba(23, 25, 52, 0.56);
+  cursor: pointer;
+}
+
+.studio-scene-child:hover {
+  border-color: var(--accent-violet);
+}
+
+.studio-scene-child-label {
+  font-size: var(--fs-2xs);
+  color: var(--text-secondary);
+}
+
+.studio-scene-child-type {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+}
+
+.studio-scene-empty {
+  font-size: var(--fs-2xs);
+  color: var(--text-muted);
+  padding: 0.2rem 0.1rem;
+}
+
+.chapter-card {
+  border: 1px solid var(--bg-hover);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+
+.chapter-card > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.55rem 0.65rem;
+}
+
+.chapter-card > summary::-webkit-details-marker {
+  display: none;
+}
+
+.chapter-card-title {
+  font-family: var(--font-title);
+  font-size: var(--fs-xs);
+  color: var(--text-primary);
+}
+
+.chapter-card-meta {
+  font-size: var(--fs-2xs);
+  color: var(--text-muted);
+}
+
+.chapter-card-body {
+  border-top: 1px solid var(--bg-hover);
+  padding: 0.65rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.studio-detail-grid {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.studio-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.studio-field span {
+  font-size: var(--fs-2xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.studio-field input,
+.studio-field textarea,
+.studio-field select {
+  border: 1px solid var(--bg-hover);
+  border-radius: 5px;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font-size: var(--fs-sm);
+  padding: 0.42rem 0.5rem;
+}
+
+.chapter-summary-box {
+  border: 1px dashed var(--bg-hover);
+  border-radius: 5px;
+  padding: 0.55rem;
+  background: rgba(26, 26, 46, 0.65);
+}
+
+.chapter-summary-title {
+  font-size: var(--fs-2xs);
+  color: var(--accent-amber);
+  text-transform: uppercase;
+  margin-bottom: 0.2rem;
+}
+
+.chapter-summary-text {
+  font-size: var(--fs-xs);
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.studio-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.studio-suggestions > span {
+  font-size: var(--fs-2xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.studio-suggestion-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.studio-suggestion-chip {
+  border: 1px solid rgba(124, 112, 198, 0.55);
+  background: rgba(67, 63, 126, 0.32);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 0.22rem 0.5rem;
+  font-size: var(--fs-2xs);
+  cursor: pointer;
+}
+
+.studio-suggestion-chip:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-violet);
+}
+
+.studio-empty {
+  border: 1px dashed var(--bg-hover);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.studio-empty-title {
+  font-family: var(--font-title);
+  font-size: var(--fs-sm);
+  color: var(--text-primary);
+}
+
+.studio-empty-text {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  margin: 0.35rem 0 0.7rem;
+}
+
+.storymap-list {
+  padding-left: 1rem;
+  color: var(--text-secondary);
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+}
+
+.storymap-flow {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.storymap-flow-item {
+  border: 1px solid var(--bg-hover);
+  border-radius: 6px;
+  padding: 0.45rem;
+  background: rgba(26, 26, 46, 0.55);
+}
+
+.flow-title {
+  font-family: var(--font-title);
+  font-size: var(--fs-xs);
+  color: var(--text-primary);
+}
+
+.flow-text {
+  font-size: var(--fs-2xs);
+  color: var(--text-secondary);
+  margin-top: 0.2rem;
+}
+
+.storymap-curve {
+  width: 100%;
+  height: 120px;
+  border: 1px solid var(--bg-hover);
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(17, 138, 178, 0.08), rgba(239, 71, 111, 0.06));
+}
+
+.storymap-curve polyline {
+  fill: none;
+  stroke: var(--accent-amber);
+  stroke-width: 2.2;
+}
+
+.storymap-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.45rem;
+}
+
+.storymap-cnl {
+  max-height: 260px;
+  overflow: auto;
+  border: 1px solid var(--bg-hover);
+  border-radius: 6px;
+  background: var(--bg-deep);
+  padding: 0.55rem;
+  color: var(--text-secondary);
+  font-size: var(--fs-2xs);
+}
+
+.storymap-empty {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+@media (max-width: 1024px) {
+  .studio-layout {
+    flex-direction: column;
+  }
+
+  .studio-nav-panel {
+    width: 100%;
+    max-width: none;
+  }
+}

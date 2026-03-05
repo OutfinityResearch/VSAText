@@ -22,6 +22,7 @@
       </div>
       <div class="header-actions">
         <button class="btn" id="btn-new" title="Create new project">◇ New</button>
+        <button class="btn" id="btn-library" title="Open reusable library">Library</button>
         <button class="btn" id="btn-load" title="Load project from server">↥ Load</button>
         <button class="btn primary" id="btn-evaluate" title="Evaluate story quality">⚖ Evaluate</button>
         <button class="btn" id="btn-run-eval" title="Run batch evaluation tests">🧪 Eval</button>
@@ -29,29 +30,53 @@
       </div>
     </header>
 
-    <aside class="tree-panel">
-      <div class="panel-header" style="flex-direction: column; gap: 0.5rem; padding: 0.8rem;">
-        <button class="btn random" id="btn-generate" style="width: 100%; font-size: 0.7rem; padding: 0.6rem;">Create Specs</button>
-        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-          <span class="panel-title">Structure</span>
-          <button class="tree-add" id="btn-add-root" title="Add Book">+</button>
-        </div>
+    <aside class="tree-panel navigator-panel">
+      <div class="panel-header navigator-header">
+        <button class="btn random" id="btn-generate">Create Specs</button>
+        <span class="panel-title">Book Navigator</span>
       </div>
-      <div class="tree-container" id="tree-container"></div>
+      <div class="navigator-content" id="navigator-content">
+        <details class="navigator-group" open>
+          <summary>Story Builder</summary>
+          <div class="navigator-items">
+            <button class="navigator-item" data-target-view="blueprint">Blueprint</button>
+            <button class="navigator-item active" data-target-view="cnl">CNL Editor</button>
+            <button class="navigator-item" data-target-view="nl">NL Story</button>
+          </div>
+        </details>
+        <details class="navigator-group" open>
+          <summary>Book Settings</summary>
+          <div class="navigator-items">
+            <button class="navigator-item" data-target-view="framework">Story Core</button>
+            <button class="navigator-item" data-target-view="narrative-design">Narrative Design</button>
+            <button class="navigator-item" data-target-view="characters">Cast</button>
+            <button class="navigator-item" data-target-view="backdrop">World</button>
+            <button class="navigator-item" data-target-view="themes">Themes</button>
+            <button class="navigator-item" data-target-view="moods">Tone &amp; Style</button>
+          </div>
+        </details>
+        <details class="navigator-group">
+          <summary data-open-view="manuscript">Story Studio</summary>
+          <div class="navigator-items" id="nav-manuscript-items">
+            <button class="navigator-item" data-target-view="manuscript">Chapters List</button>
+            <button class="navigator-item" data-target-view="dialogues">Dialogue Mode</button>
+            <div class="navigator-note">Book details will appear here after structure is created.</div>
+          </div>
+        </details>
+        <details class="navigator-group">
+          <summary>Story Map</summary>
+          <div class="navigator-items">
+            <button class="navigator-item" data-target-view="storymap" data-action="storymap-book-summary" data-storymap-section="book-summary">Book Summary</button>
+            <button class="navigator-item" data-target-view="storymap" data-action="storymap-conflict" data-storymap-section="conflict-progression">Conflict Progression</button>
+            <button class="navigator-item" data-target-view="storymap" data-action="storymap-flow" data-storymap-section="chapter-flow">Chapter Flow</button>
+            <button class="navigator-item" data-target-view="storymap" data-action="storymap-tension" data-storymap-section="tension-curve">Tension Curve</button>
+          </div>
+        </details>
+      </div>
     </aside>
 
     <main class="center-panel">
-      <div class="tabs">
-        <button class="tab" data-view="storycore">Story Core</button>
-        <button class="tab" data-view="narrativedesign">Narrative Design</button>
-        <button class="tab" data-view="cast">Cast</button>
-        <button class="tab" data-view="world">World</button>
-        <button class="tab" data-view="hooks">Hooks</button>
-        <button class="tab" data-view="scenecraft">Scene Craft</button>
-        <button class="tab active" data-view="results">Results</button>
-      </div>
       <div class="tab-content">
-        <div class="subtabs" id="subtabs"></div>
         <div class="view" id="view-framework"><div class="framework-view" id="framework-view"></div></div>
         <div class="view active" id="view-cnl">
           <div class="cnl-toolbar">
@@ -94,7 +119,7 @@
                 <div class="nl-option-group">
                   <label class="nl-option-label">Model</label>
                   <select class="nl-option-select" id="nl-model">
-                    <!-- Populated dynamically from /v1/models -->
+                    <option value="copilot-gpt-4o">copilot-gpt-4o (default)</option>
                   </select>
                 </div>
                 <div class="nl-option-group nl-option-expand">
@@ -143,6 +168,11 @@
         <div class="view" id="view-themes"><div class="entity-grid" id="themes-grid"></div></div>
         <div class="view" id="view-wisdom"><div class="wisdom-view" id="wisdom-view"></div></div>
         <div class="view" id="view-patterns"><div class="patterns-view" id="patterns-view"></div></div>
+        <div class="view" id="view-library"><div class="library-view" id="library-view"></div></div>
+        <div class="view" id="view-narrative-design"><div class="narrative-design-view" id="narrative-design-view"></div></div>
+        <div class="view" id="view-manuscript"><div class="writing-studio-view" id="manuscript-view"></div></div>
+        <div class="view" id="view-storymap"><div class="story-map-view" id="storymap-view"></div></div>
+        <div class="view" id="view-newproject"><div class="new-project-view" id="new-project-view"></div></div>
       </div>
     </main>
 
@@ -526,7 +556,7 @@
                 <div class="form-group">
                   <label class="form-label">Model</label>
                   <select class="form-select" id="gen-llm-model">
-                    <option value="">Default (auto)</option>
+                    <option value="copilot-gpt-4o">copilot-gpt-4o (default)</option>
                   </select>
                   <div class="form-hint" id="gen-llm-model-hint">Loaded from server (`/v1/models`).</div>
                 </div>

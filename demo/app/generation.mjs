@@ -21,6 +21,12 @@ import {
 } from './generation/generation-session.mjs';
 
 let selectedQuickTemplateKey = null;
+const DEFAULT_STORY_MODEL = 'copilot-gpt-4o';
+
+function isPreferredModel(value, label = '') {
+  const text = `${value} ${label}`.toLowerCase();
+  return text.includes('copilot-gpt-4o') && !text.includes('mini');
+}
 
 function isAbortError(err) {
   if (!err) return false;
@@ -325,6 +331,17 @@ function getSelectedGenStrategy() {
   return strategyRadio ? strategyRadio.value : 'random';
 }
 
+function persistNarrativeStructureInputs(narrativeStructure = {}) {
+  if (!state.project.blueprint) state.project.blueprint = {};
+  if (!state.project.blueprint.macroDesign) state.project.blueprint.macroDesign = {};
+  const existing = state.project.blueprint.macroDesign.narrativeInputs || {};
+  state.project.blueprint.macroDesign.narrativeInputs = {
+    protagonistArc: String(narrativeStructure.protagonistArc || existing.protagonistArc || ''),
+    subplots: String(narrativeStructure.subplots || existing.subplots || ''),
+    conflictAndResolution: String(narrativeStructure.conflictAndResolution || existing.conflictAndResolution || '')
+  };
+}
+
 async function loadLLMModelsForSpecs() {
   if (llmModelsLoaded) return;
   if (llmModelsLoadPromise) return llmModelsLoadPromise;
@@ -335,7 +352,7 @@ async function loadLLMModelsForSpecs() {
     if (!modelSelect) return;
 
     modelSelect.disabled = true;
-    modelSelect.innerHTML = '<option value="">Default (auto)</option>';
+    modelSelect.innerHTML = `<option value="${DEFAULT_STORY_MODEL}">${DEFAULT_STORY_MODEL} (default)</option>`;
     if (hintEl) hintEl.textContent = 'Loading models from server...';
 
     try {
@@ -350,6 +367,7 @@ async function loadLLMModelsForSpecs() {
       }
 
       let firstDeepModelValue = null;
+      let preferredModelValue = null;
 
       if (data.models?.deep?.length) {
         const deepGroup = document.createElement('optgroup');
@@ -360,6 +378,9 @@ async function loadLLMModelsForSpecs() {
           option.textContent = `${model.name} (${model.provider})`;
           deepGroup.appendChild(option);
           if (idx === 0) firstDeepModelValue = option.value;
+          if (option.value === DEFAULT_STORY_MODEL || isPreferredModel(option.value, option.textContent)) {
+            preferredModelValue = option.value;
+          }
         });
         modelSelect.appendChild(deepGroup);
       }
@@ -372,11 +393,14 @@ async function loadLLMModelsForSpecs() {
           option.value = model.qualifiedName || model.name;
           option.textContent = `${model.name} (${model.provider})`;
           fastGroup.appendChild(option);
+          if (option.value === DEFAULT_STORY_MODEL || isPreferredModel(option.value, option.textContent)) {
+            preferredModelValue = option.value;
+          }
         });
         modelSelect.appendChild(fastGroup);
       }
 
-      if (firstDeepModelValue) modelSelect.value = firstDeepModelValue;
+      modelSelect.value = preferredModelValue || DEFAULT_STORY_MODEL;
       llmModelsLoaded = true;
       if (hintEl) hintEl.textContent = 'Models loaded.';
       modelSelect.disabled = false;
@@ -492,7 +516,7 @@ window.executeGenerate = async () => {
 
 	  // Add LLM settings if needed
 	  if (strategy === 'llm') {
-	    options.model = $('#gen-llm-model')?.value || undefined;
+	    options.model = $('#gen-llm-model')?.value || DEFAULT_STORY_MODEL;
 	    options.promptKey = $('#gen-llm-prompt')?.value || 'strict_project_json';
 	    options.customPrompt = $('#gen-llm-custom-prompt')?.value?.trim() || undefined;
 	  }
@@ -560,6 +584,7 @@ window.executeGenerate = async () => {
     }
     
     if (shouldPersist) {
+      persistNarrativeStructureInputs(options.narrativeStructure || {});
       if (!markDirty || !saveProject) {
         ({ markDirty, saveProject } = await import('./persistence.mjs'));
       }

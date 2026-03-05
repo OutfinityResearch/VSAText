@@ -339,6 +339,10 @@ function executeNewProject(projectName) {
   pendingChanges = false;
 }
 
+export function createProjectFromWizard(projectName) {
+  executeNewProject(projectName);
+}
+
 /**
  * Create new project - autosaves current, then shows dialog for new name
  */

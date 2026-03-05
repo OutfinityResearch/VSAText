@@ -56,6 +56,16 @@ export async function evaluateMetrics() {
     
     // Render results
     renderServerMetrics(result);
+    window.scriptaLastEvaluationAt = Date.now();
+    document.dispatchEvent(new CustomEvent('metrics-evaluated', { detail: { result } }));
+
+    const panel = document.querySelector('.metrics-panel');
+    if (panel) {
+      panel.classList.remove('metrics-flash');
+      void panel.offsetWidth;
+      panel.classList.add('metrics-flash');
+      window.setTimeout(() => panel.classList.remove('metrics-flash'), 1500);
+    }
     
   } catch (err) {
     console.error('[Evaluate] Error:', err);
@@ -79,6 +89,8 @@ function renderServerMetrics(result) {
   
   let html = '';
   
+  html += `<div class="metrics-complete-banner">Evaluation complete</div>`;
+
   // NQS Summary
   const nqs = m.nqs;
   const nqsClass = nqs.score >= 0.70 ? 'good' : nqs.score >= 0.50 ? 'warn' : 'bad';

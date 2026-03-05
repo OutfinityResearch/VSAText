@@ -27,6 +27,7 @@ let hasGeneratedNL = false;
 let activeGeneration = null;
 let isRetryingFailedSections = false;
 let retryController = null;
+const DEFAULT_STORY_MODEL = 'copilot-gpt-4o';
 
 function makeAbortError(message = 'Generation cancelled') {
   const err = new Error(message);
@@ -183,7 +184,7 @@ function buildHookPromptInstructions() {
  */
 function getGenerationOptions() {
   const language = $('#nl-language')?.value || 'en';
-  const model = $('#nl-model')?.value || '';
+  const model = $('#nl-model')?.value || DEFAULT_STORY_MODEL;
   const customPrompt = $('#nl-custom-prompt')?.value?.trim() || '';
   const hookPrompt = buildHookPromptInstructions();
   const mergedPrompt = [customPrompt, hookPrompt].filter(Boolean).join('\n\n');
@@ -193,7 +194,7 @@ function getGenerationOptions() {
     tone: 'literary',
     length: 'full',
     language,
-    model: model || undefined,
+    model,
     customPrompt: mergedPrompt || undefined
   };
 }

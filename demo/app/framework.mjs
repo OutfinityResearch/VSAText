@@ -422,7 +422,7 @@ export function renderFrameworkView() {
 
   container.innerHTML = `
     <div class="framework-layout framework-redesign-layout">
-      <div class="framework-intro">
+      <div class="framework-page-header">
         <h2>Framework</h2>
         <p>Compose theme, dramatic mechanism, and transformation in one structured workspace.</p>
       </div>

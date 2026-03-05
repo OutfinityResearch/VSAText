@@ -33,6 +33,25 @@
   font-size: var(--fs-sm);
 }
 
+.framework-view .framework-page-header {
+  padding: 0.1rem 0.1rem 0.35rem;
+  border-bottom: 1px solid rgba(108, 118, 178, 0.22);
+  margin-bottom: 0.05rem;
+}
+
+.framework-view .framework-page-header h2 {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: var(--fs-lg);
+  color: var(--accent-gold);
+}
+
+.framework-view .framework-page-header p {
+  margin: 0.2rem 0 0;
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+}
+
 .framework-view .framework-section {
   border-radius: 10px;
   border: 1px solid var(--bg-elevated);

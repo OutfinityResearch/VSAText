@@ -290,43 +290,42 @@ export async function loadAvailableModels() {
     
     // Clear existing options
     modelSelect.innerHTML = '';
-    
+
+    const DEFAULT_MODEL = 'copilot-gpt-4o';
+    let defaultModelValue = null;
     let firstDeepModelValue = null;
-    
+
+    const addModelOption = (group, model) => {
+      const option = document.createElement('option');
+      option.value = model.qualifiedName || model.name;
+      const freeLabel = model.free ? ' (Free)' : '';
+      option.textContent = `${model.name}${freeLabel}`;
+      group.appendChild(option);
+      if (model.name === DEFAULT_MODEL) defaultModelValue = option.value;
+      return option;
+    };
+
     // Add deep models first (preferred for creative writing)
     if (data.models?.deep?.length) {
       const deepGroup = document.createElement('optgroup');
       deepGroup.label = 'Deep (Creative)';
       data.models.deep.forEach((model, idx) => {
-        const option = document.createElement('option');
-        option.value = model.qualifiedName || model.name;
-        option.textContent = `${model.name} (${model.provider})`;
-        deepGroup.appendChild(option);
-        // Remember first deep model
-        if (idx === 0) {
-          firstDeepModelValue = option.value;
-        }
+        addModelOption(deepGroup, model);
+        if (idx === 0) firstDeepModelValue = model.qualifiedName || model.name;
       });
       modelSelect.appendChild(deepGroup);
     }
-    
+
     // Add fast models
     if (data.models?.fast?.length) {
       const fastGroup = document.createElement('optgroup');
       fastGroup.label = 'Fast';
-      data.models.fast.forEach(model => {
-        const option = document.createElement('option');
-        option.value = model.qualifiedName || model.name;
-        option.textContent = `${model.name} (${model.provider})`;
-        fastGroup.appendChild(option);
-      });
+      data.models.fast.forEach(model => addModelOption(fastGroup, model));
       modelSelect.appendChild(fastGroup);
     }
-    
-    // Auto-select first deep model (best for creative writing)
-    if (firstDeepModelValue) {
-      modelSelect.value = firstDeepModelValue;
-    }
+
+    // Default to copilot-gpt-4o, fall back to first deep model
+    modelSelect.value = defaultModelValue || firstDeepModelValue || '';
     
   } catch (err) {
     console.log('[NL Generation] Could not load models:', err.message);

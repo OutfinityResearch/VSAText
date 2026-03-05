@@ -375,7 +375,8 @@ async function loadLLMModelsForSpecs() {
         data.models.deep.forEach((model, idx) => {
           const option = document.createElement('option');
           option.value = model.qualifiedName || model.name;
-          option.textContent = `${model.name} (${model.provider})`;
+          const freeLabel = model.free ? ' (Free)' : '';
+          option.textContent = `${model.name}${freeLabel}`;
           deepGroup.appendChild(option);
           if (idx === 0) firstDeepModelValue = option.value;
           if (option.value === DEFAULT_STORY_MODEL || isPreferredModel(option.value, option.textContent)) {
@@ -391,7 +392,8 @@ async function loadLLMModelsForSpecs() {
         data.models.fast.forEach(model => {
           const option = document.createElement('option');
           option.value = model.qualifiedName || model.name;
-          option.textContent = `${model.name} (${model.provider})`;
+          const freeLabel = model.free ? ' (Free)' : '';
+          option.textContent = `${model.name}${freeLabel}`;
           fastGroup.appendChild(option);
           if (option.value === DEFAULT_STORY_MODEL || isPreferredModel(option.value, option.textContent)) {
             preferredModelValue = option.value;

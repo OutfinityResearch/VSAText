@@ -79,23 +79,25 @@ overlay.id = 'new-project-wizard';
 overlay.innerHTML = `
   <div class="wizard-shell">
     <header class="wizard-header">
-      <div>
-        <h2>New Project</h2>
-        <p class="wizard-subtitle">Follow the steps to create your story project</p>
+      <div class="wizard-hero">
+        <div class="wizard-project-icon" aria-hidden="true">✦</div>
+        <div>
+          <h2>New Project</h2>
+          <p class="wizard-subtitle">Follow the steps to create your story project</p>
+        </div>
       </div>
       <button class="wizard-close" id="wizard-close" aria-label="Close wizard">×</button>
     </header>
-
     <div class="wizard-body" id="wizard-body"></div>
 
     <footer class="wizard-footer">
       <div class="wizard-footer-actions">
-        <button class="btn" id="wizard-back">Back</button>
-        <button class="btn primary" id="wizard-next">Next</button>
+        <button class="btn" id="wizard-back">← Back</button>
+        <button class="btn primary" id="wizard-next">Next →</button>
       </div>
       <div class="wizard-progress-track" aria-hidden="true">
         <div class="wizard-progress-fill" id="wizard-progress-fill"></div>
-        <div class="wizard-progress-inline-label" id="wizard-progress-label">Step 1 of ${TOTAL_STEPS}</div>
+        <div class="wizard-progress-inline-label" id="wizard-progress-label">25%</div>
       </div>
     </footer>
   </div>
@@ -150,28 +152,20 @@ function saveDraft() {
 
 function renderBasicInfo() {
   const genres = [
-    'Fantasy',
-    'Sci-Fi',
-    'Romance',
-    'Thriller',
-    'Mystery',
-    'Drama',
-    'Horror',
-    'Adventure',
-    'Historical',
-    'Dystopian'
+    { label: 'Adventure', icon: '🗺' },
+    { label: 'Sci-Fi', icon: '🚀' },
+    { label: 'Mystery', icon: '🕵' },
+    { label: 'Fantasy', icon: '🧙' },
+    { label: 'Horror', icon: '😱' },
+    { label: 'Romance', icon: '❤️' }
   ];
   const tones = [
-    'Dark',
-    'Light',
-    'Epic',
-    'Humorous',
-    'Melancholic',
-    'Optimistic',
-    'Gritty',
-    'Hopeful',
-    'Suspenseful',
-    'Poetic'
+    { label: 'Suspenseful', icon: '⏳' },
+    { label: 'Dark', icon: '🌘' },
+    { label: 'Epic', icon: '⚔' },
+    { label: 'Emotional', icon: '💠' },
+    { label: 'Light', icon: '🌤' },
+    { label: 'Poetic', icon: '✒' }
   ];
   const storyLengths = [
     { value: 'Short', label: 'Short (3-5 scenes)' },
@@ -183,24 +177,10 @@ function renderBasicInfo() {
     <div class="wizard-step-section">
       <p class="wizard-step-summary">Step 2: Basic Info</p>
 
-      <div class="wizard-grid">
+      <div class="wizard-grid wizard-grid-two-col">
         <label class="wizard-field">
           <span>Project Name</span>
           <input type="text" id="wizard-project-name" value="${esc(state.data.projectName)}" placeholder="Enter project name" required>
-        </label>
-
-        <label class="wizard-field">
-          <span>Genre</span>
-          <select id="wizard-genre">
-            ${genres.map(g => `<option value="${g}" ${state.data.genre === g ? 'selected' : ''}>${g}</option>`).join('')}
-          </select>
-        </label>
-
-        <label class="wizard-field">
-          <span>Tone</span>
-          <select id="wizard-tone">
-            ${tones.map(t => `<option value="${t}" ${state.data.tone === t ? 'selected' : ''}>${t}</option>`).join('')}
-          </select>
         </label>
 
         <label class="wizard-field">
@@ -209,6 +189,32 @@ function renderBasicInfo() {
             ${storyLengths.map(item => `<option value="${item.value}" ${state.data.storyLength === item.value ? 'selected' : ''}>${item.label}</option>`).join('')}
           </select>
         </label>
+      </div>
+
+      <div class="wizard-selection-layout">
+        <div class="wizard-choice-group">
+          <span class="wizard-choice-title">Genre</span>
+          <div class="wizard-card-selector wizard-card-selector-genre">
+            ${genres.map(item => `
+              <button class="wizard-choice-card ${state.data.genre === item.label ? 'selected' : ''}" type="button" data-select-field="genre" data-select-value="${esc(item.label)}">
+                <span class="wizard-choice-icon">${item.icon}</span>
+                <span>${item.label}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="wizard-choice-group">
+          <span class="wizard-choice-title">Tone</span>
+          <div class="wizard-card-selector wizard-card-selector-tone">
+            ${tones.map(item => `
+              <button class="wizard-choice-card ${state.data.tone === item.label ? 'selected' : ''}" type="button" data-select-field="tone" data-select-value="${esc(item.label)}">
+                <span class="wizard-choice-icon">${item.icon}</span>
+                <span>${item.label}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -222,7 +228,7 @@ function renderCoreIdeas() {
       <div class="wizard-grid wizard-grid-ideas">
         <label class="wizard-field">
           <span>Core Ideas (2-3 ideas)</span>
-          <textarea rows="6" id="wizard-core-ideas" placeholder="Write 2-3 short ideas (1-2 sentences each), one per line.">${esc(state.data.coreIdeasText)}</textarea>
+          <textarea rows="9" id="wizard-core-ideas" placeholder="Write 2-3 short ideas (1-2 sentences each), one per line.">${esc(state.data.coreIdeasText)}</textarea>
         </label>
       </div>
 
@@ -305,10 +311,14 @@ function renderCreateStoryNL() {
         </label>
       </div>
 
-      <div class="wizard-info-card">
-        <strong>Create Story</strong>
-        <p>Generate natural language story using current project content.</p>
-        <button class="btn primary" id="wizard-generate-story">Generate Story</button>
+      <div class="wizard-launch-card">
+        <div class="wizard-launch-copy">
+          <h4>Create Story</h4>
+          <p>Generate your first narrative version using the selected language, model, and story setup.</p>
+          <div class="wizard-launch-actions">
+          <button class="btn primary" id="wizard-generate-story">Generate Story</button>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -318,14 +328,15 @@ const steps = [renderStrategy, renderBasicInfo, renderCoreIdeas, renderCreateSto
 
 function renderStep() {
   const renderer = steps[state.step];
-  wizardBody.innerHTML = renderer ? renderer() : '';
+  const wideClass = state.step === 2 ? ' wizard-step-card-wide' : '';
+  wizardBody.innerHTML = `<div class="wizard-step-card${wideClass}">${renderer ? renderer() : ''}</div>`;
 
   const fill = ((state.step + 1) / TOTAL_STEPS) * 100;
   progressFill.style.width = `${fill}%`;
-  progressLabel.textContent = `Step ${state.step + 1} of ${TOTAL_STEPS}`;
+  progressLabel.textContent = `${Math.round(fill)}%`;
 
   btnBack.disabled = state.step === 0;
-  btnNext.textContent = state.step === TOTAL_STEPS - 1 ? 'Create Project' : 'Next';
+  btnNext.textContent = state.step === TOTAL_STEPS - 1 ? 'Create Project →' : 'Next →';
 
   attachListeners();
 }
@@ -344,6 +355,17 @@ function attachListeners() {
     });
   });
 
+  wizardBody.querySelectorAll('[data-select-field][data-select-value]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const field = btn.getAttribute('data-select-field');
+      const value = btn.getAttribute('data-select-value') || '';
+      if (!field) return;
+      state.data[field] = value;
+      saveDraft();
+      renderStep();
+    });
+  });
+
   wizardBody.querySelector('#wizard-generate-story')?.addEventListener('click', async () => {
     await runNLGenerationFromWizard();
   });
@@ -353,8 +375,6 @@ function updateField(el) {
   const { id, value } = el;
 
   if (id === 'wizard-project-name') state.data.projectName = value;
-  if (id === 'wizard-genre') state.data.genre = value;
-  if (id === 'wizard-tone') state.data.tone = value;
   if (id === 'wizard-story-length') state.data.storyLength = value;
   if (id === 'wizard-core-ideas') state.data.coreIdeasText = value;
   if (id === 'wizard-constraints') state.data.constraints = value;

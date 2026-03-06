@@ -69,6 +69,8 @@
 }
 
 .library-card {
+  --lib-accent: var(--accent-violet);
+  position: relative;
   border: 1px solid rgba(148, 162, 214, 0.28);
   border-radius: 8px;
   padding: 0.7rem;
@@ -78,12 +80,58 @@
   gap: 0.58rem;
   transition: border-color 0.16s ease, transform 0.16s ease, background 0.16s ease;
   height: 100%;
+  overflow: hidden;
+}
+
+.library-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--lib-accent);
+  opacity: 0.92;
 }
 
 .library-card:hover {
   border-color: rgba(255, 209, 102, 0.65);
   background: rgba(26, 36, 70, 0.8);
   transform: translateY(-1px);
+}
+
+.library-card[data-kind="template-builtin"],
+.library-card[data-kind="template-custom"] {
+  --lib-accent: #f4c96a;
+}
+
+.library-card[data-kind="pattern"] {
+  --lib-accent: #ff8f7a;
+}
+
+.library-card[data-kind="block"] {
+  --lib-accent: #62d89a;
+}
+
+.library-card[data-kind="theme-preset"],
+.library-card[data-kind="theme-saved"] {
+  --lib-accent: #7db5ff;
+}
+
+.library-card[data-kind="wisdom"] {
+  --lib-accent: #b79bff;
+}
+
+.library-card[data-kind="character-template"] {
+  --lib-accent: #7fe2d4;
+}
+
+.library-card[data-kind="location-resource"] {
+  --lib-accent: #62d89a;
+}
+
+.library-card[data-kind="object-resource"] {
+  --lib-accent: #ffb36f;
 }
 
 .library-card-title {
@@ -141,6 +189,12 @@
 .library-apply-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.library-apply-note {
+  font-size: var(--fs-2xs);
+  color: #c9d3f3;
+  opacity: 0.9;
 }
 
 .library-empty {

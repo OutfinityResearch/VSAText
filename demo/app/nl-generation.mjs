@@ -314,7 +314,7 @@ async function generateNLStorySingle(cnl, options, signal) {
   
   // Save as a new version
   const language = options.language || 'en';
-  const model = options.model || 'default';
+  const model = options.model || DEFAULT_STORY_MODEL;
   const versionInfo = await saveStoryVersion(result.story, language, model);
   if (!versionInfo) {
     setCurrentVersionInfo(null, language, model);
@@ -431,7 +431,7 @@ async function generateNLStoryStreaming(cnl, options, chapters, signal) {
   if (fullStory) {
     // Save as a new version
     const language = options.language || 'en';
-    const model = options.model || 'default';
+    const model = options.model || DEFAULT_STORY_MODEL;
     const versionInfo = await saveStoryVersion(fullStory, language, model);
     if (!versionInfo) {
       setCurrentVersionInfo(null, language, model);

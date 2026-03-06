@@ -9,6 +9,13 @@ import { state, setGeneratedStory, getGeneratedStory } from './state.mjs';
 import { $, showNotification } from './utils.mjs';
 import { parseMarkdown } from '../../src/utils/markdown.mjs';
 
+const DEFAULT_STORY_MODEL = 'copilot-gpt-4o';
+
+function isPreferredModel(value, label = '') {
+  const text = `${value || ''} ${label || ''}`.toLowerCase();
+  return text.includes(DEFAULT_STORY_MODEL) && !text.includes('mini');
+}
+
 // Current loaded version info
 let currentVersionFilename = null;
 let currentVersionLanguage = null;
@@ -60,12 +67,12 @@ export function canImprove(hasGeneratedNL) {
   if (!hasGeneratedNL && !currentVersionFilename) return false;
   
   const selectedLang = $('#nl-language')?.value || 'en';
-  const selectedModel = $('#nl-model')?.value || 'default';
+  const selectedModel = $('#nl-model')?.value || DEFAULT_STORY_MODEL;
   
   // If we have a loaded version, check if settings match
   if (currentVersionLanguage && currentVersionModel) {
     return selectedLang === currentVersionLanguage && 
-           (selectedModel || 'default') === currentVersionModel;
+           (selectedModel || DEFAULT_STORY_MODEL) === currentVersionModel;
   }
 
   // Fallback: if story exists but version metadata is unavailable,
@@ -160,7 +167,7 @@ export async function onVersionSelect(e, callbacks) {
     // Track current version info
     currentVersionFilename = filename;
     currentVersionLanguage = data.language || 'en';
-    currentVersionModel = data.model || 'default';
+    currentVersionModel = data.model || DEFAULT_STORY_MODEL;
     setHasGeneratedNL(true);
     
     // Update UI to match version's language and model
@@ -323,8 +330,13 @@ export async function loadAvailableModels() {
       modelSelect.appendChild(fastGroup);
     }
     
-    // Auto-select first deep model (best for creative writing)
-    if (firstDeepModelValue) {
+    // Prefer configured default model (exact or qualified), fallback to first deep model.
+    const preferredOption = Array.from(modelSelect.options).find(option =>
+      option.value === DEFAULT_STORY_MODEL || isPreferredModel(option.value, option.textContent)
+    );
+    if (preferredOption) {
+      modelSelect.value = preferredOption.value;
+    } else if (firstDeepModelValue) {
       modelSelect.value = firstDeepModelValue;
     }
     

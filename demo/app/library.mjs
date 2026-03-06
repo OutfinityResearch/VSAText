@@ -22,6 +22,7 @@ import {
   humanize
 } from './library-data.mjs';
 import { getOrderedChapters } from './structure-navigation.mjs';
+import VOCAB from '/src/vocabularies/vocabularies.mjs';
 
 const uiState = {
   selection: 'wisdom:tradition',
@@ -210,6 +211,85 @@ function getCardsForSelection(selection) {
     }
   }
 
+  if (group === 'characters' && key === 'templates') {
+    return {
+      title: 'Libraries',
+      subtitle: 'Character Templates',
+      cards: Object.entries(VOCAB.CHARACTER_ARCHETYPES || {}).map(([archetypeKey, archetype]) => ({
+        kind: 'character-template',
+        key: archetypeKey,
+        type: '',
+        id: '',
+        title: archetype.label || humanize(archetypeKey),
+        description: archetype.desc || 'Character archetype template',
+        meta: (archetype.suggestedTraits || []).slice(0, 3),
+        readOnly: true
+      }))
+    };
+  }
+
+  if (group === 'backdrop' && key === 'locations') {
+    const projectLocations = state.project.libraries.locations || [];
+    const cards = projectLocations.length
+      ? projectLocations.map(location => ({
+        kind: 'location-resource',
+        key: location.id || '',
+        type: '',
+        id: location.id || '',
+        title: location.name || 'Location',
+        description: location.description || location.significance || 'Reusable location resource',
+        meta: [location.time || '', location.geography || ''],
+        readOnly: true
+      }))
+      : Object.entries(VOCAB.LOCATION_GEOGRAPHY || {}).slice(0, 24).map(([geoKey, geo]) => ({
+        kind: 'location-resource',
+        key: geoKey,
+        type: '',
+        id: '',
+        title: geo.label || humanize(geoKey),
+        description: geo.desc || 'Reusable location seed',
+        meta: ['Template'],
+        readOnly: true
+      }));
+
+    return {
+      title: 'Libraries',
+      subtitle: 'Locations',
+      cards
+    };
+  }
+
+  if (group === 'backdrop' && key === 'objects') {
+    const projectObjects = state.project.libraries.objects || [];
+    const cards = projectObjects.length
+      ? projectObjects.map(objectItem => ({
+        kind: 'object-resource',
+        key: objectItem.id || '',
+        type: '',
+        id: objectItem.id || '',
+        title: objectItem.name || 'Object',
+        description: objectItem.description || objectItem.significance || 'Reusable object or artifact',
+        meta: [objectItem.type || ''],
+        readOnly: true
+      }))
+      : Object.entries(VOCAB.OBJECT_TYPES || {}).slice(0, 24).map(([objKey, objectType]) => ({
+        kind: 'object-resource',
+        key: objKey,
+        type: '',
+        id: '',
+        title: objectType.label || humanize(objKey),
+        description: objectType.desc || 'Reusable object seed',
+        meta: ['Template'],
+        readOnly: true
+      }));
+
+    return {
+      title: 'Libraries',
+      subtitle: 'Objects & Artifacts',
+      cards
+    };
+  }
+
   return { title: 'Library', subtitle: 'No category selected', cards: [] };
 }
 
@@ -221,6 +301,11 @@ function chapterOptions() {
 }
 
 function applyCard(card, targetType, chapterId = '') {
+  if (card.readOnly) {
+    notify('Preview-only resource. Add it from the dedicated editor when needed.', 'info');
+    return;
+  }
+
   if (targetType === 'chapter' && !chapterId) {
     notify('Select a chapter before applying', 'error');
     return;
@@ -240,16 +325,31 @@ function applyCard(card, targetType, chapterId = '') {
 }
 
 function renderCard(card) {
+  const templateAccentPalette = ['#f4c96a', '#7db5ff', '#62d89a', '#ff8f7a', '#b79bff', '#7fe2d4'];
+  let accent = '';
+  if (card.kind === 'template-builtin' || card.kind === 'template-custom') {
+    const key = String(card.key || card.id || card.title || '');
+    const hash = Array.from(key).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    accent = templateAccentPalette[hash % templateAccentPalette.length];
+  }
+  const accentStyle = accent ? ` style="--lib-accent:${esc(accent)}"` : '';
+
+  const actions = card.readOnly
+    ? '<span class="library-apply-note">Preview only</span>'
+    : `
+      <button class="btn small library-apply-btn" data-action="apply-book">Apply Book</button>
+      <button class="btn small library-apply-btn secondary" data-action="apply-chapter">Apply Chapter</button>
+    `;
+
   return `
-    <div class="library-card" data-kind="${esc(card.kind)}" data-key="${esc(card.key)}" data-type="${esc(card.type)}" data-id="${esc(card.id)}">
+    <div class="library-card" data-kind="${esc(card.kind)}" data-key="${esc(card.key)}" data-type="${esc(card.type)}" data-id="${esc(card.id)}"${accentStyle}>
       <div class="library-card-title">${esc(card.title)}</div>
       <div class="library-card-text">${esc(card.description || 'No description')}</div>
       <div class="library-card-meta">
         ${(card.meta || []).filter(Boolean).map(meta => `<span>${esc(humanize(meta))}</span>`).join('')}
       </div>
       <div class="library-card-actions">
-        <button class="btn small library-apply-btn" data-action="apply-book">Apply Book</button>
-        <button class="btn small library-apply-btn secondary" data-action="apply-chapter">Apply Chapter</button>
+        ${actions}
       </div>
     </div>
   `;
@@ -263,7 +363,7 @@ function bindEvents(container, cards, chapters) {
 
   container.querySelectorAll('.library-card').forEach((cardEl, index) => {
     const card = cards[index];
-    if (!card) return;
+    if (!card || card.readOnly) return;
 
     cardEl.querySelector('[data-action="apply-book"]')?.addEventListener('click', () => {
       applyCard(card, 'book', '');

@@ -59,6 +59,49 @@ const TURNING_POINT_OPTIONS = [
   'Resolution / Denouement'
 ];
 
+const STORY_CORE_OPTIONS = {
+  genre: [
+    ['fantasy', 'Fantasy'],
+    ['scifi', 'Science Fiction'],
+    ['romance', 'Romance'],
+    ['mystery', 'Mystery'],
+    ['thriller', 'Thriller'],
+    ['horror', 'Horror'],
+    ['historical', 'Historical'],
+    ['adventure', 'Adventure'],
+    ['crime', 'Crime'],
+    ['drama', 'Drama'],
+    ['young_adult', 'Young Adult'],
+    ['dystopian', 'Dystopian'],
+    ['urban_fantasy', 'Urban Fantasy']
+  ],
+  tone: [
+    ['dark', 'Dark'],
+    ['light', 'Optimistic'],
+    ['balanced', 'Tense']
+  ],
+  complexity: [
+    ['simple', 'Simple (linear plot)'],
+    ['moderate', 'Moderate (some twists)'],
+    ['complex', 'Complex (multiple threads)']
+  ],
+  length: [
+    ['short', 'Short (3-5 scenes)'],
+    ['medium', 'Medium (8-12 scenes)'],
+    ['long', 'Long (15-20 scenes)']
+  ],
+  chars: [
+    ['few', 'Few (2-3)'],
+    ['medium', 'Medium (4-6)'],
+    ['many', 'Many (7-10)']
+  ],
+  rules: [
+    ['none', 'None'],
+    ['few', 'Few'],
+    ['many', 'Rich']
+  ]
+};
+
 const ESCALATION_POINTS = {
   'Step Escalation': [12, 12, 20, 20, 30, 30, 42, 42, 56, 70],
   'Wave Escalation': [12, 24, 18, 30, 24, 40, 34, 52, 48, 68],
@@ -89,6 +132,16 @@ function ensureFrameworkProfileState() {
   const transformation = existing.transformation || {};
 
   libraries.frameworkProfile = {
+    storyCore: {
+      genre: existing.storyCore?.genre || 'fantasy',
+      tone: existing.storyCore?.tone || 'dark',
+      complexity: existing.storyCore?.complexity || 'moderate',
+      length: existing.storyCore?.length || 'medium',
+      chars: existing.storyCore?.chars || 'medium',
+      rules: existing.storyCore?.rules || 'few',
+      theme: existing.storyCore?.theme || '',
+      wisdom: existing.storyCore?.wisdom || ''
+    },
     coreTheme: {
       selectedThemeId: existing.coreTheme?.selectedThemeId || '',
       ideologicalConflict: existing.coreTheme?.ideologicalConflict || '',
@@ -130,6 +183,78 @@ function ensureFrameworkProfileState() {
   };
 
   return libraries.frameworkProfile;
+}
+
+function renderStoryCoreSection(profile) {
+  const core = profile.storyCore;
+  const renderOptions = (entries, selected) => entries.map(([value, label]) => `
+    <option value="${esc(value)}" ${selected === value ? 'selected' : ''}>${esc(label)}</option>
+  `).join('');
+
+  return `
+    <section class="framework-section section-framework-storycore">
+      <div class="framework-section-header redesign">
+        <h3>Story Core</h3>
+        <p>Genre, tone, complexity, scale, and narrative intent.</p>
+      </div>
+      <div class="framework-storycore-grid">
+        <label class="framework-new-field">
+          <span>Genre</span>
+          <select class="cinematic-select" onchange="window.frameworkUpdateProfile('storyCore','genre', this.value)">
+            ${renderOptions(STORY_CORE_OPTIONS.genre, core.genre)}
+          </select>
+        </label>
+        <label class="framework-new-field">
+          <span>Tone</span>
+          <select class="cinematic-select" onchange="window.frameworkUpdateProfile('storyCore','tone', this.value)">
+            ${renderOptions(STORY_CORE_OPTIONS.tone, core.tone)}
+          </select>
+        </label>
+        <label class="framework-new-field">
+          <span>Complexity</span>
+          <select class="cinematic-select" onchange="window.frameworkUpdateProfile('storyCore','complexity', this.value)">
+            ${renderOptions(STORY_CORE_OPTIONS.complexity, core.complexity)}
+          </select>
+        </label>
+        <label class="framework-new-field">
+          <span>Story Length</span>
+          <select class="cinematic-select" onchange="window.frameworkUpdateProfile('storyCore','length', this.value)">
+            ${renderOptions(STORY_CORE_OPTIONS.length, core.length)}
+          </select>
+        </label>
+        <label class="framework-new-field">
+          <span>Number of Characters</span>
+          <select class="cinematic-select" onchange="window.frameworkUpdateProfile('storyCore','chars', this.value)">
+            ${renderOptions(STORY_CORE_OPTIONS.chars, core.chars)}
+          </select>
+        </label>
+        <label class="framework-new-field">
+          <span>World Rules</span>
+          <select class="cinematic-select" onchange="window.frameworkUpdateProfile('storyCore','rules', this.value)">
+            ${renderOptions(STORY_CORE_OPTIONS.rules, core.rules)}
+          </select>
+        </label>
+      </div>
+      <div class="framework-storycore-text">
+        <label class="framework-new-field">
+          <span>Theme</span>
+          <textarea
+            class="form-textarea"
+            placeholder="Core theme, moral axis, central question..."
+            oninput="window.frameworkUpdateProfile('storyCore','theme', this.value)"
+          >${esc(core.theme)}</textarea>
+        </label>
+        <label class="framework-new-field">
+          <span>Wisdom</span>
+          <textarea
+            class="form-textarea"
+            placeholder="What should the reader learn or feel?"
+            oninput="window.frameworkUpdateProfile('storyCore','wisdom', this.value)"
+          >${esc(core.wisdom)}</textarea>
+        </label>
+      </div>
+    </section>
+  `;
 }
 
 function getThemeRailItems() {
@@ -417,6 +542,7 @@ function renderTransformationSection(profile) {
 function renderFrameworkDesign() {
   const profile = ensureFrameworkProfileState();
   return `
+    ${renderStoryCoreSection(profile)}
     ${renderThemeSection(profile)}
     ${renderDramaticModelSection(profile)}
     ${renderTransformationSection(profile)}

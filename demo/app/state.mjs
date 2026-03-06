@@ -186,6 +186,11 @@ export function detectChanges() {
  */
 export function setGeneratedStory(text) {
   state.generation.generatedStory = text;
+  if (typeof document !== 'undefined' && typeof document.dispatchEvent === 'function') {
+    document.dispatchEvent(new CustomEvent('generated-story-updated', {
+      detail: { hasStory: Boolean(String(text || '').trim()) }
+    }));
+  }
 }
 
 /**

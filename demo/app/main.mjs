@@ -32,7 +32,14 @@ import { renderHooksView } from './hooks.mjs';
 import { renderLibraryView, setLibrarySelection, getLibrarySelection } from './library.mjs';
 import { renderNarrativeDesignMacroView } from './narrative-design.mjs';
 import { renderManuscriptStudioView, renderStoryMapView, focusStoryMapSection } from './writing-studio.mjs';
-import { getOrderedChapters, getChapterScenes } from './structure-navigation.mjs';
+import {
+  getChaptersForManuscript,
+  getScenesForManuscriptChapter,
+  manuscriptUsesGeneratedStory,
+  addGeneratedManuscriptChapter,
+  addGeneratedManuscriptScene
+} from './writing-studio-manuscript.mjs';
+import { getChapterScenes } from './structure-navigation.mjs';
 
 // Import to register generation functions
 import './generation.mjs';
@@ -265,10 +272,12 @@ function showStandaloneView(viewName) {
   $$('.view').forEach(v => v.classList.remove('active'));
   const viewEl = $(`#view-${viewName}`);
   if (!viewEl) return;
+  activeViewKey = viewName;
   viewEl.classList.add('active');
   renderViewSpecificContent(viewName);
   setActiveNavigatorItem(viewName, '', viewName === 'library' ? getLibrarySelection() : '');
   setActiveHeaderAction(viewName);
+  if (navigatorMode === 'project') renderManuscriptNavigatorDetails();
 }
 
 function showLeafView(viewName, groupKey = activeGroupKey) {
@@ -339,13 +348,16 @@ function switchToGroup(groupKey, preferredView = null) {
 function bindCoreButtons() {
   // Header buttons
   $('#btn-load').onclick = loadProjectsList;
-  $('#btn-generate').onclick = () => {
-    if (state.generation.hasGenerated) {
-      window.showImproveModal();
-    } else {
-      openModal('generate-modal');
-    }
-  };
+  const generateBtn = $('#btn-generate');
+  if (generateBtn) {
+    generateBtn.onclick = () => {
+      if (state.generation.hasGenerated) {
+        window.showImproveModal();
+      } else {
+        openModal('generate-modal');
+      }
+    };
+  }
   $('#btn-new').onclick = openNewProjectWizard;
   $('#btn-project')?.addEventListener('click', () => {
     renderProjectNavigatorPanel();
@@ -364,10 +376,18 @@ function bindCoreButtons() {
 }
 
 function getChapterNodes() {
-  return getOrderedChapters(state.project.structure);
+  return getChaptersForManuscript();
 }
 
 function getSceneNodes(chapter) {
+  if (chapter?.source === 'generated-story') {
+    return getScenesForManuscriptChapter(chapter).map(scene => ({
+      id: scene.id,
+      title: scene.title,
+      name: scene.title,
+      type: 'scene'
+    }));
+  }
   return getChapterScenes(chapter);
 }
 
@@ -380,17 +400,119 @@ function esc(value) {
     .replace(/'/g, '&#39;');
 }
 
+function chapterLabelText(chapter, index) {
+  const raw = String(chapter?.title || chapter?.name || '').trim();
+  const normalized = raw
+    .replace(/^\s*(chapter|capitol(?:ul)?)\s+\d+\s*[:\-.]?\s*/i, '')
+    .replace(/^\s*(chapter|capitol(?:ul)?)\s*[:\-.]?\s*/i, '')
+    .trim();
+  return normalized ? `Chapter ${index + 1}: ${normalized}` : `Chapter ${index + 1}`;
+}
+
+function sceneLabelText(scene, index) {
+  const raw = String(scene?.title || scene?.name || '').trim();
+  const scenePrefix = new RegExp(`^scene\\s+${index + 1}\\b\\s*[:\\-.]?\\s*`, 'i');
+  const cleaned = raw.replace(scenePrefix, '').trim();
+  if (!cleaned && raw) return `Scene ${index + 1}`;
+  if (cleaned) return `Scene ${index + 1}: ${cleaned}`;
+  return `Scene ${index + 1}`;
+}
+
+function ensureBookStructureForManuscript() {
+  if (state.project.structure) return state.project.structure;
+  state.project.structure = {
+    id: genId('book'),
+    type: 'book',
+    name: 'Book',
+    title: state.project.name || 'Untitled Story',
+    children: []
+  };
+  return state.project.structure;
+}
+
+function getRealStructureChapters() {
+  const book = ensureBookStructureForManuscript();
+  const chapters = (book.children || []).filter((child) => child?.type === 'chapter');
+  if (!chapters.length) {
+    const chapter = {
+      id: genId('ch'),
+      type: 'chapter',
+      name: 'Chapter 1',
+      title: 'Chapter 1',
+      children: []
+    };
+    book.children.push(chapter);
+    return [chapter];
+  }
+  return chapters;
+}
+
+function addManuscriptChapter() {
+  if (manuscriptUsesGeneratedStory()) {
+    addGeneratedManuscriptChapter();
+    generateCNL();
+    renderManuscriptNavigatorDetails();
+    if (activeViewKey === 'manuscript') renderManuscriptStudioView();
+    return;
+  }
+
+  const book = ensureBookStructureForManuscript();
+  const chapters = (book.children || []).filter((child) => child?.type === 'chapter');
+  const nextIndex = chapters.length + 1;
+  const chapter = {
+    id: genId('ch'),
+    type: 'chapter',
+    name: `Chapter ${nextIndex}`,
+    title: `Chapter ${nextIndex}`,
+    children: []
+  };
+  book.children = [...(book.children || []), chapter];
+  generateCNL();
+  renderTree();
+  renderManuscriptNavigatorDetails();
+  if (activeViewKey === 'manuscript') renderManuscriptStudioView();
+}
+
+function addManuscriptScene() {
+  if (manuscriptUsesGeneratedStory()) {
+    const chapters = getChapterNodes();
+    const targetChapter = chapters[chapters.length - 1];
+    if (!targetChapter) return;
+    addGeneratedManuscriptScene(targetChapter.id);
+    generateCNL();
+    renderManuscriptNavigatorDetails();
+    if (activeViewKey === 'manuscript') renderManuscriptStudioView();
+    return;
+  }
+
+  const chapters = getRealStructureChapters();
+  const targetChapter = chapters[chapters.length - 1];
+  if (!targetChapter.children) targetChapter.children = [];
+  const existingScenes = targetChapter.children.filter((child) => child?.type === 'scene');
+  const nextIndex = existingScenes.length + 1;
+  targetChapter.children.push({
+    id: genId('sc'),
+    type: 'scene',
+    name: `Scene ${nextIndex}`,
+    title: `Scene ${nextIndex}`,
+    children: []
+  });
+  generateCNL();
+  renderTree();
+  renderManuscriptNavigatorDetails();
+  if (activeViewKey === 'manuscript') renderManuscriptStudioView();
+}
+
 function renderManuscriptNavigatorDetails() {
   const container = $('#nav-manuscript-items');
   if (!container) return;
 
   const book = state.project.structure;
   const chapters = getChapterNodes();
-  const sceneCount = chapters.reduce((sum, chapter) => sum + getSceneNodes(chapter).length, 0);
 
   const bookSummary = book
-    ? `<div class="navigator-note">Book: ${esc(book.title || state.project.name || 'Untitled Story')} • ${chapters.length} chapter(s) • ${sceneCount} scene(s)</div>`
-    : '<div class="navigator-note">No manuscript structure yet. Create Specs or add chapters to see details.</div>';
+    ? `<div class="navigator-note">Book: ${esc(book.title || state.project.name || 'Untitled Story')} • ${chapters.length} chapter(s)</div>`
+    : '';
 
   const chapterRows = !chapters.length
     ? ''
@@ -399,25 +521,57 @@ function renderManuscriptNavigatorDetails() {
         ${chapters.map((chapter, index) => {
           const scenes = getSceneNodes(chapter);
           return `
-            <button class="navigator-item navigator-item-chapter" data-target-view="manuscript" data-chapter-id="${chapter.id}">
-              Chapter ${index + 1}: ${esc(chapter.title || chapter.name || 'Untitled')}
-              <span class="navigator-inline-meta">${scenes.length} scene(s)</span>
-            </button>
-            ${scenes.map((scene, sceneIndex) => `
-              <button class="navigator-item navigator-item-scene" data-target-view="manuscript" data-chapter-id="${chapter.id}" data-scene-id="${scene.id}">
-                Scene ${sceneIndex + 1}: ${esc(scene.title || scene.name || 'Untitled')}
-              </button>
-            `).join('')}
+            <details class="navigator-subgroup">
+              <summary>${esc(chapterLabelText(chapter, index))}</summary>
+              <div class="navigator-items">
+                ${scenes.map((scene, sceneIndex) => `
+                  <button class="navigator-item navigator-item-scene" data-target-view="manuscript" data-chapter-id="${chapter.id}" data-scene-id="${scene.id}">
+                    ${esc(sceneLabelText(scene, sceneIndex))}
+                  </button>
+                `).join('')}
+              </div>
+            </details>
           `;
         }).join('')}
       </div>
     `;
 
   container.innerHTML = `
-    <button class="navigator-item" data-target-view="manuscript">Chapters List</button>
-    <button class="navigator-item" data-target-view="dialogues">Dialogue Mode</button>
-    ${bookSummary}
-    ${chapterRows}
+    <details class="navigator-subgroup" open>
+      <summary data-target-view="manuscript" class="${activeViewKey === 'manuscript' ? 'navigator-manuscript-summary-active' : ''}">Manuscript</summary>
+      <div class="navigator-items">
+        <div class="navigator-manuscript-actions">
+          <button class="navigator-add-btn" type="button" aria-label="Add Manuscript Item" title="Add">+</button>
+          <div class="navigator-add-hover-menu">
+            <button class="navigator-add-option" type="button" data-manuscript-add="chapter">+ Add Chapter</button>
+            <button class="navigator-add-option" type="button" data-manuscript-add="scene">+ Add Scene</button>
+          </div>
+        </div>
+        ${bookSummary}
+        ${chapterRows}
+      </div>
+    </details>
+    <details class="navigator-subgroup">
+      <summary>Book Settings</summary>
+      <div class="navigator-items">
+        <button class="navigator-item" data-target-view="framework">Story Core</button>
+        <button class="navigator-item" data-target-view="narrative-design">Narrative Design</button>
+        <button class="navigator-item" data-target-view="characters">Cast</button>
+        <button class="navigator-item" data-target-view="backdrop">World</button>
+        <button class="navigator-item" data-target-view="themes">Themes</button>
+        <button class="navigator-item" data-target-view="moods">Tone &amp; Style</button>
+      </div>
+    </details>
+    <details class="navigator-subgroup">
+      <summary>Library (Reusable Resources)</summary>
+      <div class="navigator-items">
+        <button class="navigator-item" data-target-view="library" data-library-select="narrative:templates">Narrative Arc Templates</button>
+        <button class="navigator-item" data-target-view="library" data-library-select="characters:templates">Character Templates</button>
+        <button class="navigator-item" data-target-view="library" data-library-select="backdrop:locations">Locations</button>
+        <button class="navigator-item" data-target-view="library" data-library-select="backdrop:objects">Objects &amp; Artifacts</button>
+        <button class="navigator-item" data-target-view="library" data-library-select="narrative:blocks">Scenes &amp; Plot Points</button>
+      </div>
+    </details>
   `;
 }
 
@@ -495,6 +649,14 @@ function bindNavigatorPanel() {
   });
 
   navigatorContent.addEventListener('click', async (event) => {
+    const manuscriptAddAction = event.target.closest('[data-manuscript-add]');
+    if (manuscriptAddAction) {
+      const addType = manuscriptAddAction.getAttribute('data-manuscript-add');
+      if (addType === 'chapter') addManuscriptChapter();
+      if (addType === 'scene') addManuscriptScene();
+      return;
+    }
+
     const item = event.target.closest('.navigator-item');
     if (!item) return;
     await handleNavigatorItemClick(item);
@@ -571,6 +733,11 @@ async function init() {
   document.addEventListener('structure-changed', () => {
     renderManuscriptNavigatorDetails();
   });
+
+  document.addEventListener('generated-story-updated', () => {
+    renderManuscriptNavigatorDetails();
+    if (activeViewKey === 'manuscript') renderManuscriptStudioView();
+  });
   
   // Initial render
   ['locations', 'objects', 'moods', 'themes'].forEach(renderEntityGrid);
@@ -620,10 +787,24 @@ export function switchToTab(viewName) {
 window.switchToTab = switchToTab;
 window.renderBackdropView = renderBackdropView;
 window.openLibraryThemes = () => {
+  const firstThemeCategory = getThemeCatalogByCategory()[0]?.key || 'personal-transformation';
+  const firstSelection = `themes:cat_${firstThemeCategory}`;
   renderLibraryNavigatorPanel();
-  setLibrarySelection('themes:all');
+  setLibrarySelection(firstSelection);
   showStandaloneView('library');
-  setActiveNavigatorItem('library', '', 'themes:all');
+
+  const groups = Array.from(document.querySelectorAll('#navigator-content .navigator-group'));
+  groups.forEach((group) => {
+    const summaryText = (group.querySelector(':scope > summary')?.textContent || '').trim().toLowerCase();
+    group.open = summaryText === 'themes';
+  });
+
+  const subgroups = Array.from(document.querySelectorAll('#navigator-content .navigator-subgroup'));
+  subgroups.forEach((subgroup, idx) => {
+    subgroup.open = idx === 0;
+  });
+
+  setActiveNavigatorItem('library', '', firstSelection);
 };
 
 // ==================== ADD MENU (Plus Button) ====================

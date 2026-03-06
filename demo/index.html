@@ -33,7 +33,6 @@
 
     <aside class="tree-panel navigator-panel">
       <div class="panel-header navigator-header">
-        <button class="btn random" id="btn-generate">Create Specs</button>
         <span class="panel-title">Book Navigator</span>
       </div>
       <div class="navigator-content" id="navigator-content">
@@ -46,22 +45,35 @@
           </div>
         </details>
         <details class="navigator-group" open>
-          <summary>Book Settings</summary>
-          <div class="navigator-items">
-            <button class="navigator-item" data-target-view="framework">Story Core</button>
-            <button class="navigator-item" data-target-view="narrative-design">Narrative Design</button>
-            <button class="navigator-item" data-target-view="characters">Cast</button>
-            <button class="navigator-item" data-target-view="backdrop">World</button>
-            <button class="navigator-item" data-target-view="themes">Themes</button>
-            <button class="navigator-item" data-target-view="moods">Tone &amp; Style</button>
-          </div>
-        </details>
-        <details class="navigator-group">
-          <summary data-open-view="manuscript">Story Studio</summary>
+          <summary data-open-view="manuscript">Story Workspace</summary>
           <div class="navigator-items" id="nav-manuscript-items">
-            <button class="navigator-item" data-target-view="manuscript">Chapters List</button>
-            <button class="navigator-item" data-target-view="dialogues">Dialogue Mode</button>
-            <div class="navigator-note">Book details will appear here after structure is created.</div>
+            <details class="navigator-subgroup" open>
+              <summary data-target-view="manuscript">Manuscript</summary>
+              <div class="navigator-items">
+                <div class="navigator-note">Generated story details appear here by chapter and scene.</div>
+              </div>
+            </details>
+            <details class="navigator-subgroup">
+              <summary>Book Settings</summary>
+              <div class="navigator-items">
+                <button class="navigator-item" data-target-view="framework">Story Core</button>
+                <button class="navigator-item" data-target-view="narrative-design">Narrative Design</button>
+                <button class="navigator-item" data-target-view="characters">Cast</button>
+                <button class="navigator-item" data-target-view="backdrop">World</button>
+                <button class="navigator-item" data-target-view="themes">Themes</button>
+                <button class="navigator-item" data-target-view="moods">Tone &amp; Style</button>
+              </div>
+            </details>
+            <details class="navigator-subgroup">
+              <summary>Library (Reusable Resources)</summary>
+              <div class="navigator-items">
+                <button class="navigator-item" data-target-view="library" data-library-select="narrative:templates">Narrative Arc Templates</button>
+                <button class="navigator-item" data-target-view="library" data-library-select="characters:templates">Character Templates</button>
+                <button class="navigator-item" data-target-view="library" data-library-select="backdrop:locations">Locations</button>
+                <button class="navigator-item" data-target-view="library" data-library-select="backdrop:objects">Objects &amp; Artifacts</button>
+                <button class="navigator-item" data-target-view="library" data-library-select="narrative:blocks">Scenes &amp; Plot Points</button>
+              </div>
+            </details>
           </div>
         </details>
         <details class="navigator-group">

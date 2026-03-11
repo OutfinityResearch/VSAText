@@ -11,11 +11,26 @@ const manuscriptUiState = {
   selectedSceneId: null
 };
 
+export function setManuscriptSelection(chapterId, sceneId = null) {
+  manuscriptUiState.selectedChapterId = chapterId || null;
+  manuscriptUiState.selectedSceneId = sceneId || null;
+}
+
+export function getManuscriptSelection() {
+  return {
+    chapterId: manuscriptUiState.selectedChapterId || null,
+    sceneId: manuscriptUiState.selectedSceneId || null
+  };
+}
+
 function esc(value) {
   return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 function normalizeListValue(value) {
   return String(value || '').split(',').map(item => item.trim()).filter(Boolean).join(', ');
+}
+function parseListValue(value) {
+  return String(value || '').split(',').map(item => item.trim()).filter(Boolean);
 }
 function getBookNode() {
   return state.project.structure || null;
@@ -36,7 +51,10 @@ function ensureManuscriptDraft() {
       : {},
     generatedScenes: existing.generatedScenes && typeof existing.generatedScenes === 'object'
       ? existing.generatedScenes
-      : {}
+      : {},
+    deletedChapterIds: Array.isArray(existing.deletedChapterIds)
+      ? existing.deletedChapterIds
+      : []
   };
   return state.project.blueprint.manuscriptDraft;
 }
@@ -52,6 +70,7 @@ function extractGeneratedStoryChapters() {
   if (!story) return [];
   const draft = ensureManuscriptDraft();
   const generatedDrafts = draft.generatedChapters || {};
+  const deletedChapterIds = new Set(draft.deletedChapterIds || []);
 
   const lines = story.split(/\r?\n/);
   const headingRegex = /^\s{0,3}(?:#{1,6}\s*)?(chapter|capitol(?:ul)?)\s+(\d+)\b[:\-. ]*(.*)$/i;
@@ -93,7 +112,7 @@ function extractGeneratedStoryChapters() {
         dialogueMode: chapterDraftExtra.dialogueMode || 'balanced'
       };
     });
-    return [...baseChapters, ...extras];
+    return [...baseChapters, ...extras].filter(chapter => !deletedChapterIds.has(chapter.id));
   }
 
   const baseChapters = matches.map((entry, idx) => {
@@ -131,7 +150,7 @@ function extractGeneratedStoryChapters() {
       dialogueMode: chapterDraftExtra.dialogueMode || 'balanced'
     };
   });
-  return [...baseChapters, ...extras];
+  return [...baseChapters, ...extras].filter(chapter => !deletedChapterIds.has(chapter.id));
 }
 
 export function getChaptersForManuscript() {
@@ -219,6 +238,7 @@ export function getScenesForManuscriptChapter(chapter) {
 export function addGeneratedManuscriptChapter() {
   const draft = ensureManuscriptDraft();
   const generatedDrafts = draft.generatedChapters || (draft.generatedChapters = {});
+  draft.deletedChapterIds = (draft.deletedChapterIds || []).filter(id => id !== `nl_ch_${getChaptersForManuscript().length + 1}`);
   const chapterCount = getChaptersForManuscript().length;
   const nextNumber = chapterCount + 1;
   const chapterId = `nl_ch_${nextNumber}`;
@@ -263,6 +283,29 @@ export function addGeneratedManuscriptScene(chapterId) {
     objects: ''
   });
   return sceneId;
+}
+
+export function deleteGeneratedManuscriptChapter(chapterId) {
+  if (!chapterId) return false;
+  const draft = ensureManuscriptDraft();
+  const generatedDrafts = draft.generatedChapters || (draft.generatedChapters = {});
+  const generatedScenes = draft.generatedScenes || (draft.generatedScenes = {});
+  delete generatedDrafts[chapterId];
+  delete generatedScenes[chapterId];
+  if (!draft.deletedChapterIds.includes(chapterId)) draft.deletedChapterIds.push(chapterId);
+  return true;
+}
+
+export function deleteGeneratedManuscriptScene(chapterId, sceneId) {
+  if (!chapterId || !sceneId) return false;
+  const chapter = getChaptersForManuscript().find(item => item.id === chapterId);
+  if (!chapter || chapter.source !== 'generated-story') return false;
+  const generatedScenes = ensureGeneratedScenes(chapter);
+  const nextScenes = generatedScenes.filter(scene => scene.id !== sceneId);
+  if (nextScenes.length === generatedScenes.length) return false;
+  const draft = ensureManuscriptDraft();
+  draft.generatedScenes[chapterId] = nextScenes;
+  return true;
 }
 
 function setSceneField(chapter, scene, field, value) {
@@ -430,7 +473,7 @@ function renderSceneWorkspace(chapter, scene, chapterIndex, sceneIndex) {
     .map(item => String(item?.name || '').trim())
     .filter(Boolean);
   const locationOptions = Array.from(new Set([...knownLocations, ...locationTerms]));
-  const selectedLocation = locationTerms[0] || '';
+  const customLocationTerms = locationTerms.filter(name => !knownLocations.includes(name));
   const dialogueRows = parseDialogueLines(scene.dialogue);
 
   return `
@@ -476,11 +519,19 @@ function renderSceneWorkspace(chapter, scene, chapterIndex, sceneIndex) {
       <div class="chapter-summary-box">
         <div class="chapter-summary-title">Location</div>
         <label class="studio-field">
-          <span>Selected Location</span>
-          <select data-scene-id="${esc(scene.id)}" data-scene-location-select>
-            <option value="">Select location</option>
-            ${locationOptions.map(name => `<option value="${esc(name)}" ${name === selectedLocation ? 'selected' : ''}>${esc(name)}</option>`).join('')}
+          <span>Select Locations</span>
+          <select multiple size="${Math.max(3, Math.min(6, locationOptions.length || 3))}" data-scene-id="${esc(scene.id)}" data-scene-location-select>
+            ${locationOptions.map(name => `<option value="${esc(name)}" ${locationTerms.includes(name) ? 'selected' : ''}>${esc(name)}</option>`).join('')}
           </select>
+        </label>
+        <label class="studio-field">
+          <span>Custom Locations</span>
+          <input
+            type="text"
+            data-scene-id="${esc(scene.id)}"
+            data-scene-location-custom
+            value="${esc(customLocationTerms.join(', '))}"
+            placeholder="Add custom locations, separated by commas">
         </label>
         <input type="hidden" data-scene-id="${esc(scene.id)}" data-scene-field="locations" value="${esc(scene.locations || '')}">
       </div>
@@ -647,17 +698,44 @@ export function bindManuscriptEvents(container, rerender) {
     select.addEventListener('change', () => {
       const sceneId = select.getAttribute('data-scene-id');
       if (!sceneId) return;
+      const customInput = container.querySelector(`[data-scene-id="${sceneId}"][data-scene-location-custom]`);
+      const selectedLocations = Array.from(select.selectedOptions).map(option => option.value.trim()).filter(Boolean);
+      const customLocations = parseListValue(customInput?.value || '');
       const chapters = getChaptersForManuscript();
       for (const chapter of chapters) {
         const scenes = getEditableScenes(chapter);
         const targetScene = scenes.find(item => item.id === sceneId);
         if (!targetScene) continue;
-        setSceneField(chapter, targetScene, 'locations', select.value ? String(select.value).trim() : '');
+        setSceneField(chapter, targetScene, 'locations', [...selectedLocations, ...customLocations].join(', '));
         generateCNL();
         rerender();
         return;
       }
     });
+  });
+
+  container.querySelectorAll('[data-scene-id][data-scene-location-custom]').forEach(input => {
+    const syncCustomLocations = () => {
+      const sceneId = input.getAttribute('data-scene-id');
+      if (!sceneId) return;
+      const select = container.querySelector(`[data-scene-id="${sceneId}"][data-scene-location-select]`);
+      const selectedLocations = select
+        ? Array.from(select.selectedOptions).map(option => option.value.trim()).filter(Boolean)
+        : [];
+      const customLocations = parseListValue(input.value);
+      const chapters = getChaptersForManuscript();
+      for (const chapter of chapters) {
+        const scenes = getEditableScenes(chapter);
+        const targetScene = scenes.find(item => item.id === sceneId);
+        if (!targetScene) continue;
+        setSceneField(chapter, targetScene, 'locations', [...selectedLocations, ...customLocations].join(', '));
+        generateCNL();
+        return;
+      }
+    };
+
+    input.addEventListener('input', syncCustomLocations);
+    input.addEventListener('change', syncCustomLocations);
   });
 
   container.querySelectorAll('[data-scene-id][data-scene-quick-add]').forEach(btn => {

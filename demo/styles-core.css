@@ -88,33 +88,35 @@ body::before {
 /* ============================================ */
 .app {
   display: grid;
-  grid-template-columns: 296px 1fr 320px;
-  grid-template-rows: 52px 1fr 36px;
+  grid-template-columns: 340px 1fr 320px;
+  grid-template-rows: 62px 1fr 36px;
   height: 100vh;
 }
 
 header {
   grid-column: 1 / -1;
-  background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-main) 100%);
-  border-bottom: 1px solid var(--bg-elevated);
-  padding: 0 1rem;
+  background: linear-gradient(180deg, rgba(35, 40, 78, 0.98) 0%, rgba(25, 30, 58, 0.98) 100%);
+  border-bottom: 1px solid rgba(173, 190, 240, 0.18);
+  padding: 0 1.15rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: relative;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.03), 0 8px 24px rgba(7, 9, 23, 0.18);
 }
 
 .logo { order: 2; }
 
 .logo h1 {
   font-family: var(--font-title);
-  font-size: var(--fs-lg);
+  font-size: clamp(1.45rem, 2vw, 1.72rem);
   background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-amber) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.095em;
   white-space: nowrap;
+  text-shadow: 0 10px 24px rgba(236, 170, 64, 0.14);
 }
 
 .header-center {
@@ -128,27 +130,29 @@ header {
 
 .project-name {
   font-family: var(--font-title);
-  font-size: var(--fs-base);
+  font-size: 1rem;
   background: transparent;
   border: none;
-  border-bottom: 1px solid transparent;
-  color: var(--text-primary);
-  padding: 0.2rem 0.4rem;
-  min-width: 180px;
+  border-bottom: 1px solid rgba(255, 209, 102, 0.14);
+  color: rgba(245, 248, 255, 0.96);
+  padding: 0.24rem 0.5rem;
+  min-width: 220px;
   text-align: center;
+  letter-spacing: 0.04em;
 }
 .project-name:focus { outline: none; border-color: var(--accent-gold); }
 
-.header-actions { display: flex; gap: 0.4rem; margin-left: auto; order: 4; }
+.header-actions { display: flex; gap: 0.42rem; margin-left: auto; order: 4; }
 
 /* Zoom Controls */
 .zoom-controls {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.2rem 0.5rem;
-  background: var(--bg-elevated);
-  border-radius: 6px;
+  padding: 0.24rem 0.54rem;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(173, 190, 240, 0.16);
+  border-radius: 8px;
   margin-right: 0.7rem;
   order: 1;
 }
@@ -162,7 +166,7 @@ header {
 .zoom-level {
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
-  color: var(--text-secondary);
+  color: rgba(234, 240, 255, 0.88);
   min-width: 40px;
   text-align: center;
 }
@@ -261,7 +265,7 @@ footer {
 
 @media (max-width: 1280px) {
   .app {
-    grid-template-columns: 262px 1fr 280px;
+    grid-template-columns: 308px 1fr 280px;
   }
 
   .header-actions {
@@ -275,7 +279,7 @@ footer {
 
 @media (max-width: 1024px) {
   .app {
-    grid-template-columns: 236px 1fr;
+    grid-template-columns: 280px 1fr;
   }
 
   .metrics-panel {
@@ -297,19 +301,19 @@ footer {
   }
 
   .logo h1 {
-    font-size: var(--fs-base);
+    font-size: 1.12rem;
     letter-spacing: 0.04em;
   }
 
   .project-name {
-    min-width: 120px;
+    min-width: 140px;
     max-width: 180px;
   }
 }
 
 @media (max-width: 760px) {
   .app {
-    grid-template-columns: 190px 1fr;
+    grid-template-columns: 220px 1fr;
   }
 
   .zoom-controls {

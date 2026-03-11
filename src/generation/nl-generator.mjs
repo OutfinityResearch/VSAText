@@ -320,6 +320,7 @@ export async function generateStoryByScenes(params, callbacks, llmProvider) {
   onStart?.({ totalScenes: scenes.length, storyName });
   
   let previousSummary = '';
+  let lastChapterNumber = null;
   
   for (let i = 0; i < scenes.length; i++) {
     const scene = scenes[i];
@@ -469,12 +470,18 @@ export async function generateStoryByScenes(params, callbacks, llmProvider) {
     
     if (success) {
       result.stats.completed++;
-      result.fullStory += (result.fullStory ? '\n\n' : '') + section.content;
+      const chapterHeading = scene.chapterNumber !== lastChapterNumber
+        ? `## Chapter ${scene.chapterNumber}: ${scene.chapterTitle || `Chapter ${scene.chapterNumber}`}`
+        : '';
+      const storyParts = [chapterHeading, section.content].filter(Boolean);
+      result.fullStory += (result.fullStory ? '\n\n' : '') + storyParts.join('\n\n');
+      lastChapterNumber = scene.chapterNumber;
       
       onSceneComplete?.({
         sceneId,
         sceneNumber: i + 1,
         chapterNumber: scene.chapterNumber,
+        chapterTitle: scene.chapterTitle,
         title: scene.title,
         content: section.content,
         progress: Math.round(((i + 1) / scenes.length) * 100)
@@ -485,13 +492,19 @@ export async function generateStoryByScenes(params, callbacks, llmProvider) {
       result.failedSections.push(section);
       
       // Add placeholder with CNL reference
-      const failurePlaceholder = `\n\n### ${scene.title}\n\n[Generation failed: ${section.error}]\n\n<!-- CNL for retry:\n${scene.cnl}\n-->`;
-      result.fullStory += failurePlaceholder;
+      const chapterHeading = scene.chapterNumber !== lastChapterNumber
+        ? `## Chapter ${scene.chapterNumber}: ${scene.chapterTitle || `Chapter ${scene.chapterNumber}`}`
+        : '';
+      const failurePlaceholder = `### ${scene.title}\n\n[Generation failed: ${section.error}]\n\n<!-- CNL for retry:\n${scene.cnl}\n-->`;
+      const storyParts = [chapterHeading, failurePlaceholder].filter(Boolean);
+      result.fullStory += (result.fullStory ? '\n\n' : '') + storyParts.join('\n\n');
+      lastChapterNumber = scene.chapterNumber;
       
       onSceneError?.({
         sceneId,
         sceneNumber: i + 1,
         chapterNumber: scene.chapterNumber,
+        chapterTitle: scene.chapterTitle,
         title: scene.title,
         error: section.error,
         cnl: scene.cnl,

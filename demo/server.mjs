@@ -530,6 +530,7 @@ async function handleNLStoryStream(req, res) {
           type: 'scene_complete', 
           sceneNumber: data.sceneNumber,
           chapterNumber: data.chapterNumber,
+          chapterTitle: data.chapterTitle,
           title: data.title,
           content: data.content,
           progress: data.progress
@@ -541,6 +542,7 @@ async function handleNLStoryStream(req, res) {
           type: 'scene_error', 
           sceneNumber: data.sceneNumber,
           chapterNumber: data.chapterNumber,
+          chapterTitle: data.chapterTitle,
           title: data.title,
           error: data.error,
           cnl: data.cnl,  // Include CNL for retry

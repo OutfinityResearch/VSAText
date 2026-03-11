@@ -7,6 +7,7 @@
 import state from '../state.mjs';
 import { updateBeatMapping, setBlueprintArc } from '../state.mjs';
 import { genId } from '../utils.mjs';
+import { generateCNL } from '../cnl.mjs';
 import { getArcs, getArc, getCurrentArcBeats, getTensionAtPosition } from './blueprint-state.mjs';
 import { renderTensionCurve } from './tension-curve.mjs';
 import { initSubplots, render as renderSubplots } from './subplots.mjs';
@@ -24,6 +25,62 @@ const ARC_ORDER = [
   'five_act',
   'seven_point'
 ];
+
+const BEAT_ICONS = {
+  ordinary_world: '🏠',
+  call_to_adventure: '📣',
+  refusal: '🛑',
+  meeting_mentor: '🧙',
+  crossing_threshold: '🚪',
+  tests_allies_enemies: '🧭',
+  approach_cave: '🌒',
+  ordeal: '⚔',
+  reward: '👑',
+  road_back: '🛤',
+  resurrection: '🔥',
+  return_elixir: '🏺',
+  hook: '🎣',
+  setup: '🧩',
+  inciting_incident: '💥',
+  plot_point_1: '➡',
+  rising_action: '📈',
+  midpoint: '🎯',
+  plot_point_2: '🪤',
+  climax: '🌋',
+  resolution: '✨',
+  opening_image: '🖼',
+  theme_stated: '🗝',
+  catalyst: '⚡',
+  debate: '💭',
+  break_into_two: '🚀',
+  b_story: '🫶',
+  fun_and_games: '🎭',
+  bad_guys_close_in: '🕸',
+  all_is_lost: '🕯',
+  dark_night: '🌌',
+  break_into_three: '🔓',
+  finale: '🏁',
+  final_image: '🌅',
+  you: '🙂',
+  need: '💡',
+  go: '🛫',
+  search: '🔎',
+  find: '💎',
+  take: '💸',
+  return: '↩',
+  change: '🦋',
+  ki: '🌱',
+  sho: '🪴',
+  ten: '🌀',
+  ketsu: '🌕',
+  exposition: '📖',
+  falling_action: '📉',
+  denouement: '🕊',
+  plot_turn_1: '🧱',
+  pinch_1: '📌',
+  pinch_2: '📍',
+  plot_turn_2: '🧠'
+};
 
 /**
  * Initialize the timeline component
@@ -88,12 +145,17 @@ export function render() {
       </div>
     </section>
 
+    <div class="beat-mappings" id="beat-mappings">
+      <h4>Beat Mappings</h4>
+      ${renderMappingsList(beats, mappings)}
+    </div>
+
     <section class="timeline-guide" aria-label="Timeline guide">
       <div class="timeline-guide-title">How to read this timeline</div>
       <div class="timeline-guide-items">
-        <span><i class="guide-dot" aria-hidden="true"></i> Colored beat dot = tension intensity for that beat</span>
-        <span><i class="guide-pill" aria-hidden="true"></i> Label = beat name</span>
-        <span><strong>% value under beat</strong> = position in story timeline</span>
+        <span><i class="guide-dot" aria-hidden="true"></i> Icon marker = narrative beat identity</span>
+        <span><i class="guide-pill" aria-hidden="true"></i> Beat name + % = placement in story timeline</span>
+        <span><strong>Mapped chapter tag</strong> = current chapter assignment</span>
         <span><strong>0%</strong> opening, <strong>50%</strong> midpoint, <strong>100%</strong> ending</span>
       </div>
       <div class="timeline-guide-tension" aria-label="Tension legend">
@@ -125,13 +187,20 @@ export function render() {
         ${beats.map(beat => {
           const saved = emotionalArc.find(item => item.beatKey === beat.key);
           const selectedMood = saved?.moodPreset || '';
+          const progress = Math.round((beat.position || 0) * 100);
           return `
-            <div class="arc-beat">
-              <div class="arc-beat-position">${Math.round((beat.position || 0) * 100)}%</div>
-              <div class="arc-beat-label">${beat.label}</div>
+            <div class="arc-beat" data-beat="${beat.key}">
+              <div class="arc-beat-topline">
+                <span class="arc-beat-icon" aria-hidden="true">${getBeatIcon(beat)}</span>
+                <div class="arc-beat-heading">
+                  <div class="arc-beat-label">${beat.label}</div>
+                  <div class="arc-beat-position">${progress}% position</div>
+                </div>
+              </div>
               <div class="arc-beat-desc">${beat.desc || ''}</div>
               <div class="arc-beat-mood">
-                <select class="arc-mood-select" data-beat="${beat.key}">
+                <label class="arc-beat-mood-label" for="arc-mood-${beat.key}">Mood</label>
+                <select class="arc-mood-select" id="arc-mood-${beat.key}" data-beat="${beat.key}">
                   <option value="">-- Select mood --</option>
                   ${Object.entries(VOCAB.MOOD_PRESETS || {}).map(([key, mood]) => `
                     <option value="${key}" ${selectedMood === key ? 'selected' : ''}>${mood.label}</option>
@@ -147,32 +216,13 @@ export function render() {
     <div class="arc-emotional-section" id="arc-emotional-section">
       <h4>Emotional Progression</h4>
       <p class="arc-emotional-note">
-        Mood is configured in Story Beats above. This section gives a compact overview of progression across the full arc.
+        Mood is configured in Story Beats above. This chart shows emotional intensity across the arc, aligned with beat positions.
       </p>
-      <div class="arc-emotional-bars">
-        ${beats.map(beat => {
-          const saved = emotionalArc.find(item => item.beatKey === beat.key);
-          const mood = saved ? (VOCAB.MOOD_PRESETS || {})[saved.moodPreset] : null;
-          const label = mood?.label || 'Not set';
-          const color = mood?.color || 'var(--bg-hover)';
-          const active = mood ? 'active' : '';
-          return `
-            <div class="arc-emotional-bar ${active}" title="${beat.label}: ${label}">
-              <div class="bar-fill" style="background:${color};"></div>
-              <span class="bar-label">${Math.round((beat.position || 0) * 100)}%</span>
-            </div>
-          `;
-        }).join('')}
-      </div>
+      ${renderEmotionalProgression(beats, emotionalArc)}
     </div>
     
     <div class="tension-curve-container" id="tension-curve">
       <!-- Tension curve will be rendered here -->
-    </div>
-    
-    <div class="beat-mappings" id="beat-mappings">
-      <h4>Beat Mappings</h4>
-      ${renderMappingsList(beats, mappings)}
     </div>
     
     <div class="subplots-section" id="subplots-container">
@@ -225,10 +275,89 @@ function renderBeat(beat, mappings) {
          style="left: ${left}%"
          draggable="true"
          title="${beat.label} (${progress}%)${beat.desc ? ` - ${beat.desc}` : ''}">
-      <div class="beat-marker tension-${tension}"></div>
-      <div class="beat-label">${beat.key.replace(/_/g, ' ')}</div>
+      <div class="beat-marker tension-${tension}">
+        <span class="beat-marker-icon" aria-hidden="true">${getBeatIcon(beat)}</span>
+      </div>
+      <div class="beat-label">${beat.label}</div>
       <div class="beat-progress">${progress}%</div>
       ${isMapped ? `<div class="beat-mapping">${getFriendlyChapterLabel(chapterId)}</div>` : ''}
+    </div>
+  `;
+}
+
+function getBeatIcon(beat) {
+  return BEAT_ICONS[beat?.key] || '✦';
+}
+
+function getMoodIntensity(moodPreset) {
+  const preset = (VOCAB.MOOD_PRESETS || {})[moodPreset];
+  if (!preset?.emotions) return 2.5;
+  const values = Object.values(preset.emotions).map(value => Number(value) || 0).filter(value => value > 0);
+  if (!values.length) return 2.5;
+  const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+  return Math.min(5, Math.max(1, average + 1));
+}
+
+function renderEmotionalProgression(beats, emotionalArc) {
+  if (!beats.length) {
+    return `<div class="arc-emotional-empty">No beats available for this arc.</div>`;
+  }
+
+  const width = 960;
+  const height = 180;
+  const paddingX = 28;
+  const paddingTop = 20;
+  const paddingBottom = 34;
+  const usableHeight = height - paddingTop - paddingBottom;
+  const firstPosition = Number.isFinite(beats[0]?.position) ? beats[0].position : 0;
+  const lastPosition = Number.isFinite(beats[beats.length - 1]?.position) ? beats[beats.length - 1].position : 1;
+  const positionSpan = Math.max(0.001, lastPosition - firstPosition);
+
+  const points = beats.map(beat => {
+    const saved = emotionalArc.find(item => item.beatKey === beat.key);
+    const preset = saved ? (VOCAB.MOOD_PRESETS || {})[saved.moodPreset] : null;
+    const intensity = getMoodIntensity(saved?.moodPreset);
+    const normalizedPosition = ((beat.position || 0) - firstPosition) / positionSpan;
+    const x = paddingX + normalizedPosition * (width - paddingX * 2);
+    const y = paddingTop + (usableHeight - ((intensity - 1) / 4) * usableHeight);
+    return {
+      beat,
+      x,
+      y,
+      intensity,
+      normalizedPosition,
+      moodLabel: preset?.label || 'Not set',
+      color: preset?.color || 'rgba(156, 173, 229, 0.88)'
+    };
+  });
+
+  const pathD = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(' ');
+
+  return `
+    <div class="arc-emotional-chart">
+      <svg viewBox="0 0 ${width} ${height}" class="arc-emotional-svg" role="img" aria-label="Emotional progression line chart">
+        <path d="${pathD}" class="arc-emotional-line"></path>
+        ${points.map(point => `
+          <g class="arc-emotional-node" data-beat="${point.beat.key}" transform="translate(${point.x.toFixed(1)} ${point.y.toFixed(1)})">
+            <title>${escapeAttr(`${point.beat.label} • ${Math.round((point.beat.position || 0) * 100)}% • ${point.moodLabel} • Intensity ${point.intensity.toFixed(1)}`)}</title>
+            <circle r="6" fill="${point.color}" class="arc-emotional-dot"></circle>
+          </g>
+        `).join('')}
+        ${points.map(point => `
+          <g class="arc-emotional-guide" transform="translate(${point.x.toFixed(1)} 0)">
+            <line y1="${paddingTop}" y2="${height - paddingBottom}" class="arc-emotional-guide-line"></line>
+            <text y="${height - 10}" class="arc-emotional-axis-label">${Math.round((point.beat.position || 0) * 100)}%</text>
+          </g>
+        `).join('')}
+      </svg>
+      <div class="arc-emotional-legend">
+        ${points.map(point => `
+          <div class="arc-emotional-legend-item" data-beat="${point.beat.key}" title="${escapeAttr(`${point.beat.label}: ${point.moodLabel}`)}">
+            <span class="legend-beat-icon">${getBeatIcon(point.beat)}</span>
+            <span class="legend-beat-label">${point.beat.label}</span>
+          </div>
+        `).join('')}
+      </div>
     </div>
   `;
 }
@@ -374,6 +503,7 @@ function attachEventListeners() {
   if (arcSelect) {
     arcSelect.addEventListener('change', (e) => {
       setBlueprintArc(e.target.value);
+      generateCNL();
       render();
     });
   }
@@ -443,6 +573,8 @@ function attachEventListeners() {
       render();
     });
   });
+
+  bindBeatHoverSync();
 }
 
 function escapeAttr(value) {
@@ -495,6 +627,29 @@ function handleDrop(e) {
   // Note: This updates visual position, but narrative beats have fixed positions
   // In a full implementation, this could reorder beats or show a warning
   console.log(`Beat ${draggedBeat} dropped at position ${newPosition.toFixed(2)}`);
+}
+
+function bindBeatHoverSync() {
+  const interactiveSelector = '.timeline-beat, .arc-beat, .mapping-row, .arc-emotional-node, .arc-emotional-legend-item';
+  const items = Array.from(document.querySelectorAll(interactiveSelector));
+  if (!items.length) return;
+
+  const setHoveredBeat = (beatKey) => {
+    items.forEach(element => {
+      element.classList.toggle('is-hovered', Boolean(beatKey) && element.dataset.beat === beatKey);
+    });
+  };
+
+  const clearHoveredBeat = () => {
+    items.forEach(element => element.classList.remove('is-hovered'));
+  };
+
+  items.forEach(element => {
+    element.addEventListener('mouseenter', () => setHoveredBeat(element.dataset.beat || ''));
+    element.addEventListener('mouseleave', clearHoveredBeat);
+    element.addEventListener('focusin', () => setHoveredBeat(element.dataset.beat || ''));
+    element.addEventListener('focusout', clearHoveredBeat);
+  });
 }
 
 export default {

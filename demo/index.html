@@ -47,12 +47,23 @@
         <details class="navigator-group" open>
           <summary data-open-view="manuscript">Story Workspace</summary>
           <div class="navigator-items" id="nav-manuscript-items">
-            <details class="navigator-subgroup" open>
-              <summary data-target-view="manuscript">Manuscript</summary>
+            <div class="navigator-subgroup">
+              <div class="navigator-manuscript-header">
+                <button type="button" data-target-view="manuscript" class="navigator-manuscript-summary">
+                  <span>Manuscript</span>
+                </button>
+                <div class="navigator-manuscript-summary-actions">
+                  <button class="navigator-add-btn" type="button" aria-label="Add Manuscript Item" title="Add">+</button>
+                  <div class="navigator-add-hover-menu">
+                    <button class="navigator-add-option" type="button" data-manuscript-add="chapter">+ Add Chapter</button>
+                    <button class="navigator-add-option" type="button" data-manuscript-add="scene">+ Add Scene</button>
+                  </div>
+                </div>
+              </div>
               <div class="navigator-items">
                 <div class="navigator-note">Generated story details appear here by chapter and scene.</div>
               </div>
-            </details>
+            </div>
             <details class="navigator-subgroup">
               <summary>Book Settings</summary>
               <div class="navigator-items">
@@ -104,57 +115,64 @@
         </div>
         <div class="view" id="view-nl">
           <div class="nl-container">
-            <!-- Version Selector Panel -->
-            <div class="nl-versions-panel" id="nl-versions-panel">
-              <div class="nl-versions-header">
-                <span class="nl-versions-label">Story Versions</span>
-                <select class="nl-version-select" id="nl-version-select">
-                  <option value="">-- New Generation --</option>
-                </select>
-                <button class="btn small" id="btn-nl-delete-version" title="Delete selected version" disabled>Delete</button>
-              </div>
+            <div class="nl-page-heading">
+              <h2>Natural Language Story</h2>
+              <p>Generate and manage story drafts</p>
             </div>
-            <!-- Generation Options Panel -->
-            <div class="nl-options-panel" id="nl-options-panel">
-              <div class="nl-options-row">
-                <div class="nl-option-group">
-                  <label class="nl-option-label">Language</label>
-                  <select class="nl-option-select" id="nl-language">
-                    <option value="en">English</option>
-                    <option value="fr">Français</option>
-                    <option value="es">Español</option>
-                    <option value="pt">Português</option>
-                    <option value="it">Italiano</option>
-                    <option value="de">Deutsch</option>
-                    <option value="ro">Română</option>
+
+            <div class="nl-controls-panel" id="nl-versions-panel">
+              <div class="nl-controls-row">
+                <div class="nl-controls-block nl-controls-versions">
+                  <span class="nl-versions-label">Story Versions</span>
+                  <div class="nl-version-chip-list" id="nl-version-chips">
+                    <div class="nl-version-empty-state">
+                      <span class="nl-version-empty-text">No saved versions yet</span>
+                    </div>
+                  </div>
+                  <select class="nl-version-select" id="nl-version-select" hidden>
+                    <option value="">-- New Generation --</option>
                   </select>
                 </div>
-                <div class="nl-option-group">
-                  <label class="nl-option-label">Model</label>
-                  <select class="nl-option-select" id="nl-model">
-                    <option value="copilot-gpt-4o">copilot-gpt-4o (default)</option>
-                  </select>
-                </div>
-                <div class="nl-option-group nl-option-expand">
-                  <label class="nl-option-label">Custom Instructions</label>
-                  <input type="text" class="nl-option-input" id="nl-custom-prompt" 
-                         placeholder="E.g. Write in first person, focus on dialogue...">
+
+                <div class="nl-controls-block nl-controls-settings">
+                  <div class="nl-option-group">
+                    <label class="nl-option-label" for="nl-language">Language</label>
+                    <select class="nl-option-select" id="nl-language">
+                      <option value="en">English</option>
+                      <option value="fr">Français</option>
+                      <option value="es">Español</option>
+                      <option value="pt">Português</option>
+                      <option value="it">Italiano</option>
+                      <option value="de">Deutsch</option>
+                      <option value="ro">Română</option>
+                    </select>
+                  </div>
+                  <div class="nl-option-group">
+                    <label class="nl-option-label" for="nl-model">Model</label>
+                    <select class="nl-option-select" id="nl-model">
+                      <option value="copilot-gpt-4o">copilot-gpt-4o (default)</option>
+                    </select>
+                  </div>
+                  <div class="nl-option-group nl-option-expand">
+                    <label class="nl-option-label" for="nl-custom-prompt">Custom Instructions</label>
+                    <input type="text" class="nl-option-input" id="nl-custom-prompt"
+                           placeholder="E.g. Write in first person, focus on dialogue...">
+                  </div>
                 </div>
               </div>
-            </div>
-            <!-- Toolbar -->
-            <div class="nl-toolbar">
-              <button class="btn random" id="btn-nl-generate">Create Story</button>
-              <span class="nl-toolbar-spacer"></span>
-              <button class="btn" id="btn-nl-copy">Copy</button>
-              <button class="btn" id="btn-nl-export">Export</button>
+
+              <div class="nl-controls-actions">
+                <button class="btn random" id="btn-nl-generate">Create Story</button>
+                <button class="btn" id="btn-nl-copy">Copy</button>
+                <button class="btn" id="btn-nl-export">Export</button>
+              </div>
             </div>
             <div class="nl-content" id="nl-content">
               <div class="nl-empty-state">
                 <div class="icon">📖</div>
                 <div>No story generated yet</div>
                 <div style="font-size: 0.9rem; color: var(--text-faded);">
-                  Create your specs first, then click "Create Story" to generate prose
+                  Click "Create Story" to generate the first draft for this project
                 </div>
               </div>
             </div>
@@ -185,6 +203,7 @@
         <div class="view" id="view-narrative-design"><div class="narrative-design-view" id="narrative-design-view"></div></div>
         <div class="view" id="view-manuscript"><div class="writing-studio-view" id="manuscript-view"></div></div>
         <div class="view" id="view-storymap"><div class="story-map-view" id="storymap-view"></div></div>
+        <div class="view" id="view-evaluation-report"><div class="evaluation-report-view" id="evaluation-report-view"></div></div>
         <div class="view" id="view-newproject"><div class="new-project-view" id="new-project-view"></div></div>
       </div>
     </main>

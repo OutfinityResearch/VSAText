@@ -9,7 +9,7 @@ import { $, $$, genId, openModal } from './utils.mjs';
 import { renderTree, findNode, addChild } from './tree.mjs';
 import { renderEntityGrid, renderBackdropView, renderCharactersCastView, showSelectModal, showBlockModal, showActionModal } from './entities.mjs';
 import { renderRelationshipsView, renderBlocksView, renderWorldRulesView } from './views.mjs';
-import { evaluateMetrics, renderEmptyMetrics, initMetrics } from './metrics.mjs';
+import { evaluateMetrics, renderEmptyMetrics, initMetrics, renderFullEvaluationReport } from './metrics.mjs';
 import { exportCNL, importCNL, toggleEditMode, setCNLViewMode, generateCNL } from './cnl.mjs';
 import { loadProjectsList, initPersistence } from './persistence.mjs';
 import { setupContextMenu } from './context-menu.mjs';
@@ -35,9 +35,13 @@ import { renderManuscriptStudioView, renderStoryMapView, focusStoryMapSection } 
 import {
   getChaptersForManuscript,
   getScenesForManuscriptChapter,
+  getManuscriptSelection,
   manuscriptUsesGeneratedStory,
   addGeneratedManuscriptChapter,
-  addGeneratedManuscriptScene
+  addGeneratedManuscriptScene,
+  deleteGeneratedManuscriptChapter,
+  deleteGeneratedManuscriptScene,
+  setManuscriptSelection
 } from './writing-studio-manuscript.mjs';
 import { getChapterScenes } from './structure-navigation.mjs';
 
@@ -46,7 +50,7 @@ import './generation.mjs';
 import { updateGenerateButton } from './generation.mjs';
 
 // NL generation
-import { generateNLStory, resetNLState, initNLGeneration } from './nl-generation.mjs';
+import { generateNLStory, resetNLState, initNLGeneration, updateNLGenerateButton } from './nl-generation.mjs';
 
 // Wizard
 import { openWizard } from './wizard.mjs';
@@ -56,6 +60,7 @@ import { openNewProjectWizard } from './new-project-wizard.mjs';
 import { initEvalRunner } from './eval-runner.mjs';
 
 let currentBlueprintView = 'timeline';
+let manuscriptNavigatorOpenChapterId = null;
 
 const TAB_GROUPS = [
   {
@@ -159,6 +164,8 @@ function renderViewSpecificContent(viewName) {
   if (viewName === 'narrative-design') renderNarrativeDesignMacroView();
   if (viewName === 'manuscript') renderManuscriptStudioView();
   if (viewName === 'storymap') renderStoryMapView();
+  if (viewName === 'nl') updateNLGenerateButton();
+  if (viewName === 'evaluation-report') renderFullEvaluationReport();
 }
 
 function setActiveNavigatorItem(viewName, action = '', librarySelect = '') {
@@ -372,6 +379,8 @@ function bindCoreButtons() {
     showStandaloneView('library');
   };
   $('#btn-evaluate').onclick = evaluateMetrics;
+  document.addEventListener('open-evaluation-report', () => showStandaloneView('evaluation-report'));
+  document.addEventListener('close-evaluation-report', () => showStandaloneView('nl'));
   $('#btn-docs')?.addEventListener('click', () => window.open('/docs/theory/index.html', '_blank'));
 }
 
@@ -474,33 +483,93 @@ function addManuscriptChapter() {
 }
 
 function addManuscriptScene() {
+  const { chapterId: selectedChapterId } = getManuscriptSelection();
+
   if (manuscriptUsesGeneratedStory()) {
     const chapters = getChapterNodes();
-    const targetChapter = chapters[chapters.length - 1];
+    const targetChapter = chapters.find(ch => ch.id === selectedChapterId)
+      || chapters.find(ch => ch.id === manuscriptNavigatorOpenChapterId)
+      || chapters[chapters.length - 1];
     if (!targetChapter) return;
-    addGeneratedManuscriptScene(targetChapter.id);
-    generateCNL();
-    renderManuscriptNavigatorDetails();
-    if (activeViewKey === 'manuscript') renderManuscriptStudioView();
+    const sceneId = addGeneratedManuscriptScene(targetChapter.id);
+    manuscriptNavigatorOpenChapterId = targetChapter.id;
+    setManuscriptSelection(targetChapter.id, sceneId);
+    refreshManuscriptUi();
     return;
   }
 
   const chapters = getRealStructureChapters();
-  const targetChapter = chapters[chapters.length - 1];
+  const targetChapter = chapters.find(ch => ch.id === selectedChapterId)
+    || chapters.find(ch => ch.id === manuscriptNavigatorOpenChapterId)
+    || chapters[chapters.length - 1];
   if (!targetChapter.children) targetChapter.children = [];
   const existingScenes = targetChapter.children.filter((child) => child?.type === 'scene');
   const nextIndex = existingScenes.length + 1;
-  targetChapter.children.push({
+  const scene = {
     id: genId('sc'),
     type: 'scene',
     name: `Scene ${nextIndex}`,
     title: `Scene ${nextIndex}`,
     children: []
-  });
+  };
+  targetChapter.children.push(scene);
+  manuscriptNavigatorOpenChapterId = targetChapter.id;
+  setManuscriptSelection(targetChapter.id, scene.id);
+  refreshManuscriptUi();
+}
+
+function refreshManuscriptUi() {
   generateCNL();
   renderTree();
   renderManuscriptNavigatorDetails();
   if (activeViewKey === 'manuscript') renderManuscriptStudioView();
+}
+
+function deleteManuscriptChapter(chapterId) {
+  if (!chapterId) return;
+
+  if (manuscriptUsesGeneratedStory()) {
+    deleteGeneratedManuscriptChapter(chapterId);
+    const chapters = getChapterNodes();
+    const nextChapter = chapters.find(ch => ch.id !== chapterId) || null;
+    manuscriptNavigatorOpenChapterId = nextChapter?.id || null;
+    setManuscriptSelection(nextChapter?.id || null, null);
+    refreshManuscriptUi();
+    return;
+  }
+
+  const book = ensureBookStructureForManuscript();
+  const chapters = (book.children || []).filter(child => child?.type === 'chapter');
+  const nextChapter = chapters.find(ch => ch.id !== chapterId) || null;
+  book.children = (book.children || []).filter(child => child?.id !== chapterId);
+  manuscriptNavigatorOpenChapterId = nextChapter?.id || null;
+  setManuscriptSelection(nextChapter?.id || null, null);
+  refreshManuscriptUi();
+}
+
+function deleteManuscriptScene(chapterId, sceneId) {
+  if (!chapterId || !sceneId) return;
+
+  if (manuscriptUsesGeneratedStory()) {
+    deleteGeneratedManuscriptScene(chapterId, sceneId);
+    const chapters = getChapterNodes();
+    const chapter = chapters.find(item => item.id === chapterId) || null;
+    const scenes = chapter ? getSceneNodes(chapter) : [];
+    const nextScene = scenes.find(scene => scene.id !== sceneId) || null;
+    manuscriptNavigatorOpenChapterId = chapterId;
+    setManuscriptSelection(chapterId, nextScene?.id || null);
+    refreshManuscriptUi();
+    return;
+  }
+
+  const chapters = getRealStructureChapters();
+  const targetChapter = chapters.find(ch => ch.id === chapterId);
+  if (!targetChapter) return;
+  targetChapter.children = (targetChapter.children || []).filter(child => child?.id !== sceneId);
+  const nextScene = (targetChapter.children || []).find(child => child?.type === 'scene') || null;
+  manuscriptNavigatorOpenChapterId = chapterId;
+  setManuscriptSelection(chapterId, nextScene?.id || null);
+  refreshManuscriptUi();
 }
 
 function renderManuscriptNavigatorDetails() {
@@ -509,10 +578,7 @@ function renderManuscriptNavigatorDetails() {
 
   const book = state.project.structure;
   const chapters = getChapterNodes();
-
-  const bookSummary = book
-    ? `<div class="navigator-note">Book: ${esc(book.title || state.project.name || 'Untitled Story')} • ${chapters.length} chapter(s)</div>`
-    : '';
+  const { chapterId: selectedChapterId, sceneId: selectedSceneId } = getManuscriptSelection();
 
   const chapterRows = !chapters.length
     ? ''
@@ -520,14 +586,36 @@ function renderManuscriptNavigatorDetails() {
       <div class="navigator-subtree">
         ${chapters.map((chapter, index) => {
           const scenes = getSceneNodes(chapter);
+          const isOpen = chapter.id === manuscriptNavigatorOpenChapterId;
+          const isChapterSelected = selectedChapterId === chapter.id && !selectedSceneId;
           return `
-            <details class="navigator-subgroup">
-              <summary>${esc(chapterLabelText(chapter, index))}</summary>
+            <details class="navigator-subgroup navigator-chapter-group" ${isOpen ? 'open' : ''}>
+              <summary
+                class="navigator-chapter-summary ${isChapterSelected ? 'is-selected' : ''}"
+                data-target-view="manuscript"
+                data-manuscript-chapter-id="${chapter.id}">
+                <span class="navigator-chapter-summary-label">${esc(chapterLabelText(chapter, index))}</span>
+                <button
+                  class="navigator-inline-action navigator-inline-delete"
+                  type="button"
+                  data-delete-chapter-id="${chapter.id}"
+                  aria-label="Delete chapter"
+                  title="Delete chapter">×</button>
+              </summary>
               <div class="navigator-items">
                 ${scenes.map((scene, sceneIndex) => `
-                  <button class="navigator-item navigator-item-scene" data-target-view="manuscript" data-chapter-id="${chapter.id}" data-scene-id="${scene.id}">
-                    ${esc(sceneLabelText(scene, sceneIndex))}
-                  </button>
+                  <div class="navigator-item-row">
+                    <button class="navigator-item navigator-item-scene ${selectedSceneId === scene.id ? 'active is-selected' : ''}" data-target-view="manuscript" data-chapter-id="${chapter.id}" data-scene-id="${scene.id}">
+                      ${esc(sceneLabelText(scene, sceneIndex))}
+                    </button>
+                    <button
+                      class="navigator-inline-action navigator-inline-delete navigator-scene-delete"
+                      type="button"
+                      data-delete-scene-id="${scene.id}"
+                      data-delete-scene-chapter-id="${chapter.id}"
+                      aria-label="Delete scene"
+                      title="Delete scene">×</button>
+                  </div>
                 `).join('')}
               </div>
             </details>
@@ -537,20 +625,23 @@ function renderManuscriptNavigatorDetails() {
     `;
 
   container.innerHTML = `
-    <details class="navigator-subgroup" open>
-      <summary data-target-view="manuscript" class="${activeViewKey === 'manuscript' ? 'navigator-manuscript-summary-active' : ''}">Manuscript</summary>
-      <div class="navigator-items">
-        <div class="navigator-manuscript-actions">
+    <div class="navigator-subgroup">
+      <div class="navigator-manuscript-header">
+        <button type="button" data-target-view="manuscript" class="navigator-manuscript-summary ${activeViewKey === 'manuscript' ? 'navigator-manuscript-summary-active' : ''}">
+          <span>Manuscript</span>
+        </button>
+        <div class="navigator-manuscript-summary-actions">
           <button class="navigator-add-btn" type="button" aria-label="Add Manuscript Item" title="Add">+</button>
           <div class="navigator-add-hover-menu">
             <button class="navigator-add-option" type="button" data-manuscript-add="chapter">+ Add Chapter</button>
             <button class="navigator-add-option" type="button" data-manuscript-add="scene">+ Add Scene</button>
           </div>
         </div>
-        ${bookSummary}
+      </div>
+      <div class="navigator-items">
         ${chapterRows}
       </div>
-    </details>
+    </div>
     <details class="navigator-subgroup">
       <summary>Book Settings</summary>
       <div class="navigator-items">
@@ -629,6 +720,66 @@ function bindNavigatorPanel() {
   if (!navigatorContent || navigatorContent.dataset.boundClick === '1') return;
 
   navigatorContent.addEventListener('click', (event) => {
+    const manuscriptActions = event.target.closest('.navigator-manuscript-summary-actions');
+    const addButton = event.target.closest('.navigator-add-btn');
+    const addOption = event.target.closest('.navigator-add-option');
+    const deleteChapterButton = event.target.closest('[data-delete-chapter-id]');
+    const deleteSceneButton = event.target.closest('[data-delete-scene-id]');
+
+    navigatorContent.querySelectorAll('.navigator-manuscript-summary-actions.open').forEach(el => {
+      if (el !== manuscriptActions) el.classList.remove('open');
+    });
+
+    if (addButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      manuscriptActions?.classList.toggle('open');
+      return;
+    }
+
+    if (addOption) {
+      event.preventDefault();
+      event.stopPropagation();
+      manuscriptActions?.classList.remove('open');
+    }
+
+    if (deleteChapterButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      const chapterId = deleteChapterButton.getAttribute('data-delete-chapter-id');
+      if (!chapterId) return;
+      if (!window.confirm('Delete this chapter?')) return;
+      deleteManuscriptChapter(chapterId);
+      return;
+    }
+
+    if (deleteSceneButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      const chapterId = deleteSceneButton.getAttribute('data-delete-scene-chapter-id');
+      const sceneId = deleteSceneButton.getAttribute('data-delete-scene-id');
+      if (!chapterId || !sceneId) return;
+      if (!window.confirm('Delete this scene?')) return;
+      deleteManuscriptScene(chapterId, sceneId);
+      return;
+    }
+
+    const manuscriptHeaderButton = event.target.closest('button[data-target-view="manuscript"].navigator-manuscript-summary');
+    if (manuscriptHeaderButton) {
+      event.preventDefault();
+      showStandaloneView('manuscript');
+      return;
+    }
+
+    const manuscriptChapterSummary = event.target.closest('summary[data-manuscript-chapter-id]');
+    if (manuscriptChapterSummary) {
+      const chapterId = manuscriptChapterSummary.dataset.manuscriptChapterId || '';
+      manuscriptNavigatorOpenChapterId = chapterId || null;
+      setManuscriptSelection(chapterId, null);
+      showStandaloneView('manuscript');
+      return;
+    }
+
     const librarySummary = event.target.closest('summary[data-library-select]');
     if (librarySummary) {
       const targetView = librarySummary.dataset.targetView || 'library';
@@ -659,6 +810,12 @@ function bindNavigatorPanel() {
 
     const item = event.target.closest('.navigator-item');
     if (!item) return;
+    const chapterId = item.dataset.chapterId || '';
+    const sceneId = item.dataset.sceneId || '';
+    if (chapterId) {
+      manuscriptNavigatorOpenChapterId = chapterId;
+      setManuscriptSelection(chapterId, sceneId || null);
+    }
     await handleNavigatorItemClick(item);
   });
   navigatorContent.dataset.boundClick = '1';
@@ -737,6 +894,12 @@ async function init() {
   document.addEventListener('generated-story-updated', () => {
     renderManuscriptNavigatorDetails();
     if (activeViewKey === 'manuscript') renderManuscriptStudioView();
+  });
+
+  document.addEventListener('metrics-evaluated', () => {
+    if (activeViewKey === 'evaluation-report') {
+      renderFullEvaluationReport();
+    }
   });
   
   // Initial render

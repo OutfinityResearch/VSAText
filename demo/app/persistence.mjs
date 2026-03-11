@@ -311,13 +311,22 @@ export function showProjectNameDialog(title = 'Project Name') {
 /**
  * Execute the actual new project reset
  */
-function executeNewProject(projectName) {
+async function executeNewProject(projectName) {
+  const normalizedName = String(projectName || '').trim();
+  if (!normalizedName) return;
+
+  try {
+    await fetch(`/v1/projects/${encodeURIComponent(normalizedName)}`, { method: 'DELETE' });
+  } catch {
+    // Ignore cleanup errors. Project creation below will still proceed.
+  }
+
   resetProject();
   
-  state.project.id = projectName;
-  state.project.name = projectName;
+  state.project.id = normalizedName;
+  state.project.name = normalizedName;
   
-  $('#project-name').value = projectName;
+  $('#project-name').value = normalizedName;
   renderTree();
   ['characters', 'locations', 'objects', 'moods', 'themes'].forEach(renderEntityGrid);
   renderFrameworkView();
@@ -333,14 +342,14 @@ function executeNewProject(projectName) {
   resetNLState();
   
   // Save immediately to create the folder
-  saveProject(true);
+  await saveProject(true);
   
-  showNotification(`Project "${projectName}" created`, 'success');
+  showNotification(`Project "${normalizedName}" created`, 'success');
   pendingChanges = false;
 }
 
-export function createProjectFromWizard(projectName) {
-  executeNewProject(projectName);
+export async function createProjectFromWizard(projectName) {
+  await executeNewProject(projectName);
 }
 
 /**
@@ -355,7 +364,7 @@ export async function newProject() {
   // Show dialog for new project name
   const projectName = await showProjectNameDialog('New Project');
   if (projectName) {
-    executeNewProject(projectName);
+    await executeNewProject(projectName);
   }
 }
 

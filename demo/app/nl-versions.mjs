@@ -20,6 +20,7 @@ function isPreferredModel(value, label = '') {
 let currentVersionFilename = null;
 let currentVersionLanguage = null;
 let currentVersionModel = null;
+let cachedVersions = [];
 
 // Lazy import for persistence to avoid circular dependency
 let persistenceModule = null;
@@ -57,6 +58,40 @@ export function resetVersionState() {
   currentVersionFilename = null;
   currentVersionLanguage = null;
   currentVersionModel = null;
+  cachedVersions = [];
+}
+
+function getVersionChipLabel(version) {
+  return version?.version ? `v${version.version}` : 'Version';
+}
+
+function renderVersionChips(selectedFilename = '') {
+  const chipsContainer = $('#nl-version-chips');
+  if (!chipsContainer) return;
+
+  if (!cachedVersions.length) {
+    chipsContainer.innerHTML = `
+      <div class="nl-version-empty-state">
+        <span class="nl-version-empty-text">No saved versions yet</span>
+      </div>
+    `;
+    return;
+  }
+
+  const items = [
+    `<button class="nl-version-chip nl-version-chip-new ${selectedFilename ? '' : 'active'}" type="button" data-version-filename="">+ New</button>`,
+    ...cachedVersions.map(version => `
+      <button
+        class="nl-version-chip ${selectedFilename === version.filename ? 'active' : ''}"
+        type="button"
+        data-version-filename="${version.filename}"
+        title="Version ${version.version || ''} - ${version.language || 'en'} - ${version.model || DEFAULT_STORY_MODEL}">
+        ${getVersionChipLabel(version)}
+      </button>
+    `)
+  ];
+
+  chipsContainer.innerHTML = items.join('');
 }
 
 /**
@@ -92,9 +127,11 @@ export async function loadStoryVersions() {
   // Clear existing options
   versionSelect.innerHTML = '<option value="">-- New Generation --</option>';
   currentVersionFilename = null;
+  cachedVersions = [];
   
   // Disable delete button
   if (deleteBtn) deleteBtn.disabled = true;
+  renderVersionChips('');
   
   // Can't load versions without project ID
   if (!state.project.id) return;
@@ -105,8 +142,12 @@ export async function loadStoryVersions() {
     
     const data = await response.json();
     const versions = data.versions || [];
+    cachedVersions = versions;
     
-    if (versions.length === 0) return;
+    if (versions.length === 0) {
+      renderVersionChips('');
+      return;
+    }
     
     // Language names for display
     const langNames = {
@@ -121,9 +162,12 @@ export async function loadStoryVersions() {
       option.textContent = `v${v.version} - ${langNames[v.language] || v.language} - ${v.model}`;
       versionSelect.appendChild(option);
     });
+
+    renderVersionChips(currentVersionFilename || '');
     
   } catch (err) {
     console.error('Failed to load story versions:', err);
+    renderVersionChips('');
   }
 }
 
@@ -135,10 +179,18 @@ export async function loadStoryVersions() {
  * @param {Function} resetNLContent - Callback to reset content
  */
 export async function onVersionSelect(e, callbacks) {
-  const { updateNLGenerateButton, displayNLContent, enablePreviewButton, resetNLContent, setHasGeneratedNL } = callbacks;
-  
-  const filename = e.target.value;
+  const {
+    updateNLGenerateButton,
+    displayNLContent,
+    enablePreviewButton,
+    resetNLContent,
+    setHasGeneratedNL,
+    markCurrentStructureAsGenerationBaseline
+  } = callbacks;
+  const filename = typeof e === 'string' ? e : e?.target?.value || '';
   const deleteBtn = $('#btn-nl-delete-version');
+  const versionSelect = $('#nl-version-select');
+  if (versionSelect) versionSelect.value = filename;
   
   if (!filename) {
     // New generation selected - reset version tracking
@@ -149,6 +201,7 @@ export async function onVersionSelect(e, callbacks) {
     if (deleteBtn) deleteBtn.disabled = true;
     resetNLContent();
     updateNLGenerateButton();
+    renderVersionChips('');
     return;
   }
   
@@ -188,8 +241,10 @@ export async function onVersionSelect(e, callbacks) {
     
     updateNLGenerateButton();
     enablePreviewButton();
+    markCurrentStructureAsGenerationBaseline?.();
     
     if (deleteBtn) deleteBtn.disabled = false;
+    renderVersionChips(filename);
     
   } catch (err) {
     showNotification('Error loading version: ' + err.message, 'error');
@@ -220,6 +275,7 @@ export async function deleteCurrentVersion(resetNLContent) {
     
     // Reset content
     resetNLContent();
+    renderVersionChips('');
     
   } catch (err) {
     showNotification('Error deleting version: ' + err.message, 'error');
@@ -269,6 +325,7 @@ export async function saveStoryVersion(content, language, model) {
       const deleteBtn = $('#btn-nl-delete-version');
       if (deleteBtn) deleteBtn.disabled = false;
     }
+    renderVersionChips(versionInfo.filename);
     
     // Update current version tracking
     currentVersionLanguage = language;

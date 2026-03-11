@@ -3,7 +3,6 @@
  */
 
 import { createProjectFromWizard } from './persistence.mjs';
-import { generateNLStory } from './nl-generation.mjs';
 import { showNotification } from './utils.mjs';
 
 const DRAFT_KEY = 'scripta-new-project-wizard';
@@ -93,11 +92,14 @@ overlay.innerHTML = `
     <footer class="wizard-footer">
       <div class="wizard-footer-actions">
         <button class="btn" id="wizard-back">← Back</button>
+        <div class="wizard-progress-panel">
+          <div class="wizard-progress-step-label" id="wizard-progress-label">Step 1 of 4</div>
+          <div class="wizard-progress-track" aria-hidden="true">
+            <div class="wizard-progress-fill" id="wizard-progress-fill"></div>
+          </div>
+          <div class="wizard-progress-helper" id="wizard-progress-helper"></div>
+        </div>
         <button class="btn primary" id="wizard-next">Next →</button>
-      </div>
-      <div class="wizard-progress-track" aria-hidden="true">
-        <div class="wizard-progress-fill" id="wizard-progress-fill"></div>
-        <div class="wizard-progress-inline-label" id="wizard-progress-label">25%</div>
       </div>
     </footer>
   </div>
@@ -112,6 +114,7 @@ function isPreferredModel(value, label = '') {
 const wizardBody = overlay.querySelector('#wizard-body');
 const progressFill = overlay.querySelector('#wizard-progress-fill');
 const progressLabel = overlay.querySelector('#wizard-progress-label');
+const progressHelper = overlay.querySelector('#wizard-progress-helper');
 const btnBack = overlay.querySelector('#wizard-back');
 const btnNext = overlay.querySelector('#wizard-next');
 const btnClose = overlay.querySelector('#wizard-close');
@@ -175,7 +178,7 @@ function renderBasicInfo() {
 
   return `
     <div class="wizard-step-section">
-      <p class="wizard-step-summary">Step 2: Basic Info</p>
+      <p class="wizard-step-summary">Step 2: Project Details</p>
 
       <div class="wizard-grid wizard-grid-two-col">
         <label class="wizard-field">
@@ -197,6 +200,7 @@ function renderBasicInfo() {
           <div class="wizard-card-selector wizard-card-selector-genre">
             ${genres.map(item => `
               <button class="wizard-choice-card ${state.data.genre === item.label ? 'selected' : ''}" type="button" data-select-field="genre" data-select-value="${esc(item.label)}">
+                <span class="wizard-choice-check" aria-hidden="true">✓</span>
                 <span class="wizard-choice-icon">${item.icon}</span>
                 <span>${item.label}</span>
               </button>
@@ -209,6 +213,7 @@ function renderBasicInfo() {
           <div class="wizard-card-selector wizard-card-selector-tone">
             ${tones.map(item => `
               <button class="wizard-choice-card ${state.data.tone === item.label ? 'selected' : ''}" type="button" data-select-field="tone" data-select-value="${esc(item.label)}">
+                <span class="wizard-choice-check" aria-hidden="true">✓</span>
                 <span class="wizard-choice-icon">${item.icon}</span>
                 <span>${item.label}</span>
               </button>
@@ -285,7 +290,10 @@ function renderCreateStoryNL() {
 
   return `
     <div class="wizard-step-section">
-      <p class="wizard-step-summary">Step 4: Create Story</p>
+      <div class="wizard-step-header">
+        <p class="wizard-step-summary">Step 4 - Final Settings</p>
+        <p class="wizard-step-support">Choose language and model. You can generate the story after the project is created.</p>
+      </div>
 
       <div class="wizard-grid wizard-grid-small">
         <label class="wizard-field">
@@ -313,11 +321,8 @@ function renderCreateStoryNL() {
 
       <div class="wizard-launch-card">
         <div class="wizard-launch-copy">
-          <h4>Create Story</h4>
-          <p>Generate your first narrative version using the selected language, model, and story setup.</p>
-          <div class="wizard-launch-actions">
-          <button class="btn primary" id="wizard-generate-story">Generate Story</button>
-          </div>
+          <h4>Ready to Create</h4>
+          <p>Create the project with these settings, then continue in <strong>NL Story</strong> to generate the first draft.</p>
         </div>
       </div>
     </div>
@@ -333,10 +338,16 @@ function renderStep() {
 
   const fill = ((state.step + 1) / TOTAL_STEPS) * 100;
   progressFill.style.width = `${fill}%`;
-  progressLabel.textContent = `${Math.round(fill)}%`;
+  progressLabel.textContent = `Step ${state.step + 1} of ${TOTAL_STEPS}`;
 
   btnBack.disabled = state.step === 0;
-  btnNext.textContent = state.step === TOTAL_STEPS - 1 ? 'Create Project →' : 'Next →';
+  btnNext.textContent = state.step === TOTAL_STEPS - 1 ? 'Create Project' : 'Next →';
+  btnNext.disabled = false;
+  btnNext.classList.add('primary');
+  btnNext.classList.remove('wizard-btn-secondary');
+  progressHelper.textContent = state.step === TOTAL_STEPS - 1
+    ? 'After project creation, continue in NL Story to generate the draft.'
+    : '';
 
   attachListeners();
 }
@@ -364,10 +375,6 @@ function attachListeners() {
       saveDraft();
       renderStep();
     });
-  });
-
-  wizardBody.querySelector('#wizard-generate-story')?.addEventListener('click', async () => {
-    await runNLGenerationFromWizard();
   });
 }
 
@@ -444,43 +451,30 @@ async function loadModelOptions() {
   }
 }
 
-async function runNLGenerationFromWizard() {
-  if (!ensureRequiredFields()) return;
-
-  createProjectFromWizard(state.data.projectName.trim());
-  applyWizardNLSelections();
-
-  closeOverlay();
-  window.switchToTab?.('nl');
-
-  try {
-    await generateNLStory();
-  } catch (err) {
-    showNotification(`Generation error: ${err.message}`, 'error');
-  }
-}
-
 function closeOverlay() {
   overlay.classList.remove('open');
 }
 
-function finish() {
+async function finish() {
   if (!ensureRequiredFields()) return;
 
-  createProjectFromWizard(state.data.projectName.trim());
+  await createProjectFromWizard(state.data.projectName.trim());
+  applyWizardNLSelections();
   saveDraft();
   closeOverlay();
+  window.switchToTab?.('nl');
 }
 
 function openOverlay() {
   loadDraft();
+  state.step = 0;
   overlay.classList.add('open');
   renderStep();
 }
 
-btnNext.addEventListener('click', () => {
+btnNext.addEventListener('click', async () => {
   if (state.step === TOTAL_STEPS - 1) {
-    finish();
+    await finish();
     return;
   }
   state.step += 1;

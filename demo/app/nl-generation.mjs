@@ -10,6 +10,7 @@ import { generateCNL } from './cnl.mjs';
 import { $, showNotification } from './utils.mjs';
 import { parseMarkdown, escapeHtml } from '../../src/utils/markdown.mjs';
 import { openBookPreview, closeBookPreview, resetBookPreview } from './book-preview.mjs';
+import { getChaptersForManuscript, getScenesForManuscriptChapter } from './writing-studio-manuscript.mjs';
 import {
   loadStoryVersions,
   onVersionSelect,
@@ -27,6 +28,7 @@ let hasGeneratedNL = false;
 let activeGeneration = null;
 let isRetryingFailedSections = false;
 let retryController = null;
+let lastGeneratedStructureSignature = null;
 const DEFAULT_STORY_MODEL = 'copilot-gpt-4o';
 
 function makeAbortError(message = 'Generation cancelled') {
@@ -126,6 +128,23 @@ export function getNLGenerationState() {
  */
 function setHasGeneratedNL(value) {
   hasGeneratedNL = value;
+}
+
+export function markCurrentStructureAsGenerationBaseline() {
+  setLastGeneratedStructureSignature(getCurrentStructureSignature());
+}
+
+function getCurrentStructureSignature() {
+  return String(generateCNL() || '').trim();
+}
+
+function setLastGeneratedStructureSignature(signature = null) {
+  lastGeneratedStructureSignature = signature ? String(signature).trim() : null;
+}
+
+function needsStoryRegeneration() {
+  if (!hasGeneratedNL || !lastGeneratedStructureSignature) return false;
+  return getCurrentStructureSignature() !== lastGeneratedStructureSignature;
 }
 
 function buildHookPromptInstructions() {
@@ -329,6 +348,7 @@ async function generateNLStorySingle(cnl, options, signal) {
   
   // Update state
   hasGeneratedNL = true;
+  setLastGeneratedStructureSignature(cnl);
   updateNLGenerateButton();
   enablePreviewButton();
   
@@ -441,6 +461,7 @@ async function generateNLStoryStreaming(cnl, options, chapters, signal) {
     setGeneratedStory(fullStory);
     displayNLContent(fullStory);
     hasGeneratedNL = true;
+    setLastGeneratedStructureSignature(cnl);
     updateNLGenerateButton();
     enablePreviewButton();
     
@@ -461,12 +482,14 @@ async function generateNLStoryStreaming(cnl, options, chapters, signal) {
  */
 let streamingChapterCount = 0;
 let failedSections = []; // Track failed sections for retry
+let streamingLastChapterNumber = null;
 
 function handleStreamEvent(event, setFullStory) {
   switch (event.type) {
     case 'start':
       streamingChapterCount = 0;
       failedSections = [];
+      streamingLastChapterNumber = null;
       const totalScenes = event.totalScenes || event.totalChapters || 1;
       // Switch to streaming view
       showNLStreamingState();
@@ -510,7 +533,11 @@ function handleStreamEvent(event, setFullStory) {
         event.progress || 0,
         ''
       );
-      const sceneHtml = parseMarkdown(event.content || '');
+      const chapterHeading = event.chapterNumber !== streamingLastChapterNumber
+        ? parseMarkdown(`## Chapter ${event.chapterNumber}: ${event.chapterTitle || `Chapter ${event.chapterNumber}`}`)
+        : '';
+      const sceneHtml = `${chapterHeading}${parseMarkdown(event.content || '')}`;
+      streamingLastChapterNumber = event.chapterNumber;
       appendNLStreamingContent(sceneHtml, streamingChapterCount === 1);
       break;
     }
@@ -537,6 +564,7 @@ function handleStreamEvent(event, setFullStory) {
         id: `scene_${event.sceneNumber ?? event.chapterNumber ?? ''}`,
         type: 'scene',
         chapterNumber: event.chapterNumber,
+        chapterTitle: event.chapterTitle,
         sceneNumber: event.sceneNumber,
         title: event.title,
         error: event.error,
@@ -887,6 +915,49 @@ function enablePreviewButton() {
   }
 }
 
+function injectChapterHeadingsFromManuscript(story) {
+  const text = String(story || '');
+  if (!text.trim()) return text;
+  if (/^\s*##\s+(chapter|capitol(?:ul)?)\b/im.test(text)) return text;
+
+  const chapters = getChaptersForManuscript();
+  if (!chapters.length) return text;
+
+  const lines = text.split(/\r?\n/);
+  const sceneHeadingRegex = /^\s*###\s+/;
+  const sceneHeadingIndexes = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    if (sceneHeadingRegex.test(lines[i])) sceneHeadingIndexes.push(i);
+  }
+  if (!sceneHeadingIndexes.length) return text;
+
+  let scenePointer = 0;
+  const output = [];
+
+  for (let chapterIndex = 0; chapterIndex < chapters.length; chapterIndex += 1) {
+    const chapter = chapters[chapterIndex];
+    const chapterScenes = getScenesForManuscriptChapter(chapter);
+    const sceneCount = Math.max(0, chapterScenes.length);
+
+    if (sceneCount === 0) continue;
+    if (scenePointer >= sceneHeadingIndexes.length) break;
+
+    const chapterTitle = String(chapter.title || chapter.name || `Chapter ${chapterIndex + 1}`).trim();
+    output.push(`## Chapter ${chapterIndex + 1}: ${chapterTitle.replace(/^\s*(chapter|capitol(?:ul)?)\s+\d+\s*[:\-.]?\s*/i, '').trim() || `Chapter ${chapterIndex + 1}`}`);
+
+    const startLine = sceneHeadingIndexes[scenePointer];
+    const nextScenePointer = Math.min(sceneHeadingIndexes.length, scenePointer + sceneCount);
+    const endLine = nextScenePointer < sceneHeadingIndexes.length
+      ? sceneHeadingIndexes[nextScenePointer]
+      : lines.length;
+    output.push(lines.slice(startLine, endLine).join('\n').trim());
+    scenePointer = nextScenePointer;
+  }
+
+  if (!output.length) return text;
+  return output.filter(Boolean).join('\n\n').trim();
+}
+
 /**
  * Display generated NL content (renders Markdown)
  */
@@ -895,7 +966,15 @@ function displayNLContent(story) {
   if (!content) return;
   
   // Parse markdown to HTML
-  const renderedHtml = parseMarkdown(story);
+  const normalizedStory = injectChapterHeadingsFromManuscript(story);
+  const lines = normalizedStory.split(/\r?\n/);
+  const projectName = String(state.project.name || '').trim().toLowerCase();
+  const cleanedStory = lines.filter((line, index) => {
+    if (index > 0) return true;
+    const trimmed = line.trim().replace(/^#\s+/, '').trim().toLowerCase();
+    return !(trimmed && projectName && trimmed === projectName);
+  }).join('\n');
+  const renderedHtml = parseMarkdown(cleanedStory);
   
   content.innerHTML = `
     <div class="nl-story-content">
@@ -953,6 +1032,11 @@ export function updateNLGenerateButton() {
   }
 
   btn.classList.remove('danger');
+  if (needsStoryRegeneration()) {
+    btn.textContent = 'Regenerate Story';
+    return;
+  }
+
   btn.textContent = canImprove(hasGeneratedNL) ? 'Improve Story' : 'Create Story';
 }
 
@@ -967,7 +1051,7 @@ function resetNLContent() {
         <div class="icon">Book</div>
         <div>No story generated yet</div>
         <div style="font-size: 0.9rem; color: var(--text-faded);">
-          Create your specs first, then click "Create Story" to generate prose
+          Click "Create Story" to generate the first draft for this project
         </div>
       </div>
     `;
@@ -990,6 +1074,7 @@ export function resetNLState() {
   activeGeneration = null;
   isRetryingFailedSections = false;
   retryController = null;
+  setLastGeneratedStructureSignature(null);
   resetVersionState();
   resetBookPreview();
   
@@ -997,6 +1082,15 @@ export function resetNLState() {
   const versionSelect = $('#nl-version-select');
   if (versionSelect) {
     versionSelect.innerHTML = '<option value="">-- New Generation --</option>';
+  }
+
+  const chipsContainer = $('#nl-version-chips');
+  if (chipsContainer) {
+    chipsContainer.innerHTML = `
+      <div class="nl-version-empty-state">
+        <span class="nl-version-empty-text">No saved versions yet</span>
+      </div>
+    `;
   }
   
   const deleteBtn = $('#btn-nl-delete-version');
@@ -1042,8 +1136,26 @@ export function initNLGeneration() {
       displayNLContent,
       enablePreviewButton,
       resetNLContent,
-      setHasGeneratedNL
+      setHasGeneratedNL,
+      markCurrentStructureAsGenerationBaseline
     }));
+  }
+
+  const versionChips = $('#nl-version-chips');
+  if (versionChips) {
+    versionChips.addEventListener('click', async (event) => {
+      const chip = event.target.closest('[data-version-filename]');
+      if (!chip) return;
+      const filename = chip.getAttribute('data-version-filename') || '';
+      await onVersionSelect(filename, {
+        updateNLGenerateButton,
+        displayNLContent,
+        enablePreviewButton,
+        resetNLContent,
+        setHasGeneratedNL,
+        markCurrentStructureAsGenerationBaseline
+      });
+    });
   }
   
   // Delete version button

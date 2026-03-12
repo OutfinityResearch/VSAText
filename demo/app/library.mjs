@@ -91,7 +91,12 @@ function getCardsForSelection(selection) {
             id: '',
             title: theme.label,
             description: theme.detail,
-            meta: theme.blocks.map(humanize)
+            meta: theme.blocks.map(humanize),
+            themeGuidance: {
+              ideologicalConflict: theme.ideologicalConflict,
+              moralQuestion: theme.moralQuestion,
+              transformationAxis: theme.transformationAxis
+            }
           }))
         };
       }
@@ -107,7 +112,12 @@ function getCardsForSelection(selection) {
           id: '',
           title: theme.label,
           description: theme.detail,
-          meta: theme.blocks.map(humanize)
+          meta: theme.blocks.map(humanize),
+          themeGuidance: {
+            ideologicalConflict: theme.ideologicalConflict,
+            moralQuestion: theme.moralQuestion,
+            transformationAxis: theme.transformationAxis
+          }
         }))
       };
     }
@@ -124,7 +134,12 @@ function getCardsForSelection(selection) {
             id: '',
             title: theme.label,
             description: theme.detail,
-            meta: theme.blocks.map(humanize)
+            meta: theme.blocks.map(humanize),
+            themeGuidance: {
+              ideologicalConflict: theme.ideologicalConflict,
+              moralQuestion: theme.moralQuestion,
+              transformationAxis: theme.transformationAxis
+            }
           }]
         };
       }
@@ -142,7 +157,12 @@ function getCardsForSelection(selection) {
           id: theme.id,
           title: theme.name || 'Theme',
           description: theme.themeKey ? humanize(theme.themeKey) : 'Custom theme',
-          meta: [theme.id]
+          meta: [theme.id],
+          themeGuidance: {
+            ideologicalConflict: theme.ideologicalConflict || '',
+            moralQuestion: theme.moralQuestion || '',
+            transformationAxis: theme.transformationAxis || ''
+          }
         }))
       };
     }
@@ -341,6 +361,16 @@ function renderCard(card) {
       <button class="btn small library-apply-btn secondary" data-action="apply-chapter">Apply Chapter</button>
     `;
 
+  const themeGuidance = card.themeGuidance
+    ? `
+      <div class="library-card-guidance">
+        ${card.themeGuidance.ideologicalConflict ? `<div><span>Ideological Conflict</span><p>${esc(card.themeGuidance.ideologicalConflict)}</p></div>` : ''}
+        ${card.themeGuidance.moralQuestion ? `<div><span>Moral Question</span><p>${esc(card.themeGuidance.moralQuestion)}</p></div>` : ''}
+        ${card.themeGuidance.transformationAxis ? `<div><span>Transformation Axis</span><p>${esc(card.themeGuidance.transformationAxis)}</p></div>` : ''}
+      </div>
+    `
+    : '';
+
   return `
     <div class="library-card" data-kind="${esc(card.kind)}" data-key="${esc(card.key)}" data-type="${esc(card.type)}" data-id="${esc(card.id)}"${accentStyle}>
       <div class="library-card-title">${esc(card.title)}</div>
@@ -348,6 +378,7 @@ function renderCard(card) {
       <div class="library-card-meta">
         ${(card.meta || []).filter(Boolean).map(meta => `<span>${esc(humanize(meta))}</span>`).join('')}
       </div>
+      ${themeGuidance}
       <div class="library-card-actions">
         ${actions}
       </div>

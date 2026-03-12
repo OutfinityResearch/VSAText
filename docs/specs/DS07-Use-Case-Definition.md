@@ -13,36 +13,48 @@ Current AI writing tools treat story creation as one-shot prompting. Authors lac
 ## Primary Workflow
 
 ```
-Create Project → Compose Elements → Generate Content → Evaluate Quality
-                                          ↑                    ↓
-                                          └────── Iterate ─────┘
+Create Project → Book Settings → Blueprint → Story Map → CNL Editor → NL Story → Manuscript
+                                         ↑                                            ↓
+                                         └──────────────── Iterate ────────────────────┘
 ```
 
 ### Step 1: Create Project
 
-Author creates a new project with title, format (novel/screenplay/short story), and synopsis. System assigns a unique ID.
+Author creates a new project in the wizard with title, format, length, and a few seed ideas. System assigns a unique ID and opens Book Settings.
 
-### Step 2: Compose Elements
+### Step 2: Book Settings
 
-Author assembles building blocks from libraries:
-- **Characters** - archetypes or custom with traits and goals
-- **Locations** - settings with atmosphere
-- **Patterns** - story structures (three-act, hero's journey)
-- **Themes and Tone** - narrative direction
+Author shapes the narrative foundation before structural planning:
+- **Story Core** - story fundamentals, primary themes, character transformation
+- **Narrative Design** - core conflict, macro structure, conflict escalation, storytelling constraints
+- **Cast** - reusable or custom characters
+- **World** - locations, rules, and setting logic
+- **Themes** - thematic templates and ideological framing
+- **Tone & Style** - language and register preferences
 
-System auto-generates CNL from these elements.
+### Step 3: Blueprint
 
-### Step 3: Generate Content
+Author defines the narrative arc, key event, primary conflict, pacing, and beat logic.
 
-Planning agent creates scene breakdown and character arcs. Author reviews, adjusts, then triggers content generation. Can regenerate specific scenes with different parameters.
+### Step 4: Story Map
 
-### Step 4: Evaluate Quality
+Author maps chapters and scenes, assigns structural roles, and prepares the project for formal specification.
 
-Author selects metrics (NQS, coherence, CAD, readability). System computes scores and highlights issues. Author iterates based on feedback.
+### Step 5: CNL Editor
+
+System consolidates visual planning into editable CNL. Author reviews and adjusts the specification directly when needed.
+
+### Step 6: NL Story
+
+Author triggers prose generation from the current CNL. The same screen supports first draft generation, improvement, regeneration, and stop controls.
+
+### Step 7: Manuscript
+
+Author edits chapters and scenes in manuscript form, expands structure manually, and iterates with generation and evaluation feedback.
 
 ## Alternative Workflows
 
-**Quick Start** - Use pre-made project templates, customize, generate immediately.
+**Quick Start** - Create a project, skip ahead with Create Story, and generate a draft without completing every planning step.
 
 **Reverse Engineering** - Paste existing text, system extracts characters/settings/themes, author refines and continues.
 

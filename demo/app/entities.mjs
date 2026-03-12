@@ -12,6 +12,7 @@ import { renderRelationshipsView } from './views.mjs';
 import { renderWorldLayersView } from './world-layers.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
 import { parseAnnotationLines, annotationsToEditorText } from './cnl-annotations.mjs';
+import { getThemeGuidance } from './theme-guidance.mjs';
 
 // ==================== ENTITY DESCRIPTIONS ====================
 const ENTITY_DESCRIPTIONS = {
@@ -888,9 +889,20 @@ function showEntityForm(type, e) {
   
   if (type === 'themes') {
     html += `<div class="form-group"><label class="form-label">Select Theme</label>
-      <div id="e-themes" class="entity-grid">${Object.entries(VOCAB.THEMES).map(([k, v]) => `<div class="entity-card ${e?.themeKey === k ? 'selected' : ''}" onclick="selectTheme('${k}')" data-key="${k}" style="margin-bottom:0.4rem;${e?.themeKey === k ? 'border-color:var(--accent-amber);background:rgba(251,133,0,0.1);' : ''}">
+      <div id="e-themes" class="entity-grid">${Object.entries(VOCAB.THEMES).map(([k, v]) => {
+        const guidance = getThemeGuidance(k, v.label);
+        return `<div class="entity-card ${e?.themeKey === k ? 'selected' : ''}" onclick="selectTheme('${k}')" data-key="${k}" style="margin-bottom:0.4rem;${e?.themeKey === k ? 'border-color:var(--accent-amber);background:rgba(251,133,0,0.1);' : ''}">
         <div class="entity-name">${v.label}</div><div class="entity-type">${v.desc}</div>
-        <div class="entity-tags">${v.suggestedBlocks.slice(0, 3).map(b => `<span class="entity-tag">${b}</span>`).join('')}</div></div>`).join('')}</div></div>`;
+        <div class="entity-tags">${v.suggestedBlocks.slice(0, 3).map(b => `<span class="entity-tag">${b}</span>`).join('')}</div>
+        <div style="margin-top:0.45rem;display:grid;gap:0.25rem;">
+          <div style="font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Ideological Conflict</div>
+          <div style="font-size:0.76rem;color:var(--text-secondary);line-height:1.35;">${guidance.ideologicalConflict}</div>
+          <div style="font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:0.1rem;">Moral Question</div>
+          <div style="font-size:0.76rem;color:var(--text-secondary);line-height:1.35;">${guidance.moralQuestion}</div>
+          <div style="font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:0.1rem;">Transformation Axis</div>
+          <div style="font-size:0.76rem;color:var(--text-secondary);line-height:1.35;">${guidance.transformationAxis}</div>
+        </div></div>`;
+      }).join('')}</div></div>`;
   }
 
   if (['characters', 'locations', 'objects', 'moods', 'themes'].includes(type)) {
@@ -953,8 +965,25 @@ function saveEntity(type) {
     if (!sel) { alert('Select a theme'); return; }
     const k = sel.dataset.key;
     const t = VOCAB.THEMES[k];
+    const guidance = getThemeGuidance(k, t.label);
     e.name = t.label;
     e.themeKey = k;
+    e.ideologicalConflict = guidance.ideologicalConflict;
+    e.moralQuestion = guidance.moralQuestion;
+    e.transformationAxis = guidance.transformationAxis;
+    e.wisdom = guidance.wisdom;
+
+    const libraries = state.project.libraries || (state.project.libraries = {});
+    const frameworkProfile = libraries.frameworkProfile || (libraries.frameworkProfile = {});
+    const storyCore = frameworkProfile.storyCore || (frameworkProfile.storyCore = {});
+    const coreTheme = frameworkProfile.coreTheme || (frameworkProfile.coreTheme = {});
+
+    storyCore.theme = e.name;
+    storyCore.wisdom = e.wisdom;
+    coreTheme.selectedThemeId = e.id;
+    coreTheme.ideologicalConflict = e.ideologicalConflict;
+    coreTheme.moralQuestion = e.moralQuestion;
+    coreTheme.transformationAxis = e.transformationAxis;
   }
 
   const annotationsInput = $('#e-annotations');

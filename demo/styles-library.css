@@ -161,6 +161,31 @@
   color: #dbe3fd;
 }
 
+.library-card-guidance {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.55rem;
+  border: 1px solid rgba(125, 181, 255, 0.24);
+  border-radius: 8px;
+  background: rgba(10, 18, 38, 0.46);
+}
+
+.library-card-guidance span {
+  display: inline-block;
+  margin-bottom: 0.16rem;
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9fc8ff;
+}
+
+.library-card-guidance p {
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  color: #e3e9fb;
+}
+
 .library-card-actions {
   display: flex;
   gap: 0.45rem;

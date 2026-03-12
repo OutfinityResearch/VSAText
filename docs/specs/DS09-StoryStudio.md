@@ -34,24 +34,36 @@ Story Studio is SCRIPTA's visual interface for composing stories and evaluating 
 ### 1. Start New Story
 
 **From scratch:**
-1. Click "New" to create empty project
-2. Add characters in Characters tab
-3. Add locations in Locations tab
-4. Create structure: Book → Chapters → Scenes
-5. Assign characters/locations to scenes
-6. Add narrative blocks and actions
-7. Review metrics and iterate
+1. Click "New" to open the project wizard
+2. Enter title, format, length, and seed ideas
+3. Continue in Book Settings to shape Story Core and Narrative Design
+4. Build the main arc in Blueprint
+5. Organize chapters and scenes in Story Map
+6. Review and refine the CNL in CNL Editor
+7. Generate prose in NL Story
+8. Continue drafting in Manuscript
 
 **From random generation:**
 1. Click "Random" to generate complete story
 2. Review generated elements
-3. Modify characters, locations, relationships as needed
-4. Adjust structure and scenes
-5. Evaluate and refine
+3. Refine Story Core, Narrative Design, cast, and world details
+4. Adjust Blueprint and Story Map
+5. Generate, evaluate, and refine
 
-### 2. Build Story Structure
+### 2. Book Settings Foundation
 
-Authors work with a tree hierarchy:
+Book Settings is the editorial planning layer. It includes:
+
+- **Story Core**: story fundamentals, themes, wisdom, and character transformation
+- **Narrative Design**: core conflict, macro structure, escalation logic, and constraints
+- **Cast**: reusable character planning
+- **World**: locations and world constraints
+- **Themes**: reusable thematic templates
+- **Tone & Style**: language direction for generation
+
+### 3. Build Story Structure
+
+Authors work with a hierarchy that moves from macro structure to editable manuscript:
 
 ```
 Book
@@ -68,7 +80,7 @@ Book
 
 Right-click context menu provides actions appropriate to each node type.
 
-### 3. Manage Entities
+### 4. Manage Entities
 
 Each entity type has its own tab with:
 - Grid of entity cards
@@ -83,7 +95,7 @@ Entity types:
 - **Moods**: Name, emotion mix with intensities
 - **Themes**: Selected from vocabulary
 
-### 4. Define Relationships
+### 5. Define Relationships
 
 The Relations tab provides:
 - Visual graph showing character connections
@@ -92,13 +104,15 @@ The Relations tab provides:
 
 Relationship types cover familial, social, romantic, antagonistic, and power dynamics.
 
-### 5. Configure Emotional Journey
+### 6. Plan Blueprint and Story Map
 
-**Arc Selection**: Choose narrative arc template (Hero's Journey, Three Act, Save the Cat, etc.)
+**Arc Selection**: Choose the narrative arc template in Blueprint.
 
-**Beat Assignment**: Assign mood presets to each arc beat to define the emotional progression.
+**Beat Assignment**: Define beat progression, key event, tension, and pacing in Blueprint.
 
-### 6. Add World Rules
+**Story Map**: Map chapters, scenes, turning points, and structural roles across the book.
+
+### 7. Add World Rules
 
 Define special rules that govern the story world:
 - Magic systems
@@ -108,7 +122,7 @@ Define special rules that govern the story world:
 
 These become part of the generated CNL and influence content generation.
 
-### 7. Evaluate Quality
+### 8. Evaluate Quality
 
 Metrics panel shows real-time scores:
 
@@ -120,7 +134,7 @@ Metrics panel shows real-time scores:
 
 Green = passes threshold, Yellow = warning, Red = fails
 
-### 8. Export
+### 9. Export
 
 **Export CNL**: Download the auto-generated CNL as a `.cnl` file for use with other tools or for archival.
 

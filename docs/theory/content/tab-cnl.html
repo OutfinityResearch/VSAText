@@ -1,23 +1,23 @@
-<h1>CNL Tab</h1>
+<h1>CNL Editor</h1>
 
-<p>The CNL (Controlled Natural Language) tab displays the generated specification code for your story. This is the machine-readable format that powers all of SCRIPTA's analysis and generation features.</p>
+<p>The CNL Editor displays and edits the generated specification code for your story. This is the machine-readable format that powers analysis, generation, and verification.</p>
 
 <div class="info-box">
-  <div class="info-box-title">When to Use This Tab</div>
-  <p>Use the CNL tab to review the generated specification, export your story definition, or debug issues with story elements.</p>
+  <div class="info-box-title">When to Use This Page</div>
+  <p>Use CNL Editor after Book Settings, Blueprint, and Story Map to review the specification, export it, or make direct corrections.</p>
 </div>
 
 <h2>What This Tab Does</h2>
 
-<p>The CNL tab provides a read-only view of the CNL code generated from your visual editor inputs. Every character, location, relationship, scene, and constraint you define through the UI is automatically converted to CNL syntax.</p>
+<p>The CNL Editor shows the CNL generated from your visual editor inputs. Every character, location, relationship, chapter, scene, and constraint defined through the UI is converted into CNL syntax.</p>
 
 <h3>Key Features</h3>
 
 <ul>
-  <li><strong>Syntax Highlighting</strong>: Keywords, entities, and values are color-coded for readability</li>
-  <li><strong>Export</strong>: Download the CNL as a <code>.cnl</code> or <code>.txt</code> file</li>
-  <li><strong>Copy</strong>: Copy the entire specification to clipboard</li>
-  <li><strong>Search</strong>: Find specific elements within the specification</li>
+  <li><strong>CNL View</strong>: visual formatted mode for reading the current specification</li>
+  <li><strong>Edit</strong>: direct text editing when precise fixes are needed</li>
+  <li><strong>Import / Export</strong>: move CNL in and out of the project</li>
+  <li><strong>Debugging Surface</strong>: inspect how UI decisions map into formal specification</li>
 </ul>
 
 <h2>Understanding the CNL Structure</h2>
@@ -48,7 +48,7 @@ Entity1 relates to Entity2 as relationship_type
   <tr>
     <td>Entities</td>
     <td>Characters, locations, objects</td>
-    <td>Characters, Locations, Objects tabs</td>
+    <td>Cast and World pages</td>
   </tr>
   <tr>
     <td>Relationships</td>
@@ -58,17 +58,17 @@ Entity1 relates to Entity2 as relationship_type
   <tr>
     <td>Moods</td>
     <td>Emotional atmospheres</td>
-    <td>Moods tab</td>
+    <td>Story Core, Blueprint, and related planning pages</td>
   </tr>
   <tr>
     <td>Themes & Wisdom</td>
     <td>Thematic content</td>
-    <td>Themes, Wisdom tabs</td>
+    <td>Story Core</td>
   </tr>
   <tr>
     <td>World Rules</td>
     <td>Universe constraints</td>
-    <td>World tab</td>
+    <td>Story Core and World</td>
   </tr>
   <tr>
     <td>Blueprint</td>
@@ -78,55 +78,27 @@ Entity1 relates to Entity2 as relationship_type
   <tr>
     <td>Structure</td>
     <td>Books, chapters, scenes</td>
-    <td>Visual story structure</td>
-  </tr>
-  <tr>
-    <td>Scene Change</td>
-    <td>Changes in information, emotion, relationships, and stakes</td>
-    <td>Scene/Scene Change tab</td>
-  </tr>
-  <tr>
-    <td>Sequel</td>
-    <td>Character reactions, reflections, decisions</td>
-    <td>Sequel tab</td>
+    <td>Story Map and Manuscript structure</td>
   </tr>
   <tr>
     <td>Blocks</td>
     <td>Reusable story patterns (Revelation, Confrontation, Sacrifice, etc.)</td>
     <td>Blocks tab</td>
   </tr>
-  <tr>
-    <td>Dialogue</td>
-    <td>Structured conversation specifications</td>
-    <td>Dialog tab</td>
-  </tr>
-  <tr>
-    <td>Goal</td>
-    <td>Character goals and narrative stakes</td>
-    <td>Goals tab</td>
-  </tr>
-  <tr>
-    <td>Events</td>
-    <td>Specific occurrences driving the plot forward</td>
-    <td>Events tab</td>
-  </tr>
 </table>
 
 <h2>Workflow Position</h2>
 
-<pre><code>Visual Editor Tabs
-       |
-       v
-   CNL (auto-generated)  <-- You are here
-       |
-       v
-   Parser (SDK)
-       |
-       v
-   AST (Abstract Syntax Tree)
-       |
-       v
-   Metrics & Generation</code></pre>
+<pre><code>Book Settings + Blueprint + Story Map
+                 |
+                 v
+          CNL Editor  &lt;-- You are here
+                 |
+                 v
+           Parser / SDK
+                 |
+                 v
+         Metrics + NL Story</code></pre>
 
 <h2>Common Use Cases</h2>
 
@@ -140,11 +112,11 @@ Entity1 relates to Entity2 as relationship_type
 <p>Share CNL files with collaborators who can import them into their own SCRIPTA instance.</p>
 
 <h3>4. Advanced Editing</h3>
-<p>While the visual editor handles most cases, some advanced patterns may require direct CNL knowledge.</p>
+<p>Most work should happen in the UI, but direct CNL editing is useful for precise fixes or specification cleanup.</p>
 
 <h2>Metrics Impact</h2>
 
-<p>The CNL tab itself doesn't affect metrics - it's a view of what generates the metrics. However, examining the CNL helps you understand why certain scores appear.</p>
+<p>The CNL Editor itself doesn't change metrics directly, but examining the specification helps explain why certain scores appear.</p>
 
 <h2>Related Documentation</h2>
 

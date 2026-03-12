@@ -11,13 +11,22 @@ import { countType } from './tree.mjs';
 import { generateCNL } from './cnl.mjs';
 import { evaluateCNL } from '../../src/evaluate.mjs';
 import { getChaptersForManuscript, getScenesForManuscriptChapter } from './writing-studio-manuscript.mjs';
+import { getCurrentArcBeats } from './blueprint/blueprint-state.mjs';
 
 let lastEvaluationResult = null;
 
 const QUICK_METRICS = [
   { key: 'completeness', name: 'Completeness', description: 'Required story elements are present.' },
   { key: 'coherence', name: 'Coherence', description: 'References and structure stay consistent.' },
-  { key: 'originality', name: 'Originality', description: 'Scenes, actions, and themes feel varied.' }
+  { key: 'originality', name: 'Originality', description: 'Scenes, actions, and themes feel varied.' },
+  { key: 'eap', name: 'EAP', description: 'Emotional arc coverage across narrative beats.' }
+];
+
+const QUALITY_TARGETS = [
+  { key: 'nqs', label: 'NQS', target: '≥70% practical / ≥25% improvement research', description: 'Overall narrative quality' },
+  { key: 'completeness', label: 'Completeness', target: '≥80%', description: 'Required elements present' },
+  { key: 'coherence', label: 'Coherence', target: '≥75%', description: 'Entity consistency' },
+  { key: 'eap', label: 'EAP', target: '≥70%', description: 'Emotional arc coverage' }
 ];
 
 function clamp(value, min = 0, max = 1) {
@@ -29,13 +38,13 @@ function toPercent(value) {
 }
 
 function getScoreTone(score) {
-  if (score >= 0.75) return 'good';
+  if (score >= 0.70) return 'good';
   if (score >= 0.5) return 'warn';
   return 'bad';
 }
 
 function getScoreStatus(score) {
-  if (score >= 0.75) return 'Good';
+  if (score >= 0.70) return 'Good';
   if (score >= 0.5) return 'Weak';
   return 'Critical';
 }
@@ -59,7 +68,24 @@ function formatMetricValue(metric) {
 }
 
 function getMetricByKey(result, key) {
+  if (key === 'eap') return getEapMetric();
   return result?.metrics?.[key] || null;
+}
+
+function getEapMetric() {
+  const beats = getCurrentArcBeats();
+  const assigned = new Set((state.project.libraries.emotionalArc || []).map(item => item.beatKey).filter(Boolean));
+  const totalBeats = beats.length || 0;
+  const coveredBeats = beats.filter(beat => assigned.has(beat.key)).length;
+  const score = totalBeats > 0 ? coveredBeats / totalBeats : 0;
+
+  return {
+    score,
+    threshold: 0.70,
+    passed: score >= 0.70,
+    coveredBeats,
+    totalBeats
+  };
 }
 
 function getPrimaryMetrics(result) {
@@ -69,58 +95,9 @@ function getPrimaryMetrics(result) {
   })).filter(item => item.metric);
 }
 
-function getTopIssues(result) {
-  const issues = [];
-  const metrics = result.metrics || {};
-  const structure = result.structure || {};
-  const entities = result.entities || {};
-
-  if (structure.scenes < 3) {
-    issues.push(`Only ${structure.scenes || 0} scene(s) defined. Add more scenes for a complete arc.`);
-  }
-
-  if (metrics.sceneCompleteness && !metrics.sceneCompleteness.passed) {
-    const missingCount = Math.max(
-      1,
-      Math.round((metrics.sceneCompleteness.totalScenes || 0) - (metrics.sceneCompleteness.completeScenes || 0))
-    );
-    issues.push(`${missingCount} scene(s) are missing character, location, or action coverage.`);
-  }
-
-  if (metrics.characterContinuity && !metrics.characterContinuity.passed) {
-    const missingCharacters = Math.max(
-      1,
-      (metrics.characterContinuity.totalCharacters || 0) - Object.values(metrics.characterContinuity.characterAppearances || {}).filter(count => count >= 1).length
-    );
-    issues.push(`${missingCharacters} character(s) are defined but barely used across scenes.`);
-  }
-
-  if (metrics.locationLogic && !metrics.locationLogic.passed) {
-    const reused = metrics.locationLogic.locationsReused || 0;
-    issues.push(
-      reused <= 0
-        ? 'Locations are not reused yet, so spatial continuity feels weak.'
-        : 'Location continuity is thin. Reuse key locations across scenes.'
-    );
-  }
-
-  if ((structure.dialogues || 0) < 2) {
-    issues.push('Dialogue density is low. Add more spoken exchanges to improve scene energy.');
-  }
-
-  if (metrics.originality && !metrics.originality.passed) {
-    issues.push('Originality is limited. Vary actions, blocks, or themes to reduce repetition.');
-  }
-
-  if ((entities.characters || []).length === 0) {
-    issues.push('No characters were detected in the story structure.');
-  }
-
-  return issues.slice(0, 5);
-}
-
 function getAISummary(result) {
   const metrics = result.metrics || {};
+  const insights = getGeneratedStoryInsights(result);
   const strengths = [];
   const gaps = [];
 
@@ -128,10 +105,10 @@ function getAISummary(result) {
   if ((metrics.coherence?.score || 0) >= 0.75) strengths.push('scene-to-scene logic is coherent');
   if ((metrics.characterContinuity?.score || 0) >= 0.6) strengths.push('characters stay present across scenes');
 
-  if ((metrics.sceneCompleteness?.score || 0) < 0.7) gaps.push('some scenes still miss key elements');
-  if ((metrics.locationLogic?.score || 0) < 0.5) gaps.push('location reuse is thin');
-  if ((metrics.originality?.score || 0) < 0.5) gaps.push('variety is limited');
-  if (((result.structure || {}).dialogues || 0) < 2) gaps.push('dialogue coverage is low');
+  if (insights.scenesMissingCoverage.length > 0) gaps.push('some scenes still miss key structural anchors');
+  if (insights.proseFlags.lowDialogue) gaps.push('dialogue coverage is light in the generated draft');
+  if (insights.proseFlags.repetitiveOpenings) gaps.push('several paragraphs start with repetitive phrasing');
+  if (insights.proseFlags.singleLocationDependency) gaps.push('the story leans too heavily on one location');
 
   if (!strengths.length) strengths.push('the draft already provides a workable narrative base');
   if (!gaps.length) gaps.push('the next step is polishing scenes and stylistic texture');
@@ -139,50 +116,22 @@ function getAISummary(result) {
   return `The story shows that ${strengths[0]}, but ${gaps[0]}.`;
 }
 
-function getSuggestions(result) {
-  const suggestions = [];
-  const metrics = result.metrics || {};
-  const entities = result.entities || {};
-  const structure = result.structure || {};
-
-  if (metrics.sceneCompleteness && !metrics.sceneCompleteness.passed) {
-    suggestions.push('Add a clear character, location, and action anchor to every weak scene.');
-  }
-  if (metrics.characterContinuity && !metrics.characterContinuity.passed) {
-    const underused = Object.entries(metrics.characterContinuity.characterAppearances || {})
-      .filter(([, count]) => count < 2)
-      .map(([name]) => name)
-      .slice(0, 2);
-    if (underused.length) {
-      suggestions.push(`Reuse ${underused.join(' and ')} in later scenes to improve continuity.`);
-    } else {
-      suggestions.push('Reuse major characters in multiple scenes to improve continuity.');
-    }
-  }
-  if (metrics.locationLogic && !metrics.locationLogic.passed) {
-    const locations = (entities.locations || []).map(item => item.name).filter(Boolean).slice(0, 2);
-    suggestions.push(
-      locations.length
-        ? `Bring back ${locations.join(' or ')} in later scenes to strengthen location logic.`
-        : 'Reuse key locations across scenes to create a stronger spatial thread.'
-    );
-  }
-  if ((structure.dialogues || 0) < 2) {
-    suggestions.push('Introduce more dialogue beats in scenes that carry conflict or decisions.');
-  }
-  if (metrics.originality && !metrics.originality.passed) {
-    suggestions.push('Diversify block types, actions, and themes to improve originality.');
-  }
-  if ((structure.relationships || 0) < 2) {
-    suggestions.push('Define more character relationships so tension and motivations read more clearly.');
-  }
-
-  return suggestions.slice(0, 5);
-}
-
 function countRegexMatches(text, regex) {
   const matches = String(text || '').match(regex);
   return Array.isArray(matches) ? matches.length : 0;
+}
+
+function countWords(text) {
+  return String(text || '').trim().split(/\s+/).filter(Boolean).length;
+}
+
+function getParagraphs(text) {
+  return String(text || '').split(/\n\s*\n/).map(item => item.trim()).filter(Boolean);
+}
+
+function getParagraphOpening(text) {
+  const words = String(text || '').trim().split(/\s+/).filter(Boolean).slice(0, 3);
+  return words.join(' ').toLowerCase();
 }
 
 function normalizeName(value) {
@@ -272,6 +221,7 @@ function getSceneAnalysis() {
         countRegexMatches(text, /(?:^|\n)\s*[—"-]/gm),
         linkedDialogues.length
       );
+      const wordCount = countWords(text);
 
       sceneAnalyses.push({
         chapterId: chapter.id,
@@ -281,6 +231,7 @@ function getSceneAnalysis() {
         detectedCharacters,
         detectedLocations,
         dialogueCount,
+        wordCount,
         linkedDialogueCount: linkedDialogues.length,
         hasCharacters: detectedCharacters.length > 0 || String(scene.characters || '').trim().length > 0,
         hasLocations: detectedLocations.length > 0 || String(scene.locations || '').trim().length > 0
@@ -295,6 +246,7 @@ function getGeneratedStoryInsights(result) {
   const storyText = String(state.generation?.generatedStory || '').trim();
   const chapters = getChaptersForManuscript();
   const sceneAnalyses = getSceneAnalysis();
+  const paragraphs = getParagraphs(storyText);
 
   const sceneTexts = sceneAnalyses.map(scene => {
     return [scene.sceneTitle, ...scene.detectedCharacters, ...scene.detectedLocations].join('\n');
@@ -348,6 +300,42 @@ function getGeneratedStoryInsights(result) {
     .filter(scene => scene.dialogueCount < 1)
     .map(scene => `${scene.chapterTitle} → ${scene.sceneTitle}`);
 
+  const scenesMissingCoverage = sceneAnalyses
+    .filter(scene => !scene.hasCharacters || !scene.hasLocations)
+    .map(scene => `${scene.chapterTitle} → ${scene.sceneTitle}`);
+
+  const underdevelopedScenes = sceneAnalyses
+    .filter(scene => scene.wordCount > 0 && scene.wordCount < 45)
+    .map(scene => `${scene.chapterTitle} → ${scene.sceneTitle}`);
+
+  const chapterSceneCounts = chapters.map(chapter => ({
+    title: String(chapter.title || chapter.name || 'Chapter').trim(),
+    count: getScenesForManuscriptChapter(chapter).length
+  }));
+  const maxScenesPerChapter = chapterSceneCounts.reduce((max, item) => Math.max(max, item.count), 0);
+  const minScenesPerChapter = chapterSceneCounts.reduce((min, item) => Math.min(min, item.count || 0), chapterSceneCounts.length ? chapterSceneCounts[0].count : 0);
+
+  const openingCounts = new Map();
+  paragraphs.forEach(paragraph => {
+    const opening = getParagraphOpening(paragraph);
+    if (!opening) return;
+    openingCounts.set(opening, (openingCounts.get(opening) || 0) + 1);
+  });
+  const repetitiveOpening = Array.from(openingCounts.entries()).find(([, count]) => count >= 3)?.[0] || '';
+
+  const totalWords = countWords(storyText);
+  const averageWordsPerScene = sceneAnalyses.length
+    ? Math.round(sceneAnalyses.reduce((sum, scene) => sum + scene.wordCount, 0) / sceneAnalyses.length)
+    : 0;
+
+  const proseFlags = {
+    lowDialogue: sceneAnalyses.length > 0 && sceneAnalyses.filter(scene => scene.dialogueCount > 0).length <= Math.ceil(sceneAnalyses.length / 3),
+    repetitiveOpenings: Boolean(repetitiveOpening),
+    singleLocationDependency: usedLocations.size === 1 && sceneAnalyses.length >= 3,
+    unbalancedChapters: chapterSceneCounts.length > 1 && (maxScenesPerChapter - minScenesPerChapter) >= 3,
+    veryShortScenes: underdevelopedScenes.length >= 2
+  };
+
   return {
     chapters: chapters.length || (result.structure?.chapters || 0),
     scenes: sceneAnalyses.length || (result.structure?.scenes || 0),
@@ -356,10 +344,113 @@ function getGeneratedStoryInsights(result) {
     dialogues: Math.max(sceneDialogueCount, proseDialogueCount, result.structure?.dialogues || 0),
     detectedCharacters: Array.from(usedCharacters).sort((a, b) => a.localeCompare(b)),
     detectedLocations: Array.from(usedLocations).sort((a, b) => a.localeCompare(b)),
+    sceneAnalyses,
+    chapterSceneCounts,
+    totalWords,
+    averageWordsPerScene,
     scenesMissingCharacters,
     scenesMissingLocations,
-    scenesMissingDialogue
+    scenesMissingDialogue,
+    scenesMissingCoverage,
+    underdevelopedScenes,
+    repetitiveOpening,
+    proseFlags
   };
+}
+
+function getTopIssues(result) {
+  const insights = getGeneratedStoryInsights(result);
+  const metrics = result.metrics || {};
+  const issues = [];
+
+  if (insights.scenesMissingCoverage.length) {
+    issues.push(`${insights.scenesMissingCoverage[0]} is missing either a clear character or a location anchor.`);
+  }
+
+  if (insights.underdevelopedScenes.length) {
+    issues.push(`${insights.underdevelopedScenes[0]} is very short and may not land as a full dramatic beat.`);
+  }
+
+  if (insights.proseFlags.lowDialogue) {
+    const firstQuietScene = insights.sceneAnalyses.find(scene => scene.dialogueCount < 1);
+    if (firstQuietScene) {
+      issues.push(`${firstQuietScene.chapterTitle} → ${firstQuietScene.sceneTitle} has no dialogue, which flattens interaction.`);
+    }
+  }
+
+  if (insights.proseFlags.repetitiveOpenings && insights.repetitiveOpening) {
+    issues.push(`Several paragraphs repeat the opening phrase "${insights.repetitiveOpening}", which makes the prose feel patterned.`);
+  }
+
+  if (insights.proseFlags.singleLocationDependency && insights.detectedLocations[0]) {
+    issues.push(`The draft relies heavily on ${insights.detectedLocations[0]} and needs more spatial variety.`);
+  }
+
+  if (insights.proseFlags.unbalancedChapters) {
+    const heaviest = [...insights.chapterSceneCounts].sort((a, b) => b.count - a.count)[0];
+    const lightest = [...insights.chapterSceneCounts].sort((a, b) => a.count - b.count)[0];
+    if (heaviest && lightest) {
+      issues.push(`${heaviest.title} has ${heaviest.count} scenes while ${lightest.title} has ${lightest.count}, so pacing is uneven.`);
+    }
+  }
+
+  if ((metrics.originality?.score || 0) < 0.5) {
+    issues.push('The current draft still shows limited structural variety across beats and scene actions.');
+  }
+
+  if (!issues.length && (metrics.nqs?.score || 0) < 0.7) {
+    issues.push('The draft is structurally workable, but it still needs stronger scene-level variation to reach the practical quality target.');
+  }
+
+  return issues.slice(0, 5);
+}
+
+function getSuggestions(result) {
+  const insights = getGeneratedStoryInsights(result);
+  const metrics = result.metrics || {};
+  const suggestions = [];
+
+  if (insights.scenesMissingCoverage.length) {
+    suggestions.push(`Strengthen ${insights.scenesMissingCoverage[0]} with a named character and a concrete location cue.`);
+  }
+
+  if (insights.underdevelopedScenes.length) {
+    suggestions.push(`Expand ${insights.underdevelopedScenes[0]} with one conflict beat, one reaction, and one consequence.`);
+  }
+
+  if (insights.proseFlags.lowDialogue) {
+    const targetScene = insights.sceneAnalyses.find(scene => scene.dialogueCount < 1);
+    if (targetScene) {
+      suggestions.push(`Add one short exchange in ${targetScene.chapterTitle} → ${targetScene.sceneTitle} to reveal motive or tension.`);
+    }
+  }
+
+  if (insights.proseFlags.repetitiveOpenings && insights.repetitiveOpening) {
+    suggestions.push(`Rewrite repeated paragraph openings built around "${insights.repetitiveOpening}" to vary rhythm and emphasis.`);
+  }
+
+  if (insights.proseFlags.singleLocationDependency) {
+    const alternateLocation = insights.detectedLocations[1] || (state.project.libraries.locations || []).map(item => item.name).find(name => name && !insights.detectedLocations.includes(name));
+    suggestions.push(
+      alternateLocation
+        ? `Move at least one later scene into ${alternateLocation} to widen the world of the story.`
+        : 'Introduce one additional recurring location so the story does not feel spatially locked.'
+    );
+  }
+
+  if (insights.proseFlags.unbalancedChapters) {
+    suggestions.push('Redistribute scene load across chapters so escalation feels steadier from opening to climax.');
+  }
+
+  if ((metrics.originality?.score || 0) < 0.5) {
+    suggestions.push('Vary scene actions, revelations, and beat execution so chapters do not resolve tension in the same way.');
+  }
+
+  if (!suggestions.length) {
+    suggestions.push('Use the current draft as a strong base and refine dialogue texture, sensory detail, and chapter transitions.');
+  }
+
+  return suggestions.slice(0, 5);
 }
 
 function renderQuickMetrics(result) {
@@ -459,6 +550,30 @@ function renderFullReportMetricCards(result) {
   }).join('');
 }
 
+function renderQualityTargets(result) {
+  return `
+    <div class="report-target-list">
+      ${QUALITY_TARGETS.map(item => {
+        const metric = getMetricByKey(result, item.key);
+        const actual = metric ? formatMetricValue(metric) : 'N/A';
+        const tone = metric ? getScoreTone(metric.score) : 'warn';
+        return `
+          <div class="report-target-row">
+            <div class="report-target-head">
+              <span class="report-target-label">${escapeHtml(item.label)}</span>
+              <span class="report-target-actual ${tone}">${escapeHtml(actual)}</span>
+            </div>
+            <div class="report-target-meta">
+              <span>Target: ${escapeHtml(item.target)}</span>
+              <span>${escapeHtml(item.description)}</span>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
 function renderFullReport(result) {
   const nqs = result.metrics?.nqs || { score: 0, interpretation: 'Critical' };
   const tone = getScoreTone(nqs.score);
@@ -499,6 +614,11 @@ function renderFullReport(result) {
           ${renderFullReportMetricCards(result)}
         </div>
       </section>
+
+      <details class="evaluation-report-section" open>
+        <summary>Quality Targets</summary>
+        ${renderQualityTargets(result)}
+      </details>
 
       <details class="evaluation-report-section" open>
         <summary>Story Structure</summary>

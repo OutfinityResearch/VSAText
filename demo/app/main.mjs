@@ -642,27 +642,6 @@ function renderManuscriptNavigatorDetails() {
         ${chapterRows}
       </div>
     </div>
-    <details class="navigator-subgroup">
-      <summary>Book Settings</summary>
-      <div class="navigator-items">
-        <button class="navigator-item" data-target-view="framework">Story Core</button>
-        <button class="navigator-item" data-target-view="narrative-design">Narrative Design</button>
-        <button class="navigator-item" data-target-view="characters">Cast</button>
-        <button class="navigator-item" data-target-view="backdrop">World</button>
-        <button class="navigator-item" data-target-view="themes">Themes</button>
-        <button class="navigator-item" data-target-view="moods">Tone &amp; Style</button>
-      </div>
-    </details>
-    <details class="navigator-subgroup">
-      <summary>Library (Reusable Resources)</summary>
-      <div class="navigator-items">
-        <button class="navigator-item" data-target-view="library" data-library-select="narrative:templates">Narrative Arc Templates</button>
-        <button class="navigator-item" data-target-view="library" data-library-select="characters:templates">Character Templates</button>
-        <button class="navigator-item" data-target-view="library" data-library-select="backdrop:locations">Locations</button>
-        <button class="navigator-item" data-target-view="library" data-library-select="backdrop:objects">Objects &amp; Artifacts</button>
-        <button class="navigator-item" data-target-view="library" data-library-select="narrative:blocks">Scenes &amp; Plot Points</button>
-      </div>
-    </details>
   `;
 }
 

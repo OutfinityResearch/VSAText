@@ -8,6 +8,7 @@ import { generateCNL } from './cnl.mjs';
 import { renderEntityGrid } from './entities.mjs';
 import { addChild, findNode, getUsedBlocks } from './tree.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
+import { getThemeGuidance } from './theme-guidance.mjs';
 import {
   PHILOSOPHICAL_TRADITIONS,
   MORAL_INSIGHTS,
@@ -174,7 +175,8 @@ export function getThemePresetCatalog() {
     key,
     label: theme.label,
     detail: theme.desc,
-    blocks: (theme.suggestedBlocks || []).slice(0, 3)
+    blocks: (theme.suggestedBlocks || []).slice(0, 3),
+    ...getThemeGuidance(key, theme.label)
   }));
 }
 
@@ -389,13 +391,25 @@ export function applyThemePreset(key, target = { targetType: 'book', targetId: '
   let themeId = '';
 
   if (existing) {
+    if (!existing.ideologicalConflict || !existing.moralQuestion || !existing.transformationAxis || !existing.wisdom) {
+      const guidance = getThemeGuidance(key, theme.label);
+      existing.ideologicalConflict = existing.ideologicalConflict || guidance.ideologicalConflict;
+      existing.moralQuestion = existing.moralQuestion || guidance.moralQuestion;
+      existing.transformationAxis = existing.transformationAxis || guidance.transformationAxis;
+      existing.wisdom = existing.wisdom || guidance.wisdom;
+    }
     profile.coreTheme.selectedThemeId = existing.id;
     themeId = existing.id;
   } else {
+    const guidance = getThemeGuidance(key, theme.label);
     const created = {
       id: genId(),
       name: theme.label,
       themeKey: key,
+      ideologicalConflict: guidance.ideologicalConflict,
+      moralQuestion: guidance.moralQuestion,
+      transformationAxis: guidance.transformationAxis,
+      wisdom: guidance.wisdom,
       annotations: []
     };
     state.project.libraries.themes.push(created);

@@ -6,21 +6,16 @@
 
 import { state } from './state.mjs';
 import { $ } from './utils.mjs';
+import { getThemeGuidance } from './theme-guidance.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
 
 const THEME_SUGGESTIONS = Object.entries(VOCAB.THEMES || {}).slice(0, 5).map(([key, theme]) => ({
   key,
   label: theme.label,
-  blocks: (theme.suggestedBlocks || []).slice(0, 3)
+  desc: theme.desc || '',
+  blocks: (theme.suggestedBlocks || []).slice(0, 3),
+  guidance: getThemeGuidance(key, theme.label)
 }));
-
-const ARC_OPTIONS = [
-  'Three-Act Arc',
-  'Hero Journey Arc',
-  'Tragedy Arc',
-  'Redemption Arc',
-  'Quest Arc'
-];
 
 const THEMATIC_DIRECTION_OPTIONS = [
   'Redemption',
@@ -34,29 +29,6 @@ const THEMATIC_DIRECTION_OPTIONS = [
   'Moral awakening',
   'Resilience',
   'Transformation through loss'
-];
-
-const THEMATIC_POLARITY_OPTIONS = [
-  'Love vs Duty',
-  'Freedom vs Obligation',
-  'Justice vs Mercy',
-  'Truth vs Loyalty',
-  'Power vs Compassion',
-  'Order vs Chaos',
-  'Faith vs Doubt',
-  'Security vs Autonomy',
-  'Tradition vs Change',
-  'Honor vs Survival',
-  'Revenge vs Forgiveness',
-  'Individual vs Community'
-];
-
-const TURNING_POINT_OPTIONS = [
-  'Inciting Incident',
-  'First Plot Point',
-  'Midpoint / Crisis',
-  'Climax',
-  'Resolution / Denouement'
 ];
 
 const STORY_CORE_OPTIONS = {
@@ -125,6 +97,20 @@ function humanize(value) {
     .trim();
 }
 
+function buildThemeAutofill(themeEntity) {
+  const themeKey = themeEntity?.themeKey || '';
+  if (themeEntity?.ideologicalConflict || themeEntity?.moralQuestion || themeEntity?.transformationAxis || themeEntity?.wisdom) {
+    const guidance = getThemeGuidance(themeKey, themeEntity?.name || humanize(themeKey));
+    return {
+      ideologicalConflict: themeEntity.ideologicalConflict || guidance.ideologicalConflict,
+      moralQuestion: themeEntity.moralQuestion || guidance.moralQuestion,
+      transformationAxis: themeEntity.transformationAxis || guidance.transformationAxis,
+      wisdom: themeEntity.wisdom || guidance.wisdom
+    };
+  }
+  return getThemeGuidance(themeKey, themeEntity?.name || humanize(themeKey) || 'This theme');
+}
+
 function ensureFrameworkProfileState() {
   const libraries = state.project.libraries || (state.project.libraries = {});
   const existing = libraries.frameworkProfile || {};
@@ -154,10 +140,6 @@ function ensureFrameworkProfileState() {
       conflictType: existing.dramaticModel?.conflictType || '',
       resolutionPath: existing.dramaticModel?.resolutionPath || '',
       escalationPattern: existing.dramaticModel?.escalationPattern || 'Wave Escalation',
-      structuralArc: existing.dramaticModel?.structuralArc || '',
-      turningPoint: existing.dramaticModel?.turningPoint
-        || (Array.isArray(existing.dramaticModel?.turningPoints) ? existing.dramaticModel.turningPoints[0] || '' : ''),
-      thematicPolarity: existing.dramaticModel?.thematicPolarity || '',
       thematicDirection: existing.dramaticModel?.thematicDirection
         || existing.dramaticModel?.thematicDirectionPrimary
         || '',
@@ -194,32 +176,14 @@ function renderStoryCoreSection(profile) {
   return `
     <section class="framework-section section-framework-storycore">
       <div class="framework-section-header redesign">
-        <h3>Story Core</h3>
-        <p>Genre, tone, complexity, scale, and narrative intent.</p>
+        <h3>Story Fundamentals</h3>
+        <p>Complexity, cast scale, world rules, and the core wisdom of the story.</p>
       </div>
       <div class="framework-storycore-grid">
-        <label class="framework-new-field">
-          <span>Genre</span>
-          <select class="cinematic-select" onchange="window.frameworkUpdateProfile('storyCore','genre', this.value)">
-            ${renderOptions(STORY_CORE_OPTIONS.genre, core.genre)}
-          </select>
-        </label>
-        <label class="framework-new-field">
-          <span>Tone</span>
-          <select class="cinematic-select" onchange="window.frameworkUpdateProfile('storyCore','tone', this.value)">
-            ${renderOptions(STORY_CORE_OPTIONS.tone, core.tone)}
-          </select>
-        </label>
         <label class="framework-new-field">
           <span>Complexity</span>
           <select class="cinematic-select" onchange="window.frameworkUpdateProfile('storyCore','complexity', this.value)">
             ${renderOptions(STORY_CORE_OPTIONS.complexity, core.complexity)}
-          </select>
-        </label>
-        <label class="framework-new-field">
-          <span>Story Length</span>
-          <select class="cinematic-select" onchange="window.frameworkUpdateProfile('storyCore','length', this.value)">
-            ${renderOptions(STORY_CORE_OPTIONS.length, core.length)}
           </select>
         </label>
         <label class="framework-new-field">
@@ -237,14 +201,6 @@ function renderStoryCoreSection(profile) {
       </div>
       <div class="framework-storycore-text">
         <label class="framework-new-field">
-          <span>Theme</span>
-          <textarea
-            class="form-textarea"
-            placeholder="Core theme, moral axis, central question..."
-            oninput="window.frameworkUpdateProfile('storyCore','theme', this.value)"
-          >${esc(core.theme)}</textarea>
-        </label>
-        <label class="framework-new-field">
           <span>Wisdom</span>
           <textarea
             class="form-textarea"
@@ -261,15 +217,18 @@ function getThemeRailItems() {
   const themes = state.project.libraries.themes || [];
   const items = [];
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 3; i++) {
     const entity = themes[i];
     if (entity) {
       const base = VOCAB.THEMES?.[entity.themeKey] || null;
+      const guidance = buildThemeAutofill(entity);
       items.push({
         type: 'entity',
         id: entity.id,
         title: entity.name || 'Theme',
         subtitle: entity.themeKey ? humanize(entity.themeKey) : 'Custom theme',
+        description: base?.desc || '',
+        guidance,
         chips: (base?.suggestedBlocks || []).slice(0, 3)
       });
       continue;
@@ -280,6 +239,8 @@ function getThemeRailItems() {
       type: 'suggested',
       title: suggestion?.label || 'Suggested Theme',
       subtitle: 'Template',
+      description: suggestion?.desc || '',
+      guidance: suggestion?.guidance || null,
       chips: suggestion?.blocks || ['Setup', 'Midpoint', 'Resolution']
     });
   }
@@ -289,11 +250,15 @@ function getThemeRailItems() {
 
 function renderThemeCard(item) {
   const chips = (item.chips || []).map(chip => `<span>${esc(humanize(chip))}</span>`).join('');
+  const description = item.description
+    ? `<div class="framework-theme-description">${esc(item.description)}</div>`
+    : '';
   if (item.type === 'entity') {
     return `
       <button class="framework-theme-card ${item.selected ? 'active' : ''}" type="button" onclick="window.frameworkSelectTheme('${item.id}')">
         <div class="framework-theme-title">${esc(item.title)}</div>
         <div class="framework-theme-subtitle">${esc(item.subtitle)}</div>
+        ${description}
         <div class="framework-theme-chips">${chips}</div>
       </button>
     `;
@@ -303,6 +268,7 @@ function renderThemeCard(item) {
     <button class="framework-theme-card suggested" type="button" onclick="window.addEntity('themes')">
       <div class="framework-theme-title">${esc(item.title)}</div>
       <div class="framework-theme-subtitle">${esc(item.subtitle)}</div>
+      ${description}
       <div class="framework-theme-chips">${chips}</div>
     </button>
   `;
@@ -430,41 +396,9 @@ function renderDramaticModelSection(profile) {
           </select>
           ${renderEscalationGraph(model.escalationPattern)}
         </article>
-        <article class="dramatic-card">
-          <h4>Structural Arc</h4>
-          <label class="framework-new-field">
-            <span>Arc Type</span>
-            <select class="cinematic-select" onchange="window.frameworkUpdateProfile('dramaticModel','structuralArc', this.value)">
-              <option value="">Select arc</option>
-              ${ARC_OPTIONS.map(option => `<option value="${esc(option)}" ${model.structuralArc === option ? 'selected' : ''}>${esc(option)}</option>`).join('')}
-            </select>
-          </label>
-          <div class="turning-points-block">
-            <div class="turning-points-title">Turning Points</div>
-            <select class="cinematic-select" onchange="window.frameworkUpdateProfile('dramaticModel','turningPoint', this.value)">
-              <option value="">Select turning point</option>
-              ${TURNING_POINT_OPTIONS.map(point => `<option value="${esc(point)}" ${model.turningPoint === point ? 'selected' : ''}>${esc(point)}</option>`).join('')}
-            </select>
-          </div>
-        </article>
         <article class="dramatic-card narrative-constraints-card">
-          <h4>Narrative Constraints</h4>
-          <div class="constraint-toggles">
-            ${renderConstraintToggle('Non-linear timeline', model.constraints.nonLinear, 'nonLinear')}
-            ${renderConstraintToggle('Moral ambiguity', model.constraints.moralAmbiguity, 'moralAmbiguity')}
-          </div>
-        </article>
-        <article class="dramatic-card">
-          <h4>Thematic Polarity</h4>
+          <h4>Thematic Direction</h4>
           <label class="framework-new-field">
-            <span>Thematic Polarity</span>
-            <select class="cinematic-select" onchange="window.frameworkUpdateProfile('dramaticModel','thematicPolarity', this.value)">
-              <option value="">Select polarity</option>
-              ${THEMATIC_POLARITY_OPTIONS.map(option => `<option value="${esc(option)}" ${model.thematicPolarity === option ? 'selected' : ''}>${esc(option)}</option>`).join('')}
-            </select>
-          </label>
-          <label class="framework-new-field">
-            <span>Thematic Direction</span>
             <select class="cinematic-select" onchange="window.frameworkUpdateProfile('dramaticModel','thematicDirection', this.value)">
               <option value="">Select direction</option>
               ${THEMATIC_DIRECTION_OPTIONS.map(option => `<option value="${esc(option)}" ${model.thematicDirection === option ? 'selected' : ''}>${esc(option)}</option>`).join('')}
@@ -490,7 +424,7 @@ function renderConstraintToggle(label, enabled, key) {
   `;
 }
 
-function renderTransformationCard(title, beforeLabel, afterLabel, beforeValue, afterValue, beforeKey, afterKey) {
+function renderTransformationCard(title, beforeLabel, afterLabel, beforeValue, afterValue, beforeKey, afterKey, beforePlaceholder = 'Before', afterPlaceholder = 'After') {
   return `
     <article class="transform-card">
       <h4>${esc(title)}</h4>
@@ -500,7 +434,7 @@ function renderTransformationCard(title, beforeLabel, afterLabel, beforeValue, a
           <input
             type="text"
             value="${esc(beforeValue)}"
-            placeholder="Before"
+            placeholder="${esc(beforePlaceholder)}"
             oninput="window.frameworkUpdateProfile('transformation','${beforeKey}', this.value)"
           >
         </label>
@@ -509,11 +443,27 @@ function renderTransformationCard(title, beforeLabel, afterLabel, beforeValue, a
           <input
             type="text"
             value="${esc(afterValue)}"
-            placeholder="After"
+            placeholder="${esc(afterPlaceholder)}"
             oninput="window.frameworkUpdateProfile('transformation','${afterKey}', this.value)"
           >
         </label>
       </div>
+    </article>
+  `;
+}
+
+function renderTransformationPromptCard(title, promptLabel, value, key, placeholder) {
+  return `
+    <article class="transform-card">
+      <h4>${esc(title)}</h4>
+      <label class="framework-new-field">
+        <span>${esc(promptLabel)}</span>
+        <textarea
+          class="form-textarea"
+          placeholder="${esc(placeholder)}"
+          oninput="window.frameworkUpdateProfile('transformation','${key}', this.value)"
+        >${esc(value)}</textarea>
+      </label>
     </article>
   `;
 }
@@ -524,16 +474,39 @@ function renderTransformationSection(profile) {
   return `
     <section class="framework-section section-framework-transformation">
       <div class="framework-section-header redesign">
-        <h3>Transformation</h3>
-        <p>Before/after identity shift with value shifts, cost, and new equilibrium.</p>
+        <h3>Character Transformation</h3>
+        <p>Track who the protagonist is before the story, what they learn, and what change costs them.</p>
       </div>
       <div class="transform-grid">
-        ${renderTransformationCard('Character Arc', 'Before', 'After', t.characterArcBefore, t.characterArcAfter, 'characterArcBefore', 'characterArcAfter')}
-        ${renderTransformationCard('Value Shift', 'Before Values', 'After Values', t.valueShiftBefore, t.valueShiftAfter, 'valueShiftBefore', 'valueShiftAfter')}
-        ${renderTransformationCard('Loss / Gain', 'Loss/Gain Before', 'Loss/Gain After', t.lossGainBefore, t.lossGainAfter, 'lossGainBefore', 'lossGainAfter')}
-        ${renderTransformationCard('New Equilibrium', 'Old Balance', 'New Balance', t.newBalanceBefore, t.newBalanceAfter, 'newBalanceBefore', 'newBalanceAfter')}
-        ${renderTransformationCard('Ideatic Direction', 'Initial Direction', 'Final Direction', t.ideaticDirectionBefore, t.ideaticDirectionAfter, 'ideaticDirectionBefore', 'ideaticDirectionAfter')}
-        ${renderTransformationCard('Cost of Change', 'Cost Avoided', 'Cost Paid', t.changeCostBefore, t.changeCostAfter, 'changeCostBefore', 'changeCostAfter')}
+        ${renderTransformationCard(
+          'Character Arc',
+          'Before',
+          'After',
+          t.characterArcBefore,
+          t.characterArcAfter,
+          'characterArcBefore',
+          'characterArcAfter',
+          'naive / arrogant / broken / idealistic',
+          'wise / corrupted / redeemed / free'
+        )}
+        ${renderTransformationCard(
+          'Value Shift',
+          'Believed',
+          'Learns',
+          t.valueShiftBefore,
+          t.valueShiftAfter,
+          'valueShiftBefore',
+          'valueShiftAfter',
+          'Power solves everything',
+          'Power destroys what you love'
+        )}
+        ${renderTransformationPromptCard(
+          'Cost of Change',
+          'What must the hero lose?',
+          t.changeCostAfter,
+          'changeCostAfter',
+          'a friend\ntheir status\ntheir innocence'
+        )}
       </div>
     </section>
   `;
@@ -549,6 +522,13 @@ function renderFrameworkDesign() {
   `;
 }
 
+function openStoryGenerationShortcut() {
+  window.switchToTab?.('nl');
+  window.requestAnimationFrame?.(() => {
+    document.getElementById('btn-nl-generate')?.click();
+  });
+}
+
 export function renderFrameworkView() {
   const container = $('#framework-view');
   if (!container) return;
@@ -556,8 +536,15 @@ export function renderFrameworkView() {
   container.innerHTML = `
     <div class="framework-layout framework-redesign-layout">
       <div class="framework-page-header">
-        <h2>Framework</h2>
-        <p>Compose theme, dramatic mechanism, and transformation in one structured workspace.</p>
+        <div class="framework-page-header-copy">
+          <h2>Story Core</h2>
+          <p>Define the book foundation, then continue into Blueprint and the rest of the story flow.</p>
+        </div>
+        <div class="framework-page-header-actions">
+          <button class="btn random" type="button" onclick="window.openStoryGenerationShortcut()">
+            Create Story
+          </button>
+        </div>
       </div>
       ${renderFrameworkDesign()}
     </div>
@@ -565,6 +552,7 @@ export function renderFrameworkView() {
 }
 
 window.renderFrameworkView = renderFrameworkView;
+window.openStoryGenerationShortcut = openStoryGenerationShortcut;
 
 window.frameworkUpdateProfile = (section, key, value) => {
   const profile = ensureFrameworkProfileState();
@@ -574,8 +562,17 @@ window.frameworkUpdateProfile = (section, key, value) => {
 
 window.frameworkSelectTheme = (themeId) => {
   const profile = ensureFrameworkProfileState();
-  const exists = (state.project.libraries.themes || []).some(theme => theme.id === themeId);
-  profile.coreTheme.selectedThemeId = exists ? themeId : '';
+  const selectedTheme = (state.project.libraries.themes || []).find(theme => theme.id === themeId) || null;
+  profile.coreTheme.selectedThemeId = selectedTheme ? themeId : '';
+  if (selectedTheme) {
+    const autofill = buildThemeAutofill(selectedTheme);
+    const selectedThemeLabel = selectedTheme.name || humanize(selectedTheme.themeKey || '') || '';
+    profile.storyCore.theme = selectedThemeLabel;
+    profile.storyCore.wisdom = autofill.wisdom;
+    profile.coreTheme.ideologicalConflict = autofill.ideologicalConflict;
+    profile.coreTheme.moralQuestion = autofill.moralQuestion;
+    profile.coreTheme.transformationAxis = autofill.transformationAxis;
+  }
   renderFrameworkView();
 };
 

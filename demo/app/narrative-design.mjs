@@ -1,23 +1,31 @@
 /**
  * SCRIPTA Demo - Narrative Design (Macro)
  *
- * Minimal macro planning workspace:
- * - Macro Structure (chapters only, no scenes)
- * - Conflict Escalation Plan
- * - Character Arcs Overview
+ * Narrative design workspace:
+ * - Core conflict
+ * - Protagonist journey
+ * - Macro structure
+ * - Conflict escalation
+ * - Narrative constraints
  */
 
 import { state } from './state.mjs';
 import { $ } from './utils.mjs';
 import { getOrderedChapters } from './structure-navigation.mjs';
+import VOCAB from '../../src/vocabularies/vocabularies.mjs';
 
 const TURNING_POINTS = ['None', 'Inciting Incident', 'First Plot Point', 'Midpoint', 'Second Plot Point', 'Climax', 'Resolution'];
 const STRUCTURE_ROLES = ['Setup', 'Escalation', 'Crisis', 'Finale'];
 const CONFLICT_TYPES = ['Internal', 'Interpersonal', 'External', 'Societal', 'Existential'];
-const ESCALATION_PATTERNS = ['Linear', 'Wave', 'Spiral', 'Step', 'Cliff'];
-const RESOLUTION_PATHS = ['Victory', 'Pyrrhic Victory', 'Sacrifice', 'Reconciliation', 'Ambiguous'];
-const CHARACTER_ROLES = ['Protagonist', 'Antagonist', 'Supporting'];
-const ARC_TYPES = ['Positive', 'Negative', 'Flat'];
+const ESCALATION_PATTERNS = ['Wave', 'Spiral', 'Linear', 'Step', 'Cliff'];
+const RESOLUTION_PATHS = ['Victory', 'Sacrifice', 'Tragic fall', 'Bittersweet ending', 'Reconciliation', 'Ambiguous'];
+const STRUCTURE_MODELS = Object.entries(VOCAB.NARRATIVE_ARCS || {})
+  .filter(([, arc]) => (arc?.scope || 'work') === 'work')
+  .map(([key, arc]) => ({
+    key,
+    label: String(arc?.label || key)
+  }));
+const DEFAULT_STRUCTURE_MODEL = STRUCTURE_MODELS.find(model => model.key === 'three_act')?.key || STRUCTURE_MODELS[0]?.key || 'three_act';
 
 let draggedChapterId = null;
 
@@ -38,10 +46,14 @@ function chapterTitle(index) {
   return `Chapter ${index + 1}`;
 }
 
-function getCastCharacters() {
-  return Array.isArray(state.project.libraries?.characters)
-    ? state.project.libraries.characters
-    : [];
+function normalizeStructureModel(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return DEFAULT_STRUCTURE_MODEL;
+  const byKey = STRUCTURE_MODELS.find(model => model.key === raw);
+  if (byKey) return byKey.key;
+  const byLabel = STRUCTURE_MODELS.find(model => model.label === raw);
+  if (byLabel) return byLabel.key;
+  return DEFAULT_STRUCTURE_MODEL;
 }
 
 function ensureMacroDesign() {
@@ -66,18 +78,19 @@ function ensureMacroDesign() {
       turningPoint: TURNING_POINTS.includes(chapter.turningPoint) ? chapter.turningPoint : 'None',
       role: STRUCTURE_ROLES.includes(chapter.role) ? chapter.role : 'Setup'
     })),
+    coreConflict: {
+      centralConflict: String(existing.coreConflict?.centralConflict || ''),
+      resolutionPath: RESOLUTION_PATHS.includes(existing.coreConflict?.resolutionPath) ? existing.coreConflict.resolutionPath : 'Victory'
+    },
+    macroStructure: {
+      structureModel: normalizeStructureModel(existing.macroStructure?.structureModel)
+    },
     conflictPlan: {
       conflictType: CONFLICT_TYPES.includes(existing.conflictPlan?.conflictType) ? existing.conflictPlan.conflictType : 'Interpersonal',
       escalationPattern: ESCALATION_PATTERNS.includes(existing.conflictPlan?.escalationPattern) ? existing.conflictPlan.escalationPattern : 'Wave',
-      resolutionPath: RESOLUTION_PATHS.includes(existing.conflictPlan?.resolutionPath) ? existing.conflictPlan.resolutionPath : 'Victory'
+      stakesGrowth: String(existing.conflictPlan?.stakesGrowth || '')
     },
-    chapterEscalation: Array.isArray(existing.chapterEscalation) ? existing.chapterEscalation : [],
-    characterArcs: Array.isArray(existing.characterArcs) ? existing.characterArcs : [],
-    narrativeInputs: {
-      protagonistArc: String(existing.narrativeInputs?.protagonistArc || ''),
-      subplots: String(existing.narrativeInputs?.subplots || ''),
-      conflictAndResolution: String(existing.narrativeInputs?.conflictAndResolution || '')
-    }
+    chapterEscalation: Array.isArray(existing.chapterEscalation) ? existing.chapterEscalation : []
   };
 
   return state.project.blueprint.macroDesign;
@@ -100,27 +113,23 @@ function syncMacroDesign() {
     };
   });
 
-  const cast = getCastCharacters();
-  const arcsByCharacterId = new Map(
-    macro.characterArcs
-      .filter(item => item?.characterId)
-      .map(item => [item.characterId, item])
-  );
-  macro.characterArcs = cast.map(character => {
-    const existing = arcsByCharacterId.get(character.id) || {};
-    return {
-      characterId: character.id,
-      characterName: character.name || character.id,
-      role: CHARACTER_ROLES.includes(existing.role) ? existing.role : 'Supporting',
-      arcType: ARC_TYPES.includes(existing.arcType) ? existing.arcType : 'Positive',
-      beforeState: String(existing.beforeState || ''),
-      afterState: String(existing.afterState || ''),
-      valueShift: Number.isFinite(existing.valueShift) ? existing.valueShift : 50,
-      chapterIds: Array.isArray(existing.chapterIds) ? existing.chapterIds.filter(id => macro.chapters.some(ch => ch.id === id)) : []
-    };
-  });
-
   return macro;
+}
+
+function ensureNarrativeConstraints() {
+  const libraries = state.project.libraries || (state.project.libraries = {});
+  const frameworkProfile = libraries.frameworkProfile || (libraries.frameworkProfile = {});
+  const dramaticModel = frameworkProfile.dramaticModel || (frameworkProfile.dramaticModel = {});
+  const constraints = dramaticModel.constraints || {};
+
+  dramaticModel.constraints = {
+    nonLinear: Boolean(constraints.nonLinear),
+    moralAmbiguity: Boolean(constraints.moralAmbiguity),
+    multiplePOV: Boolean(constraints.multiplePOV),
+    unreliableNarrator: Boolean(constraints.unreliableNarrator)
+  };
+
+  return dramaticModel.constraints;
 }
 
 function reorderChapters(macro, sourceId, targetId) {
@@ -136,12 +145,45 @@ function renderOptions(options, selected) {
   return options.map(option => `<option value="${esc(option)}" ${selected === option ? 'selected' : ''}>${esc(option)}</option>`).join('');
 }
 
+function renderKeyedOptions(options, selected) {
+  return options
+    .map(option => `<option value="${esc(option.key)}" ${selected === option.key ? 'selected' : ''}>${esc(option.label)}</option>`)
+    .join('');
+}
+
+function renderCoreConflict(macro) {
+  return `
+    <section class="nd-section">
+      <div class="nd-section-head">
+        <h3>Core Conflict</h3>
+        <p>Define the central struggle of the story and the broad shape of its ending.</p>
+      </div>
+      <div class="nd-grid nd-core-conflict-grid">
+        <label class="nd-field nd-core-conflict-field">
+          <span>Central Conflict</span>
+          <input type="text" id="nd-central-conflict" value="${esc(macro.coreConflict.centralConflict)}" placeholder="A knight must overthrow a corrupt king.">
+        </label>
+        <label class="nd-field nd-core-resolution-field">
+          <span>Resolution Path</span>
+          <select id="nd-resolution-path">${renderOptions(RESOLUTION_PATHS, macro.coreConflict.resolutionPath)}</select>
+        </label>
+      </div>
+    </section>
+  `;
+}
+
 function renderMacroStructure(macro) {
   return `
     <section class="nd-section">
       <div class="nd-section-head">
         <h3>Macro Structure</h3>
-        <p>Story skeleton only: chapters, turning points, structural role.</p>
+        <p>Choose the structure model, then map turning points across chapters.</p>
+      </div>
+      <div class="nd-grid nd-grid-2">
+        <label class="nd-field">
+          <span>Structure Model</span>
+          <select id="nd-structure-model">${renderKeyedOptions(STRUCTURE_MODELS, macro.macroStructure.structureModel)}</select>
+        </label>
       </div>
       <div class="nd-chapter-list" id="nd-chapter-list">
         ${macro.chapters.length ? macro.chapters.map((chapter, index) => `
@@ -159,20 +201,31 @@ function renderMacroStructure(macro) {
                 </select>
               </label>
               <label class="nd-field">
-                <span>Role</span>
-                <select data-chapter-field="role" data-chapter-id="${esc(chapter.id)}">
-                  ${renderOptions(STRUCTURE_ROLES, chapter.role)}
-                </select>
+                <div class="nd-field-head nd-field-head-inline">
+                  <span>Role</span>
+                  <button
+                    class="nd-remove-chapter"
+                    type="button"
+                    aria-label="Remove chapter"
+                    title="Remove chapter"
+                    data-remove-chapter="${esc(chapter.id)}"
+                    onclick="window.removeNarrativeDesignChapter('${esc(chapter.id)}')"
+                  >X</button>
+                </div>
+                <div class="nd-role-row">
+                  <select data-chapter-field="role" data-chapter-id="${esc(chapter.id)}">
+                    ${renderOptions(STRUCTURE_ROLES, chapter.role)}
+                  </select>
+                </div>
               </label>
             </div>
-            <button class="btn small danger" type="button" data-remove-chapter="${esc(chapter.id)}">Remove</button>
           </article>
         `).join('') : `
           <div class="nd-empty">No chapters yet. Add macro chapters to define structure.</div>
         `}
       </div>
       <div class="nd-actions">
-        <button class="btn" type="button" id="btn-nd-add-chapter">+ Add Chapter</button>
+        <button class="btn" type="button" id="btn-nd-add-chapter" onclick="window.addNarrativeDesignChapter()">+ Add Chapter</button>
       </div>
     </section>
   `;
@@ -195,8 +248,8 @@ function renderConflictPlan(macro) {
   return `
     <section class="nd-section">
       <div class="nd-section-head">
-        <h3>Conflict Escalation Plan</h3>
-        <p>Model dramatic progression at chapter level.</p>
+        <h3>Conflict Escalation</h3>
+        <p>Define how conflict intensifies and how stakes expand across the story.</p>
       </div>
       <div class="nd-grid nd-grid-3">
         <label class="nd-field">
@@ -208,8 +261,8 @@ function renderConflictPlan(macro) {
           <select id="nd-escalation-pattern">${renderOptions(ESCALATION_PATTERNS, macro.conflictPlan.escalationPattern)}</select>
         </label>
         <label class="nd-field">
-          <span>Resolution Path</span>
-          <select id="nd-resolution-path">${renderOptions(RESOLUTION_PATHS, macro.conflictPlan.resolutionPath)}</select>
+          <span>Stakes Growth</span>
+          <input type="text" id="nd-stakes-growth" value="${esc(macro.conflictPlan.stakesGrowth)}" placeholder="Personal -> Kingdom -> World">
         </label>
       </div>
 
@@ -245,113 +298,57 @@ function renderConflictPlan(macro) {
   `;
 }
 
-function renderCharacterArcs(macro) {
-  return `
-    <section class="nd-section">
-      <div class="nd-section-head">
-        <h3>Character Arcs Overview</h3>
-        <p>Align character evolution with macro structure.</p>
-      </div>
-      ${macro.characterArcs.length ? `
-        <div class="nd-character-list">
-          ${macro.characterArcs.map(arc => `
-            <article class="nd-character-card">
-              <div class="nd-card-head">
-                <strong>${esc(arc.characterName)}</strong>
-              </div>
-              <div class="nd-grid nd-grid-2">
-                <label class="nd-field">
-                  <span>Role</span>
-                  <select data-arc-field="role" data-character-id="${esc(arc.characterId)}">
-                    ${renderOptions(CHARACTER_ROLES, arc.role)}
-                  </select>
-                </label>
-                <label class="nd-field">
-                  <span>Arc Type</span>
-                  <select data-arc-field="arcType" data-character-id="${esc(arc.characterId)}">
-                    ${renderOptions(ARC_TYPES, arc.arcType)}
-                  </select>
-                </label>
-              </div>
-              <div class="nd-grid nd-grid-2">
-                <label class="nd-field">
-                  <span>Before State</span>
-                  <input type="text" data-arc-field="beforeState" data-character-id="${esc(arc.characterId)}" value="${esc(arc.beforeState)}">
-                </label>
-                <label class="nd-field">
-                  <span>After State</span>
-                  <input type="text" data-arc-field="afterState" data-character-id="${esc(arc.characterId)}" value="${esc(arc.afterState)}">
-                </label>
-              </div>
-              <label class="nd-field">
-                <span>Value Shift (${Number(arc.valueShift) || 50})</span>
-                <input type="range" min="0" max="100" step="1" value="${Number(arc.valueShift) || 50}" data-arc-field="valueShift" data-character-id="${esc(arc.characterId)}">
-              </label>
-              <div class="nd-mini-timeline">
-                <span>Start</span>
-                <div class="nd-mini-track"><div class="nd-mini-progress" style="width:${Number(arc.valueShift) || 50}%"></div></div>
-                <span>Transformation</span>
-                <div class="nd-mini-track"><div class="nd-mini-progress nd-mini-progress-end" style="width:100%"></div></div>
-                <span>End</span>
-              </div>
-              <div class="nd-chapter-checks">
-                <span>Appears in chapters:</span>
-                <div class="nd-check-list">
-                  ${macro.chapters.length ? macro.chapters.map((chapter, index) => `
-                    <label class="nd-check-item">
-                      <input
-                        type="checkbox"
-                        data-arc-chapter="${esc(arc.characterId)}"
-                        value="${esc(chapter.id)}"
-                        ${arc.chapterIds.includes(chapter.id) ? 'checked' : ''}
-                      >
-                      ${esc(chapter.title || chapterTitle(index))}
-                    </label>
-                  `).join('') : '<span class="nd-empty-inline">No chapters</span>'}
-                </div>
-              </div>
-            </article>
-          `).join('')}
-        </div>
-      ` : `<div class="nd-empty">No characters available. Add characters in Cast.</div>`}
-    </section>
-  `;
-}
-
 function renderNarrativeDesign() {
   const macro = syncMacroDesign();
+  const constraints = ensureNarrativeConstraints();
   return `
     <div class="nd-layout">
       <div class="nd-header">
         <div>
           <h2>Narrative Design</h2>
-          <p>Macro-only planning workspace. No scene tree in this view.</p>
+          <p>Shape the narrative logic of the book: conflict, journey, structure, escalation, and storytelling constraints.</p>
         </div>
         <span class="nd-autosave">Autosave On</span>
       </div>
+      ${renderCoreConflict(macro)}
+      ${renderMacroStructure(macro)}
+      ${renderConflictPlan(macro)}
       <section class="nd-section">
         <div class="nd-section-head">
-          <h3>Narrative Inputs</h3>
-          <p>High-level inputs synced from Narrative Structure in Create Specs.</p>
+          <h3>Narrative Constraints</h3>
+          <p>Define how the story is told, not what happens in it.</p>
         </div>
-        <div class="nd-grid nd-grid-3">
-          <label class="nd-field">
-            <span>Protagonist Arc</span>
-            <input type="text" data-narrative-input="protagonistArc" value="${esc(macro.narrativeInputs.protagonistArc)}" placeholder="Ex: fall -> awakening -> leadership">
+        <div class="nd-grid nd-grid-2">
+          <label class="nd-check-card">
+            <input type="checkbox" id="nd-constraint-nonlinear" ${constraints.nonLinear ? 'checked' : ''}>
+            <div>
+              <strong>Non-linear timeline</strong>
+              <p>Allow chronology shifts, flashbacks, and out-of-order reveals.</p>
+            </div>
           </label>
-          <label class="nd-field">
-            <span>Subplots</span>
-            <input type="text" data-narrative-input="subplots" value="${esc(macro.narrativeInputs.subplots)}" placeholder="Ex: rivalry, family debt, hidden alliance">
+          <label class="nd-check-card">
+            <input type="checkbox" id="nd-constraint-moral-ambiguity" ${constraints.moralAmbiguity ? 'checked' : ''}>
+            <div>
+              <strong>Moral ambiguity</strong>
+              <p>Allow ethically gray choices without a clean moral resolution.</p>
+            </div>
           </label>
-          <label class="nd-field">
-            <span>Conflict & Resolution</span>
-            <input type="text" data-narrative-input="conflictAndResolution" value="${esc(macro.narrativeInputs.conflictAndResolution)}" placeholder="Ex: moral duel resolved by sacrifice">
+          <label class="nd-check-card">
+            <input type="checkbox" id="nd-constraint-multiple-pov" ${constraints.multiplePOV ? 'checked' : ''}>
+            <div>
+              <strong>Multiple POV</strong>
+              <p>Tell the story through more than one viewpoint character.</p>
+            </div>
+          </label>
+          <label class="nd-check-card">
+            <input type="checkbox" id="nd-constraint-unreliable-narrator" ${constraints.unreliableNarrator ? 'checked' : ''}>
+            <div>
+              <strong>Unreliable narrator</strong>
+              <p>Allow distortion, omission, or bias in the telling voice.</p>
+            </div>
           </label>
         </div>
       </section>
-      ${renderMacroStructure(macro)}
-      ${renderConflictPlan(macro)}
-      ${renderCharacterArcs(macro)}
     </div>
   `;
 }
@@ -387,43 +384,18 @@ function bindChapterDnd(container) {
 
 function bindEvents(container) {
   const macro = ensureMacroDesign();
-
-  container.querySelectorAll('[data-narrative-input]').forEach(field => {
-    const handler = () => {
-      const key = field.getAttribute('data-narrative-input');
-      if (!key || !macro.narrativeInputs) return;
-      macro.narrativeInputs[key] = field.value;
-    };
-    field.addEventListener('input', handler);
-    field.addEventListener('change', handler);
-  });
+  const constraints = ensureNarrativeConstraints();
 
   bindChapterDnd(container);
 
   container.addEventListener('click', event => {
-    const addBtn = event.target.closest('#btn-nd-add-chapter');
-    if (addBtn) {
-      event.preventDefault();
-      const index = macro.chapters.length;
-      macro.chapters.push({
-        id: uid('ch'),
-        title: chapterTitle(index),
-        turningPoint: 'None',
-        role: STRUCTURE_ROLES[Math.min(index, STRUCTURE_ROLES.length - 1)] || 'Setup'
-      });
-      renderNarrativeDesignMacroView();
-      return;
-    }
-
     const removeBtn = event.target.closest('[data-remove-chapter]');
     if (removeBtn) {
       event.preventDefault();
+      event.stopPropagation();
       const chapterId = removeBtn.getAttribute('data-remove-chapter');
       macro.chapters = macro.chapters.filter(ch => ch.id !== chapterId);
       macro.chapterEscalation = macro.chapterEscalation.filter(item => item.chapterId !== chapterId);
-      macro.characterArcs.forEach(arc => {
-        arc.chapterIds = arc.chapterIds.filter(id => id !== chapterId);
-      });
       renderNarrativeDesignMacroView();
     }
   });
@@ -451,8 +423,31 @@ function bindEvents(container) {
   container.querySelector('#nd-escalation-pattern')?.addEventListener('change', event => {
     macro.conflictPlan.escalationPattern = event.target.value;
   });
+  container.querySelector('#nd-central-conflict')?.addEventListener('input', event => {
+    macro.coreConflict.centralConflict = event.target.value;
+  });
   container.querySelector('#nd-resolution-path')?.addEventListener('change', event => {
-    macro.conflictPlan.resolutionPath = event.target.value;
+    macro.coreConflict.resolutionPath = event.target.value;
+  });
+  container.querySelector('#nd-structure-model')?.addEventListener('change', event => {
+    macro.macroStructure.structureModel = event.target.value;
+  });
+  container.querySelector('#nd-stakes-growth')?.addEventListener('input', event => {
+    macro.conflictPlan.stakesGrowth = event.target.value;
+  });
+
+  container.querySelector('#nd-constraint-nonlinear')?.addEventListener('change', event => {
+    constraints.nonLinear = Boolean(event.target.checked);
+  });
+
+  container.querySelector('#nd-constraint-moral-ambiguity')?.addEventListener('change', event => {
+    constraints.moralAmbiguity = Boolean(event.target.checked);
+  });
+  container.querySelector('#nd-constraint-multiple-pov')?.addEventListener('change', event => {
+    constraints.multiplePOV = Boolean(event.target.checked);
+  });
+  container.querySelector('#nd-constraint-unreliable-narrator')?.addEventListener('change', event => {
+    constraints.unreliableNarrator = Boolean(event.target.checked);
   });
 
   container.querySelectorAll('[data-tension-chapter]').forEach(slider => {
@@ -464,33 +459,6 @@ function bindEvents(container) {
       renderNarrativeDesignMacroView();
     });
   });
-
-  container.querySelectorAll('[data-arc-field]').forEach(field => {
-    const handler = () => {
-      const characterId = field.getAttribute('data-character-id');
-      const key = field.getAttribute('data-arc-field');
-      const arc = macro.characterArcs.find(item => item.characterId === characterId);
-      if (!arc || !key) return;
-      arc[key] = key === 'valueShift' ? Number(field.value) || 0 : field.value;
-      if (key === 'valueShift') renderNarrativeDesignMacroView();
-    };
-    field.addEventListener('input', handler);
-    field.addEventListener('change', handler);
-  });
-
-  container.querySelectorAll('[data-arc-chapter]').forEach(checkbox => {
-    checkbox.addEventListener('change', () => {
-      const characterId = checkbox.getAttribute('data-arc-chapter');
-      const chapterId = checkbox.value;
-      const arc = macro.characterArcs.find(item => item.characterId === characterId);
-      if (!arc) return;
-      if (checkbox.checked) {
-        if (!arc.chapterIds.includes(chapterId)) arc.chapterIds.push(chapterId);
-      } else {
-        arc.chapterIds = arc.chapterIds.filter(id => id !== chapterId);
-      }
-    });
-  });
 }
 
 export function renderNarrativeDesignMacroView() {
@@ -499,5 +467,25 @@ export function renderNarrativeDesignMacroView() {
   container.innerHTML = renderNarrativeDesign();
   bindEvents(container);
 }
+
+window.addNarrativeDesignChapter = () => {
+  const macro = ensureMacroDesign();
+  const index = macro.chapters.length;
+  macro.chapters.push({
+    id: uid('ch'),
+    title: chapterTitle(index),
+    turningPoint: 'None',
+    role: STRUCTURE_ROLES[Math.min(index, STRUCTURE_ROLES.length - 1)] || 'Setup'
+  });
+  renderNarrativeDesignMacroView();
+};
+
+window.removeNarrativeDesignChapter = (chapterId) => {
+  const macro = ensureMacroDesign();
+  if (!chapterId) return;
+  macro.chapters = macro.chapters.filter(ch => ch.id !== chapterId);
+  macro.chapterEscalation = macro.chapterEscalation.filter(item => item.chapterId !== chapterId);
+  renderNarrativeDesignMacroView();
+};
 
 export default { renderNarrativeDesignMacroView };

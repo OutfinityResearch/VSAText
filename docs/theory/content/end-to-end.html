@@ -1,13 +1,13 @@
 <h1>End-to-End Example</h1>
 
-<p>This document walks through a complete SCRIPTA workflow: from building libraries, creating structure, exporting CNL, generating prose, evaluating quality, and iterating based on metrics.</p>
+<p>This document walks through a complete SCRIPTA workflow: Create Project, Book Settings, Blueprint, Story Map, CNL Editor, NL Story, Manuscript, and metric-guided iteration.</p>
 
 <div class="info-box">
   <div class="info-box-title">Example Story: "The Silver Key"</div>
   <p>We'll create a short fantasy story about a young woman who discovers a magical key that unlocks a hidden power. This compact example demonstrates all major SCRIPTA features.</p>
 </div>
 
-<h2>Phase 1: Building Libraries</h2>
+<h2>Phase 1: Book Settings and Libraries</h2>
 
 <h3>Step 1.1: Create Characters</h3>
 
@@ -113,27 +113,39 @@
   </tr>
 </table>
 
-<h3>Step 1.5: Define Framework Rules</h3>
+<h3>Step 1.5: Define Story Core Direction</h3>
 
-<p>In the Framework tab, we capture world constraints:</p>
-
-<ul>
-  <li>"Magic is inherited but must be unlocked"</li>
-  <li>"The Silver Key can only be used by those with pure intentions"</li>
-  <li>"Dark magic corrupts the user over time"</li>
-</ul>
-
-<h3>Step 1.6: Set Framework Themes</h3>
-
-<p>In Framework, we also define thematic strategy:</p>
+<p>In Story Core, we define the book's editorial direction:</p>
 
 <ul>
-  <li><strong>Identity</strong>: Elena discovering who she truly is</li>
-  <li><strong>Power</strong>: The responsibility that comes with magical ability</li>
-  <li><strong>Redemption</strong>: Mira's past connection to Valdris</li>
+  <li><strong>Complexity</strong>: layered but readable</li>
+  <li><strong>World Rules</strong>: magic is inherited but must be unlocked</li>
+  <li><strong>Wisdom</strong>: power without restraint becomes self-destruction</li>
 </ul>
 
-<h2>Phase 2: Creating Structure</h2>
+<h3>Step 1.6: Select Theme and Character Transformation</h3>
+
+<p>Still in Story Core, we define the protagonist change and thematic frame:</p>
+
+<ul>
+  <li><strong>Theme</strong>: Power</li>
+  <li><strong>Ideological Conflict</strong>: control promises safety, but corrupts what it claims to protect</li>
+  <li><strong>Character Arc</strong>: curious villager → responsible guardian</li>
+  <li><strong>Value Shift</strong>: power solves everything → power can destroy what you love</li>
+</ul>
+
+<h3>Step 1.7: Set Narrative Design</h3>
+
+<p>In Narrative Design, we lock the conflict and macro plan before detailed mapping:</p>
+
+<ul>
+  <li><strong>Central Conflict</strong>: Elena must master the Silver Key before Valdris claims it</li>
+  <li><strong>Resolution Path</strong>: Sacrifice</li>
+  <li><strong>Structure Model</strong>: Story Circle</li>
+  <li><strong>Escalation Pattern</strong>: Spiral</li>
+</ul>
+
+<h2>Phase 2: Blueprint and Story Map</h2>
 
 <h3>Step 2.1: Select Narrative Arc</h3>
 
@@ -311,7 +323,7 @@ Story has theme redemption as secondary
 Story requires "happy ending"
 Story forbids "graphic violence"
 
-// --- Framework: World Rules ---
+// --- Story Core / World Rules ---
 World is setting
 
 R1 is world_rule
@@ -494,7 +506,7 @@ Book group end</code></pre>
 
 <h2>Phase 4: Generating Prose (NL)</h2>
 
-<p>Click "Create Story" in the NL tab. The system sends the CNL specification to the LLM and receives prose:</p>
+<p>Click "Create Story" in NL Story. The system sends the CNL specification to the LLM and receives prose:</p>
 
 <div class="info-box">
   <div class="info-box-title">Generated Excerpt (Scene 3)</div>
@@ -673,23 +685,27 @@ Sc6 group end</code></pre>
 │                    SCRIPTA WORKFLOW                            │
 ├───────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  1. BUILD LIBRARIES                                            │
-│     Characters → Relations → Backdrop → Framework              │
+│  1. CREATE PROJECT                                             │
+│     Wizard → title, format, length, seed ideas                 │
 │                           │                                     │
 │                           ▼                                     │
-│  2. CREATE STRUCTURE                                           │
-│     Arc Selection → Chapters → Scenes → Beat Mapping           │
+│  2. BOOK SETTINGS                                              │
+│     Story Core → Narrative Design → Cast → World               │
 │                           │                                     │
 │                           ▼                                     │
-│  3. EXPORT CNL                                                 │
-│     Visual Editor automatically generates CNL specification    │
+│  3. PLAN STRUCTURE                                             │
+│     Blueprint → Story Map                                      │
 │                           │                                     │
 │                           ▼                                     │
-│  4. GENERATE NL (Optional)                                     │
-│     CNL → LLM → Prose narrative                                │
+│  4. EXPORT / REVIEW CNL                                        │
+│     Visual editor generates editable CNL specification         │
 │                           │                                     │
 │                           ▼                                     │
-│  5. EVALUATE                                                   │
+│  5. GENERATE NL STORY                                          │
+│     CNL → draft generation → improve / regenerate              │
+│                           │                                     │
+│                           ▼                                     │
+│  6. MANUSCRIPT + EVALUATE                                      │
 │     Run metrics: CS, CAD, CAR, EAP, NQS, etc.                  │
 │                           │                                     │
 │              ┌────────────┴────────────┐                       │

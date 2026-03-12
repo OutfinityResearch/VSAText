@@ -71,8 +71,8 @@ Hierarchical story structure with drag-and-drop reordering:
 
 ## Center Panel Tabs
 
-### CNL Tab
-Auto-generated CNL code (read-only). Updates in real-time as structure changes.
+### CNL Editor
+Auto-generated CNL code with visual view and direct edit mode. Updates in real-time as structure changes.
 
 ```
 // Auto-generated CNL

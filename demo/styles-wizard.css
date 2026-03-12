@@ -546,9 +546,10 @@
 #new-project-wizard .wizard-progress-helper {
   min-height: 1rem;
   color: rgba(215, 225, 251, 0.72);
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   line-height: 1.35;
   text-align: center;
+  white-space: nowrap;
 }
 
 #new-project-wizard .wizard-footer-actions .btn {

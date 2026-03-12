@@ -1,94 +1,95 @@
 <h1>SCRIPTA Research Studio</h1>
 
-<p>SCRIPTA (Structured Creative Writing Intelligent Platform for Textual Authoring) is a Visual Story Composer that enables authors to build narrative specifications through an intuitive visual interface.</p>
+<p>SCRIPTA is a story planning and generation studio built around a specification-first workflow. The application helps authors move from project intent to narrative design, formal story specification, prose generation, and manuscript refinement.</p>
 
 <div class="info-box">
-  <div class="info-box-title">Key Concept</div>
-  <p>Think of CNL as a programming language for narratives. The visual editor is like an IDE, and the CNL is the source code that describes your story's structure.</p>
+  <div class="info-box-title">Core Product Idea</div>
+  <p>SCRIPTA does not begin with a one-shot prompt. It begins with a project, shapes the story foundation in Book Settings, formalizes that foundation in CNL, and then generates prose from the resulting specification.</p>
 </div>
 
-<h2>Features</h2>
+<h2>Natural Workflow</h2>
+
+<pre><code>Create Project
+      ↓
+Book Settings
+      ↓
+Blueprint
+      ↓
+Story Map
+      ↓
+CNL Editor
+      ↓
+NL Story
+      ↓
+Manuscript</code></pre>
+
+<p>This is the recommended flow for new work. Iteration can happen at any stage, but the strongest results usually come from moving through the sequence in order.</p>
+
+<h2>What Each Step Does</h2>
 
 <div class="feature-grid">
   <div class="feature-card">
-    <h4>Build Structure</h4>
-    <p>Create chapters, scenes, and beats in a hierarchical tree with drag-and-drop.</p>
+    <h4><a href="#tab-create-specs" data-page="tab-create-specs">New Project</a></h4>
+    <p>Create the project with title, format, length, and seed ideas. After clicking Create Project, the app opens Book Settings.</p>
   </div>
   <div class="feature-card">
-    <h4>Define Characters</h4>
-    <p>Create characters with archetypes, traits, and relationships.</p>
+    <h4><a href="#tab-framework" data-page="tab-framework">Story Core</a></h4>
+    <p>Define story fundamentals, theme, wisdom, and character transformation. This is the editorial foundation of the book.</p>
   </div>
   <div class="feature-card">
-    <h4>Build Backdrop</h4>
-    <p>Define settings in the literary sense: locations, time periods, and scene-relevant objects.</p>
+    <h4><a href="#tab-narrative-design" data-page="tab-narrative-design">Narrative Design</a></h4>
+    <p>Define core conflict, macro structure, escalation, and storytelling constraints before structural planning.</p>
   </div>
   <div class="feature-card">
-    <h4>Plan Emotionally</h4>
-    <p>Use Blueprint to control arc selection, emotional progression, tension, and pacing.</p>
+    <h4><a href="#tab-blueprint" data-page="tab-blueprint">Blueprint</a></h4>
+    <p>Shape arc, beats, key events, pacing, and tension. Blueprint is the main structural planning surface.</p>
   </div>
   <div class="feature-card">
-    <h4>Generate Stories</h4>
-    <p>Use Random, LLM, or Advanced strategies to generate specifications.</p>
+    <h4><a href="#end-to-end" data-page="end-to-end">Story Map</a></h4>
+    <p>Map chapters and scenes across the book and connect macro structure to concrete flow.</p>
   </div>
   <div class="feature-card">
-    <h4>Measure Quality</h4>
-    <p>Real-time metrics evaluate coherence, completeness, and quality.</p>
+    <h4><a href="#tab-cnl" data-page="tab-cnl">CNL Editor</a></h4>
+    <p>Inspect and edit the formal specification that powers analysis, generation, and export.</p>
+  </div>
+  <div class="feature-card">
+    <h4><a href="#tab-nl" data-page="tab-nl">NL Story</a></h4>
+    <p>Generate the story draft, improve it, regenerate it, and manage versions from the current specification.</p>
+  </div>
+  <div class="feature-card">
+    <h4><a href="#end-to-end" data-page="end-to-end">Manuscript</a></h4>
+    <p>Continue drafting and editing chapter and scene content in manuscript form after generation.</p>
   </div>
 </div>
 
-<h2>Core Documentation</h2>
+<h2>Book Settings</h2>
 
-<p>These pages provide fundamental understanding of SCRIPTA's concepts and capabilities:</p>
+<p>Book Settings is the first major planning stage after project creation. It includes:</p>
 
-<div class="feature-grid">
-  <div class="feature-card">
-    <h4><a href="#conceptual-model" data-page="conceptual-model">Conceptual Model & Glossary</a></h4>
-    <p>Central reference for all SCRIPTA concepts: Chapter, Scene, Beat, Block, Pattern, Wisdom, Theme, and how they connect.</p>
-  </div>
-  <div class="feature-card">
-    <h4><a href="#cnl-language" data-page="cnl-language">CNL Language Reference</a></h4>
-    <p>Complete grammar, semantics, and examples for the Controlled Natural Language specification format.</p>
-  </div>
-  <div class="feature-card">
-    <h4><a href="#elements" data-page="elements">Story Elements Guide</a></h4>
-    <p>Documentation for all editor tabs: Characters, Relations, Backdrop, Framework, Dialogues, Blueprint, and more.</p>
-  </div>
-  <div class="feature-card">
-    <h4><a href="#generation" data-page="generation">Generation Strategies</a></h4>
-    <p>How Random, LLM, and Advanced generation work: pipelines, algorithms, and metric-driven optimization.</p>
-  </div>
-  <div class="feature-card">
-    <h4><a href="#end-to-end" data-page="end-to-end">End-to-End Example</a></h4>
-    <p>Complete workflow from building libraries to CNL export, prose generation, evaluation, and metric-guided iteration.</p>
-  </div>
-  <div class="feature-card">
-    <h4><a href="#metrics-reference" data-page="metrics-reference">Metrics Reference</a></h4>
-    <p>Comprehensive metrics documentation with formulas, thresholds, and links to technical specifications (DS12-DS25).</p>
-  </div>
-</div>
-
-<h2>Quick Start</h2>
-
-<h3>1. Generate a Story</h3>
-<p>Click <strong>Create Specs</strong> in the left panel. Choose genre, length, complexity, then select a strategy:</p>
-<p>For the full-page workflow, see <a href="#tab-create-specs" data-page="tab-create-specs">Create Story Specification</a>.</p>
 <ul>
-  <li><strong>Random (Fast)</strong> - Instant generation using templates</li>
-  <li><strong>With LLM</strong> - AI-powered creative generation</li>
-  <li><strong>Advanced</strong> - Multi-pass optimization</li>
-  <li><strong>Guided Wizard</strong> - Step-by-step configuration</li>
+  <li><strong>Story Core</strong> - story fundamentals, theme, wisdom, and character transformation</li>
+  <li><strong>Narrative Design</strong> - core conflict, macro structure, escalation, and constraints</li>
+  <li><strong>Cast</strong> - reusable or project-specific characters</li>
+  <li><strong>World</strong> - settings, locations, and world logic</li>
+  <li><strong>Themes</strong> - reusable thematic templates</li>
+  <li><strong>Tone &amp; Style</strong> - language direction for generation</li>
 </ul>
 
-<h3>2. Explore the Tabs</h3>
-<p>After generation, explore the tabs: CNL, NL, Blueprint, Framework, Templates, Characters, Relations, Backdrop, Dialogues, Blocks, Wisdom, Patterns.</p>
+<p>In practice, Story Core and Narrative Design define the strongest part of the foundation before Blueprint begins.</p>
 
-<h3>Create Specs Reference</h3>
-<p>Detailed field-by-field documentation for the specification page is available in <a href="#tab-create-specs" data-page="tab-create-specs">Create Story Specification</a>.</p>
+<h2>Shortcut Workflow</h2>
 
-<h3>3. Export</h3>
-<p>Click <strong>Export CNL</strong> to download your story specification. Use <strong>Create Story</strong> in the NL tab to generate prose.</p>
+<p>SCRIPTA also supports a faster path for users who do not want to complete every planning step first.</p>
 
-<h2>CNL Syntax</h2>
+<ul>
+  <li>Use <strong>Create Story</strong> in Story Core to jump directly into the NL Story generation flow</li>
+  <li>This shortcut uses the same generation logic as the main Create Story action in NL Story</li>
+  <li>The shortcut is useful for rapid drafting, but more complete planning usually produces stronger output</li>
+</ul>
+
+<h2>Why CNL Matters</h2>
+
+<p>CNL is the formal specification layer between planning and prose. It turns visual decisions into a consistent textual representation that the SDK can parse, evaluate, and send into generation.</p>
 
 <pre><code>// Character definition
 Anna is hero
@@ -97,81 +98,50 @@ Anna has trait courage
 // Relationship
 Anna relates to Gandalf as mentor_student
 
-// Scene structure
-Sc1 group begin
-  Sc1 has title "The Beginning"
-  Anna discovers artifact
-Sc1 group end
-
 // World rule
 World is setting
 R1 is world_rule
 R1 has text "Magic requires sacrifice"
 World includes rule R1</code></pre>
 
-<h2>Generation Strategies</h2>
+<h2>How to Start</h2>
 
-<table>
-  <tr>
-    <th>Strategy</th>
-    <th>Speed</th>
-    <th>Quality</th>
-  </tr>
-  <tr>
-    <td>Random</td>
-    <td>Instant</td>
-    <td>65-80% NQS</td>
-  </tr>
-  <tr>
-    <td>With LLM</td>
-    <td>10-30s</td>
-    <td>75-90% NQS</td>
-  </tr>
-  <tr>
-    <td>Advanced</td>
-    <td>5-15s</td>
-    <td>80-95% NQS</td>
-  </tr>
-</table>
+<ol>
+  <li>Click <strong>New</strong> in the application header.</li>
+  <li>Complete the <a href="#tab-create-specs" data-page="tab-create-specs">New Project</a> wizard.</li>
+  <li>Continue in <a href="#tab-framework" data-page="tab-framework">Story Core</a>.</li>
+  <li>Refine the conflict in <a href="#tab-narrative-design" data-page="tab-narrative-design">Narrative Design</a>.</li>
+  <li>Build structure in <a href="#tab-blueprint" data-page="tab-blueprint">Blueprint</a> and Story Map.</li>
+  <li>Review the specification in <a href="#tab-cnl" data-page="tab-cnl">CNL Editor</a>.</li>
+  <li>Generate the draft in <a href="#tab-nl" data-page="tab-nl">NL Story</a>.</li>
+  <li>Continue editing in Manuscript and evaluate quality as needed.</li>
+</ol>
 
-<h2>Quality Metrics</h2>
+<h2>Core Documentation</h2>
 
-<p>These are practical targets for a well-structured story specification. For research evaluation, NQS is measured as improvement vs baseline (see <a href="#metrics-nqs" data-page="metrics-nqs">NQS specification</a>).</p>
-
-<table>
-  <tr>
-    <th>Metric</th>
-    <th>Target</th>
-    <th>Measures</th>
-  </tr>
-  <tr>
-    <td>NQS</td>
-    <td>≥70% (practical) / ≥25% improvement (research)</td>
-    <td>Overall narrative quality</td>
-  </tr>
-  <tr>
-    <td>Completeness</td>
-    <td>≥80%</td>
-    <td>Required elements present</td>
-  </tr>
-  <tr>
-    <td>Coherence</td>
-    <td>≥75%</td>
-    <td>Entity consistency</td>
-  </tr>
-  <tr>
-    <td>EAP</td>
-    <td>≥70%</td>
-    <td>Emotional arc coverage</td>
-  </tr>
-</table>
-
-<h2>API Endpoints</h2>
-
-<pre><code>GET  /v1/projects          - List projects
-POST /v1/projects          - Create project
-GET  /v1/projects/:id      - Load project
-PUT  /v1/projects/:id      - Update project
-
-POST /v1/generate/llm      - Generate with LLM
-POST /v1/generate/nl-story - Generate prose from CNL</code></pre>
+<div class="feature-grid">
+  <div class="feature-card">
+    <h4><a href="#conceptual-model" data-page="conceptual-model">Conceptual Model & Glossary</a></h4>
+    <p>Central reference for chapters, scenes, beats, themes, wisdom, patterns, and how they connect.</p>
+  </div>
+  <div class="feature-card">
+    <h4><a href="#cnl-language" data-page="cnl-language">CNL Language Reference</a></h4>
+    <p>Complete grammar and semantics for the specification language used by the application.</p>
+  </div>
+  <div class="feature-card">
+    <h4><a href="#end-to-end" data-page="end-to-end">End-to-End Example</a></h4>
+    <p>Full example of the current workflow from project creation to manuscript iteration.</p>
+  </div>
+  <div class="feature-card">
+    <h4><a href="#generation" data-page="generation">Generation Strategies</a></h4>
+    <p>How different generation modes behave and when to use them.</p>
+  </div>
+  <div class="feature-card">
+    <h4><a href="#metrics-overview" data-page="metrics-overview">Metrics Overview</a></h4>
+    <p>Understand how SCRIPTA evaluates quality, coherence, and coverage.</p>
+  </div>
+  <div class="feature-card">
+    <h4><a href="#tab-cnl" data-page="tab-cnl">CNL Editor</a></h4>
+    <p>See how planning decisions become formal specification and exportable project state.</p>
+  </div>
+</div>

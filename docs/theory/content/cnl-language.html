@@ -7,6 +7,26 @@
   <p>CNL (Controlled Natural Language) is a human-readable, machine-parseable language for narrative specifications. It uses Subject-Verb-Object (SVO) syntax that mirrors natural English while being precise enough for automated parsing and analysis.</p>
 </div>
 
+<h2>Workflow Position</h2>
+
+<p>In the current application flow, CNL sits between planning and prose generation.</p>
+
+<pre><code>Create Project
+      ↓
+Book Settings
+      ↓
+Blueprint
+      ↓
+Story Map
+      ↓
+CNL Editor
+      ↓
+NL Story
+      ↓
+Manuscript</code></pre>
+
+<p>Book Settings, Blueprint, and Story Map produce the specification. CNL Editor exposes that specification directly. NL Story and Manuscript then build on it.</p>
+
 <h2>Design Philosophy</h2>
 
 <p>CNL is designed with these principles:</p>
@@ -15,7 +35,7 @@
   <li><strong>Readability</strong>: Authors should be able to read and understand CNL without training</li>
   <li><strong>Precision</strong>: Every statement has exactly one interpretation</li>
   <li><strong>Composability</strong>: Small statements combine to describe complex narratives</li>
-  <li><strong>Tool-Friendly</strong>: Visual editors generate CNL; authors rarely write it directly</li>
+  <li><strong>Tool-Friendly</strong>: New Project, Story Core, Narrative Design, Blueprint, and Story Map generate CNL; authors rarely write it directly</li>
 </ul>
 
 <h2>Lexical Structure</h2>

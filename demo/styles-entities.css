@@ -502,6 +502,8 @@
 
 #characters-grid .protagonist-fields {
   padding-right: 0;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 1.2fr);
+  gap: 0.55rem;
 }
 
 #cast-btn-add-secondary-character,
@@ -588,6 +590,36 @@
   letter-spacing: 0.035em;
   margin-bottom: 0.38rem;
   text-transform: none;
+}
+
+#characters-grid .protagonist-fields .form-input,
+#characters-grid .protagonist-fields .form-select,
+#characters-grid .spec-secondary-item .form-input,
+#characters-grid .spec-secondary-item .form-select,
+#characters-grid .spec-secondary-item .multi-dropdown-toggle {
+  min-height: 40px;
+  padding: 0.56rem 0.68rem;
+  font-size: var(--fs-sm);
+}
+
+#characters-grid .protagonist-fields .multi-dropdown,
+#characters-grid .spec-secondary-item .multi-dropdown {
+  width: 100%;
+}
+
+#characters-grid .protagonist-fields .multi-dropdown-toggle,
+#characters-grid .spec-secondary-item .multi-dropdown-toggle {
+  min-height: 40px;
+  height: 40px;
+  width: 100%;
+  padding: 0.56rem 0.68rem;
+  display: flex;
+  align-items: center;
+}
+
+#characters-grid .spec-secondary-item .spec-secondary-fields {
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 0.9fr) minmax(0, 1.15fr);
+  gap: 0.55rem;
 }
 
 #backdrop-view .form-select,
@@ -755,6 +787,11 @@
   }
 
   .cast-secondary-row {
+    grid-template-columns: 1fr;
+  }
+
+  #characters-grid .protagonist-fields,
+  #characters-grid .spec-secondary-item .spec-secondary-fields {
     grid-template-columns: 1fr;
   }
 }

@@ -338,20 +338,20 @@ function sceneOptions(chapters) {
   );
 }
 
-function applyCard(card, targetType, chapterId = '') {
+function applyCard(card, targetType, targetId = '', targetLabel = '') {
   if (card.readOnly) {
     notify('Preview-only resource. Add it from the dedicated editor when needed.', 'info');
     return;
   }
 
-  if (targetType === 'chapter' && !chapterId) {
-    notify('Select a chapter before applying', 'error');
+  if ((targetType === 'chapter' || targetType === 'scene') && !targetId) {
+    notify(`Select a ${targetType} before applying`, 'error');
     return;
   }
 
-  const target = targetType === 'chapter'
-    ? { targetType: 'chapter', targetId: chapterId }
-    : { targetType: 'book', targetId: '' };
+  const target = targetType === 'book'
+    ? { targetType: 'book', targetId: '', targetLabel }
+    : { targetType, targetId, targetLabel };
 
   if (card.kind === 'wisdom') applyWisdom(card.type, card.key, target);
   if (card.kind === 'theme-preset') applyThemePreset(card.key, target);
@@ -464,7 +464,7 @@ function openApplyTargetModal(card, chapters, scenes) {
       const targetType = button.getAttribute('data-target-type') || 'book';
       const targetId = button.getAttribute('data-target-id') || '';
       if (targetType === 'chapter') uiState.chapterTargetId = targetId;
-      applyCard(card, targetType, targetId);
+      applyCard(card, targetType, targetId, button.querySelector('span')?.textContent || '');
       closeModal('select-modal');
       renderLibraryView();
     });

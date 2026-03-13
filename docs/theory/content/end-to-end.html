@@ -1,17 +1,38 @@
 <h1>End-to-End Example</h1>
 
-<p>This document walks through a complete SCRIPTA workflow: Create Project, Book Settings, Blueprint, Story Map, CNL Editor, NL Story, Manuscript, and metric-guided iteration.</p>
+<p>This document walks through the current SCRIPTA workflow from <strong>New Project</strong> to <strong>Manuscript</strong>, including the planning path, the formal CNL specification, prose generation, and metric-guided iteration.</p>
 
 <div class="info-box">
   <div class="info-box-title">Example Story: "The Silver Key"</div>
   <p>We'll create a short fantasy story about a young woman who discovers a magical key that unlocks a hidden power. This compact example demonstrates all major SCRIPTA features.</p>
 </div>
 
-<h2>Phase 1: Book Settings and Libraries</h2>
+<div class="info-box">
+  <div class="info-box-title">Current Workflow</div>
+  <p><strong>Recommended path:</strong> New Project -&gt; Book Settings -&gt; Story Core -&gt; Narrative Design -&gt; Blueprint -&gt; Story Map -&gt; CNL Editor -&gt; NL Story -&gt; Manuscript</p>
+  <p><strong>Shortcut:</strong> New Project -&gt; Story Core -&gt; Create Story -&gt; NL Story</p>
+</div>
 
-<h3>Step 1.1: Create Characters</h3>
+<h2>Phase 1: New Project and Book Foundation</h2>
 
-<p>First, we define our cast of characters in the Characters tab:</p>
+<h3>Step 1.0: Start in New Project</h3>
+
+<p>We begin in <strong>New Project</strong>, where the author creates the project and enters the foundation: title, length, high-level genre direction, and a few seed ideas.</p>
+
+<ul>
+  <li><strong>Title</strong>: The Silver Key</li>
+  <li><strong>Length</strong>: Short book</li>
+  <li><strong>Genre direction</strong>: Fantasy adventure</li>
+  <li><strong>Seed ideas</strong>: magical key, hidden inheritance, corrupt rival, costly power</li>
+</ul>
+
+<p>After the wizard, the recommended path continues into <strong>Book Settings</strong>.</p>
+
+<h2>Phase 2: Book Settings and Libraries</h2>
+
+<h3>Step 2.1: Create Characters</h3>
+
+<p>First, we define the cast in the <strong>Cast</strong> page:</p>
 
 <table>
   <tr>
@@ -46,18 +67,18 @@
   </tr>
 </table>
 
-<h3>Step 1.2: Define Relationships</h3>
+<h3>Step 2.2: Define Relationships</h3>
 
-<p>In the Relations tab, we establish connections:</p>
+<p>In the <strong>Cast</strong> page, we establish relationships and dynamics:</p>
 
 <ul>
-  <li>Elena relates to Mira as <strong>mentor_student</strong></li>
-  <li>Elena relates to Finn as <strong>friend</strong></li>
-  <li>Valdris relates to Elena as <strong>enemy</strong></li>
-  <li>Mira relates to Valdris as <strong>former_ally</strong></li>
+  <li>Elena relates to Mira as <strong>mentor_student</strong>, dynamic <strong>protective</strong></li>
+  <li>Elena relates to Finn as <strong>friend</strong>, dynamic <strong>supportive</strong></li>
+  <li>Valdris relates to Elena as <strong>enemy</strong>, dynamic <strong>manipulative</strong></li>
+  <li>Mira relates to Valdris as <strong>former_ally</strong>, dynamic <strong>toxic</strong></li>
 </ul>
 
-<h3>Step 1.3: Build World Locations</h3>
+<h3>Step 2.3: Build World Locations</h3>
 
 <p>In the World page, we define the core settings:</p>
 
@@ -88,7 +109,7 @@
   </tr>
 </table>
 
-<h3>Step 1.4: Add World Objects</h3>
+<h3>Step 2.4: Add World Objects</h3>
 
 <p>Still in World, we add story-relevant objects:</p>
 
@@ -113,7 +134,7 @@
   </tr>
 </table>
 
-<h3>Step 1.5: Define Story Core Direction</h3>
+<h3>Step 2.5: Define Story Core Direction</h3>
 
 <p>In Story Core, we define the book's editorial direction:</p>
 
@@ -123,7 +144,7 @@
   <li><strong>Wisdom</strong>: power without restraint becomes self-destruction</li>
 </ul>
 
-<h3>Step 1.6: Select Theme and Character Transformation</h3>
+<h3>Step 2.6: Select Theme and Character Transformation</h3>
 
 <p>Still in Story Core, we define the protagonist change and thematic frame:</p>
 
@@ -134,7 +155,7 @@
   <li><strong>Value Shift</strong>: power solves everything → power can destroy what you love</li>
 </ul>
 
-<h3>Step 1.7: Set Narrative Design</h3>
+<h3>Step 2.7: Set Narrative Design</h3>
 
 <p>In Narrative Design, we lock the conflict and macro plan before detailed mapping:</p>
 
@@ -145,9 +166,11 @@
   <li><strong>Escalation Pattern</strong>: Spiral</li>
 </ul>
 
-<h2>Phase 2: Blueprint and Story Map</h2>
+<p>At this point, the author could already use <strong>Create Story</strong> in Story Core to jump directly to <strong>NL Story</strong> and generate a quick draft. In this example we continue through the full planning path.</p>
 
-<h3>Step 2.1: Select Narrative Arc</h3>
+<h2>Phase 3: Blueprint and Story Map</h2>
+
+<h3>Step 3.1: Select Narrative Arc</h3>
 
 <p>We choose the <strong>Story Circle (Dan Harmon)</strong> arc with 8 beats, appropriate for a compact story:</p>
 
@@ -162,7 +185,7 @@
   <li><strong>Change</strong> - Elena transformed, new responsibilities</li>
 </ol>
 
-<h3>Step 2.2: Create Chapters and Scenes</h3>
+<h3>Step 3.2: Create Chapters and Scenes</h3>
 
 <pre><code>Book: "The Silver Key"
 ├── Chapter 1: "Ordinary Days"
@@ -217,9 +240,9 @@
   Mood: Bittersweet
   Actions: Elena returns, transformed</code></pre>
 
-<h3>Step 2.3: Map Beats to Scenes</h3>
+<h3>Step 3.3: Map Beats to Scenes</h3>
 
-<p>In the Blueprint tab, we create beat mappings:</p>
+<p>In <strong>Blueprint</strong>, we create beat mappings and tension planning:</p>
 
 <table>
   <tr>
@@ -278,7 +301,7 @@
   </tr>
 </table>
 
-<h3>Step 2.4: Add Dialogues</h3>
+<h3>Step 3.4: Add Dialogue Intent</h3>
 
 <p>We define key dialogue moments:</p>
 
@@ -305,9 +328,11 @@ Dialogue 2: "Valdris Confrontation"
     - Mira: Reveals past with Valdris
     - Valdris: Threatens consequences</code></pre>
 
-<h2>Phase 3: Exporting CNL</h2>
+<h2>Phase 4: Review the Formal Specification in CNL Editor</h2>
 
-<p>The visual editor generates the following CNL:</p>
+<p>The planning workflow produces a formal CNL specification. In <strong>CNL Editor</strong>, the author can review, validate, edit, import, or export that specification.</p>
+
+<p>The generated CNL looks like this:</p>
 
 <pre><code>// ============================================
 // THE SILVER KEY - Story Specification
@@ -504,9 +529,9 @@ Elena transforms "accepts new responsibility"
   
 Book group end</code></pre>
 
-<h2>Phase 4: Generating Prose (NL)</h2>
+<h2>Phase 5: Generate Prose in NL Story</h2>
 
-<p>Click "Create Story" in NL Story. The system sends the CNL specification to the LLM and receives prose:</p>
+<p>In <strong>NL Story</strong>, the author clicks <strong>Create Story</strong>. The system uses the project foundation and CNL specification to generate a narrative draft.</p>
 
 <div class="info-box">
   <div class="info-box-title">Generated Excerpt (Scene 3)</div>
@@ -514,9 +539,9 @@ Book group end</code></pre>
   <p style="font-style: italic;">'You are not ordinary, Elena,' the woman said, her voice like wind through ancient leaves. 'You never were. Your mother... she was one of us. And the power that sleeps within you - it's time to wake it.'"</p>
 </div>
 
-<h2>Phase 5: Evaluation</h2>
+<h2>Phase 6: Evaluate and Interpret Metrics</h2>
 
-<p>Click "Evaluate" to run metrics on the specification. The system calculates:</p>
+<p>Click <strong>Evaluate</strong> to run quality checks on the specification and draft. The current workflow focuses on practical product metrics such as <strong>Coverage</strong>, <strong>Coherence</strong>, and <strong>NQS</strong>, with optional supporting diagnostics.</p>
 
 <h3>Initial Metrics Report</h3>
 
@@ -528,13 +553,13 @@ Book group end</code></pre>
     <th>Status</th>
   </tr>
   <tr>
-    <td>Completeness</td>
+    <td>Coverage</td>
     <td>92%</td>
     <td>>= 80%</td>
     <td style="color: #06d6a0;">PASS</td>
   </tr>
   <tr>
-    <td>Coherence Score (CS)</td>
+    <td>Coherence</td>
     <td>78%</td>
     <td>>= 75%</td>
     <td style="color: #06d6a0;">PASS</td>
@@ -584,7 +609,7 @@ Book group end</code></pre>
   <tr>
     <td><strong>NQS (Overall)</strong></td>
     <td><strong>74%</strong></td>
-    <td>>= 70%</td>
+    <td>>= 75%</td>
     <td style="color: #06d6a0;">PASS</td>
   </tr>
 </table>
@@ -596,10 +621,10 @@ Book group end</code></pre>
 <ul>
   <li><strong>Dialogue Quality is low (45%)</strong>: Our dialogues need more exchanges and content</li>
   <li><strong>Relationship Usage is marginal (50%)</strong>: The Mira-Valdris "former_ally" relationship isn't used in scenes</li>
-  <li><strong>Overall structure is good</strong>: Characters appear consistently, locations are reused</li>
+  <li><strong>Coverage and coherence are healthy</strong>: Characters appear consistently, planned locations are reused, and the structure is readable</li>
 </ul>
 
-<h2>Phase 6: Metric-Guided Iteration</h2>
+<h2>Phase 7: Metric-Guided Iteration</h2>
 
 <h3>Iteration 1: Fix Dialogue Quality</h3>
 
@@ -668,14 +693,16 @@ Sc6 group end</code></pre>
   </tr>
 </table>
 
-<h2>Phase 7: Final Export</h2>
+<h2>Phase 8: Manuscript and Final Export</h2>
+
+<p>After the first NL draft and evaluation pass, the author moves into <strong>Manuscript</strong> to continue chapter and scene refinement, then exports the assets needed for later work.</p>
 
 <h3>Export Options</h3>
 
 <ul>
   <li><strong>Export CNL</strong>: Download the specification as <code>the-silver-key.cnl</code></li>
   <li><strong>Export Project</strong>: Save complete project JSON for later editing</li>
-  <li><strong>Export NL</strong>: Download generated prose</li>
+  <li><strong>Export NL</strong>: Download the generated NL Story draft</li>
   <li><strong>Save to Server</strong>: Persist for team collaboration</li>
 </ul>
 
@@ -685,52 +712,56 @@ Sc6 group end</code></pre>
 │                    SCRIPTA WORKFLOW                            │
 ├───────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  1. CREATE PROJECT                                             │
-│     Wizard → title, format, length, seed ideas                 │
+│  1. NEW PROJECT                                                │
+│     Wizard → title, length, genre direction, seed ideas        │
 │                           │                                     │
 │                           ▼                                     │
 │  2. BOOK SETTINGS                                              │
-│     Story Core → Narrative Design → Cast → World               │
+│     Cast → World → Tone & Style                                │
 │                           │                                     │
 │                           ▼                                     │
-│  3. PLAN STRUCTURE                                             │
+│  3. STORY CORE + NARRATIVE DESIGN                              │
+│     Theme, wisdom, transformation, conflict, macro structure   │
+│                           │                                     │
+│                           ▼                                     │
+│  4. PLAN STRUCTURE                                             │
 │     Blueprint → Story Map                                      │
 │                           │                                     │
 │                           ▼                                     │
-│  4. EXPORT / REVIEW CNL                                        │
-│     Visual editor generates editable CNL specification         │
+│  5. REVIEW CNL EDITOR                                          │
+│     Planning workflow generates editable CNL specification     │
 │                           │                                     │
 │                           ▼                                     │
-│  5. GENERATE NL STORY                                          │
+│  6. GENERATE NL STORY                                          │
 │     CNL → draft generation → improve / regenerate              │
 │                           │                                     │
 │                           ▼                                     │
-│  6. MANUSCRIPT + EVALUATE                                      │
-│     Run metrics: CS, CAD, CAR, EAP, NQS, etc.                  │
+│  7. MANUSCRIPT + EVALUATE                                      │
+│     Run metrics: Coverage, Coherence, NQS, diagnostics         │
 │                           │                                     │
 │              ┌────────────┴────────────┐                       │
 │              │                         │                       │
 │              ▼                         ▼                       │
-│     Metrics PASS              Metrics FAIL                     │
+│     Metrics PASS              Metrics NEED WORK                │
 │         │                         │                            │
 │         ▼                         ▼                            │
-│  6. FINALIZE               6. ITERATE                          │
+│  8. FINALIZE               8. ITERATE                          │
 │     Export & Use              Fix issues based on              │
 │                               diagnostic feedback              │
 │                                    │                           │
-│                                    └──────> (back to step 2)   │
+│                                    └──────> (back to step 2-6) │
 │                                                                 │
 └───────────────────────────────────────────────────────────────┘</code></pre>
 
 <h2>Key Takeaways</h2>
 
 <ol>
-  <li><strong>Libraries before Structure</strong>: Define characters, locations, and objects before creating scenes that reference them</li>
-  <li><strong>Beat Mapping matters</strong>: Align scenes with arc beats for proper pacing</li>
-  <li><strong>Metrics guide improvement</strong>: Low scores indicate specific areas to fix</li>
-  <li><strong>Iterate until quality</strong>: Use the evaluate-fix cycle until NQS meets target</li>
-  <li><strong>Relationships need scenes</strong>: Defined relationships should manifest in the story</li>
-  <li><strong>Dialogues need content</strong>: Empty dialogue placeholders hurt quality</li>
+  <li><strong>Project foundation comes first</strong>: Start in New Project, then deepen the story through Book Settings, Story Core, and Narrative Design</li>
+  <li><strong>Structure follows intent</strong>: Use Blueprint and Story Map only after the conflict, world, and cast are clear</li>
+  <li><strong>CNL is the formal bridge</strong>: The CNL Editor exposes the specification that powers validation, export, and NL Story generation</li>
+  <li><strong>Metrics guide improvement</strong>: Coverage, Coherence, and NQS help identify where the draft needs refinement</li>
+  <li><strong>Manuscript is the editorial layer</strong>: After NL Story generation, continue refining chapters and scenes in Manuscript</li>
+  <li><strong>Relationships and dialogue must manifest in scenes</strong>: planning alone is not enough; the draft has to show those elements on the page</li>
 </ol>
 
 <h2>Related Documents</h2>

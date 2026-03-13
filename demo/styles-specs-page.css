@@ -346,6 +346,7 @@
 }
 
 .spec-secondary-fields .form-select,
+.spec-secondary-fields .form-input,
 .spec-secondary-fields .multi-dropdown-toggle {
   min-height: 34px;
 }

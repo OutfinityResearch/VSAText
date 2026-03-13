@@ -8,7 +8,7 @@ Story Studio is SCRIPTA's visual interface for composing stories and evaluating 
 
 **Visual-First Authoring**: Authors work with visual elements (trees, cards, graphs) rather than writing code. The system generates CNL automatically from the visual structure.
 
-**Real-Time Feedback**: Metrics update as authors make changes. No need to run separate evaluation steps.
+**Guided Feedback**: Authors move through planning, generation, and explicit evaluation steps. Metrics are surfaced through the evaluation workflow rather than assumed to update continuously in every editing context.
 
 **Browser-First**: All processing happens client-side. The server only handles persistence.
 
@@ -36,12 +36,14 @@ Story Studio is SCRIPTA's visual interface for composing stories and evaluating 
 **From scratch:**
 1. Click "New" to open the project wizard
 2. Enter title, format, length, and seed ideas
-3. Continue in Book Settings to shape Story Core and Narrative Design
-4. Build the main arc in Blueprint
-5. Organize chapters and scenes in Story Map
-6. Review and refine the CNL in CNL Editor
-7. Generate prose in NL Story
-8. Continue drafting in Manuscript
+3. Continue in Book Settings to shape the story foundation
+4. Refine thematic direction and transformation in Story Core
+5. Define conflict and macro structure in Narrative Design
+6. Build the main arc in Blueprint
+7. Organize chapters and scenes in Story Map
+8. Review and refine the CNL in CNL Editor
+9. Generate prose in NL Story
+10. Continue drafting in Manuscript
 
 **From random generation:**
 1. Click "Random" to generate complete story
@@ -81,25 +83,25 @@ Right-click context menu provides actions appropriate to each node type.
 
 ### 4. Manage Entities
 
-Each entity type has its own tab with:
+Core planning pages expose focused entity editing surfaces:
 - Grid of entity cards
 - "+" card to add new entities
 - Click card to edit
 - Delete option in edit modal
 
-Entity types:
-- **Characters**: Name, archetype, traits
-- **Locations**: Name, geography, time period, characteristics
-- **Objects**: Name, type, significance, owner
-- **Moods**: Name, emotion mix with intensities
-- **Themes**: Selected from vocabulary
+Primary entity areas:
+- **Cast**: protagonist, antagonist, secondary characters, archetypes, traits, and relationship dynamics
+- **World**: locations, objects, world rules, and world layers
+- **Themes and wisdom**: selected and refined through Story Core and related planning pages
+- **Structural elements**: chapters, scenes, beats, and turning points through Blueprint and Story Map
 
 ### 5. Define Relationships
 
-The Relations tab provides:
-- Visual graph showing character connections
-- List of defined relationships
-- Add/delete relationship controls
+Relationships are defined inside the **Cast** page, where authors can:
+- assign relationship pairs
+- select a **Relationship Type**
+- select a **Relationship Dynamic**
+- refine how relationships appear in the story foundation
 
 Relationships can include both a **Relationship Type** and a **Relationship Dynamic** for more dramatic specificity.
 
@@ -123,12 +125,12 @@ These become part of the generated CNL and influence content generation.
 
 ### 8. Evaluate Quality
 
-Metrics panel shows real-time scores:
+Evaluation focuses on the primary product metrics and supporting diagnostics:
 
 | Category | Metrics |
 |----------|---------|
-| Summary | NQS, Completeness, Coherence, Emotional Arc |
-| Detailed | CAD, CAR, OI, CPSR, CSA, RQ, Explainability |
+| Summary | Coverage, Coherence, NQS |
+| Detailed | CAD, CAR, CSA, Emotional Arc, relationship and structure diagnostics |
 | Structure | Counts of chapters, scenes, blocks, actions, refs |
 
 Green = passes threshold, Yellow = warning, Red = fails
@@ -159,7 +161,6 @@ Examples:
 | Characters | Project | Named characters with archetypes and traits |
 | Locations | Project | Places with geography and atmosphere |
 | Objects | Project | Significant items with types and ownership |
-| Moods | Project | Emotional registers for scenes |
 | Themes | Project | Abstract narrative themes |
 | Relationships | Project | Connections between characters |
 | World Rules | Project | Special rules governing the story world |
@@ -194,6 +195,6 @@ All computation is client-side. Server is only for persistence.
 
 1. New user can create a complete story structure in under 30 minutes
 2. Random generation produces coherent starting point
-3. Metrics provide actionable feedback
+3. Metrics provide actionable feedback through evaluation
 4. CNL export works correctly
 5. UI is responsive and intuitive

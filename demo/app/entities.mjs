@@ -573,6 +573,10 @@ function createSecondarySpecRow(character = null, removable = true) {
     ${removable ? '<button class="spec-secondary-delete" type="button" title="Delete character" aria-label="Delete character">×</button>' : ''}
     <div class="spec-secondary-fields">
       <div class="form-group">
+        <label class="form-label">Name</label>
+        <input class="form-input cast-secondary-name-input" type="text" value="${escapeHtml(character?.name || '')}" placeholder="Secondary character name">
+      </div>
+      <div class="form-group">
         <label class="form-label">Archetype</label>
         <select class="form-select cast-secondary-archetype">
           ${castOptions(SECONDARY_ARCHETYPES, [character?.archetype || 'ally'])}
@@ -693,7 +697,8 @@ function getTemplateTraitsForCast(role, archetype, suggestedTraits = []) {
   return [...(CAST_ARCHETYPE_TRAIT_DEFAULTS?.[role]?.[archetype] || [])];
 }
 
-function upsertPrimaryCharacter(role, fallbackName, defaultArchetype, archetypeId, traitsId) {
+function upsertPrimaryCharacter(role, fallbackName, defaultArchetype, nameId, archetypeId, traitsId) {
+  const name = $(nameId)?.value?.trim() || fallbackName;
   const archetype = $(archetypeId)?.value || defaultArchetype;
   const traits = Array.from($(traitsId)?.selectedOptions || []).map(option => option.value);
   let character = (state.project.libraries.characters || []).find(c => inferCharacterRole(c) === role);
@@ -701,7 +706,7 @@ function upsertPrimaryCharacter(role, fallbackName, defaultArchetype, archetypeI
     character = { id: genId() };
     state.project.libraries.characters.push(character);
   }
-  character.name = character.name || fallbackName;
+  character.name = name;
   character.role = role;
   character.archetype = archetype;
   character.traits = traits;
@@ -737,8 +742,8 @@ function syncCastRelationshipsFromUI() {
 }
 
 function syncPrimaryCharactersFromUI() {
-  upsertPrimaryCharacter('protagonist', 'Protagonist', 'hero', '#cast-protagonist-archetype', '#cast-protagonist-traits');
-  upsertPrimaryCharacter('antagonist', 'Antagonist', 'shadow', '#cast-antagonist-archetype', '#cast-antagonist-traits');
+  upsertPrimaryCharacter('protagonist', 'Protagonist', 'hero', '#cast-protagonist-name', '#cast-protagonist-archetype', '#cast-protagonist-traits');
+  upsertPrimaryCharacter('antagonist', 'Antagonist', 'shadow', '#cast-antagonist-name', '#cast-antagonist-archetype', '#cast-antagonist-traits');
   syncCastRelationshipsFromUI();
   renderRelationshipsView();
   generateCNL();
@@ -750,6 +755,7 @@ function syncSecondaryCharactersFromUI() {
   const rows = Array.from(secondaryList.querySelectorAll('.spec-secondary-item'));
   const saved = [];
   rows.forEach((row, index) => {
+    const name = row.querySelector('.cast-secondary-name-input')?.value?.trim() || `Secondary ${index + 1}`;
     const archetype = row.querySelector('.cast-secondary-archetype')?.value || 'ally';
     const traits = Array.from(row.querySelector('.cast-secondary-traits')?.selectedOptions || []).map(option => option.value);
     let characterId = row.dataset.characterId || '';
@@ -762,7 +768,7 @@ function syncSecondaryCharactersFromUI() {
       row.dataset.characterId = characterId;
       row.dataset.rowKey = characterId;
     }
-    character.name = character.name || `Secondary ${index + 1}`;
+    character.name = name;
     character.role = 'secondary';
     character.archetype = archetype;
     character.traits = traits;
@@ -848,8 +854,10 @@ function applyCharacterTemplateToCast(targetRole, templateKey) {
 }
 
 function bindCastSpecEvents() {
+  const protagonistName = $('#cast-protagonist-name');
   const protagonistArchetype = $('#cast-protagonist-archetype');
   const protagonistTraits = $('#cast-protagonist-traits');
+  const antagonistName = $('#cast-antagonist-name');
   const antagonistArchetype = $('#cast-antagonist-archetype');
   const antagonistTraits = $('#cast-antagonist-traits');
   const secondaryList = $('#cast-secondary-characters');
@@ -860,8 +868,9 @@ function bindCastSpecEvents() {
   const relList = $('#cast-relationship-list');
   const addRelBtn = $('#cast-btn-add-relationship');
 
-  [protagonistArchetype, protagonistTraits, antagonistArchetype, antagonistTraits].forEach(control => {
+  [protagonistName, protagonistArchetype, protagonistTraits, antagonistName, antagonistArchetype, antagonistTraits].forEach(control => {
     control?.addEventListener('change', syncPrimaryCharactersFromUI);
+    control?.addEventListener('input', syncPrimaryCharactersFromUI);
   });
   enhanceCastMultiSelectDropdown(protagonistTraits);
   enhanceCastMultiSelectDropdown(antagonistTraits);
@@ -875,6 +884,10 @@ function bindCastSpecEvents() {
   }
 
   secondaryList.addEventListener('change', (event) => {
+    if (!event.target.closest('.spec-secondary-item')) return;
+    syncSecondaryCharactersFromUI();
+  });
+  secondaryList.addEventListener('input', (event) => {
     if (!event.target.closest('.spec-secondary-item')) return;
     syncSecondaryCharactersFromUI();
   });
@@ -933,6 +946,10 @@ function renderCharactersSpecBlock() {
           </div>
           <div class="spec-secondary-fields protagonist-fields">
             <div class="form-group">
+              <label class="form-label">Name</label>
+              <input class="form-input" id="cast-protagonist-name" type="text" value="${escapeHtml(protagonist?.name || '')}" placeholder="Protagonist name">
+            </div>
+            <div class="form-group">
               <label class="form-label">Archetype</label>
               <select class="form-select" id="cast-protagonist-archetype">
                 ${castOptions(PROTAGONIST_ARCHETYPES, [protagonist?.archetype || 'hero'])}
@@ -955,6 +972,10 @@ function renderCharactersSpecBlock() {
             <button class="btn small" type="button" onclick="window.openCharacterTemplateModal('antagonist')">Use Template</button>
           </div>
           <div class="spec-secondary-fields protagonist-fields">
+            <div class="form-group">
+              <label class="form-label">Name</label>
+              <input class="form-input" id="cast-antagonist-name" type="text" value="${escapeHtml(antagonist?.name || '')}" placeholder="Antagonist name">
+            </div>
             <div class="form-group">
               <label class="form-label">Archetype</label>
               <select class="form-select" id="cast-antagonist-archetype">

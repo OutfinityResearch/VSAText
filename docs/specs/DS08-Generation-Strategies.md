@@ -4,6 +4,8 @@
 
 SCRIPTA provides three distinct story generation strategies, each optimized for different use cases. Authors can choose their preferred approach based on speed requirements, quality expectations, and available resources.
 
+In the current product, the primary author-facing evaluation signals are **Coverage**, **Coherence**, and **NQS**. Additional metrics may still be used internally or in advanced optimization flows.
+
 ## Strategy Comparison
 
 | Strategy | Speed | Quality | API Required | Best For |
@@ -57,7 +59,7 @@ Fast, deterministic generation using predefined vocabularies and randomized temp
 | World Rules | none, few, many | Special rules count |
 
 ### Output Quality
-- **Completeness**: 90-100% (all required elements present)
+- **Coverage**: 90-100% (planned story elements are broadly represented)
 - **Coherence**: 70-85% (references valid, but not semantically optimized)
 - **Originality**: 50-70% (random selection provides variety)
 - **NQS**: Typically 65-80%
@@ -112,7 +114,7 @@ The LLM receives a structured prompt containing:
 1. **Role definition**: "You are a story specification generator for SCRIPTA"
 2. **Parameters**: All user-selected options
 3. **Output schema**: Detailed JSON structure expected
-4. **Quality requirements**: Coherence, genre-appropriateness, completeness
+4. **Quality requirements**: Coherence, Coverage, genre-appropriateness, and structural completeness
 
 ### Sample Prompt Structure
 
@@ -148,7 +150,7 @@ When LLM is unavailable (no API key, network issues):
 - **AchillesAgentLib**: Available at `/home/salboaie/work/AchillesAgentLib/`
 
 ### Output Quality
-- **Completeness**: 85-95% (LLM may miss some elements)
+- **Coverage**: 85-95% (the draft typically uses most planned elements, though some may still be omitted)
 - **Coherence**: 85-95% (semantic relationships considered)
 - **Originality**: 75-90% (creative naming and relationships)
 - **NQS**: Typically 75-90%
@@ -170,7 +172,7 @@ Multi-pass generation with constraint solving and metric-driven optimization. Pr
    a. Generate candidate using Random strategy
    b. Evaluate all metrics
    c. Calculate composite score:
-      score = weighted_sum(NQS, Coherence, Completeness, EAP, 1-CAD, CAR, CSA)
+      score = weighted_sum(NQS, Coherence, Coverage, EAP, 1-CAD, CAR, CSA)
    d. IF score > best_score:
       - Save current state as best result
    e. IF score >= TARGET_NQS:
@@ -198,8 +200,8 @@ Multi-pass generation with constraint solving and metric-driven optimization. Pr
 | Metric | Weight | Target | Description |
 |--------|--------|--------|-------------|
 | NQS | 0.25 | ≥85% | Narrative Quality Score |
-| Coherence | 0.20 | ≥75% | Entity reference validity |
-| Completeness | 0.15 | ≥80% | Required elements present |
+| Coherence | 0.20 | ≥75% | Entity reference validity and structural consistency |
+| Coverage | 0.15 | ≥80% | Planned elements are represented in the generated story |
 | EAP | 0.10 | ≥70% | Emotional Arc Profile |
 | CAD (inverted) | 0.10 | ≤15% | Character Attribute Drift |
 | CAR | 0.10 | ≥95% | Compliance Adherence Rate |
@@ -216,9 +218,9 @@ for each scene in structure:
       remove reference
 ```
 
-#### Completeness Fixes
+#### Coverage Fixes
 ```javascript
-// Ensure minimum elements exist
+// Ensure planned elements are represented
 if characters.length < 2: add random character
 if locations.length < 1: add random location
 if themes.length < 1: add random theme
@@ -240,7 +242,7 @@ for each character:
 ```
 
 ### Output Quality
-- **Completeness**: 95-100%
+- **Coverage**: 95-100%
 - **Coherence**: 90-98%
 - **NQS**: Typically 80-95%
 - **Metric Optimization**: Guaranteed to meet targets or best achievable

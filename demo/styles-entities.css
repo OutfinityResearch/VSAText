@@ -232,6 +232,7 @@
 .rel-hidden-badge { font-size: var(--fs-xs); margin-right: 0.3rem; }
 .rel-from, .rel-to { font-weight: 600; color: var(--text-primary); font-size: var(--fs-base); }
 .rel-type { font-size: var(--fs-xs); color: var(--text-muted); text-transform: uppercase; padding: 0.2rem 0.4rem; background: var(--bg-deep); border-radius: 3px; }
+.rel-dynamic { font-size: var(--fs-xs); color: #d9e4ff; padding: 0.2rem 0.48rem; background: rgba(80, 98, 162, 0.28); border: 1px solid rgba(121, 139, 204, 0.24); border-radius: 999px; }
 .rel-arrow { color: var(--text-faded); }
 .rel-delete { margin-left: auto; background: transparent; border: none; color: var(--text-faded); cursor: pointer; font-size: var(--fs-md); padding: 0.2rem; }
 .rel-delete:hover { color: var(--accent-rose); }
@@ -317,6 +318,14 @@
   align-items: center;
   gap: 0.7rem;
   margin-bottom: 0.05rem;
+}
+
+.backdrop-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .backdrop-section-header .btn.small {
@@ -459,6 +468,36 @@
 #characters-grid .spec-secondary-item,
 #characters-grid .spec-relationship-item {
   background: rgba(26, 26, 46, 0.2);
+}
+
+#characters-grid .spec-relationship-controls {
+  padding-right: 0;
+  margin-bottom: 0.55rem;
+}
+
+#characters-grid .spec-relationship-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: end;
+  padding: 0.75rem 2.4rem 0.68rem 0.75rem;
+}
+
+#characters-grid .spec-relationship-item .form-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+#characters-grid .spec-relationship-item .form-select {
+  min-height: 46px;
+}
+
+#characters-grid .spec-relationship-item .spec-secondary-delete {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  transform: none;
 }
 
 #characters-grid .protagonist-fields {

@@ -25,11 +25,10 @@ Author creates a new project in the wizard with title, format, length, and a few
 ### Step 2: Book Settings
 
 Author shapes the narrative foundation before structural planning:
-- **Story Core** - story fundamentals, primary themes, character transformation
+- **Story Core** - story fundamentals, theme direction, wisdom, and character transformation
 - **Narrative Design** - core conflict, macro structure, conflict escalation, storytelling constraints
-- **Cast** - reusable or custom characters
-- **World** - locations, rules, and setting logic
-- **Themes** - thematic templates and ideological framing
+- **Cast** - protagonist, antagonist, secondary characters, and relationship dynamics
+- **World** - locations, objects, rules, and setting logic
 - **Tone & Style** - language and register preferences
 
 ### Step 3: Blueprint
@@ -55,6 +54,8 @@ Author edits chapters and scenes in manuscript form, expands structure manually,
 ## Alternative Workflows
 
 **Quick Start** - Create a project, skip ahead with Create Story, and generate a draft without completing every planning step.
+
+**Library-First Apply** - Open Library, choose a reusable item, click Apply, select Book or a specific chapter/scene when available, then continue editing in the destination page.
 
 **Reverse Engineering** - Paste existing text, system extracts characters/settings/themes, author refines and continues.
 

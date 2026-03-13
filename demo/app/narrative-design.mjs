@@ -10,8 +10,9 @@
  */
 
 import { state } from './state.mjs';
-import { $ } from './utils.mjs';
+import { $, openModal, closeModal } from './utils.mjs';
 import { getOrderedChapters } from './structure-navigation.mjs';
+import { getTemplates, getTemplate } from './blueprint/blueprint-state.mjs';
 import VOCAB from '../../src/vocabularies/vocabularies.mjs';
 
 const TURNING_POINTS = ['None', 'Inciting Incident', 'First Plot Point', 'Midpoint', 'Second Plot Point', 'Climax', 'Resolution'];
@@ -54,6 +55,156 @@ function normalizeStructureModel(value) {
   const byLabel = STRUCTURE_MODELS.find(model => model.label === raw);
   if (byLabel) return byLabel.key;
   return DEFAULT_STRUCTURE_MODEL;
+}
+
+function getNarrativeArcTemplates() {
+  return Object.entries(getTemplates() || {});
+}
+
+function inferEscalationPatternFromPreset(preset = []) {
+  if (!Array.isArray(preset) || preset.length < 2) return 'Wave';
+  let rises = 0;
+  let falls = 0;
+  for (let i = 1; i < preset.length; i += 1) {
+    const diff = Number(preset[i]?.tension || 0) - Number(preset[i - 1]?.tension || 0);
+    if (diff > 0) rises += 1;
+    if (diff < 0) falls += 1;
+  }
+  if (falls === 0) return 'Linear';
+  if (rises >= 3 && falls <= 1) return 'Spiral';
+  if (rises >= 2 && falls >= 2) return 'Wave';
+  return 'Step';
+}
+
+function tensionAtPosition(preset = [], position = 0) {
+  if (!Array.isArray(preset) || !preset.length) return 3;
+  const sorted = [...preset].sort((left, right) => (left.position || 0) - (right.position || 0));
+  if (position <= (sorted[0]?.position || 0)) return Number(sorted[0]?.tension) || 3;
+  if (position >= (sorted[sorted.length - 1]?.position || 1)) return Number(sorted[sorted.length - 1]?.tension) || 3;
+
+  for (let index = 1; index < sorted.length; index += 1) {
+    const previous = sorted[index - 1];
+    const current = sorted[index];
+    if (position > current.position) continue;
+    const span = current.position - previous.position || 1;
+    const ratio = (position - previous.position) / span;
+    const tension = previous.tension + ratio * (current.tension - previous.tension);
+    return Math.max(1, Math.min(5, Math.round(tension)));
+  }
+
+  return 3;
+}
+
+function createTemplateChapterRole(index, total) {
+  if (total <= 1) return 'Setup';
+  if (index === total - 1) return 'Finale';
+  if (index >= Math.max(1, total - 2)) return 'Crisis';
+  if (index === 0) return 'Setup';
+  return index <= Math.max(1, Math.floor((total - 1) / 3)) ? 'Setup' : 'Escalation';
+}
+
+function createTemplateTurningPoint(index, total) {
+  if (total <= 0) return 'None';
+  const turningMap = new Map();
+  turningMap.set(0, 'Inciting Incident');
+  if (total >= 4) turningMap.set(Math.max(1, Math.floor((total - 1) / 3)), 'First Plot Point');
+  if (total >= 3) turningMap.set(Math.floor((total - 1) / 2), 'Midpoint');
+  if (total >= 5) turningMap.set(Math.max(1, total - 2), 'Climax');
+  turningMap.set(total - 1, 'Resolution');
+  return turningMap.get(index) || 'None';
+}
+
+function buildTemplateChapters(template) {
+  const count = Math.max(1, Number(template?.chapters) || 4);
+  return Array.from({ length: count }, (_, index) => ({
+    id: uid('ch'),
+    title: chapterTitle(index),
+    turningPoint: createTemplateTurningPoint(index, count),
+    role: createTemplateChapterRole(index, count)
+  }));
+}
+
+function buildTemplateEscalation(chapters, template) {
+  const preset = Array.isArray(template?.tensionPreset) ? template.tensionPreset : [];
+  return chapters.map((chapter, index) => {
+    const position = chapters.length === 1 ? 0.5 : index / (chapters.length - 1);
+    return {
+      chapterId: chapter.id,
+      tension: tensionAtPosition(preset, position),
+      note: ''
+    };
+  });
+}
+
+function renderTemplateGenreTags(template) {
+  const genres = Array.isArray(template?.suggestedGenres) ? template.suggestedGenres.slice(0, 3) : [];
+  return genres.map(genre => `<span class="nd-template-tag">${esc(genre)}</span>`).join('');
+}
+
+function openNarrativeArcTemplateModal() {
+  const modalOverlay = $('#select-modal');
+  modalOverlay?.classList.add('modal-overlay-page', 'template-browser-modal');
+  modalOverlay?.querySelector('.modal')?.classList.add('modal-page', 'template-browser-sheet');
+  const templates = getNarrativeArcTemplates();
+  $('#select-modal-title').textContent = 'Use Arc Template';
+
+  if (!templates.length) {
+    $('#select-modal-body').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-text">No narrative arc templates available</div>
+        <div class="empty-state-hint">Open Blueprint once or reload the project to load template data.</div>
+      </div>
+    `;
+    openModal('select-modal');
+    return;
+  }
+
+  $('#select-modal-body').innerHTML = `
+    <div class="nd-template-picker">
+      <div class="nd-template-picker-head">
+        <div class="nd-template-picker-title">Narrative Arc Templates</div>
+        <div class="nd-template-picker-desc">Apply a reusable arc skeleton to prefill structure model, macro chapters, turning points, and tension progression.</div>
+      </div>
+      <div class="nd-template-grid">
+        ${templates.map(([key, template]) => `
+          <button
+            class="nd-template-card"
+            type="button"
+            onclick="window.applyNarrativeArcTemplate('${esc(key)}')">
+            <div class="nd-template-card-head">
+              <strong>${esc(template.label || key)}</strong>
+              <span>${esc(template.complexity || 'medium')}</span>
+            </div>
+            <p>${esc(template.description || 'Narrative arc template')}</p>
+            <div class="nd-template-footer">
+              <div class="nd-template-meta">
+              <span>${esc(STRUCTURE_MODELS.find(model => model.key === normalizeStructureModel(template.arc))?.label || template.arc || 'Arc')}</span>
+              </div>
+              <div class="nd-template-tags">${renderTemplateGenreTags(template)}</div>
+            </div>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  openModal('select-modal');
+}
+
+function applyNarrativeArcTemplate(templateKey) {
+  const template = getTemplate(templateKey);
+  if (!template) return;
+  const macro = ensureMacroDesign();
+  const chapters = buildTemplateChapters(template);
+
+  macro.macroStructure.structureModel = normalizeStructureModel(template.arc);
+  macro.chapters = chapters;
+  macro.chapterEscalation = buildTemplateEscalation(chapters, template);
+  macro.conflictPlan.escalationPattern = inferEscalationPatternFromPreset(template.tensionPreset);
+
+  closeModal('select-modal');
+  renderNarrativeDesignMacroView();
+  window.showNotification?.(`${template.label} applied to Macro Structure`, 'success');
 }
 
 function ensureMacroDesign() {
@@ -176,8 +327,11 @@ function renderMacroStructure(macro) {
   return `
     <section class="nd-section">
       <div class="nd-section-head">
-        <h3>Macro Structure</h3>
-        <p>Choose the structure model, then map turning points across chapters.</p>
+        <div>
+          <h3>Macro Structure</h3>
+          <p>Choose the structure model, then map turning points across chapters.</p>
+        </div>
+        <button class="btn small nd-template-trigger" type="button" id="btn-nd-use-template">Use Arc Template</button>
       </div>
       <div class="nd-grid nd-grid-2">
         <label class="nd-field">
@@ -432,6 +586,7 @@ function bindEvents(container) {
   container.querySelector('#nd-structure-model')?.addEventListener('change', event => {
     macro.macroStructure.structureModel = event.target.value;
   });
+  container.querySelector('#btn-nd-use-template')?.addEventListener('click', openNarrativeArcTemplateModal);
   container.querySelector('#nd-stakes-growth')?.addEventListener('input', event => {
     macro.conflictPlan.stakesGrowth = event.target.value;
   });
@@ -487,5 +642,8 @@ window.removeNarrativeDesignChapter = (chapterId) => {
   macro.chapterEscalation = macro.chapterEscalation.filter(item => item.chapterId !== chapterId);
   renderNarrativeDesignMacroView();
 };
+
+window.openNarrativeArcTemplateModal = openNarrativeArcTemplateModal;
+window.applyNarrativeArcTemplate = applyNarrativeArcTemplate;
 
 export default { renderNarrativeDesignMacroView };

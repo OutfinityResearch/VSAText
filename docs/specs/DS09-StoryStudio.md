@@ -56,9 +56,8 @@ Book Settings is the editorial planning layer. It includes:
 
 - **Story Core**: story fundamentals, themes, wisdom, and character transformation
 - **Narrative Design**: core conflict, macro structure, escalation logic, and constraints
-- **Cast**: reusable character planning
-- **World**: locations and world constraints
-- **Themes**: reusable thematic templates
+- **Cast**: protagonist, antagonist, secondary characters, relationship type, and relationship dynamic
+- **World**: locations, objects, world rules, world layers, and direct template shortcuts from Library
 - **Tone & Style**: language direction for generation
 
 ### 3. Build Story Structure
@@ -102,7 +101,7 @@ The Relations tab provides:
 - List of defined relationships
 - Add/delete relationship controls
 
-Relationship types cover familial, social, romantic, antagonistic, and power dynamics.
+Relationships can include both a **Relationship Type** and a **Relationship Dynamic** for more dramatic specificity.
 
 ### 6. Plan Blueprint and Story Map
 
@@ -137,6 +136,21 @@ Green = passes threshold, Yellow = warning, Red = fails
 ### 9. Export
 
 **Export CNL**: Download the auto-generated CNL as a `.cnl` file for use with other tools or for archival.
+
+## Library Apply Workflow
+
+Library is no longer only a preview surface. Authors can:
+
+1. Open Library
+2. Browse a reusable item
+3. Click **Apply**
+4. Choose a valid destination such as **Book**, **Chapter**, or **Scene** depending on category
+5. Continue refinement in the destination page
+
+Examples:
+- Narrative Arc Templates support macro planning
+- Character Templates accelerate Cast setup
+- Locations and Objects can be applied into World, chapters, or scenes when available
 
 ## Entity Libraries
 

@@ -20,7 +20,9 @@ export function openModal(id) {
 }
 
 export function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
+  const modal = document.getElementById(id);
+  modal.classList.remove('open', 'modal-overlay-page', 'template-browser-modal');
+  modal.querySelector('.modal')?.classList.remove('modal-page', 'template-browser-sheet');
   if (id === 'entity-modal') {
     const deleteBtn = document.getElementById('btn-modal-delete');
     if (deleteBtn) {

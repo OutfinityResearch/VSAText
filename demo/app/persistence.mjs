@@ -160,6 +160,13 @@ export async function loadProjectsList() {
       <div class="entity-grid">
         ${projects.map(p => `
           <div class="entity-card" onclick="loadProject('${p.id}')" style="cursor:pointer;">
+            <button
+              class="project-delete-btn"
+              type="button"
+              title="Delete project"
+              aria-label="Delete project"
+              onclick="event.stopPropagation(); deleteProjectFromServer('${p.id}')"
+            >×</button>
             <div class="entity-name">${p.name || p.id}</div>
             <div class="entity-type">${p.genre || 'Story'}</div>
             <div class="entity-desc" style="font-size:0.7rem;color:var(--text-faded);">
@@ -170,7 +177,6 @@ export async function loadProjectsList() {
               <span class="entity-tag">${new Date(p.modified_at).toLocaleDateString()}</span>
               ${p.metrics_summary?.nqs ? `<span class="entity-tag">NQS: ${(p.metrics_summary.nqs * 100).toFixed(0)}%</span>` : ''}
             </div>
-            <button class="btn danger small" onclick="event.stopPropagation(); deleteProjectFromServer('${p.id}')" style="margin-top:0.5rem;">Delete</button>
           </div>
         `).join('')}
       </div>`;

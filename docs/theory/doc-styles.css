@@ -247,6 +247,72 @@ blockquote {
   margin: 0.5rem 0 0 1rem;
 }
 
+.flow-diagram {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 1.25rem 0;
+}
+
+.flow-step {
+  position: relative;
+  padding: 1rem 1.1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 209, 102, 0.18);
+  background:
+    linear-gradient(135deg, rgba(255, 209, 102, 0.08), rgba(17, 138, 178, 0.04)),
+    linear-gradient(180deg, rgba(45, 45, 82, 0.92), rgba(36, 36, 66, 0.96));
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+}
+
+.flow-step::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 12px 0 0 12px;
+  background: linear-gradient(180deg, var(--accent-gold), var(--accent-sky));
+}
+
+.flow-step strong {
+  display: block;
+  font-family: 'Cinzel', serif;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  margin-bottom: 0.22rem;
+}
+
+.flow-step p {
+  margin: 0;
+  color: #d8deef;
+}
+
+.flow-step-kicker {
+  display: inline-block;
+  margin-bottom: 0.34rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+}
+
+.flow-step-primary {
+  border-color: rgba(255, 209, 102, 0.32);
+}
+
+.flow-step-accent::before {
+  background: linear-gradient(180deg, var(--accent-teal), var(--accent-violet));
+}
+
+.flow-arrow {
+  text-align: center;
+  font-size: 1.2rem;
+  color: var(--accent-gold);
+  line-height: 1;
+}
+
 /* Accordion Styles */
 .accordion {
   margin: 1.5rem 0;

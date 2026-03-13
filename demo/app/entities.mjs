@@ -53,6 +53,21 @@ const CHARACTER_TEMPLATE_OPTIONS = Object.entries(VOCAB.CHARACTER_ARCHETYPES || 
   suggestedTraits: Array.isArray(value?.suggestedTraits) ? value.suggestedTraits : []
 }));
 
+const LOCATION_TEMPLATE_OPTIONS = Object.entries(VOCAB.LOCATION_GEOGRAPHY || {}).map(([key, value]) => ({
+  key,
+  label: value?.label || humanizeLabel(key),
+  description: value?.desc || 'Location template',
+  category: value?.category || ''
+}));
+
+const OBJECT_TEMPLATE_OPTIONS = Object.entries(VOCAB.OBJECT_TYPES || {}).map(([key, value]) => ({
+  key,
+  label: value?.label || humanizeLabel(key),
+  description: value?.desc || 'Object template',
+  category: value?.category || '',
+  icon: value?.icon || ''
+}));
+
 // ==================== ENTITY GRIDS ====================
 export function renderEntityGrid(type, containerIdOrOptions = null, maybeOptions = null) {
   let containerId = `${type}-grid`;
@@ -96,6 +111,7 @@ export function renderEntityGrid(type, containerIdOrOptions = null, maybeOptions
   
   let cards = list.map(e => {
     let tags = '';
+    let extraDescription = '';
     if (e.traits?.length) {
       const displayTraits = e.traits.slice(0, 4);
       const moreCount = e.traits.length - 4;
@@ -115,6 +131,14 @@ export function renderEntityGrid(type, containerIdOrOptions = null, maybeOptions
       const geo = e.geography ? humanizeLabel(e.geography) : '';
       const era = e.time ? humanizeLabel(e.time) : '';
       sub = [geo, era].filter(Boolean).join(' • ') || 'Location';
+      extraDescription = e.description || e.significance || '';
+    }
+    if (type === 'objects') {
+      const objectTypeLabel = e.objectType ? humanizeLabel(e.objectType) : '';
+      const normalizedName = String(e.name || '').trim().toLowerCase();
+      const normalizedType = objectTypeLabel.trim().toLowerCase();
+      sub = normalizedName && normalizedName === normalizedType ? '' : objectTypeLabel;
+      extraDescription = e.description || '';
     }
     const cardType = type === 'objects' ? 'object' : type.slice(0, -1);
     const quickDelete = (type === 'characters' || type === 'locations' || type === 'objects')
@@ -122,7 +146,11 @@ export function renderEntityGrid(type, containerIdOrOptions = null, maybeOptions
       : '';
     return `<div class="entity-card ${cardType}" onclick="editEntity('${type}','${e.id}')">
       ${quickDelete}
-      <div class="entity-name">${e.name}</div><div class="entity-type">${sub}</div>${tags}</div>`;
+      <div class="entity-name">${e.name}</div>
+      ${sub ? `<div class="entity-type">${sub}</div>` : ''}
+      ${extraDescription ? `<div class="entity-desc">${escapeHtml(extraDescription)}</div>` : ''}
+      ${tags}
+    </div>`;
   }).join('');
   
   if (includeAddCard) {
@@ -191,7 +219,10 @@ export function renderBackdropView() {
       <section class="backdrop-section">
         <div class="backdrop-section-header">
           <h3>Locations (Place & Time)</h3>
-          <button class="btn small" type="button" onclick="window.addEntity('locations')">+ Add Location</button>
+          <div class="backdrop-section-actions">
+            <button class="btn small" type="button" onclick="window.openWorldTemplateModal('locations')">Add from Library</button>
+            <button class="btn small" type="button" onclick="window.addEntity('locations')">+ Add Location</button>
+          </div>
         </div>
         <div class="backdrop-section-note">Define place, geography, atmosphere, and era/time period for scene context.</div>
         <div class="entity-grid" id="backdrop-locations-grid"></div>
@@ -199,7 +230,10 @@ export function renderBackdropView() {
       <section class="backdrop-section">
         <div class="backdrop-section-header">
           <h3>Story Objects</h3>
-          <button class="btn small" type="button" onclick="window.addEntity('objects')">+ Add Object</button>
+          <div class="backdrop-section-actions">
+            <button class="btn small" type="button" onclick="window.openWorldTemplateModal('objects')">Add from Library</button>
+            <button class="btn small" type="button" onclick="window.addEntity('objects')">+ Add Object</button>
+          </div>
         </div>
         <div class="backdrop-section-note">Track story-relevant artifacts, tools, keys, and symbolic items.</div>
         <div class="entity-grid" id="backdrop-objects-grid"></div>
@@ -439,6 +473,16 @@ const SPEC_RELATION_TYPES = [
   { value: 'dependency', label: 'Dependency' }
 ];
 
+const RELATIONSHIP_DYNAMICS = [
+  { value: 'supportive', label: 'Supportive' },
+  { value: 'toxic', label: 'Toxic' },
+  { value: 'manipulative', label: 'Manipulative' },
+  { value: 'protective', label: 'Protective' },
+  { value: 'competitive', label: 'Competitive' },
+  { value: 'codependent', label: 'Codependent' },
+  { value: 'mentor_student_tension', label: 'Mentor-Student Tension' }
+];
+
 let castDropdownListenerBound = false;
 
 function closeCastMultiDropdowns(except = null) {
@@ -555,20 +599,30 @@ function createSecondarySpecRow(character = null, removable = true) {
   return row;
 }
 
-function createRelationshipSpecRow(type = 'alliance') {
+function createRelationshipSpecRow(type = 'alliance', dynamic = 'supportive') {
   const row = document.createElement('div');
   row.className = 'spec-relationship-item';
   row.innerHTML = `
     <button class="spec-secondary-delete" type="button" title="Delete relationship" aria-label="Delete relationship">×</button>
-    <select class="form-select cast-relationship-type">
-      ${castOptions(SPEC_RELATION_TYPES, [type])}
-    </select>
+    <div class="form-group">
+      <label class="form-label">Relationship Type</label>
+      <select class="form-select cast-relationship-type">
+        ${castOptions(SPEC_RELATION_TYPES, [type])}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Relationship Dynamic</label>
+      <select class="form-select cast-relationship-dynamic">
+        ${castOptions(RELATIONSHIP_DYNAMICS, [dynamic])}
+      </select>
+    </div>
   `;
   row.querySelector('.spec-secondary-delete')?.addEventListener('click', () => {
     row.remove();
     syncCastRelationshipsFromUI();
   });
   row.querySelector('.cast-relationship-type')?.addEventListener('change', () => syncCastRelationshipsFromUI());
+  row.querySelector('.cast-relationship-dynamic')?.addEventListener('change', () => syncCastRelationshipsFromUI());
   return row;
 }
 
@@ -662,14 +716,21 @@ function syncCastRelationshipsFromUI() {
   const antagonist = (state.project.libraries.characters || []).find(c => inferCharacterRole(c) === 'antagonist');
   if (!protagonist || !antagonist) return;
 
-  const selectedTypes = Array.from(document.querySelectorAll('#cast-relationship-list .cast-relationship-type'))
-    .map(select => select.value)
-    .filter(Boolean);
-
-  const types = Array.from(new Set(selectedTypes));
+  const rows = Array.from(document.querySelectorAll('#cast-relationship-list .spec-relationship-item'));
   const old = state.project.libraries.relationships || [];
   const kept = old.filter(rel => !(rel.fromId === protagonist.id && rel.toId === antagonist.id));
-  const mapped = types.map(type => ({ id: genId(), fromId: protagonist.id, toId: antagonist.id, type, hidden: false }));
+  const mapped = rows.map(row => {
+    const type = row.querySelector('.cast-relationship-type')?.value || 'alliance';
+    const dynamic = row.querySelector('.cast-relationship-dynamic')?.value || 'supportive';
+    return {
+      id: genId(),
+      fromId: protagonist.id,
+      toId: antagonist.id,
+      type,
+      dynamic,
+      hidden: false
+    };
+  });
   state.project.libraries.relationships = [...kept, ...mapped];
   renderRelationshipsView();
   generateCNL();
@@ -717,6 +778,9 @@ function syncSecondaryCharactersFromUI() {
 }
 
 function openCharacterTemplateModal(targetRole) {
+  const modalOverlay = $('#select-modal');
+  modalOverlay?.classList.add('modal-overlay-page', 'template-browser-modal');
+  modalOverlay?.querySelector('.modal')?.classList.add('modal-page', 'template-browser-sheet');
   $('#select-modal-title').textContent = targetRole === 'secondary'
     ? 'Add Character from Template'
     : `Use Template for ${humanizeLabel(targetRole)}`;
@@ -792,6 +856,7 @@ function bindCastSpecEvents() {
   const addSecondaryBtn = $('#cast-btn-add-secondary-character');
   const addSecondaryTemplateBtn = $('#cast-btn-add-secondary-template');
   const relSelect = $('#cast-relationships');
+  const relDynamicSelect = $('#cast-relationship-dynamic');
   const relList = $('#cast-relationship-list');
   const addRelBtn = $('#cast-btn-add-relationship');
 
@@ -830,16 +895,15 @@ function bindCastSpecEvents() {
     ? (state.project.libraries.relationships || []).filter(rel => rel.fromId === protagonist.id && rel.toId === antagonist.id)
     : [];
   if (betweenPrimary.length) {
-    betweenPrimary.forEach(rel => relList.appendChild(createRelationshipSpecRow(rel.type)));
+    betweenPrimary.forEach(rel => relList.appendChild(createRelationshipSpecRow(rel.type, rel.dynamic || 'supportive')));
   }
 
   addRelBtn?.addEventListener('click', () => {
     const selectedType = relSelect?.value || 'alliance';
-    relList.appendChild(createRelationshipSpecRow(selectedType));
+    const selectedDynamic = relDynamicSelect?.value || 'supportive';
+    relList.appendChild(createRelationshipSpecRow(selectedType, selectedDynamic));
     syncCastRelationshipsFromUI();
   });
-
-  relSelect?.addEventListener('change', () => syncCastRelationshipsFromUI());
 
   if (!castDropdownListenerBound) {
     document.addEventListener('click', (event) => {
@@ -921,11 +985,19 @@ function renderCharactersSpecBlock() {
       <div class="spec-characters-grid">
         <div class="spec-subcard spec-subcard-relationships">
           <h4 class="spec-subcard-title">Relationships</h4>
-          <div class="form-group">
-            <label class="form-label">Relationship Type</label>
-            <select class="form-select" id="cast-relationships">
-              ${castOptions(SPEC_RELATION_TYPES, ['alliance'])}
-            </select>
+          <div class="spec-secondary-fields spec-relationship-controls">
+            <div class="form-group">
+              <label class="form-label">Relationship Type</label>
+              <select class="form-select" id="cast-relationships">
+                ${castOptions(SPEC_RELATION_TYPES, ['alliance'])}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Relationship Dynamic</label>
+              <select class="form-select" id="cast-relationship-dynamic">
+                ${castOptions(RELATIONSHIP_DYNAMICS, ['supportive'])}
+              </select>
+            </div>
           </div>
           <div class="spec-relationship-list" id="cast-relationship-list"></div>
           <button class="btn small" id="cast-btn-add-relationship" type="button">+ Add Relationship</button>
@@ -1253,6 +1325,93 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
+function openWorldTemplateModal(kind) {
+  const modalOverlay = $('#select-modal');
+  modalOverlay?.classList.add('modal-overlay-page', 'template-browser-modal');
+  modalOverlay?.querySelector('.modal')?.classList.add('modal-page', 'template-browser-sheet');
+
+  const isLocation = kind === 'locations';
+  const options = isLocation ? LOCATION_TEMPLATE_OPTIONS : OBJECT_TEMPLATE_OPTIONS;
+
+  $('#select-modal-title').textContent = isLocation
+    ? 'Add Location from Library'
+    : 'Add Object from Library';
+
+  $('#select-modal-body').innerHTML = `
+    <div class="entity-grid">
+      <div class="entity-grid-header">
+        <div class="entity-grid-title">${isLocation ? 'Locations' : 'Objects & Artifacts'}</div>
+        <div class="entity-grid-desc">
+          ${isLocation
+            ? 'Choose a reusable location seed to prefill geography and world context, then continue editing manually in World.'
+            : 'Choose a reusable object or artifact seed to prefill type and significance, then continue editing manually in World.'}
+        </div>
+      </div>
+      <div class="entity-grid-cards">
+        ${options.map(template => `
+          <button
+            class="entity-card ${isLocation ? 'location' : 'object'}"
+            type="button"
+            onclick="window.applyWorldTemplate('${kind}','${template.key}')">
+            <div class="entity-name">${escapeHtml(isLocation ? template.label : `${template.icon ? `${template.icon} ` : ''}${template.label}`)}</div>
+            <div class="entity-desc">${escapeHtml(template.description)}</div>
+            ${isLocation ? `
+              <div class="entity-tags">
+                ${template.category ? `<span class="entity-tag">${escapeHtml(humanizeLabel(template.category))}</span>` : ''}
+                <span class="entity-tag">Template</span>
+              </div>
+            ` : ''}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  openModal('select-modal');
+}
+
+function applyWorldTemplate(kind, templateKey) {
+  const isLocation = kind === 'locations';
+  const collection = state.project.libraries[kind] || (state.project.libraries[kind] = []);
+  const template = (isLocation ? LOCATION_TEMPLATE_OPTIONS : OBJECT_TEMPLATE_OPTIONS).find(item => item.key === templateKey);
+  if (!template) return;
+
+  const duplicate = collection.find(item => (
+    isLocation
+      ? item.geography === templateKey && String(item.name || '').trim().toLowerCase() === String(template.label).trim().toLowerCase()
+      : item.objectType === templateKey && String(item.name || '').trim().toLowerCase() === String(template.label).trim().toLowerCase()
+  ));
+  if (duplicate) {
+    closeModal('select-modal');
+    window.showNotification?.(`${template.label} is already in World`, 'info');
+    return;
+  }
+
+  if (isLocation) {
+    collection.push({
+      id: genId(),
+      name: template.label,
+      geography: template.key,
+      time: $('#worldspec-time-period')?.value || 'medieval',
+      characteristics: []
+    });
+  } else {
+    collection.push({
+      id: genId(),
+      name: template.label,
+      objectType: template.key,
+      significance: $('#worldspec-object-importance')?.value || 'important',
+      ownerId: null,
+      description: template.description
+    });
+  }
+
+  closeModal('select-modal');
+  window.renderBackdropView?.();
+  generateCNL();
+  window.showNotification?.(`${template.label} added from library`, 'success');
+}
+
 window.toggleChip = el => el.classList.toggle('selected');
 window.selectTheme = k => {
   $$('#e-themes .entity-card').forEach(c => {
@@ -1439,6 +1598,8 @@ export function showActionModal(parent) {
 
 window.openCharacterTemplateModal = openCharacterTemplateModal;
 window.applyCharacterTemplateToCast = applyCharacterTemplateToCast;
+window.openWorldTemplateModal = openWorldTemplateModal;
+window.applyWorldTemplate = applyWorldTemplate;
 
 window.saveAction = (pid) => {
   const p = findNode(pid);

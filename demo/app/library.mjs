@@ -2,7 +2,7 @@
  * SCRIPTA Demo - Library View (Cards + Context Apply)
  */
 
-import { $ } from './utils.mjs';
+import { $, openModal, closeModal } from './utils.mjs';
 import { state } from './state.mjs';
 import {
   getWisdomCatalog,
@@ -21,7 +21,8 @@ import {
   applyBlock,
   humanize
 } from './library-data.mjs';
-import { getOrderedChapters } from './structure-navigation.mjs';
+import { getOrderedChapters, getChapterScenes } from './structure-navigation.mjs';
+import { getChaptersForManuscript, getScenesForManuscriptChapter } from './writing-studio-manuscript.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
 
 const uiState = {
@@ -313,11 +314,28 @@ function getCardsForSelection(selection) {
   return { title: 'Library', subtitle: 'No category selected', cards: [] };
 }
 
-function chapterOptions() {
-  return getOrderedChapters(state.project.structure).map((chapter, index) => ({
+function getLibraryChapterNodes() {
+  const structureChapters = getOrderedChapters(state.project.structure);
+  if (structureChapters.length) return structureChapters;
+  return getChaptersForManuscript();
+}
+
+function chapterOptions(chapters = getLibraryChapterNodes()) {
+  return chapters.map((chapter, index) => ({
     id: chapter.id,
     label: `Chapter ${index + 1}: ${chapter.title || chapter.name || 'Untitled'}`
   }));
+}
+
+function sceneOptions(chapters) {
+  return chapters.flatMap((chapter, chapterIndex) =>
+    (chapter?.source === 'generated-story' ? getScenesForManuscriptChapter(chapter) : getChapterScenes(chapter)).map((scene, sceneIndex) => ({
+      id: scene.id,
+      chapterId: chapter.id,
+      label: `Scene ${sceneIndex + 1}: ${scene.title || scene.name || 'Untitled'}`,
+      chapterLabel: `Chapter ${chapterIndex + 1}: ${chapter.title || chapter.name || 'Untitled'}`
+    }))
+  );
 }
 
 function applyCard(card, targetType, chapterId = '') {
@@ -344,6 +362,117 @@ function applyCard(card, targetType, chapterId = '') {
   if (card.kind === 'block') applyBlock(card.key, target);
 }
 
+function getAllowedTargets(card, chapters, scenes) {
+  const chapterTargets = chapters.map(chapter => ({
+    targetType: 'chapter',
+    targetId: chapter.id,
+    label: chapter.label
+  }));
+  const sceneTargets = scenes.map(scene => ({
+    targetType: 'scene',
+    targetId: scene.id,
+    label: scene.label,
+    parentLabel: scene.chapterLabel
+  }));
+
+  if (card.kind === 'template-builtin' || card.kind === 'template-custom') {
+    return [
+      { targetType: 'book', targetId: '', label: 'Book' },
+      ...chapterTargets
+    ];
+  }
+
+  if (card.kind === 'character-template') {
+    return [
+      { targetType: 'book', targetId: '', label: 'Book' },
+      ...chapterTargets
+    ];
+  }
+
+  if (card.kind === 'theme-preset' || card.kind === 'theme-saved' || card.kind === 'wisdom') {
+    return [
+      { targetType: 'book', targetId: '', label: 'Book' },
+      ...chapterTargets,
+      ...sceneTargets
+    ];
+  }
+
+  if (card.kind === 'pattern') {
+    return [
+      { targetType: 'book', targetId: '', label: 'Book' },
+      ...chapterTargets
+    ];
+  }
+
+  if (card.kind === 'block') {
+    return [
+      ...chapterTargets,
+      ...sceneTargets
+    ];
+  }
+
+  return [
+    { targetType: 'book', targetId: '', label: 'Book' },
+    ...chapterTargets,
+    ...sceneTargets
+  ];
+}
+
+function renderApplyTargetGroup(title, targets = []) {
+  if (!targets.length) return '';
+  return `
+    <div class="library-apply-group">
+      <div class="library-apply-group-title">${esc(title)}</div>
+      <div class="library-apply-targets">
+        ${targets.map(target => `
+          <button
+            class="library-apply-target"
+            type="button"
+            data-target-type="${esc(target.targetType)}"
+            data-target-id="${esc(target.targetId)}">
+            <span>${esc(target.label)}</span>
+            ${target.parentLabel ? `<small>${esc(target.parentLabel)}</small>` : ''}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function openApplyTargetModal(card, chapters, scenes) {
+  const targets = getAllowedTargets(card, chapters, scenes);
+  if (!targets.length) return;
+  const bookTargets = targets.filter(target => target.targetType === 'book');
+  const chapterTargets = targets.filter(target => target.targetType === 'chapter');
+  const sceneTargets = targets.filter(target => target.targetType === 'scene');
+
+  $('#select-modal-title').textContent = 'Apply Template';
+  $('#select-modal-body').innerHTML = `
+    <div class="library-apply-modal">
+      <div class="library-apply-modal-head">
+        <div class="library-apply-modal-title">Where do you want to apply this item?</div>
+        <div class="library-apply-modal-item">${esc(card.title)}</div>
+      </div>
+      ${renderApplyTargetGroup('Book', bookTargets)}
+      ${renderApplyTargetGroup('Chapters', chapterTargets)}
+      ${renderApplyTargetGroup('Scenes', sceneTargets)}
+    </div>
+  `;
+
+  $('#select-modal-body').querySelectorAll('.library-apply-target').forEach(button => {
+    button.addEventListener('click', () => {
+      const targetType = button.getAttribute('data-target-type') || 'book';
+      const targetId = button.getAttribute('data-target-id') || '';
+      if (targetType === 'chapter') uiState.chapterTargetId = targetId;
+      applyCard(card, targetType, targetId);
+      closeModal('select-modal');
+      renderLibraryView();
+    });
+  });
+
+  openModal('select-modal');
+}
+
 function renderCard(card) {
   const templateAccentPalette = ['#f4c96a', '#7db5ff', '#62d89a', '#ff8f7a', '#b79bff', '#7fe2d4'];
   let accent = '';
@@ -357,8 +486,7 @@ function renderCard(card) {
   const actions = card.readOnly
     ? '<span class="library-apply-note">Preview only</span>'
     : `
-      <button class="btn small library-apply-btn" data-action="apply-book">Apply Book</button>
-      <button class="btn small library-apply-btn secondary" data-action="apply-chapter">Apply Chapter</button>
+      <button class="btn small library-apply-btn" data-action="apply">Apply</button>
     `;
 
   const themeGuidance = card.themeGuidance
@@ -386,25 +514,13 @@ function renderCard(card) {
   `;
 }
 
-function bindEvents(container, cards, chapters) {
-  const chapterSelect = container.querySelector('#library-chapter-target');
-  chapterSelect?.addEventListener('change', () => {
-    uiState.chapterTargetId = chapterSelect.value;
-  });
-
+function bindEvents(container, cards, chapters, scenes) {
   container.querySelectorAll('.library-card').forEach((cardEl, index) => {
     const card = cards[index];
     if (!card || card.readOnly) return;
 
-    cardEl.querySelector('[data-action="apply-book"]')?.addEventListener('click', () => {
-      applyCard(card, 'book', '');
-      renderLibraryView();
-    });
-
-    cardEl.querySelector('[data-action="apply-chapter"]')?.addEventListener('click', () => {
-      const chapterId = uiState.chapterTargetId || (chapters[0]?.id || '');
-      applyCard(card, 'chapter', chapterId);
-      renderLibraryView();
+    cardEl.querySelector('[data-action="apply"]')?.addEventListener('click', () => {
+      openApplyTargetModal(card, chapters, scenes);
     });
   });
 }
@@ -415,11 +531,9 @@ export function renderLibraryView() {
 
   const data = getCardsForSelection(uiState.selection);
   const cards = data.cards || [];
-  const chapters = chapterOptions();
-
-  if (!uiState.chapterTargetId && chapters.length) {
-    uiState.chapterTargetId = chapters[0].id;
-  }
+  const chapterNodes = getLibraryChapterNodes();
+  const chapters = chapterOptions(chapterNodes);
+  const scenes = sceneOptions(chapterNodes);
 
   container.innerHTML = `
     <div class="library-layout">
@@ -427,16 +541,6 @@ export function renderLibraryView() {
         <div class="library-page-header">
           <h2>${esc(data.title)}</h2>
           <p>${esc(data.subtitle)}</p>
-          <div class="library-target-row-inline">
-            <label>
-              <span>Chapter Target</span>
-              <select id="library-chapter-target" ${chapters.length ? '' : 'disabled'}>
-                ${chapters.length
-                  ? chapters.map(ch => `<option value="${esc(ch.id)}" ${uiState.chapterTargetId === ch.id ? 'selected' : ''}>${esc(ch.label)}</option>`).join('')
-                  : '<option value="">No chapters available</option>'}
-              </select>
-            </label>
-          </div>
         </div>
 
         <div class="library-cards">
@@ -448,7 +552,7 @@ export function renderLibraryView() {
     </div>
   `;
 
-  bindEvents(container, cards, chapters);
+  bindEvents(container, cards, chapters, scenes);
 }
 
 export default { renderLibraryView, setLibrarySelection, getLibrarySelection };

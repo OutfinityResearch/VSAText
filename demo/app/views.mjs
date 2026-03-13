@@ -50,6 +50,12 @@ function getViewDescriptionHtml(viewKey) {
   </div>`;
 }
 
+function humanizeIdentifier(value) {
+  return String(value || '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, match => match.toUpperCase());
+}
+
 // ==================== RELATIONSHIPS VIEW ====================
 export function renderRelationshipsView() {
   const container = $('#relationships-view');
@@ -204,6 +210,7 @@ export function renderRelationshipsView() {
           <span class="rel-from">${from.name}</span>
           <span class="rel-arrow">→</span>
           <span class="rel-type">${relType?.label || r.type}</span>
+          ${r.dynamic ? `<span class="rel-dynamic">${humanizeIdentifier(r.dynamic)}</span>` : ''}
           <span class="rel-arrow">→</span>
           <span class="rel-to">${to.name}</span>
           <button class="rel-delete" onclick="deleteRelationship('${r.id}')" title="Delete">×</button>

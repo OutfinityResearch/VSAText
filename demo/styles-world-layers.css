@@ -46,22 +46,23 @@
 }
 
 .world-layer-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--bg-elevated);
-  border-radius: 8px;
-  padding: 0.9rem;
+  background: linear-gradient(180deg, rgba(33, 37, 68, 0.92), rgba(24, 28, 54, 0.96));
+  border: 1px solid rgba(90, 96, 138, 0.5);
+  border-radius: 10px;
+  padding: 0.95rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+  box-shadow: 0 10px 24px rgba(7, 10, 24, 0.18);
 }
 
 .world-layer-card:hover {
-  border-color: var(--bg-hover);
+  border-color: rgba(255, 209, 102, 0.34);
 }
 
 .world-layers-layout.embedded .world-layer-card {
-  background: var(--bg-deep);
-  border-color: var(--bg-hover);
+  background: linear-gradient(180deg, rgba(33, 37, 68, 0.92), rgba(24, 28, 54, 0.96));
+  border-color: rgba(90, 96, 138, 0.5);
 }
 
 .world-layer-card-header {
@@ -74,15 +75,15 @@
 .world-layer-card-header h3 {
   margin: 0;
   font-family: var(--font-title);
-  font-size: var(--fs-base);
-  color: var(--text-primary);
+  font-size: var(--fs-md);
+  color: #f7e2a8;
 }
 
 .world-layer-card-header p {
-  margin: 0.3rem 0 0;
-  color: var(--text-muted);
-  font-size: var(--fs-xs);
-  line-height: 1.4;
+  margin: 0.35rem 0 0;
+  color: #d7dff4;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
 }
 
 .world-layer-list {
@@ -93,19 +94,19 @@
 
 .world-layer-empty {
   border: 1px dashed var(--bg-hover);
-  border-radius: 6px;
-  padding: 0.75rem;
-  color: var(--text-muted);
+  border-radius: 8px;
+  padding: 0.9rem;
+  color: #d7dff4;
   font-size: var(--fs-sm);
-  background: var(--bg-deep);
+  background: rgba(17, 21, 42, 0.68);
 }
 
 .world-layer-item {
   position: relative;
-  border: 1px solid var(--bg-hover);
-  border-radius: 6px;
-  background: var(--bg-deep);
-  padding: 0.65rem 2.1rem 0.65rem 0.65rem;
+  border: 1px solid rgba(108, 118, 178, 0.32);
+  border-radius: 8px;
+  background: rgba(17, 21, 42, 0.78);
+  padding: 0.78rem 2.1rem 0.78rem 0.78rem;
 }
 
 .world-layer-fields {

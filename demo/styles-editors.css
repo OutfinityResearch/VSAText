@@ -47,11 +47,21 @@
 
 /* CNL Tab Toolbar */
 .cnl-toolbar {
-  display: flex; gap: 0.5rem; padding: 0.5rem;
-  background: var(--bg-surface); border-radius: 6px;
-  margin-bottom: 0.5rem; justify-content: flex-end;
+  display: flex;
+  gap: 0.55rem;
+  padding: 0.72rem 0.8rem;
+  background: linear-gradient(180deg, rgba(33, 37, 68, 0.9), rgba(24, 28, 54, 0.92));
+  border: 1px solid rgba(90, 96, 138, 0.42);
+  border-radius: 10px;
+  margin-bottom: 0.7rem;
+  justify-content: flex-end;
+  box-shadow: 0 10px 24px rgba(7, 10, 24, 0.14);
 }
-.cnl-toolbar .btn { font-size: var(--fs-xs); padding: 0.4rem 0.8rem; }
+.cnl-toolbar .btn {
+  font-size: var(--fs-xs);
+  padding: 0.42rem 0.82rem;
+  border-radius: 999px;
+}
 
 /* ============================================ */
 /* Dialogue Editor Styles */

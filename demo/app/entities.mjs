@@ -46,6 +46,13 @@ const WORLD_RULE_TEMPLATES = [
   { category: 'geography', name: 'Borders shape conflict', description: 'Movement rules alter alliances and threat.' }
 ];
 
+const CHARACTER_TEMPLATE_OPTIONS = Object.entries(VOCAB.CHARACTER_ARCHETYPES || {}).map(([key, value]) => ({
+  key,
+  label: value?.label || humanizeLabel(key),
+  description: value?.desc || 'Character template',
+  suggestedTraits: Array.isArray(value?.suggestedTraits) ? value.suggestedTraits : []
+}));
+
 // ==================== ENTITY GRIDS ====================
 export function renderEntityGrid(type, containerIdOrOptions = null, maybeOptions = null) {
   let containerId = `${type}-grid`;
@@ -132,9 +139,9 @@ export function renderBackdropView() {
 
   container.innerHTML = `
     <div class="view-description-header">
-      <div class="view-description-title">Backdrop</div>
+      <div class="view-description-title">World</div>
       <div class="view-description-text">
-        In literary writing, backdrop means the story setting: place, time, and meaningful objects that shape atmosphere, conflict, and character choices.
+        Shape the setting of the story through place, time, world rules, and meaningful objects that influence atmosphere, conflict, and character choices.
       </div>
     </div>
     <div class="backdrop-layout">
@@ -374,6 +381,51 @@ const SECONDARY_TRAITS = [
   { value: 'patient', label: 'Patient' }
 ];
 
+const TEMPLATE_TRAIT_ALIASES = {
+  courage: 'brave',
+  brave: 'brave',
+  compassion: 'compassionate',
+  compassionate: 'compassionate',
+  resilient: 'resilient',
+  wisdom: 'patient',
+  wise: 'patient',
+  patient: 'patient',
+  mysterious: 'reserved',
+  cunning: 'manipulative',
+  pride: 'domineering',
+  wrath: 'vengeful',
+  deceit: 'deceptive',
+  volatile: 'reckless',
+  charismatic: 'charismatic',
+  loyal: 'loyal',
+  protective: 'protective',
+  ambitious: 'ambitious',
+  idealistic: 'idealistic',
+  curious: 'curious',
+  strategic: 'strategic'
+};
+
+const CAST_ARCHETYPE_TRAIT_DEFAULTS = {
+  protagonist: {
+    hero: ['brave', 'resilient', 'compassionate'],
+    seeker: ['curious', 'resourceful', 'idealistic'],
+    caregiver: ['compassionate', 'loyal', 'empathetic'],
+    rebel: ['brave', 'stubborn', 'strategic']
+  },
+  antagonist: {
+    shadow: ['manipulative', 'domineering', 'vengeful'],
+    ruler: ['calculating', 'domineering', 'charismatic'],
+    trickster: ['deceptive', 'charismatic', 'strategic'],
+    destroyer: ['ruthless', 'obsessive', 'vengeful']
+  },
+  secondary: {
+    ally: ['loyal', 'bold', 'pragmatic'],
+    mentor: ['patient', 'reserved', 'protective'],
+    guardian: ['protective', 'skeptical', 'loyal'],
+    trickster: ['witty', 'reckless', 'sarcastic']
+  }
+};
+
 const SPEC_RELATION_TYPES = [
   { value: 'alliance', label: 'Alliance' },
   { value: 'rivalry', label: 'Rivalry' },
@@ -472,6 +524,7 @@ function createSecondarySpecRow(character = null, removable = true) {
   const row = document.createElement('div');
   row.className = `spec-secondary-item${removable ? '' : ' no-delete'}`;
   row.dataset.characterId = character?.id || '';
+  row.dataset.rowKey = character?.id || genId();
   row.innerHTML = `
     ${removable ? '<button class="spec-secondary-delete" type="button" title="Delete character" aria-label="Delete character">×</button>' : ''}
     <div class="spec-secondary-fields">
@@ -519,6 +572,73 @@ function createRelationshipSpecRow(type = 'alliance') {
   return row;
 }
 
+function applySelectedValuesToSelect(selectEl, values) {
+  if (!selectEl) return;
+  const normalized = new Set((Array.isArray(values) ? values : [values]).map(String));
+  Array.from(selectEl.options || []).forEach(option => {
+    option.selected = normalized.has(String(option.value));
+  });
+}
+
+function refreshCastMultiSelectDropdown(selectEl) {
+  if (!selectEl) return;
+  const wrapper = selectEl.nextElementSibling;
+  if (wrapper?.classList?.contains('multi-dropdown')) wrapper.remove();
+  selectEl.dataset.enhancedMultiDropdown = '';
+  selectEl.classList.remove('multi-dropdown-native');
+  enhanceCastMultiSelectDropdown(selectEl);
+}
+
+function getAllowedArchetypesForRole(role) {
+  if (role === 'protagonist') return PROTAGONIST_ARCHETYPES.map(item => item.value);
+  if (role === 'antagonist') return ANTAGONIST_ARCHETYPES.map(item => item.value);
+  return SECONDARY_ARCHETYPES.map(item => item.value);
+}
+
+function getAllowedTraitsForRole(role) {
+  if (role === 'protagonist') return PROTAGONIST_TRAITS.map(item => item.value);
+  if (role === 'antagonist') return ANTAGONIST_TRAITS.map(item => item.value);
+  return SECONDARY_TRAITS.map(item => item.value);
+}
+
+function normalizeTemplateArchetype(role, templateKey) {
+  const allowed = getAllowedArchetypesForRole(role);
+  if (allowed.includes(templateKey)) return templateKey;
+
+  if (role === 'protagonist') {
+    if (['mentor', 'guardian', 'ally', 'herald', 'caregiver', 'explorer', 'creator', 'innocent'].includes(templateKey)) return 'caregiver';
+    if (['trickster', 'shapeshifter', 'rebel'].includes(templateKey)) return 'rebel';
+    return 'hero';
+  }
+
+  if (role === 'antagonist') {
+    if (['villain', 'shadow'].includes(templateKey)) return 'shadow';
+    if (['trickster', 'shapeshifter'].includes(templateKey)) return 'trickster';
+    if (['ruler'].includes(templateKey)) return 'ruler';
+    return 'shadow';
+  }
+
+  if (['mentor', 'guardian', 'trickster', 'ally'].includes(templateKey)) return templateKey;
+  if (['herald', 'shapeshifter'].includes(templateKey)) return 'trickster';
+  return 'ally';
+}
+
+function normalizeTemplateTraits(role, suggestedTraits = []) {
+  const allowed = new Set(getAllowedTraitsForRole(role));
+  const normalized = [];
+  suggestedTraits.forEach(trait => {
+    const mapped = TEMPLATE_TRAIT_ALIASES[String(trait || '').toLowerCase()] || String(trait || '').toLowerCase();
+    if (allowed.has(mapped) && !normalized.includes(mapped)) normalized.push(mapped);
+  });
+  return normalized.slice(0, 4);
+}
+
+function getTemplateTraitsForCast(role, archetype, suggestedTraits = []) {
+  const normalized = normalizeTemplateTraits(role, suggestedTraits);
+  if (normalized.length) return normalized;
+  return [...(CAST_ARCHETYPE_TRAIT_DEFAULTS?.[role]?.[archetype] || [])];
+}
+
 function upsertPrimaryCharacter(role, fallbackName, defaultArchetype, archetypeId, traitsId) {
   const archetype = $(archetypeId)?.value || defaultArchetype;
   const traits = Array.from($(traitsId)?.selectedOptions || []).map(option => option.value);
@@ -555,6 +675,114 @@ function syncCastRelationshipsFromUI() {
   generateCNL();
 }
 
+function syncPrimaryCharactersFromUI() {
+  upsertPrimaryCharacter('protagonist', 'Protagonist', 'hero', '#cast-protagonist-archetype', '#cast-protagonist-traits');
+  upsertPrimaryCharacter('antagonist', 'Antagonist', 'shadow', '#cast-antagonist-archetype', '#cast-antagonist-traits');
+  syncCastRelationshipsFromUI();
+  renderRelationshipsView();
+  generateCNL();
+}
+
+function syncSecondaryCharactersFromUI() {
+  const secondaryList = $('#cast-secondary-characters');
+  if (!secondaryList) return;
+  const rows = Array.from(secondaryList.querySelectorAll('.spec-secondary-item'));
+  const saved = [];
+  rows.forEach((row, index) => {
+    const archetype = row.querySelector('.cast-secondary-archetype')?.value || 'ally';
+    const traits = Array.from(row.querySelector('.cast-secondary-traits')?.selectedOptions || []).map(option => option.value);
+    let characterId = row.dataset.characterId || '';
+    let character = characterId
+      ? state.project.libraries.characters.find(c => c.id === characterId)
+      : null;
+    if (!character) {
+      character = { id: genId() };
+      characterId = character.id;
+      row.dataset.characterId = characterId;
+      row.dataset.rowKey = characterId;
+    }
+    character.name = character.name || `Secondary ${index + 1}`;
+    character.role = 'secondary';
+    character.archetype = archetype;
+    character.traits = traits;
+    character.arcType = character.arcType || 'flat';
+    saved.push(character);
+  });
+  state.project.libraries.characters = [
+    ...state.project.libraries.characters.filter(c => inferCharacterRole(c) !== 'secondary'),
+    ...saved
+  ];
+  renderRelationshipsView();
+  generateCNL();
+}
+
+function openCharacterTemplateModal(targetRole) {
+  $('#select-modal-title').textContent = targetRole === 'secondary'
+    ? 'Add Character from Template'
+    : `Use Template for ${humanizeLabel(targetRole)}`;
+
+  $('#select-modal-body').innerHTML = `
+    <div class="entity-grid">
+      <div class="entity-grid-header">
+        <div class="entity-grid-title">Character Templates</div>
+        <div class="entity-grid-desc">Choose a template to prefill archetype and traits, then continue editing manually in Cast.</div>
+      </div>
+      <div class="entity-grid-cards">
+        ${CHARACTER_TEMPLATE_OPTIONS.map(template => `
+          <button
+            class="entity-card character"
+            type="button"
+            onclick="window.applyCharacterTemplateToCast('${targetRole}','${template.key}')">
+            <div class="entity-name">${escapeHtml(template.label)}</div>
+            <div class="entity-desc">${escapeHtml(template.description)}</div>
+            <div class="entity-tags">
+              ${template.suggestedTraits.slice(0, 4).map(trait => `<span class="entity-tag">${escapeHtml(humanizeLabel(trait))}</span>`).join('')}
+            </div>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  openModal('select-modal');
+}
+
+function applyCharacterTemplateToCast(targetRole, templateKey) {
+  const template = CHARACTER_TEMPLATE_OPTIONS.find(item => item.key === templateKey);
+  if (!template) return;
+  const archetype = normalizeTemplateArchetype(targetRole, template.key);
+  const traits = getTemplateTraitsForCast(targetRole, archetype, template.suggestedTraits);
+
+  if (targetRole === 'protagonist' || targetRole === 'antagonist') {
+    let character = (state.project.libraries.characters || []).find(c => inferCharacterRole(c) === targetRole);
+    if (!character) {
+      character = { id: genId() };
+      state.project.libraries.characters.push(character);
+    }
+    character.name = character.name || humanizeLabel(targetRole);
+    character.role = targetRole;
+    character.archetype = archetype;
+    character.traits = traits;
+    character.arcType = character.arcType || (targetRole === 'antagonist' ? 'negative' : 'positive');
+    closeModal('select-modal');
+    renderCharactersCastView();
+    window.showNotification?.(`${template.label} applied to ${humanizeLabel(targetRole)}`, 'success');
+    return;
+  }
+
+  state.project.libraries.characters.push({
+    id: genId(),
+    name: template.label,
+    role: 'secondary',
+    archetype,
+    traits,
+    arcType: 'flat'
+  });
+  closeModal('select-modal');
+  renderCharactersCastView();
+  window.showNotification?.(`${template.label} added from templates`, 'success');
+}
+
 function bindCastSpecEvents() {
   const protagonistArchetype = $('#cast-protagonist-archetype');
   const protagonistTraits = $('#cast-protagonist-traits');
@@ -562,20 +790,13 @@ function bindCastSpecEvents() {
   const antagonistTraits = $('#cast-antagonist-traits');
   const secondaryList = $('#cast-secondary-characters');
   const addSecondaryBtn = $('#cast-btn-add-secondary-character');
+  const addSecondaryTemplateBtn = $('#cast-btn-add-secondary-template');
   const relSelect = $('#cast-relationships');
   const relList = $('#cast-relationship-list');
   const addRelBtn = $('#cast-btn-add-relationship');
 
-  const syncPrimary = () => {
-    upsertPrimaryCharacter('protagonist', 'Protagonist', 'hero', '#cast-protagonist-archetype', '#cast-protagonist-traits');
-    upsertPrimaryCharacter('antagonist', 'Antagonist', 'shadow', '#cast-antagonist-archetype', '#cast-antagonist-traits');
-    syncCastRelationshipsFromUI();
-    renderRelationshipsView();
-    generateCNL();
-  };
-
   [protagonistArchetype, protagonistTraits, antagonistArchetype, antagonistTraits].forEach(control => {
-    control?.addEventListener('change', syncPrimary);
+    control?.addEventListener('change', syncPrimaryCharactersFromUI);
   });
   enhanceCastMultiSelectDropdown(protagonistTraits);
   enhanceCastMultiSelectDropdown(antagonistTraits);
@@ -588,44 +809,19 @@ function bindCastSpecEvents() {
     secondaryCharacters.forEach(character => secondaryList.appendChild(createSecondarySpecRow(character, true)));
   }
 
-  const syncSecondary = () => {
-    const rows = Array.from(secondaryList.querySelectorAll('.spec-secondary-item'));
-    const saved = [];
-    rows.forEach((row, index) => {
-      const archetype = row.querySelector('.cast-secondary-archetype')?.value || 'ally';
-      const traits = Array.from(row.querySelector('.cast-secondary-traits')?.selectedOptions || []).map(option => option.value);
-      let characterId = row.dataset.characterId || '';
-      let character = characterId
-        ? state.project.libraries.characters.find(c => c.id === characterId)
-        : null;
-      if (!character) {
-        character = { id: genId() };
-        characterId = character.id;
-        row.dataset.characterId = characterId;
-      }
-      character.name = character.name || `Secondary ${index + 1}`;
-      character.role = 'secondary';
-      character.archetype = archetype;
-      character.traits = traits;
-      character.arcType = character.arcType || 'flat';
-      saved.push(character);
-    });
-    state.project.libraries.characters = [
-      ...state.project.libraries.characters.filter(c => inferCharacterRole(c) !== 'secondary'),
-      ...saved
-    ];
-    renderRelationshipsView();
-    generateCNL();
-  };
-
   secondaryList.addEventListener('change', (event) => {
     if (!event.target.closest('.spec-secondary-item')) return;
-    syncSecondary();
+    syncSecondaryCharactersFromUI();
   });
 
   addSecondaryBtn?.addEventListener('click', () => {
+    const placeholder = secondaryList.querySelector('.spec-secondary-item.no-delete');
+    if (placeholder) placeholder.remove();
     secondaryList.appendChild(createSecondarySpecRow(null, true));
+    syncSecondaryCharactersFromUI();
   });
+
+  addSecondaryTemplateBtn?.addEventListener('click', () => openCharacterTemplateModal('secondary'));
 
   relList.innerHTML = '';
   const protagonist = (state.project.libraries.characters || []).find(c => inferCharacterRole(c) === 'protagonist');
@@ -653,6 +849,10 @@ function bindCastSpecEvents() {
     });
     castDropdownListenerBound = true;
   }
+
+  syncPrimaryCharactersFromUI();
+  syncSecondaryCharactersFromUI();
+  syncCastRelationshipsFromUI();
 }
 
 function renderCharactersSpecBlock() {
@@ -663,43 +863,56 @@ function renderCharactersSpecBlock() {
     <div class="cast-spec-rows">
       <div class="spec-characters-grid">
         <div class="spec-subcard">
-          <h4 class="spec-subcard-title">Protagonist</h4>
-          <div class="form-group">
-            <label class="form-label">Archetype</label>
-            <select class="form-select" id="cast-protagonist-archetype">
-              ${castOptions(PROTAGONIST_ARCHETYPES, [protagonist?.archetype || 'hero'])}
-            </select>
+          <div class="spec-subcard-header">
+            <h4 class="spec-subcard-title">Protagonist</h4>
+            <button class="btn small" type="button" onclick="window.openCharacterTemplateModal('protagonist')">Use Template</button>
           </div>
-          <div class="form-group">
-            <label class="form-label">Traits (multi-select)</label>
-            <select class="form-select" id="cast-protagonist-traits" multiple size="6">
-              ${castOptions(PROTAGONIST_TRAITS, Array.isArray(protagonist?.traits) ? protagonist.traits : [])}
-            </select>
+          <div class="spec-secondary-fields protagonist-fields">
+            <div class="form-group">
+              <label class="form-label">Archetype</label>
+              <select class="form-select" id="cast-protagonist-archetype">
+                ${castOptions(PROTAGONIST_ARCHETYPES, [protagonist?.archetype || 'hero'])}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Traits (multi-select)</label>
+              <select class="form-select" id="cast-protagonist-traits" multiple size="6">
+                ${castOptions(PROTAGONIST_TRAITS, Array.isArray(protagonist?.traits) ? protagonist.traits : [])}
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="spec-characters-grid">
         <div class="spec-subcard">
-          <h4 class="spec-subcard-title">Antagonist</h4>
-          <div class="form-group">
-            <label class="form-label">Archetype</label>
-            <select class="form-select" id="cast-antagonist-archetype">
-              ${castOptions(ANTAGONIST_ARCHETYPES, [antagonist?.archetype || 'shadow'])}
-            </select>
+          <div class="spec-subcard-header">
+            <h4 class="spec-subcard-title">Antagonist</h4>
+            <button class="btn small" type="button" onclick="window.openCharacterTemplateModal('antagonist')">Use Template</button>
           </div>
-          <div class="form-group">
-            <label class="form-label">Traits (multi-select)</label>
-            <select class="form-select" id="cast-antagonist-traits" multiple size="6">
-              ${castOptions(ANTAGONIST_TRAITS, Array.isArray(antagonist?.traits) ? antagonist.traits : [])}
-            </select>
+          <div class="spec-secondary-fields protagonist-fields">
+            <div class="form-group">
+              <label class="form-label">Archetype</label>
+              <select class="form-select" id="cast-antagonist-archetype">
+                ${castOptions(ANTAGONIST_ARCHETYPES, [antagonist?.archetype || 'shadow'])}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Traits (multi-select)</label>
+              <select class="form-select" id="cast-antagonist-traits" multiple size="6">
+                ${castOptions(ANTAGONIST_TRAITS, Array.isArray(antagonist?.traits) ? antagonist.traits : [])}
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="spec-characters-grid">
         <div class="spec-subcard spec-subcard-secondary">
-          <h4 class="spec-subcard-title">Secondary Characters</h4>
+          <div class="spec-subcard-header">
+            <h4 class="spec-subcard-title">Secondary Characters</h4>
+            <button class="btn small" id="cast-btn-add-secondary-template" type="button">Add from Templates</button>
+          </div>
           <div class="spec-secondary-list" id="cast-secondary-characters"></div>
           <button class="btn small" id="cast-btn-add-secondary-character" type="button">+ Add Character</button>
         </div>
@@ -1223,6 +1436,9 @@ export function showActionModal(parent) {
   $('#select-modal-body').innerHTML = html;
   openModal('select-modal');
 }
+
+window.openCharacterTemplateModal = openCharacterTemplateModal;
+window.applyCharacterTemplateToCast = applyCharacterTemplateToCast;
 
 window.saveAction = (pid) => {
   const p = findNode(pid);

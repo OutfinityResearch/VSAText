@@ -857,9 +857,6 @@ async function init() {
   bindNavigatorPanel();
   renderManuscriptNavigatorDetails();
 
-  // Initialize grouped tabs (Results -> CNL)
-  switchToGroup('results', 'cnl');
-  
   // Listen for blueprint changes
   document.addEventListener('blueprint-changed', () => {
     renderTimeline();
@@ -891,6 +888,9 @@ async function init() {
   renderWorldRulesView();
   renderEmptyMetrics();
   generateCNL();
+
+  // Initialize grouped tabs (Results -> CNL)
+  switchToGroup('results', 'cnl');
   
   // Initialize eval runner
   initEvalRunner();

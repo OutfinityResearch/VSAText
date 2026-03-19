@@ -452,6 +452,47 @@ function renderConflictPlan(macro) {
   `;
 }
 
+function renderStoryProgression(macro) {
+  const progression = macro.chapters.map((chapter, index) => {
+    const row = macro.chapterEscalation.find(item => item.chapterId === chapter.id);
+    const tension = Number(row?.tension) || 3;
+    return `Chapter ${index + 1}: ${chapter.title || chapterTitle(index)} reaches tension ${tension}/5.`;
+  });
+
+  return `
+    <section class="nd-section">
+      <div class="nd-section-head">
+        <h3>Story Progression</h3>
+        <p>Conflict progression and tension curve migrated from Story Map.</p>
+      </div>
+      ${macro.chapters.length ? `
+        <div class="nd-grid nd-grid-2">
+          <div class="storymap-card">
+            <h3>Conflict Progression</h3>
+            <ul class="storymap-list">
+              ${progression.map(item => `<li>${esc(item)}</li>`).join('')}
+            </ul>
+          </div>
+          <div class="storymap-card">
+            <h3>Tension Curve</h3>
+            <div class="nd-graph-shell nd-graph-shell-compact">
+              <svg class="nd-graph" viewBox="0 0 420 120" preserveAspectRatio="none" aria-hidden="true">
+                <line x1="0" y1="115" x2="420" y2="115" class="nd-axis" />
+                <line x1="0" y1="8" x2="0" y2="115" class="nd-axis" />
+                <polyline points="${escalationPoints(macro)}" class="nd-line" />
+              </svg>
+              <div class="nd-graph-labels">
+                <span>X: Chapters</span>
+                <span>Y: Tension Level</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ` : `<div class="nd-empty">Add chapters first to model conflict progression.</div>`}
+    </section>
+  `;
+}
+
 function renderNarrativeDesign() {
   const macro = syncMacroDesign();
   const constraints = ensureNarrativeConstraints();
@@ -467,6 +508,7 @@ function renderNarrativeDesign() {
       ${renderCoreConflict(macro)}
       ${renderMacroStructure(macro)}
       ${renderConflictPlan(macro)}
+      ${renderStoryProgression(macro)}
       <section class="nd-section">
         <div class="nd-section-head">
           <h3>Narrative Constraints</h3>

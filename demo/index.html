@@ -36,64 +36,24 @@
         <span class="panel-title">Book Navigator</span>
       </div>
       <div class="navigator-content" id="navigator-content">
-        <details class="navigator-group" open>
-          <summary>Story Builder</summary>
+        <div class="navigator-group">
           <div class="navigator-items">
-            <details class="navigator-subgroup" open>
-              <summary>Book Settings</summary>
-              <div class="navigator-items">
-                <button class="navigator-item" data-target-view="framework">Story Core</button>
-                <button class="navigator-item" data-target-view="narrative-design">Narrative Design</button>
-                <button class="navigator-item" data-target-view="characters">Cast</button>
-                <button class="navigator-item" data-target-view="backdrop">World</button>
-                <button class="navigator-item" data-target-view="moods">Tone &amp; Style</button>
-              </div>
-            </details>
+            <button class="navigator-item" data-target-view="story-fundamentals">Story Fundamentals</button>
+            <button class="navigator-item" data-target-view="core-theme">Theme</button>
+            <button class="navigator-item" data-target-view="dramatic-model">Dramatic Model</button>
+            <button class="navigator-item" data-target-view="character-transformation">Character Transformation</button>
+            <button class="navigator-item" data-target-view="narrative-design">Narrative Design</button>
+            <button class="navigator-item" data-target-view="characters">Cast</button>
+            <button class="navigator-item" data-target-view="backdrop">World</button>
+            <button class="navigator-item" data-target-view="moods">Tone &amp; Style</button>
             <button class="navigator-item" data-target-view="blueprint">Blueprint</button>
             <button class="navigator-item active" data-target-view="cnl">CNL Editor</button>
             <button class="navigator-item" data-target-view="nl">NL Story</button>
           </div>
-        </details>
-        <details class="navigator-group" open>
-          <summary>Library (Reusable Resources)</summary>
-          <div class="navigator-items">
-            <button class="navigator-item" data-target-view="library" data-library-select="narrative:templates">Narrative Arc Templates</button>
-            <button class="navigator-item" data-target-view="library" data-library-select="characters:templates">Character Templates</button>
-            <button class="navigator-item" data-target-view="library" data-library-select="backdrop:locations">Locations</button>
-            <button class="navigator-item" data-target-view="library" data-library-select="backdrop:objects">Objects &amp; Artifacts</button>
-            <button class="navigator-item" data-target-view="library" data-library-select="narrative:blocks">Scenes &amp; Plot Points</button>
-          </div>
-        </details>
-        <details class="navigator-group">
-          <summary>Story Map</summary>
-          <div class="navigator-items">
-            <button class="navigator-item" data-target-view="storymap" data-action="storymap-book-summary" data-storymap-section="book-summary">Book Summary</button>
-            <button class="navigator-item" data-target-view="storymap" data-action="storymap-conflict" data-storymap-section="conflict-progression">Conflict Progression</button>
-            <button class="navigator-item" data-target-view="storymap" data-action="storymap-flow" data-storymap-section="chapter-flow">Chapter Flow</button>
-            <button class="navigator-item" data-target-view="storymap" data-action="storymap-tension" data-storymap-section="tension-curve">Tension Curve</button>
-          </div>
-        </details>
-        <details class="navigator-group" open>
-          <summary data-open-view="manuscript">Story Workspace</summary>
-          <div class="navigator-items" id="nav-manuscript-items">
-            <div class="navigator-subgroup">
-              <div class="navigator-manuscript-header">
-                <button type="button" data-target-view="manuscript" class="navigator-manuscript-summary">
-                  <span>Manuscript</span>
-                </button>
-                <div class="navigator-manuscript-summary-actions">
-                  <button class="navigator-add-btn" type="button" aria-label="Add Manuscript Item" title="Add">+</button>
-                  <div class="navigator-add-hover-menu">
-                    <button class="navigator-add-option" type="button" data-manuscript-add="chapter">+ Add Chapter</button>
-                    <button class="navigator-add-option" type="button" data-manuscript-add="scene">+ Add Scene</button>
-                  </div>
-                </div>
-              </div>
-              <div class="navigator-items">
-                <div class="navigator-note">Generated story details appear here by chapter and scene.</div>
-              </div>
-            </div>
-          </div>
+        </div>
+        <details class="navigator-group project-structure-group" open>
+          <summary>Project Structure</summary>
+          <div class="tree-container" id="tree-container"></div>
         </details>
       </div>
     </aside>
@@ -101,6 +61,10 @@
     <main class="center-panel">
       <div class="tab-content">
         <div class="view" id="view-framework"><div class="framework-view" id="framework-view"></div></div>
+        <div class="view" id="view-story-fundamentals"><div class="framework-view" id="story-fundamentals-view"></div></div>
+        <div class="view" id="view-core-theme"><div class="framework-view" id="core-theme-view"></div></div>
+        <div class="view" id="view-dramatic-model"><div class="framework-view" id="dramatic-model-view"></div></div>
+        <div class="view" id="view-character-transformation"><div class="framework-view" id="character-transformation-view"></div></div>
         <div class="view active" id="view-cnl">
           <div class="cnl-toolbar">
             <button class="btn btn-edit-active" id="btn-cnl-view-formatted" title="Show CNL visual view">CNL View</button>

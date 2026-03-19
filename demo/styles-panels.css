@@ -34,6 +34,26 @@
 
 .tree-container { flex: 1; overflow-y: auto; padding: 0.4rem; }
 
+.project-structure-group .tree-container {
+  padding: 0.72rem 0.72rem 0.9rem;
+}
+
+.project-structure-group .tree-container .empty-state {
+  margin: 0.2rem;
+}
+
+.project-structure-group .tree-node-content {
+  align-items: flex-start;
+}
+
+.project-structure-group .tree-label {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
 .navigator-panel .navigator-header {
   flex-direction: column;
   align-items: stretch;

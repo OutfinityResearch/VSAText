@@ -512,14 +512,34 @@ function renderTransformationSection(profile) {
   `;
 }
 
-function renderFrameworkDesign() {
-  const profile = ensureFrameworkProfileState();
+function renderFrameworkShell({ pageTitle, pageDescription, bodyMarkup }) {
   return `
-    ${renderStoryCoreSection(profile)}
-    ${renderThemeSection(profile)}
-    ${renderDramaticModelSection(profile)}
-    ${renderTransformationSection(profile)}
+    <div class="framework-layout framework-redesign-layout">
+      <div class="framework-page-header">
+        <div class="framework-page-header-copy">
+          <h2>${esc(pageTitle)}</h2>
+          <p>${esc(pageDescription)}</p>
+        </div>
+        <div class="framework-page-header-actions">
+          <button class="btn random" type="button" onclick="window.openStoryGenerationShortcut()">
+            Create Story
+          </button>
+        </div>
+      </div>
+      ${bodyMarkup}
+    </div>
   `;
+}
+
+function renderFrameworkPage(containerId, pageTitle, pageDescription, sectionRenderer) {
+  const container = $(containerId);
+  if (!container) return;
+  const profile = ensureFrameworkProfileState();
+  container.innerHTML = renderFrameworkShell({
+    pageTitle,
+    pageDescription,
+    bodyMarkup: sectionRenderer(profile)
+  });
 }
 
 function openStoryGenerationShortcut() {
@@ -530,29 +550,51 @@ function openStoryGenerationShortcut() {
 }
 
 export function renderFrameworkView() {
-  const container = $('#framework-view');
-  if (!container) return;
+  renderStoryFundamentalsView();
+}
 
-  container.innerHTML = `
-    <div class="framework-layout framework-redesign-layout">
-      <div class="framework-page-header">
-        <div class="framework-page-header-copy">
-          <h2>Story Core</h2>
-          <p>Define the book foundation, then continue into Blueprint and the rest of the story flow.</p>
-        </div>
-        <div class="framework-page-header-actions">
-          <button class="btn random" type="button" onclick="window.openStoryGenerationShortcut()">
-            Create Story
-          </button>
-        </div>
-      </div>
-      ${renderFrameworkDesign()}
-    </div>
-  `;
+export function renderStoryFundamentalsView() {
+  renderFrameworkPage(
+    '#story-fundamentals-view',
+    'Story Fundamentals',
+    'Define complexity, cast scale, world rules, and the core wisdom that anchors the book.',
+    renderStoryCoreSection
+  );
+}
+
+export function renderCoreThemeView() {
+  renderFrameworkPage(
+    '#core-theme-view',
+    'Theme',
+    'Clarify the worldview conflict, moral question, and value shift the story will explore.',
+    renderThemeSection
+  );
+}
+
+export function renderDramaticModelView() {
+  renderFrameworkPage(
+    '#dramatic-model-view',
+    'Dramatic Model',
+    'Pick the conflict engine, escalation pattern, and structural direction of the narrative.',
+    renderDramaticModelSection
+  );
+}
+
+export function renderCharacterTransformationView() {
+  renderFrameworkPage(
+    '#character-transformation-view',
+    'Character Transformation',
+    'Capture the protagonist arc, the beliefs that break, and the cost of transformation.',
+    renderTransformationSection
+  );
 }
 
 window.renderFrameworkView = renderFrameworkView;
 window.openStoryGenerationShortcut = openStoryGenerationShortcut;
+window.renderStoryFundamentalsView = renderStoryFundamentalsView;
+window.renderCoreThemeView = renderCoreThemeView;
+window.renderDramaticModelView = renderDramaticModelView;
+window.renderCharacterTransformationView = renderCharacterTransformationView;
 
 window.frameworkUpdateProfile = (section, key, value) => {
   const profile = ensureFrameworkProfileState();
@@ -584,4 +626,10 @@ window.frameworkToggleConstraint = (key) => {
   renderFrameworkView();
 };
 
-export default { renderFrameworkView };
+export default {
+  renderFrameworkView,
+  renderStoryFundamentalsView,
+  renderCoreThemeView,
+  renderDramaticModelView,
+  renderCharacterTransformationView
+};

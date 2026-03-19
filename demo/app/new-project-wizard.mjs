@@ -462,7 +462,7 @@ async function finish() {
   applyWizardNLSelections();
   saveDraft();
   closeOverlay();
-  window.switchToTab?.('framework');
+  window.switchToTab?.('story-fundamentals');
 }
 
 function openOverlay() {

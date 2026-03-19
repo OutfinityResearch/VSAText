@@ -31,7 +31,7 @@ export function renderTree() {
   const c = $('#tree-container');
   if (!c) return;
   if (!state.project.structure) {
-    c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📖</div><div class="empty-state-text">No structure yet</div><div class="empty-state-hint">Click Generate Story or + to start</div></div>';
+    c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📖</div><div class="empty-state-text">No story generated yet</div><div class="empty-state-hint">Generate a story to populate the project structure.</div></div>';
     document.dispatchEvent(new CustomEvent('structure-changed'));
     return;
   }
@@ -77,10 +77,10 @@ function renderNode(n, d = 0) {
     ch = `<div class="tree-children">${n.children.map(x => renderNode(x, d + 1)).join('')}</div>`;
   }
   
-  // Determine if this node should navigate on click (leaf nodes with refs)
-  const isLeafNode = NODE_TO_TAB[n.type];
-  const navigateOnClick = isLeafNode ? 'true' : 'false';
-  const nodeClass = isLeafNode ? 'tree-node clickable-leaf' : 'tree-node';
+  // Allow direct navigation from project structure for manuscript nodes and entity refs.
+  const isNavigableNode = ['book', 'chapter', 'scene'].includes(n.type) || Boolean(NODE_TO_TAB[n.type]);
+  const navigateOnClick = isNavigableNode ? 'true' : 'false';
+  const nodeClass = isNavigableNode ? 'tree-node clickable-leaf' : 'tree-node';
   
   return `<div class="${nodeClass}" data-id="${n.id}" data-type="${n.type}" draggable="${canDrag}" 
     ondragstart="handleDragStart(event,'${n.id}')" ondragend="handleDragEnd(event)"
@@ -103,13 +103,23 @@ export function selectNode(id, navigate = true) {
   state.selectedNode = id;
   
   const node = findNode(id);
-  if (node?.type === 'action' || node?.type === 'scene') {
+  if (node?.type === 'action') {
     setTimeout(() => {
       window.editNodeProps?.(node);
     }, 50);
   }
 
   if (node && navigate) {
+    if (node.type === 'book' || node.type === 'chapter' || node.type === 'scene') {
+      const chapterId = node.type === 'chapter'
+        ? node.id
+        : (node.type === 'scene' ? findParent(node.id)?.id || null : null);
+      const sceneId = node.type === 'scene' ? node.id : null;
+      window.openManuscriptNode?.(chapterId, sceneId);
+      renderTree();
+      return;
+    }
+
     const mapping = NODE_TO_TAB[node.type];
     if (mapping && mapping.tab) {
       // Navigate to the corresponding tab

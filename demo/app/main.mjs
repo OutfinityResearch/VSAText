@@ -6,7 +6,7 @@
 
 import { state } from './state.mjs';
 import { $, $$, genId, openModal } from './utils.mjs';
-import { renderTree, findNode, addChild } from './tree.mjs';
+import { renderTree, findNode, addChild, selectNode } from './tree.mjs';
 import { renderEntityGrid, renderBackdropView, renderCharactersCastView, showSelectModal, showBlockModal, showActionModal } from './entities.mjs';
 import { renderRelationshipsView, renderBlocksView, renderWorldRulesView } from './views.mjs';
 import { evaluateMetrics, renderEmptyMetrics, initMetrics, renderFullEvaluationReport } from './metrics.mjs';
@@ -26,12 +26,18 @@ import { initDialogueEditor } from './dialogue/dialogue-editor.mjs';
 // Wisdom and Patterns imports
 import { renderWisdomView } from './entities-wisdom.mjs';
 import { renderPatternsView } from './entities-patterns.mjs';
-import { renderFrameworkView } from './framework.mjs';
+import {
+  renderFrameworkView,
+  renderStoryFundamentalsView,
+  renderCoreThemeView,
+  renderDramaticModelView,
+  renderCharacterTransformationView
+} from './framework.mjs';
 import { renderWorldLayersView } from './world-layers.mjs';
 import { renderHooksView } from './hooks.mjs';
 import { renderLibraryView, setLibrarySelection, getLibrarySelection } from './library.mjs';
 import { renderNarrativeDesignMacroView } from './narrative-design.mjs';
-import { renderManuscriptStudioView, renderStoryMapView, focusStoryMapSection } from './writing-studio.mjs';
+import { renderManuscriptStudioView, renderStoryMapView } from './writing-studio.mjs';
 import {
   getChaptersForManuscript,
   getScenesForManuscriptChapter,
@@ -66,8 +72,11 @@ const TAB_GROUPS = [
   {
     key: 'storycore',
     views: [
+      { key: 'story-fundamentals', label: 'Story Fundamentals' },
+      { key: 'core-theme', label: 'Theme' },
+      { key: 'dramatic-model', label: 'Dramatic Model' },
+      { key: 'character-transformation', label: 'Transformation' },
       { key: 'blueprint', label: 'Blueprint' },
-      { key: 'framework', label: 'Framework' },
       { key: 'wisdom', label: 'Wisdom' }
     ]
   },
@@ -153,6 +162,10 @@ function renderViewSpecificContent(viewName) {
   if (viewName === 'wisdom') renderWisdomView();
   if (viewName === 'patterns') renderPatternsView();
   if (viewName === 'framework') renderFrameworkView();
+  if (viewName === 'story-fundamentals') renderStoryFundamentalsView();
+  if (viewName === 'core-theme') renderCoreThemeView();
+  if (viewName === 'dramatic-model') renderDramaticModelView();
+  if (viewName === 'character-transformation') renderCharacterTransformationView();
   if (viewName === 'backdrop') renderBackdropView();
   if (viewName === 'worldlayers') renderWorldLayersView();
   if (viewName === 'openinghook') renderHooksView('opening');
@@ -204,7 +217,103 @@ function renderProjectNavigatorPanel() {
   navigatorContent.innerHTML = projectNavigatorMarkup;
   navigatorMode = 'project';
   setNavigatorTitle('Book Navigator');
+  setActiveHeaderAction(activeViewKey);
+  renderTree();
   renderManuscriptNavigatorDetails();
+}
+
+function buildStructureFromGeneratedStory() {
+  const story = String(state.generation?.generatedStory || '').trim();
+  if (!story) return false;
+
+  const chapterRegex = /^\s{0,3}(?:#{1,6}\s*)?(chapter|capitol(?:ul)?)\s+(\d+)\b[:\-. ]*(.*)$/gim;
+  const sceneRegex = /^\s{0,3}(?:#{1,6}\s*)?(scene|scena)\s+(\d+)\b[:\-. ]*(.*)$/gim;
+  const chapterMatches = Array.from(story.matchAll(chapterRegex));
+
+  const book = {
+    id: genId('book'),
+    type: 'book',
+    name: state.project.name || 'Untitled Story',
+    title: state.project.name || 'Untitled Story',
+    children: []
+  };
+
+  if (!chapterMatches.length) {
+    book.children.push({
+      id: genId('ch'),
+      type: 'chapter',
+      name: 'Chapter 1',
+      title: 'Chapter 1',
+      children: [
+        {
+          id: genId('sc'),
+          type: 'scene',
+          name: 'Scene 1',
+          title: 'Scene 1',
+          children: []
+        }
+      ]
+    });
+    state.project.structure = book;
+    return true;
+  }
+
+  chapterMatches.forEach((match, index) => {
+    const start = match.index ?? 0;
+    const end = index + 1 < chapterMatches.length ? (chapterMatches[index + 1].index ?? story.length) : story.length;
+    const body = story.slice(start, end);
+    const chapterNumber = match[2];
+    const chapterTail = String(match[3] || '').trim();
+    const chapterTitle = chapterTail ? `Chapter ${chapterNumber}: ${chapterTail}` : `Chapter ${chapterNumber}`;
+    const sceneMatches = Array.from(body.matchAll(sceneRegex));
+    const chapterNode = {
+      id: genId('ch'),
+      type: 'chapter',
+      name: chapterTitle,
+      title: chapterTitle,
+      children: []
+    };
+
+    if (!sceneMatches.length) {
+      chapterNode.children.push({
+        id: genId('sc'),
+        type: 'scene',
+        name: 'Scene 1',
+        title: 'Scene 1',
+        children: []
+      });
+    } else {
+      sceneMatches.forEach((sceneMatch) => {
+        const sceneNumber = sceneMatch[2];
+        const sceneTail = String(sceneMatch[3] || '').trim();
+        const sceneTitle = sceneTail ? `Scene ${sceneNumber}: ${sceneTail}` : `Scene ${sceneNumber}`;
+        chapterNode.children.push({
+          id: genId('sc'),
+          type: 'scene',
+          name: sceneTitle,
+          title: sceneTitle,
+          children: []
+        });
+      });
+    }
+
+    book.children.push(chapterNode);
+  });
+
+  state.project.structure = book;
+  return true;
+}
+
+function focusGeneratedProjectStructure() {
+  const structureGroup = document.querySelector('.project-structure-group');
+  if (structureGroup) structureGroup.open = true;
+  if (!state.project.structure?.id) return;
+  selectNode(state.project.structure.id, false);
+  requestAnimationFrame(() => {
+    document.querySelector(`#tree-container [data-id="${state.project.structure.id}"] .tree-node-content`)?.scrollIntoView({
+      block: 'nearest'
+    });
+  });
 }
 
 function renderLibraryNavigatorPanel() {
@@ -648,7 +757,6 @@ function renderManuscriptNavigatorDetails() {
 async function handleNavigatorItemClick(item) {
   const targetView = item.dataset.targetView;
   const action = item.dataset.action || '';
-  const storyMapSection = item.dataset.storymapSection || '';
   const librarySelect = item.dataset.librarySelect || '';
   if (!targetView) return;
 
@@ -656,17 +764,6 @@ async function handleNavigatorItemClick(item) {
     switchToGroup('results', 'nl');
     setActiveNavigatorItem('nl', action);
     await generateNLStory();
-    return;
-  }
-
-  if (targetView === 'storymap') {
-    showStandaloneView('storymap');
-    if (storyMapSection) {
-      setTimeout(() => {
-        focusStoryMapSection(storyMapSection);
-      }, 0);
-      setActiveNavigatorItem('storymap', action);
-    }
     return;
   }
 
@@ -868,6 +965,11 @@ async function init() {
   });
 
   document.addEventListener('generated-story-updated', () => {
+    if (!state.project.structure?.children?.length) {
+      buildStructureFromGeneratedStory();
+    }
+    renderProjectNavigatorPanel();
+    focusGeneratedProjectStructure();
     renderManuscriptNavigatorDetails();
     if (activeViewKey === 'manuscript') renderManuscriptStudioView();
   });
@@ -927,6 +1029,11 @@ export function switchToTab(viewName) {
 
 // Make switchToTab available globally for tree navigation
 window.switchToTab = switchToTab;
+window.openManuscriptNode = (chapterId = null, sceneId = null) => {
+  manuscriptNavigatorOpenChapterId = chapterId || null;
+  setManuscriptSelection(chapterId || null, sceneId || null);
+  showStandaloneView('manuscript');
+};
 window.renderBackdropView = renderBackdropView;
 window.openLibraryThemes = () => {
   const firstThemeCategory = getThemeCatalogByCategory()[0]?.key || 'personal-transformation';

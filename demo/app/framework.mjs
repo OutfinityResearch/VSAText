@@ -130,6 +130,8 @@ function ensureFrameworkProfileState() {
     },
     coreTheme: {
       selectedThemeId: existing.coreTheme?.selectedThemeId || '',
+      selectedThemeKey: existing.coreTheme?.selectedThemeKey || '',
+      customThemeName: existing.coreTheme?.customThemeName || '',
       ideologicalConflict: existing.coreTheme?.ideologicalConflict || '',
       moralQuestion: existing.coreTheme?.moralQuestion || '',
       transformationAxis: existing.coreTheme?.transformationAxis || '',
@@ -174,40 +176,73 @@ function renderStoryCoreSection(profile) {
   `).join('');
 
   return `
-    <section class="framework-section section-framework-storycore">
-      <div class="framework-section-header redesign">
-        <h3>Story Fundamentals</h3>
-        <p>Complexity, cast scale, world rules, and the core wisdom of the story.</p>
-      </div>
-      <div class="framework-storycore-grid">
-        <label class="framework-new-field">
-          <span>Complexity</span>
-          <select class="cinematic-select" onchange="window.frameworkUpdateProfile('storyCore','complexity', this.value)">
-            ${renderOptions(STORY_CORE_OPTIONS.complexity, core.complexity)}
-          </select>
-        </label>
-        <label class="framework-new-field">
-          <span>Number of Characters</span>
-          <select class="cinematic-select" onchange="window.frameworkUpdateProfile('storyCore','chars', this.value)">
-            ${renderOptions(STORY_CORE_OPTIONS.chars, core.chars)}
-          </select>
-        </label>
-        <label class="framework-new-field">
-          <span>World Rules</span>
-          <select class="cinematic-select" onchange="window.frameworkUpdateProfile('storyCore','rules', this.value)">
-            ${renderOptions(STORY_CORE_OPTIONS.rules, core.rules)}
-          </select>
-        </label>
-      </div>
-      <div class="framework-storycore-text">
-        <label class="framework-new-field">
-          <span>Wisdom</span>
-          <textarea
-            class="form-textarea"
-            placeholder="What should the reader learn or feel?"
-            oninput="window.frameworkUpdateProfile('storyCore','wisdom', this.value)"
-          >${esc(core.wisdom)}</textarea>
-        </label>
+    <section class="framework-section section-framework-storycore storycore-showcase">
+      <div class="storycore-showcase-grid">
+        <div class="storycore-form-column">
+          <label class="framework-new-field storycore-form-card">
+            <div class="storycore-field-title">
+              <span class="storycore-field-icon" aria-hidden="true">🧭</span>
+              <span>Complexity</span>
+            </div>
+            <select class="cinematic-select storycore-select" onchange="window.frameworkUpdateProfile('storyCore','complexity', this.value)">
+              ${renderOptions(STORY_CORE_OPTIONS.complexity, core.complexity)}
+            </select>
+          </label>
+          <label class="framework-new-field storycore-form-card">
+            <div class="storycore-field-title">
+              <span class="storycore-field-icon" aria-hidden="true">👥</span>
+              <span>Number of Characters</span>
+            </div>
+            <select class="cinematic-select storycore-select" onchange="window.frameworkUpdateProfile('storyCore','chars', this.value)">
+              ${renderOptions(STORY_CORE_OPTIONS.chars, core.chars)}
+            </select>
+          </label>
+          <label class="framework-new-field storycore-form-card">
+            <div class="storycore-field-title">
+              <span class="storycore-field-icon" aria-hidden="true">🌍</span>
+              <span>World Rules</span>
+            </div>
+            <select class="cinematic-select storycore-select" onchange="window.frameworkUpdateProfile('storyCore','rules', this.value)">
+              ${renderOptions(STORY_CORE_OPTIONS.rules, core.rules)}
+            </select>
+          </label>
+        </div>
+        <aside class="storycore-wisdom-column">
+          <label class="framework-new-field storycore-form-card storycore-form-card-wide storycore-wisdom-card">
+            <div class="framework-field-head">
+              <div class="storycore-field-title">
+                <span class="storycore-field-icon" aria-hidden="true">💡</span>
+                <span>Wisdom</span>
+              </div>
+              <button
+                class="framework-inline-btn storycore-library-btn"
+                type="button"
+                onclick="if (typeof window.openLibraryWisdom === 'function') window.openLibraryWisdom();"
+              >
+                + Add from Library
+              </button>
+            </div>
+            <textarea
+              class="form-textarea storycore-textarea"
+              placeholder="Write the central lesson of your story or choose one from Library."
+              oninput="window.frameworkUpdateProfile('storyCore','wisdom', this.value)"
+            >${esc(core.wisdom)}</textarea>
+            <div class="storycore-wisdom-suggestions">
+              ${['Love', 'Betrayal', 'Survival', 'Redemption'].map((item) => `
+                <button
+                  class="storycore-suggestion-chip"
+                  type="button"
+                  onclick="window.frameworkUpdateProfile('storyCore','wisdom','${esc(item)}'); window.renderStoryFundamentalsView();"
+                >
+                  ${esc(item)}
+                </button>
+              `).join('')}
+            </div>
+            <div class="storycore-wisdom-help">
+              Add the central lesson or truth your reader should remember after the story ends.
+            </div>
+          </label>
+        </aside>
       </div>
     </section>
   `;
@@ -275,18 +310,21 @@ function renderThemeCard(item) {
 }
 
 function renderThemeSection(profile) {
-  const items = getThemeRailItems().map(item => ({
-    ...item,
-    selected: item.type === 'entity' && item.id === profile.coreTheme.selectedThemeId
-  }));
+  const themeEntities = state.project.libraries.themes || [];
+  const selectedTheme = themeEntities.find(item => item.id === profile.coreTheme.selectedThemeId) || null;
+  const quickThemes = THEME_SUGGESTIONS.slice(0, 5);
+  const activeThemeKey = selectedTheme?.themeKey || profile.coreTheme.selectedThemeKey || '';
+  const customThemeName = profile.coreTheme.customThemeName || '';
+  const selectedThemeDescription = selectedTheme
+    ? (VOCAB.THEMES?.[selectedTheme.themeKey || '']?.desc || selectedTheme.description || '')
+    : (VOCAB.THEMES?.[activeThemeKey]?.desc || '');
 
   return `
     <section class="framework-section section-framework-theme">
       <div class="framework-section-header redesign">
-        <h3>Theme</h3>
-        <p>Core meaning axis and thematic templates.</p>
+        <p>Choose the main idea your story explores and define how it is tested.</p>
         <div class="framework-header-actions">
-          <button class="framework-inline-btn" type="button" onclick="window.addEntity('themes')">+ Add Theme</button>
+          <button class="framework-inline-btn" type="button" onclick="window.openThemeEditorPage?.()">+ Add Theme</button>
           <button
             class="framework-inline-btn"
             type="button"
@@ -296,39 +334,85 @@ function renderThemeSection(profile) {
           </button>
         </div>
       </div>
-      <div class="framework-theme-rail-wrap">
-        <div class="framework-theme-rail">
-          ${items.map(renderThemeCard).join('')}
-        </div>
-      </div>
-      <div class="framework-theme-meta">
-        <label class="framework-new-field">
-          <span>Ideological Conflict</span>
-          <input
-            type="text"
-            value="${esc(profile.coreTheme.ideologicalConflict)}"
-            placeholder="What worldview is contested?"
-            oninput="window.frameworkUpdateProfile('coreTheme','ideologicalConflict', this.value)"
-          >
-        </label>
-        <label class="framework-new-field">
-          <span>Moral Question</span>
-          <input
-            type="text"
-            value="${esc(profile.coreTheme.moralQuestion)}"
-            placeholder="What moral dilemma defines the narrative?"
-            oninput="window.frameworkUpdateProfile('coreTheme','moralQuestion', this.value)"
-          >
-        </label>
-        <label class="framework-new-field">
-          <span>Transformation Axis</span>
-          <input
-            type="text"
-            value="${esc(profile.coreTheme.transformationAxis)}"
-            placeholder="Which value shifts over time?"
-            oninput="window.frameworkUpdateProfile('coreTheme','transformationAxis', this.value)"
-          >
-        </label>
+      <div class="framework-theme-layout">
+        <section class="framework-theme-panel">
+          <label class="framework-new-field">
+            <span>Theme Name</span>
+            <input
+              id="framework-custom-theme-name"
+              type="text"
+              value="${esc(customThemeName)}"
+              placeholder="Write your custom theme name"
+              oninput="window.frameworkUpdateProfile('coreTheme','customThemeName', this.value)"
+            >
+          </label>
+          <label class="framework-new-field">
+            <span>Selected Theme</span>
+            <select
+              class="cinematic-select"
+              onchange="window.frameworkSelectTheme(this.value)"
+            >
+              <option value="">
+                ${esc(activeThemeKey ? humanize(activeThemeKey) : (customThemeName || 'No selected theme'))}
+              </option>
+              ${themeEntities.map((item) => `
+                <option value="${esc(item.id)}" ${item.id === profile.coreTheme.selectedThemeId ? 'selected' : ''}>
+                  ${esc(item.name || humanize(item.themeKey || 'Theme'))}
+                </option>
+              `).join('')}
+            </select>
+          </label>
+          <div class="framework-theme-suggestions">
+            ${quickThemes.map((item) => `
+              <button
+                class="framework-theme-chip ${item.key === activeThemeKey ? 'active' : ''}"
+                type="button"
+                onclick="window.frameworkApplyThemeSuggestion('${esc(item.key)}')"
+              >
+                ${esc(item.label)}
+              </button>
+            `).join('')}
+          </div>
+          <div class="framework-theme-summary">
+            <strong>${esc(
+              selectedTheme
+                ? (selectedTheme.name || humanize(selectedTheme.themeKey || 'Theme'))
+                : (activeThemeKey ? humanize(activeThemeKey) : (customThemeName || 'No theme selected'))
+            )}</strong>
+            <p>${esc(selectedThemeDescription || 'Choose a saved theme, add one from Library, or use a quick suggestion to prefill the guidance below.')}</p>
+          </div>
+        </section>
+        <section class="framework-theme-panel">
+          <div class="framework-theme-fields">
+            <label class="framework-new-field">
+              <span>Ideological Conflict</span>
+              <input
+                type="text"
+                value="${esc(profile.coreTheme.ideologicalConflict)}"
+                placeholder="What two worldviews are in tension?"
+                oninput="window.frameworkUpdateProfile('coreTheme','ideologicalConflict', this.value)"
+              >
+            </label>
+            <label class="framework-new-field">
+              <span>Moral Question</span>
+              <input
+                type="text"
+                value="${esc(profile.coreTheme.moralQuestion)}"
+                placeholder="What difficult question should the story explore?"
+                oninput="window.frameworkUpdateProfile('coreTheme','moralQuestion', this.value)"
+              >
+            </label>
+            <label class="framework-new-field">
+              <span>Transformation Axis</span>
+              <input
+                type="text"
+                value="${esc(profile.coreTheme.transformationAxis)}"
+                placeholder="Which value or belief changes over time?"
+                oninput="window.frameworkUpdateProfile('coreTheme','transformationAxis', this.value)"
+              >
+            </label>
+          </div>
+        </section>
       </div>
     </section>
   `;
@@ -363,12 +447,14 @@ function renderDramaticModelSection(profile) {
   return `
     <section class="framework-section section-framework-dramatic">
       <div class="framework-section-header redesign">
-        <h3>Dramatic Model</h3>
-        <p>Conflict architecture, escalation logic, structural decisions.</p>
+        <p>Define how conflict works in the story, how it escalates, and what direction the dramatic movement should follow.</p>
       </div>
-      <div class="dramatic-grid">
-        <article class="dramatic-card conflict-engine-card">
-          <h4>Conflict Engine</h4>
+      <div class="dramatic-grid dramatic-grid-redesign">
+        <article class="dramatic-card dramatic-card-wide conflict-engine-card">
+          <div class="dramatic-card-copy">
+            <h4>Conflict Engine</h4>
+            <p>Set the main type of conflict and the path through which it reaches resolution.</p>
+          </div>
           <label class="framework-new-field">
             <span>Conflict Type</span>
             <select class="cinematic-select" onchange="window.frameworkUpdateProfile('dramaticModel','conflictType', this.value)">
@@ -390,15 +476,22 @@ function renderDramaticModelSection(profile) {
           </label>
         </article>
         <article class="dramatic-card">
-          <h4>Escalation Pattern</h4>
+          <div class="dramatic-card-copy">
+            <h4>Escalation Pattern</h4>
+            <p>Choose the rhythm of pressure, reversals, and dramatic buildup across the story.</p>
+          </div>
           <select class="cinematic-select" onchange="window.frameworkUpdateProfile('dramaticModel','escalationPattern', this.value); window.renderFrameworkView();">
             ${Object.keys(ESCALATION_POINTS).map(option => `<option value="${esc(option)}" ${model.escalationPattern === option ? 'selected' : ''}>${esc(option)}</option>`).join('')}
           </select>
           ${renderEscalationGraph(model.escalationPattern)}
         </article>
         <article class="dramatic-card narrative-constraints-card">
-          <h4>Thematic Direction</h4>
+          <div class="dramatic-card-copy">
+            <h4>Thematic Direction</h4>
+            <p>Clarify the direction in which the dramatic conflict pushes the meaning of the story.</p>
+          </div>
           <label class="framework-new-field">
+            <span>Direction</span>
             <select class="cinematic-select" onchange="window.frameworkUpdateProfile('dramaticModel','thematicDirection', this.value)">
               <option value="">Select direction</option>
               ${THEMATIC_DIRECTION_OPTIONS.map(option => `<option value="${esc(option)}" ${model.thematicDirection === option ? 'selected' : ''}>${esc(option)}</option>`).join('')}
@@ -512,33 +605,43 @@ function renderTransformationSection(profile) {
   `;
 }
 
-function renderFrameworkShell({ pageTitle, pageDescription, bodyMarkup }) {
+function renderFrameworkShell({ pageTitle, pageDescription, helperMarkup = '', bodyMarkup, showHeaderActions = true }) {
   return `
     <div class="framework-layout framework-redesign-layout">
       <div class="framework-page-header">
-        <div class="framework-page-header-copy">
-          <h2>${esc(pageTitle)}</h2>
+        <div class="framework-page-header-top">
+          <div class="framework-page-header-copy">
+            <h2>${esc(pageTitle)}</h2>
+          </div>
+          ${showHeaderActions ? `
+            <div class="framework-page-header-actions">
+              <button class="btn random" type="button" onclick="window.openStoryGenerationShortcut()">
+                Create Story
+              </button>
+            </div>
+          ` : ''}
+        </div>
+        <div class="framework-page-header-divider"></div>
+        <div class="framework-page-header-subtitle">
           <p>${esc(pageDescription)}</p>
         </div>
-        <div class="framework-page-header-actions">
-          <button class="btn random" type="button" onclick="window.openStoryGenerationShortcut()">
-            Create Story
-          </button>
-        </div>
       </div>
+      ${helperMarkup}
       ${bodyMarkup}
     </div>
   `;
 }
 
-function renderFrameworkPage(containerId, pageTitle, pageDescription, sectionRenderer) {
+function renderFrameworkPage(containerId, pageTitle, pageDescription, sectionRenderer, helperMarkup = '', options = {}) {
   const container = $(containerId);
   if (!container) return;
   const profile = ensureFrameworkProfileState();
   container.innerHTML = renderFrameworkShell({
     pageTitle,
     pageDescription,
-    bodyMarkup: sectionRenderer(profile)
+    helperMarkup,
+    bodyMarkup: sectionRenderer(profile),
+    showHeaderActions: options.showHeaderActions !== false
   });
 }
 
@@ -557,8 +660,10 @@ export function renderStoryFundamentalsView() {
   renderFrameworkPage(
     '#story-fundamentals-view',
     'Story Fundamentals',
-    'Define complexity, cast scale, world rules, and the core wisdom that anchors the book.',
-    renderStoryCoreSection
+    'You can define the core elements of your story. Here, you choose the complexity, number of characters, and world rules, as well as the wisdom or central lesson, either from the app’s library or written by you, to structure your story in a clear and engaging way.',
+    renderStoryCoreSection,
+    '',
+    { showHeaderActions: false }
   );
 }
 
@@ -566,8 +671,10 @@ export function renderCoreThemeView() {
   renderFrameworkPage(
     '#core-theme-view',
     'Theme',
-    'Clarify the worldview conflict, moral question, and value shift the story will explore.',
-    renderThemeSection
+    'Use this page to define the main theme of your story. Choose or create a theme, then complete the ideological conflict, moral question, and transformation axis to show what the story is really about.',
+    renderThemeSection,
+    '',
+    { showHeaderActions: false }
   );
 }
 
@@ -575,8 +682,10 @@ export function renderDramaticModelView() {
   renderFrameworkPage(
     '#dramatic-model-view',
     'Dramatic Model',
-    'Pick the conflict engine, escalation pattern, and structural direction of the narrative.',
-    renderDramaticModelSection
+    'Use this page to define how the main conflict works in your story. Choose the conflict type, decide how it escalates, and set the dramatic direction that will guide the narrative from beginning to end.',
+    renderDramaticModelSection,
+    '',
+    { showHeaderActions: false }
   );
 }
 
@@ -606,6 +715,8 @@ window.frameworkSelectTheme = (themeId) => {
   const profile = ensureFrameworkProfileState();
   const selectedTheme = (state.project.libraries.themes || []).find(theme => theme.id === themeId) || null;
   profile.coreTheme.selectedThemeId = selectedTheme ? themeId : '';
+  profile.coreTheme.selectedThemeKey = selectedTheme?.themeKey || '';
+  profile.coreTheme.customThemeName = selectedTheme?.name || profile.coreTheme.customThemeName || '';
   if (selectedTheme) {
     const autofill = buildThemeAutofill(selectedTheme);
     const selectedThemeLabel = selectedTheme.name || humanize(selectedTheme.themeKey || '') || '';
@@ -615,7 +726,22 @@ window.frameworkSelectTheme = (themeId) => {
     profile.coreTheme.moralQuestion = autofill.moralQuestion;
     profile.coreTheme.transformationAxis = autofill.transformationAxis;
   }
-  renderFrameworkView();
+  renderCoreThemeView();
+};
+
+window.frameworkApplyThemeSuggestion = (themeKey) => {
+  const profile = ensureFrameworkProfileState();
+  const suggestion = THEME_SUGGESTIONS.find(item => item.key === themeKey);
+  const guidance = getThemeGuidance(themeKey, suggestion?.label || humanize(themeKey));
+  profile.coreTheme.selectedThemeId = '';
+  profile.coreTheme.selectedThemeKey = themeKey;
+  profile.coreTheme.customThemeName = suggestion?.label || humanize(themeKey);
+  profile.storyCore.theme = suggestion?.label || humanize(themeKey);
+  profile.storyCore.wisdom = guidance.wisdom;
+  profile.coreTheme.ideologicalConflict = guidance.ideologicalConflict;
+  profile.coreTheme.moralQuestion = guidance.moralQuestion;
+  profile.coreTheme.transformationAxis = guidance.transformationAxis;
+  renderCoreThemeView();
 };
 
 window.frameworkToggleConstraint = (key) => {

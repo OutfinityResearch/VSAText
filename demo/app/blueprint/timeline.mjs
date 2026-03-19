@@ -108,13 +108,15 @@ export function render() {
   const minTrackWidth = Math.max(800, beats.length * minWidthPerBeat);
   
   timelineContainer.innerHTML = `
-    <section class="blueprint-intro">
-      <h3>Blueprint</h3>
+    <div class="blueprint-page-heading">
+      <div class="blueprint-page-heading-copy">
+        <h2>Blueprint</h2>
+      </div>
+      <div class="blueprint-page-heading-divider"></div>
       <p>
-        Design the narrative architecture in one place: choose the arc, review beats and positions,
-        map beats to chapters, shape tension, and define emotional progression.
+        Use this page to shape the structure of your story. You can choose the narrative arc, map beats to chapters, and define tension and progression across the full story.
       </p>
-    </section>
+    </div>
 
     <div class="timeline-header">
       <label>Narrative Arc:</label>
@@ -150,24 +152,6 @@ export function render() {
       ${renderMappingsList(beats, mappings)}
     </div>
 
-    <section class="timeline-guide" aria-label="Timeline guide">
-      <div class="timeline-guide-title">How to read this timeline</div>
-      <div class="timeline-guide-items">
-        <span><i class="guide-dot" aria-hidden="true"></i> Icon marker = narrative beat identity</span>
-        <span><i class="guide-pill" aria-hidden="true"></i> Beat name + % = placement in story timeline</span>
-        <span><strong>Mapped chapter tag</strong> = current chapter assignment</span>
-        <span><strong>0%</strong> opening, <strong>50%</strong> midpoint, <strong>100%</strong> ending</span>
-      </div>
-      <div class="timeline-guide-tension" aria-label="Tension legend">
-        <span class="tension-legend-item"><strong>Tension scale:</strong></span>
-        <span class="tension-legend-item"><i class="tension-legend-dot tension-1" aria-hidden="true"></i>1 Low</span>
-        <span class="tension-legend-item"><i class="tension-legend-dot tension-2" aria-hidden="true"></i>2 Building</span>
-        <span class="tension-legend-item"><i class="tension-legend-dot tension-3" aria-hidden="true"></i>3 Medium</span>
-        <span class="tension-legend-item"><i class="tension-legend-dot tension-4" aria-hidden="true"></i>4 High</span>
-        <span class="tension-legend-item"><i class="tension-legend-dot tension-5" aria-hidden="true"></i>5 Peak</span>
-      </div>
-    </section>
-    
     <div class="timeline-scroll-container">
       <div class="timeline-track-wrapper" style="min-width: ${minTrackWidth}px;">
         <div class="timeline-track" id="timeline-track">

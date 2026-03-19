@@ -213,9 +213,19 @@ window.loadProject = async (id) => {
     renderBlocksView();
     renderWorldRulesView();
     renderEmptyMetrics();
+    generateCNL();
+    updateGenerateButton();
     
     // Load story versions for this project
     loadStoryVersions();
+
+    if (typeof document !== 'undefined') {
+      document.dispatchEvent(new CustomEvent('project-loaded', {
+        detail: { projectId: state.project.id || id }
+      }));
+    }
+
+    window.switchToTab?.('nl');
     
     closeModal('load-modal');
     showNotification('Project loaded', 'success');

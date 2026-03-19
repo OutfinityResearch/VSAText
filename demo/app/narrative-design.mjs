@@ -307,7 +307,7 @@ function renderCoreConflict(macro) {
     <section class="nd-section">
       <div class="nd-section-head">
         <h3>Core Conflict</h3>
-        <p>Define the central struggle of the story and the broad shape of its ending.</p>
+        <p>Set the main conflict and how it resolves.</p>
       </div>
       <div class="nd-grid nd-core-conflict-grid">
         <label class="nd-field nd-core-conflict-field">
@@ -329,7 +329,7 @@ function renderMacroStructure(macro) {
       <div class="nd-section-head">
         <div>
           <h3>Macro Structure</h3>
-          <p>Choose the structure model, then map turning points across chapters.</p>
+          <p>Choose the structure model and assign turning points to chapters.</p>
         </div>
         <button class="btn small nd-template-trigger" type="button" id="btn-nd-use-template">Use Arc Template</button>
       </div>
@@ -403,7 +403,7 @@ function renderConflictPlan(macro) {
     <section class="nd-section">
       <div class="nd-section-head">
         <h3>Conflict Escalation</h3>
-        <p>Define how conflict intensifies and how stakes expand across the story.</p>
+        <p>Define how tension rises and how the stakes expand.</p>
       </div>
       <div class="nd-grid nd-grid-3">
         <label class="nd-field">
@@ -501,18 +501,16 @@ function renderNarrativeDesign() {
       <div class="nd-header">
         <div>
           <h2>Narrative Design</h2>
-          <p>Shape the narrative logic of the book: conflict, journey, structure, escalation, and storytelling constraints.</p>
+          <p>Plan the conflict, structure, tension, and storytelling rules of your book.</p>
         </div>
-        <span class="nd-autosave">Autosave On</span>
       </div>
       ${renderCoreConflict(macro)}
       ${renderMacroStructure(macro)}
       ${renderConflictPlan(macro)}
-      ${renderStoryProgression(macro)}
       <section class="nd-section">
         <div class="nd-section-head">
           <h3>Narrative Constraints</h3>
-          <p>Define how the story is told, not what happens in it.</p>
+          <p>Choose how the story is told.</p>
         </div>
         <div class="nd-grid nd-grid-2">
           <label class="nd-check-card">

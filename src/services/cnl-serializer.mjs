@@ -45,6 +45,16 @@ function annotationLines(annotations, indent = '') {
   return lines;
 }
 
+function shouldSerializeNodeTitle(node) {
+  const title = String(node?.title || '').trim();
+  if (!title) return false;
+
+  const name = String(node?.name || '').trim();
+  if (!name) return true;
+
+  return title !== name;
+}
+
 /**
  * Serialize a project to CNL format
  * 
@@ -472,7 +482,7 @@ function serializeNode(node, depth) {
   
   if (['book', 'chapter', 'scene'].includes(node.type)) {
     result += `${indent}${formatId(node.name)} group begin\n`;
-    if (node.title) {
+    if (shouldSerializeNodeTitle(node)) {
       result += `${indent}  ${formatId(node.name)} has title "${node.title}"\n`;
     }
     for (const annLine of annotationLines(node.annotations || [], `${indent}  `)) {

@@ -362,6 +362,14 @@ function applyCard(card, targetType, targetId = '', targetLabel = '') {
   if (card.kind === 'block') applyBlock(card.key, target);
 }
 
+function applyWisdomToStoryFundamentals(card) {
+  if (!card || card.kind !== 'wisdom') return false;
+  applyCard(card, 'book', '', 'Book');
+  const wisdomValue = String(card.description || card.title || '').trim();
+  window.applyLibraryWisdomToStoryFundamentals?.(wisdomValue);
+  return true;
+}
+
 function getAllowedTargets(card, chapters, scenes) {
   const chapterTargets = chapters.map(chapter => ({
     targetType: 'chapter',
@@ -520,6 +528,11 @@ function bindEvents(container, cards, chapters, scenes) {
     if (!card || card.readOnly) return;
 
     cardEl.querySelector('[data-action="apply"]')?.addEventListener('click', () => {
+      const context = window.storyFundamentalsLibraryContext;
+      if (context?.source === 'story-fundamentals' && context?.kind === 'wisdom' && card.kind === 'wisdom') {
+        applyWisdomToStoryFundamentals(card);
+        return;
+      }
       openApplyTargetModal(card, chapters, scenes);
     });
   });

@@ -10,30 +10,42 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 1.05rem;
 }
 
 .nl-page-heading {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.15rem 0.05rem 0;
+  gap: 0.75rem;
+  padding: 1.1rem 0.25rem 0.25rem;
+}
+
+.nl-page-heading-copy {
+  min-width: 0;
 }
 
 .nl-page-heading h2 {
   margin: 0;
   font-family: var(--font-title);
-  font-size: 1.18rem;
-  letter-spacing: 0.07em;
+  font-size: calc(var(--fs-xl) + 2px);
+  line-height: 1.08;
+  letter-spacing: 0.01em;
   color: var(--accent-gold);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 18px rgba(236, 170, 64, 0.12);
-  text-transform: uppercase;
+}
+
+.nl-page-heading-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 209, 102, 0.34), rgba(108, 118, 178, 0.18) 68%, rgba(108, 118, 178, 0.06));
 }
 
 .nl-page-heading p {
   margin: 0;
-  font-size: 0.96rem;
-  color: rgba(215, 224, 245, 0.76);
+  max-width: none;
+  font-size: calc(var(--fs-lg) + 1px);
+  line-height: 1.78;
+  color: #e5ebfa;
 }
 
 .nl-controls-panel {

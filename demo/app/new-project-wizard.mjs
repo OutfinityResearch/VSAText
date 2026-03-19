@@ -322,7 +322,7 @@ function renderCreateStoryNL() {
       <div class="wizard-launch-card">
         <div class="wizard-launch-copy">
           <h4>Ready to Create</h4>
-          <p>Create the project with these settings, then continue in <strong>Book Settings</strong> to refine the story core, cast, world, and tone.</p>
+          <p>Create the project with these settings, then continue in <strong>NL Story</strong> to start shaping the story from the first step.</p>
         </div>
       </div>
     </div>
@@ -346,7 +346,7 @@ function renderStep() {
   btnNext.classList.add('primary');
   btnNext.classList.remove('wizard-btn-secondary');
   progressHelper.textContent = state.step === TOTAL_STEPS - 1
-    ? 'After project creation, continue in Book Settings to shape the story foundation.'
+    ? 'After project creation, continue in NL Story to start the workflow.'
     : '';
 
   attachListeners();
@@ -462,7 +462,7 @@ async function finish() {
   applyWizardNLSelections();
   saveDraft();
   closeOverlay();
-  window.switchToTab?.('story-fundamentals');
+  window.switchToTab?.('nl');
 }
 
 function openOverlay() {

@@ -7,7 +7,7 @@
 import { state } from './state.mjs';
 import { $, $$, genId, openModal } from './utils.mjs';
 import { renderTree, findNode, addChild, selectNode } from './tree.mjs';
-import { renderEntityGrid, renderBackdropView, renderCharactersCastView, showSelectModal, showBlockModal, showActionModal } from './entities.mjs';
+import { renderEntityGrid, renderBackdropView, renderCharactersCastView, renderThemeEditorPage, showSelectModal, showBlockModal, showActionModal } from './entities.mjs';
 import { renderRelationshipsView, renderBlocksView, renderWorldRulesView } from './views.mjs';
 import { evaluateMetrics, renderEmptyMetrics, initMetrics, renderFullEvaluationReport } from './metrics.mjs';
 import { exportCNL, importCNL, toggleEditMode, setCNLViewMode, generateCNL } from './cnl.mjs';
@@ -172,6 +172,7 @@ function renderViewSpecificContent(viewName) {
   if (viewName === 'midhooks') renderHooksView('mid');
   if (viewName === 'moods') renderEntityGrid('moods');
   if (viewName === 'themes') renderEntityGrid('themes');
+  if (viewName === 'theme-editor') renderThemeEditorPage();
   if (viewName === 'characters') renderCharactersCastView();
   if (viewName === 'library') renderLibraryView();
   if (viewName === 'narrative-design') renderNarrativeDesignMacroView();
@@ -218,6 +219,7 @@ function renderProjectNavigatorPanel() {
   navigatorMode = 'project';
   setNavigatorTitle('Book Navigator');
   setActiveHeaderAction(activeViewKey);
+  setActiveNavigatorItem(activeViewKey);
   renderTree();
   renderManuscriptNavigatorDetails();
 }
@@ -965,13 +967,22 @@ async function init() {
   });
 
   document.addEventListener('generated-story-updated', () => {
+    let structureWasBootstrapped = false;
     if (!state.project.structure?.children?.length) {
-      buildStructureFromGeneratedStory();
+      structureWasBootstrapped = buildStructureFromGeneratedStory();
     }
+    if (structureWasBootstrapped) generateCNL();
     renderProjectNavigatorPanel();
     focusGeneratedProjectStructure();
     renderManuscriptNavigatorDetails();
     if (activeViewKey === 'manuscript') renderManuscriptStudioView();
+  });
+
+  document.addEventListener('project-loaded', () => {
+    renderProjectNavigatorPanel();
+    renderViewSpecificContent(activeViewKey);
+    setActiveNavigatorItem(activeViewKey);
+    setActiveHeaderAction(activeViewKey);
   });
 
   document.addEventListener('metrics-evaluated', () => {
@@ -1035,6 +1046,32 @@ window.openManuscriptNode = (chapterId = null, sceneId = null) => {
   showStandaloneView('manuscript');
 };
 window.renderBackdropView = renderBackdropView;
+window.openLibraryWisdom = () => {
+  window.storyFundamentalsLibraryContext = { source: 'story-fundamentals', kind: 'wisdom' };
+  const firstSelection = 'wisdom:tradition';
+  renderLibraryNavigatorPanel();
+  setLibrarySelection(firstSelection);
+  showStandaloneView('library');
+
+  const groups = Array.from(document.querySelectorAll('#navigator-content .navigator-group'));
+  groups.forEach((group) => {
+    const summaryText = (group.querySelector(':scope > summary')?.textContent || '').trim().toLowerCase();
+    group.open = summaryText === 'wisdom';
+  });
+
+  setActiveNavigatorItem('library', '', firstSelection);
+};
+window.openThemeEditorPage = () => {
+  showStandaloneView('theme-editor');
+};
+window.applyLibraryWisdomToStoryFundamentals = (value) => {
+  const wisdomValue = String(value || '').trim();
+  if (!wisdomValue) return;
+  window.frameworkUpdateProfile?.('storyCore', 'wisdom', wisdomValue);
+  window.storyFundamentalsLibraryContext = null;
+  switchToTab('story-fundamentals');
+  window.renderStoryFundamentalsView?.();
+};
 window.openLibraryThemes = () => {
   const firstThemeCategory = getThemeCatalogByCategory()[0]?.key || 'personal-transformation';
   const firstSelection = `themes:cat_${firstThemeCategory}`;

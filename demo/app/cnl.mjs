@@ -10,6 +10,7 @@ import { $ } from './utils.mjs';
 import { serializeToCNL } from '../../src/services/cnl-serializer.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
 import { refreshAllViews, loadCNLIntoState } from './generation/generation-utils.mjs';
+import { cnlToProjectState } from './generation/cnl-roundtrip.mjs';
 import { updateGenerateButton } from './generation/generation-improve.mjs';
 
 let isEditMode = false;
@@ -180,7 +181,15 @@ function renderCNLVisual(cnlText) {
   const container = $('#cnl-visual');
   if (!container) return;
 
-  const project = state.project || {};
+  let project = state.project || {};
+  const normalizedCnlText = String(cnlText || '').trim();
+  if (normalizedCnlText) {
+    try {
+      project = cnlToProjectState(normalizedCnlText, state.project).project || project;
+    } catch {
+      // Fall back to current project state when the current CNL text cannot be round-tripped.
+    }
+  }
   const blueprint = project.blueprint || {};
   const libraries = project.libraries || {};
 
@@ -206,18 +215,6 @@ function renderCNLVisual(cnlText) {
     buildInfoTableRow('Narrative Arc', humanizeKey(blueprint.arc || project.selectedArc || 'heros_journey')),
     buildInfoTableRow('Type', 'Auto-generated CNL'),
     buildInfoTableRow('Purpose', 'Blueprint for content generation and metrics verification')
-  ];
-
-  const howToReadItems = [
-    ['Beats', 'Key narrative moments that structure progression.'],
-    ['Scenes', 'Locations, characters, objects, and mood per moment.'],
-    ['Dialogues', 'Purpose, tone, tension, speaker, and listener map.'],
-    ['World Rules', 'Inviolable laws unless exceptions are explicit.'],
-    ['World Layers', 'Societal, historical, economic, and conflict systems.'],
-    ['Characters', 'Roles, traits, and key relationships.'],
-    ['Objects', 'Central artifacts and their significance.'],
-    ['Themes', 'Primary and secondary meaning layers.'],
-    ['Tension Curve', 'How intensity changes throughout the story.']
   ];
 
   const beatRows = (blueprint.beatMappings || []).map(mapping => {
@@ -438,22 +435,13 @@ function renderCNLVisual(cnlText) {
   container.innerHTML = `<div class="cnl-blueprint-layout">
     <section class="cnl-section">
       <div class="cnl-section-head">
-        <h3>Create Story Specification</h3>
+        <h3>Story Overview</h3>
         <p>Auto-generated CNL transformed into a readable blueprint view.</p>
       </div>
       <div class="cnl-table-wrap">
         <table class="cnl-table cnl-table-compact">
           <tbody>${headerRows.join('')}</tbody>
         </table>
-      </div>
-    </section>
-
-    <section class="cnl-section">
-      <div class="cnl-section-head">
-        <h3>How to Read This Blueprint</h3>
-      </div>
-      <div class="cnl-howto-grid">
-        ${howToReadItems.map(([label, text]) => `<div class="cnl-howto-item"><strong>${esc(label)}</strong><span>${esc(text)}</span></div>`).join('')}
       </div>
     </section>
 

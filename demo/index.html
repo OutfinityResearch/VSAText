@@ -36,21 +36,22 @@
         <span class="panel-title">Book Navigator</span>
       </div>
       <div class="navigator-content" id="navigator-content">
-        <div class="navigator-group">
-          <div class="navigator-items">
+        <section class="navigator-pages">
+          <div class="navigator-pages-label">Pages</div>
+          <div class="navigator-pages-list">
+            <button class="navigator-item" data-target-view="nl">NL Story</button>
+            <button class="navigator-item active" data-target-view="cnl">CNL</button>
+            <button class="navigator-item" data-target-view="blueprint">Blueprint</button>
             <button class="navigator-item" data-target-view="story-fundamentals">Story Fundamentals</button>
             <button class="navigator-item" data-target-view="core-theme">Theme</button>
             <button class="navigator-item" data-target-view="dramatic-model">Dramatic Model</button>
-            <button class="navigator-item" data-target-view="character-transformation">Character Transformation</button>
             <button class="navigator-item" data-target-view="narrative-design">Narrative Design</button>
             <button class="navigator-item" data-target-view="characters">Cast</button>
+            <button class="navigator-item" data-target-view="character-transformation">Character Transformation</button>
             <button class="navigator-item" data-target-view="backdrop">World</button>
             <button class="navigator-item" data-target-view="moods">Tone &amp; Style</button>
-            <button class="navigator-item" data-target-view="blueprint">Blueprint</button>
-            <button class="navigator-item active" data-target-view="cnl">CNL Editor</button>
-            <button class="navigator-item" data-target-view="nl">NL Story</button>
           </div>
-        </div>
+        </section>
         <details class="navigator-group project-structure-group" open>
           <summary>Project Structure</summary>
           <div class="tree-container" id="tree-container"></div>
@@ -63,9 +64,17 @@
         <div class="view" id="view-framework"><div class="framework-view" id="framework-view"></div></div>
         <div class="view" id="view-story-fundamentals"><div class="framework-view" id="story-fundamentals-view"></div></div>
         <div class="view" id="view-core-theme"><div class="framework-view" id="core-theme-view"></div></div>
+        <div class="view" id="view-theme-editor"><div class="framework-view" id="theme-editor-view"></div></div>
         <div class="view" id="view-dramatic-model"><div class="framework-view" id="dramatic-model-view"></div></div>
         <div class="view" id="view-character-transformation"><div class="framework-view" id="character-transformation-view"></div></div>
         <div class="view active" id="view-cnl">
+          <div class="cnl-page-heading">
+            <div class="cnl-page-heading-copy">
+              <h2>Controlled Natural Language</h2>
+            </div>
+            <div class="cnl-page-heading-divider"></div>
+            <p>Use this page to review and edit the structured CNL version of your story. This format keeps the project clear, consistent, and ready for generation.</p>
+          </div>
           <div class="cnl-toolbar">
             <button class="btn btn-edit-active" id="btn-cnl-view-formatted" title="Show CNL visual view">CNL View</button>
             <button class="btn" id="btn-edit-cnl" title="Toggle edit mode">Edit</button>
@@ -79,8 +88,11 @@
         <div class="view" id="view-nl">
           <div class="nl-container">
             <div class="nl-page-heading">
-              <h2>Natural Language Story</h2>
-              <p>Generate and manage story drafts</p>
+              <div class="nl-page-heading-copy">
+                <h2>Natural Language Story</h2>
+              </div>
+              <div class="nl-page-heading-divider"></div>
+              <p>Use this page to generate your story draft, compare versions, and continue improving the text.</p>
             </div>
 
             <div class="nl-controls-panel" id="nl-versions-panel">

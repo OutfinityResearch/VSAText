@@ -169,12 +169,12 @@ export function renderBackdropView() {
     <div class="view-description-header">
       <div class="view-description-title">World</div>
       <div class="view-description-text">
-        Shape the setting of the story through place, time, world rules, and meaningful objects that influence atmosphere, conflict, and character choices.
+        Define the setting, important places, key objects, and the rules that shape your story world.
       </div>
     </div>
     <div class="backdrop-layout">
       <details class="spec-card" open>
-        <summary class="spec-card-summary"><span>The World and Locations</span><span class="spec-card-hint" aria-hidden="true"></span></summary>
+        <summary class="spec-card-summary"><span>World Setup</span><span class="spec-card-hint" aria-hidden="true"></span></summary>
         <div class="spec-card-content">
           <div class="spec-grid-4 spec-world-grid">
             <div class="form-group">
@@ -224,7 +224,6 @@ export function renderBackdropView() {
             <button class="btn small" type="button" onclick="window.addEntity('locations')">+ Add Location</button>
           </div>
         </div>
-        <div class="backdrop-section-note">Define place, geography, atmosphere, and era/time period for scene context.</div>
         <div class="entity-grid" id="backdrop-locations-grid"></div>
       </section>
       <section class="backdrop-section">
@@ -235,7 +234,6 @@ export function renderBackdropView() {
             <button class="btn small" type="button" onclick="window.addEntity('objects')">+ Add Object</button>
           </div>
         </div>
-        <div class="backdrop-section-note">Track story-relevant artifacts, tools, keys, and symbolic items.</div>
         <div class="entity-grid" id="backdrop-objects-grid"></div>
       </section>
       <section class="backdrop-section">
@@ -243,14 +241,12 @@ export function renderBackdropView() {
           <h3>World Rules</h3>
           <button class="btn small" type="button" onclick="window.addWorldRule()">+ Add World Rule</button>
         </div>
-        <div class="backdrop-section-note">Define social, magical, technological, and physical constraints that govern the world.</div>
         <div class="rules-grid-cards" id="backdrop-worldrules-grid"></div>
       </section>
       <section class="backdrop-section">
         <div class="backdrop-section-header">
           <h3>World Layers</h3>
         </div>
-        <div class="backdrop-section-note">Model societies, history, rules, economy, and conflicts directly in World.</div>
         <div id="backdrop-worldlayers-view"></div>
       </section>
     </div>
@@ -266,6 +262,61 @@ export function renderBackdropView() {
     idPrefix: 'wle'
   });
   bindWorldSpecControls();
+}
+
+export function renderThemeEditorPage() {
+  const container = $('#theme-editor-view');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="view-description-header theme-editor-hero">
+      <div class="view-description-title">Add Theme</div>
+      <div class="view-description-text">
+        Create a custom theme for your story. You can write everything manually or start from an optional preset and adjust it.
+      </div>
+    </div>
+    <div class="backdrop-layout theme-editor-layout">
+      <section class="backdrop-section theme-editor-section">
+        <div class="backdrop-section-header">
+          <h3>Theme Editor</h3>
+          <div class="backdrop-section-actions">
+            <button class="btn small" type="button" onclick="window.switchToTab?.('core-theme')">Back to Theme</button>
+            <button class="btn small" type="button" onclick="window.saveThemeFromPage()">Save Theme</button>
+          </div>
+        </div>
+        <div class="spec-card-content theme-editor-fields theme-editor-grid">
+          <div class="form-group theme-editor-field theme-editor-field-wide">
+            <label class="form-label">Theme Name</label>
+            <input class="form-input" id="theme-page-name" placeholder="Ex: Redemption through sacrifice">
+          </div>
+          <div class="form-group theme-editor-field">
+            <label class="form-label">Base Preset (Optional)</label>
+            <select class="form-select" id="theme-page-preset" onchange="window.prefillThemePageForm(this.value)">
+              <option value="">Custom theme</option>
+              ${Object.entries(VOCAB.THEMES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('')}
+            </select>
+            <div class="form-hint">Use a preset only to prefill the fields. You can edit everything manually.</div>
+          </div>
+          <div class="form-group theme-editor-field">
+            <label class="form-label">Ideological Conflict</label>
+            <input class="form-input" id="theme-page-ideological-conflict" placeholder="Ex: Justice vs mercy">
+          </div>
+          <div class="form-group theme-editor-field">
+            <label class="form-label">Moral Question</label>
+            <input class="form-input" id="theme-page-moral-question" placeholder="Ex: When does justice become cruelty?">
+          </div>
+          <div class="form-group theme-editor-field">
+            <label class="form-label">Transformation Axis</label>
+            <input class="form-input" id="theme-page-transformation-axis" placeholder="Ex: Outrage -> discernment">
+          </div>
+          <div class="form-group theme-editor-field theme-editor-field-wide">
+            <label class="form-label">Wisdom</label>
+            <textarea class="form-textarea" id="theme-page-wisdom" rows="4" placeholder="Write the central truth this theme should express."></textarea>
+          </div>
+        </div>
+      </section>
+    </div>
+  `;
 }
 
 function getWorldSpecValuesFromProject() {
@@ -1089,6 +1140,10 @@ function renderBackdropWorldRules() {
 }
 
 window.addEntity = type => { 
+  if (type === 'themes') {
+    window.openThemeEditorPage?.();
+    return;
+  }
   if (type === 'characters') pendingCharacterRole = 'secondary';
   state.editingEntity = null; 
   showEntityForm(type, null); 
@@ -1194,21 +1249,36 @@ function showEntityForm(type, e) {
   }
   
   if (type === 'themes') {
-    html += `<div class="form-group"><label class="form-label">Select Theme</label>
-      <div id="e-themes" class="entity-grid">${Object.entries(VOCAB.THEMES).map(([k, v]) => {
-        const guidance = getThemeGuidance(k, v.label);
-        return `<div class="entity-card ${e?.themeKey === k ? 'selected' : ''}" onclick="selectTheme('${k}')" data-key="${k}" style="margin-bottom:0.4rem;${e?.themeKey === k ? 'border-color:var(--accent-amber);background:rgba(251,133,0,0.1);' : ''}">
-        <div class="entity-name">${v.label}</div><div class="entity-type">${v.desc}</div>
-        <div class="entity-tags">${v.suggestedBlocks.slice(0, 3).map(b => `<span class="entity-tag">${b}</span>`).join('')}</div>
-        <div style="margin-top:0.45rem;display:grid;gap:0.25rem;">
-          <div style="font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Ideological Conflict</div>
-          <div style="font-size:0.76rem;color:var(--text-secondary);line-height:1.35;">${guidance.ideologicalConflict}</div>
-          <div style="font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:0.1rem;">Moral Question</div>
-          <div style="font-size:0.76rem;color:var(--text-secondary);line-height:1.35;">${guidance.moralQuestion}</div>
-          <div style="font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:0.1rem;">Transformation Axis</div>
-          <div style="font-size:0.76rem;color:var(--text-secondary);line-height:1.35;">${guidance.transformationAxis}</div>
-        </div></div>`;
-      }).join('')}</div></div>`;
+    html += `<div class="form-group">
+      <label class="form-label">Theme Name</label>
+      <input class="form-input" id="e-theme-name" value="${e?.name || ''}" placeholder="Ex: Redemption through sacrifice">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Base Preset (Optional)</label>
+      <select class="form-select" id="e-theme-preset" onchange="window.prefillThemeForm(this.value)">
+        <option value="">Custom theme</option>
+        ${Object.entries(VOCAB.THEMES).map(([k, v]) => `
+          <option value="${k}" ${e?.themeKey === k ? 'selected' : ''}>${v.label}</option>
+        `).join('')}
+      </select>
+      <div class="form-hint">Choose a preset only if you want to prefill the fields below. You can still edit everything manually.</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ideological Conflict</label>
+      <input class="form-input" id="e-theme-ideological-conflict" value="${e?.ideologicalConflict || ''}" placeholder="Ex: Justice vs mercy">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Moral Question</label>
+      <input class="form-input" id="e-theme-moral-question" value="${e?.moralQuestion || ''}" placeholder="Ex: When does justice become cruelty?">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Transformation Axis</label>
+      <input class="form-input" id="e-theme-transformation-axis" value="${e?.transformationAxis || ''}" placeholder="Ex: Outrage -> discernment">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Wisdom</label>
+      <textarea class="form-textarea" id="e-theme-wisdom" rows="3" placeholder="Write the central truth this theme should express.">${e?.wisdom || ''}</textarea>
+    </div>`;
   }
 
   if (['characters', 'locations', 'objects', 'moods', 'themes'].includes(type)) {
@@ -1267,17 +1337,15 @@ function saveEntity(type) {
     });
   }
   if (type === 'themes') {
-    const sel = $('#e-themes .entity-card.selected');
-    if (!sel) { alert('Select a theme'); return; }
-    const k = sel.dataset.key;
-    const t = VOCAB.THEMES[k];
-    const guidance = getThemeGuidance(k, t.label);
-    e.name = t.label;
-    e.themeKey = k;
-    e.ideologicalConflict = guidance.ideologicalConflict;
-    e.moralQuestion = guidance.moralQuestion;
-    e.transformationAxis = guidance.transformationAxis;
-    e.wisdom = guidance.wisdom;
+    const presetKey = $('#e-theme-preset')?.value || '';
+    const preset = presetKey ? VOCAB.THEMES[presetKey] : null;
+    const guidance = presetKey ? getThemeGuidance(presetKey, preset?.label || '') : null;
+    e.name = ($('#e-theme-name')?.value || '').trim() || preset?.label || 'Theme';
+    e.themeKey = presetKey || '';
+    e.ideologicalConflict = ($('#e-theme-ideological-conflict')?.value || '').trim() || guidance?.ideologicalConflict || '';
+    e.moralQuestion = ($('#e-theme-moral-question')?.value || '').trim() || guidance?.moralQuestion || '';
+    e.transformationAxis = ($('#e-theme-transformation-axis')?.value || '').trim() || guidance?.transformationAxis || '';
+    e.wisdom = ($('#e-theme-wisdom')?.value || '').trim() || guidance?.wisdom || '';
 
     const libraries = state.project.libraries || (state.project.libraries = {});
     const frameworkProfile = libraries.frameworkProfile || (libraries.frameworkProfile = {});
@@ -1287,6 +1355,7 @@ function saveEntity(type) {
     storyCore.theme = e.name;
     storyCore.wisdom = e.wisdom;
     coreTheme.selectedThemeId = e.id;
+    coreTheme.selectedThemeKey = e.themeKey || '';
     coreTheme.ideologicalConflict = e.ideologicalConflict;
     coreTheme.moralQuestion = e.moralQuestion;
     coreTheme.transformationAxis = e.transformationAxis;
@@ -1434,18 +1503,81 @@ function applyWorldTemplate(kind, templateKey) {
 }
 
 window.toggleChip = el => el.classList.toggle('selected');
-window.selectTheme = k => {
-  $$('#e-themes .entity-card').forEach(c => {
-    c.classList.remove('selected');
-    c.style.borderColor = '';
-    c.style.background = '';
-  });
-  const sel = $(`#e-themes .entity-card[data-key="${k}"]`);
-  if (sel) {
-    sel.classList.add('selected');
-    sel.style.borderColor = 'var(--accent-amber)';
-    sel.style.background = 'rgba(251,133,0,0.1)';
-  }
+window.prefillThemeForm = (themeKey) => {
+  const preset = VOCAB.THEMES?.[themeKey];
+  if (!preset) return;
+  const guidance = getThemeGuidance(themeKey, preset.label);
+  const nameInput = $('#e-theme-name');
+  const conflictInput = $('#e-theme-ideological-conflict');
+  const moralInput = $('#e-theme-moral-question');
+  const axisInput = $('#e-theme-transformation-axis');
+  const wisdomInput = $('#e-theme-wisdom');
+
+  if (nameInput && !nameInput.value.trim()) nameInput.value = preset.label || '';
+  if (conflictInput && !conflictInput.value.trim()) conflictInput.value = guidance.ideologicalConflict || '';
+  if (moralInput && !moralInput.value.trim()) moralInput.value = guidance.moralQuestion || '';
+  if (axisInput && !axisInput.value.trim()) axisInput.value = guidance.transformationAxis || '';
+  if (wisdomInput && !wisdomInput.value.trim()) wisdomInput.value = guidance.wisdom || '';
+};
+
+window.prefillThemePageForm = (themeKey) => {
+  const preset = VOCAB.THEMES?.[themeKey];
+  if (!preset) return;
+  const guidance = getThemeGuidance(themeKey, preset.label);
+  const nameInput = $('#theme-page-name');
+  const conflictInput = $('#theme-page-ideological-conflict');
+  const moralInput = $('#theme-page-moral-question');
+  const axisInput = $('#theme-page-transformation-axis');
+  const wisdomInput = $('#theme-page-wisdom');
+
+  if (nameInput && !nameInput.value.trim()) nameInput.value = preset.label || '';
+  if (conflictInput && !conflictInput.value.trim()) conflictInput.value = guidance.ideologicalConflict || '';
+  if (moralInput && !moralInput.value.trim()) moralInput.value = guidance.moralQuestion || '';
+  if (axisInput && !axisInput.value.trim()) axisInput.value = guidance.transformationAxis || '';
+  if (wisdomInput && !wisdomInput.value.trim()) wisdomInput.value = guidance.wisdom || '';
+};
+
+window.saveThemeFromPage = () => {
+  const presetKey = $('#theme-page-preset')?.value || '';
+  const preset = presetKey ? VOCAB.THEMES[presetKey] : null;
+  const guidance = presetKey ? getThemeGuidance(presetKey, preset?.label || '') : null;
+  const name = ($('#theme-page-name')?.value || '').trim() || preset?.label || 'Theme';
+  const ideologicalConflict = ($('#theme-page-ideological-conflict')?.value || '').trim() || guidance?.ideologicalConflict || '';
+  const moralQuestion = ($('#theme-page-moral-question')?.value || '').trim() || guidance?.moralQuestion || '';
+  const transformationAxis = ($('#theme-page-transformation-axis')?.value || '').trim() || guidance?.transformationAxis || '';
+  const wisdom = ($('#theme-page-wisdom')?.value || '').trim() || guidance?.wisdom || '';
+
+  const theme = {
+    id: genId(),
+    name,
+    themeKey: presetKey || '',
+    ideologicalConflict,
+    moralQuestion,
+    transformationAxis,
+    wisdom,
+    annotations: []
+  };
+
+  state.project.libraries.themes.push(theme);
+
+  const libraries = state.project.libraries || (state.project.libraries = {});
+  const frameworkProfile = libraries.frameworkProfile || (libraries.frameworkProfile = {});
+  const storyCore = frameworkProfile.storyCore || (frameworkProfile.storyCore = {});
+  const coreTheme = frameworkProfile.coreTheme || (frameworkProfile.coreTheme = {});
+
+  storyCore.theme = theme.name;
+  storyCore.wisdom = theme.wisdom;
+  coreTheme.selectedThemeId = theme.id;
+  coreTheme.selectedThemeKey = theme.themeKey || '';
+  coreTheme.customThemeName = theme.name;
+  coreTheme.ideologicalConflict = theme.ideologicalConflict;
+  coreTheme.moralQuestion = theme.moralQuestion;
+  coreTheme.transformationAxis = theme.transformationAxis;
+
+  generateCNL();
+  window.showNotification?.(`Theme "${theme.name}" added`, 'success');
+  window.switchToTab?.('core-theme');
+  window.renderCoreThemeView?.();
 };
 
 // ==================== MOOD BUILDER ====================

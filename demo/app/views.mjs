@@ -10,6 +10,15 @@ import { generateCNL } from './cnl.mjs';
 import { updateStats } from './metrics.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
 
+function esc(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ==================== VIEW DESCRIPTIONS ====================
 const VIEW_DESCRIPTIONS = {
   relationships: {
@@ -55,6 +64,27 @@ function humanizeIdentifier(value) {
     .replace(/[_-]+/g, ' ')
     .replace(/\b\w/g, match => match.toUpperCase());
 }
+
+function ensureWorldRuleUiState() {
+  const libraries = state.project.libraries || (state.project.libraries = {});
+  const ui = libraries.worldRulesUi || {};
+  libraries.worldRulesUi = {
+    selectedRuleId: typeof ui.selectedRuleId === 'string' ? ui.selectedRuleId : ''
+  };
+  return libraries.worldRulesUi;
+}
+
+function getSelectedWorldRuleId() {
+  return ensureWorldRuleUiState().selectedRuleId || '';
+}
+
+function setSelectedWorldRuleId(ruleId = '') {
+  ensureWorldRuleUiState().selectedRuleId = String(ruleId || '');
+}
+
+let lastEmotionalArcOptions = {
+  containerId: 'emotionalarc-view'
+};
 
 // ==================== RELATIONSHIPS VIEW ====================
 export function renderRelationshipsView() {
@@ -299,9 +329,11 @@ window.addRelationship = () => {
 };
 
 // ==================== EMOTIONAL ARC VIEW ====================
-export function renderEmotionalArcView() {
-  const container = $('#emotionalarc-view');
+export function renderEmotionalArcView(options = {}) {
+  const { containerId = 'emotionalarc-view' } = options;
+  const container = $(`#${containerId}`);
   if (!container) return;
+  lastEmotionalArcOptions = { containerId };
   const arc = VOCAB.NARRATIVE_ARCS[state.project.selectedArc];
   const emotionalArc = state.project.libraries.emotionalArc;
   
@@ -381,7 +413,7 @@ window.setArcBeatMood = (beatKey, moodPreset) => {
   } else if (moodPreset) {
     state.project.libraries.emotionalArc.push({ id: genId(), beatKey, moodPreset });
   }
-  renderEmotionalArcView();
+  renderEmotionalArcView(lastEmotionalArcOptions);
   generateCNL();
 };
 
@@ -498,6 +530,7 @@ window.showBlockDetails = (key) => {
 export function renderWorldRulesView() {
   const container = $('#worldrules-grid');
   const rules = state.project.libraries.worldRules;
+  const selectedRuleId = getSelectedWorldRuleId();
   
   const descHtml = getViewDescriptionHtml('worldrules');
   let cardsHtml = '';
@@ -505,7 +538,7 @@ export function renderWorldRulesView() {
   if (rules.length > 0) {
     rules.forEach(r => {
       cardsHtml += `
-        <div class="rule-card" onclick="editWorldRule('${r.id}')">
+        <div class="rule-card ${r.id === selectedRuleId ? 'active' : ''}" onclick="editWorldRule('${r.id}')">
           <div class="rule-category">${r.category}</div>
           <div class="rule-name">${r.name}</div>
           <div class="rule-desc">${r.description}</div>
@@ -523,14 +556,103 @@ function refreshWorldRuleViews() {
   window.renderBackdropView?.();
 }
 
+export function renderWorldRuleEditorPage() {
+  const container = $('#world-rule-editor-view');
+  if (!container) return;
+
+  const rule = state.editingEntity
+    ? (state.project.libraries.worldRules || []).find(item => item.id === state.editingEntity) || null
+    : null;
+  const isEdit = !!rule?.id;
+  const categories = ['physics', 'magic', 'society', 'technology', 'biology', 'time', 'geography', 'other'];
+
+  container.innerHTML = `
+    <div class="framework-view">
+      <div class="framework-layout framework-redesign-layout">
+        <div class="framework-page-header">
+          <div class="framework-page-header-top">
+            <div class="framework-page-header-copy">
+              <h2>${isEdit ? 'Edit World Rule' : 'Add World Rule'}</h2>
+            </div>
+            <div class="framework-page-header-actions">
+              <button class="btn small" type="button" id="btn-world-rule-back">Back to World</button>
+            </div>
+          </div>
+          <div class="framework-page-header-divider"></div>
+          <div class="framework-page-header-subtitle">
+            <p>Define the laws, constraints, and special conditions of the world in a dedicated editor.</p>
+          </div>
+        </div>
+
+        <section class="framework-section section-framework-new">
+          <div class="framework-section-header redesign">
+            <h3>Rule Setup</h3>
+            <p>Capture the rule name, category, effect, and scope so the world stays consistent during generation.</p>
+          </div>
+          <div class="spec-card-content theme-editor-fields theme-editor-grid">
+            <div class="form-group theme-editor-field theme-editor-field-wide">
+              <label class="form-label">Rule Name</label>
+              <input class="form-input" id="rule-name" value="${esc(rule?.name || '')}" placeholder="e.g., Inverse Gravity">
+            </div>
+            <div class="form-group theme-editor-field">
+              <label class="form-label">Category</label>
+              <select class="form-select" id="rule-category">
+                ${categories.map(category => `<option value="${category}" ${rule?.category === category ? 'selected' : ''}>${humanizeIdentifier(category)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group theme-editor-field theme-editor-field-wide">
+              <label class="form-label">Description</label>
+              <textarea class="form-textarea" id="rule-desc" rows="5" placeholder="Describe how this rule works in your world...">${esc(rule?.description || '')}</textarea>
+            </div>
+            <div class="form-group theme-editor-field theme-editor-field-wide">
+              <label class="form-label">Scope (optional)</label>
+              <input class="form-input" id="rule-scope" value="${esc(rule?.scope || '')}" placeholder="e.g., Shadowrealm, Night time, Underground">
+              <div class="form-hint">Where or when does this rule apply? Leave empty for global rules.</div>
+            </div>
+          </div>
+          <div class="subplot-editor-actions">
+            ${isEdit ? '<button class="btn danger" type="button" id="btn-delete-world-rule-page">Delete Rule</button>' : '<span></span>'}
+            <div class="subplot-editor-actions-right">
+              <button class="btn" type="button" id="btn-cancel-world-rule-page">Cancel</button>
+              <button class="btn primary" type="button" id="btn-save-world-rule-page">Save Rule</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  `;
+
+  $('#btn-world-rule-back')?.addEventListener('click', () => {
+    state.editingEntity = null;
+    window.switchToTab?.('backdrop');
+  });
+  $('#btn-cancel-world-rule-page')?.addEventListener('click', () => {
+    state.editingEntity = null;
+    window.switchToTab?.('backdrop');
+  });
+  $('#btn-save-world-rule-page')?.addEventListener('click', saveWorldRuleFromPage);
+  $('#btn-delete-world-rule-page')?.addEventListener('click', () => {
+    if (!rule?.id || !confirm('Delete this rule?')) return;
+    state.project.libraries.worldRules = state.project.libraries.worldRules.filter(item => item.id !== rule.id);
+    state.editingEntity = null;
+    setSelectedWorldRuleId('');
+    refreshWorldRuleViews();
+    updateStats();
+    generateCNL();
+    window.switchToTab?.('backdrop');
+  });
+}
+
 window.addWorldRule = () => {
   state.editingEntity = null;
-  showWorldRuleForm(null);
+  setSelectedWorldRuleId('');
+  window.showStandaloneView?.('world-rule-editor');
 };
 
 window.editWorldRule = (id) => {
   state.editingEntity = id;
-  showWorldRuleForm(state.project.libraries.worldRules.find(r => r.id === id));
+  setSelectedWorldRuleId(id);
+  window.showStandaloneView?.('world-rule-editor');
 };
 
 function showWorldRuleForm(r) {
@@ -585,6 +707,7 @@ window.deleteWorldRule = (id) => {
   if (!confirm('Delete this rule?')) return;
   state.project.libraries.worldRules = state.project.libraries.worldRules.filter(r => r.id !== id);
   closeModal('entity-modal');
+  setSelectedWorldRuleId('');
   refreshWorldRuleViews();
   updateStats();
   generateCNL();
@@ -593,10 +716,42 @@ window.deleteWorldRule = (id) => {
 window.addWorldRuleFromTemplate = (template) => {
   if (!template) return;
   state.editingEntity = null;
-  showWorldRuleForm({
+  const rule = {
+    id: genId(),
     name: template.name || '',
     category: template.category || 'other',
     description: template.description || '',
     scope: template.scope || ''
-  });
+  };
+  state.project.libraries.worldRules.push(rule);
+  state.editingEntity = rule.id;
+  setSelectedWorldRuleId(rule.id);
+  window.showStandaloneView?.('world-rule-editor');
 };
+
+function saveWorldRuleFromPage() {
+  const name = $('#rule-name')?.value.trim() || '';
+  if (!name) {
+    alert('Name is required');
+    return;
+  }
+
+  const collection = state.project.libraries.worldRules || (state.project.libraries.worldRules = []);
+  const rule = state.editingEntity
+    ? collection.find(item => item.id === state.editingEntity)
+    : { id: genId() };
+  if (!rule) return;
+
+  rule.name = name;
+  rule.category = $('#rule-category')?.value || 'other';
+  rule.description = $('#rule-desc')?.value.trim() || '';
+  rule.scope = $('#rule-scope')?.value.trim() || '';
+
+  if (!state.editingEntity) collection.push(rule);
+  setSelectedWorldRuleId(rule.id);
+  state.editingEntity = null;
+  refreshWorldRuleViews();
+  updateStats();
+  generateCNL();
+  window.switchToTab?.('backdrop');
+}

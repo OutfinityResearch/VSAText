@@ -497,17 +497,23 @@ function renderNarrativeDesign() {
   const macro = syncMacroDesign();
   const constraints = ensureNarrativeConstraints();
   return `
-    <div class="nd-layout">
-      <div class="nd-header">
-        <div>
-          <h2>Narrative Design</h2>
-          <p>Plan the conflict, structure, tension, and storytelling rules of your book.</p>
+    <div class="framework-view narrative-redesign-shell">
+      <div class="framework-layout framework-redesign-layout nd-layout">
+        <div class="framework-page-header">
+          <div class="framework-page-header-top">
+            <div class="framework-page-header-copy">
+              <h2>Narrative Design</h2>
+            </div>
+          </div>
+          <div class="framework-page-header-divider"></div>
+          <div class="framework-page-header-subtitle">
+            <p>Plan the conflict, structure, tension, and storytelling rules of your book.</p>
+          </div>
         </div>
-      </div>
-      ${renderCoreConflict(macro)}
-      ${renderMacroStructure(macro)}
-      ${renderConflictPlan(macro)}
-      <section class="nd-section">
+        ${renderCoreConflict(macro)}
+        ${renderMacroStructure(macro)}
+        ${renderConflictPlan(macro)}
+        <section class="nd-section">
         <div class="nd-section-head">
           <h3>Narrative Constraints</h3>
           <p>Choose how the story is told.</p>
@@ -542,7 +548,8 @@ function renderNarrativeDesign() {
             </div>
           </label>
         </div>
-      </section>
+        </section>
+      </div>
     </div>
   `;
 }

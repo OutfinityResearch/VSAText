@@ -8,11 +8,18 @@
 import { state } from './state.mjs';
 import { $, genId } from './utils.mjs';
 
+let lastRenderOptions = {
+  containerId: 'worldlayers-view',
+  showIntro: true,
+  embedded: false,
+  idPrefix: 'wl'
+};
+
 const CATEGORY_CONFIG = {
   societies: {
     title: 'Societies / Cultures',
-    subtitle: 'Factions, social structure, values, beliefs, and communication.',
-    addLabel: '+ Add Society Layer',
+    subtitle: 'Groups, values, and how they function.',
+    addLabel: '+ Add Society',
     fields: [
       { key: 'name', label: 'Society Name', type: 'text', placeholder: 'e.g., House Valeryn' },
       { key: 'groupType', label: 'Type', type: 'select', options: ['Faction', 'Nation', 'Culture', 'Order', 'Guild'] },
@@ -34,8 +41,8 @@ const CATEGORY_CONFIG = {
   },
   history: {
     title: 'History / Timeline',
-    subtitle: 'Major events and long-term consequences for world evolution.',
-    addLabel: '+ Add Historical Event',
+    subtitle: 'Major events that shaped the world.',
+    addLabel: '+ Add Event',
     fields: [
       { key: 'title', label: 'Event Title', type: 'text', placeholder: 'e.g., The Ashfall Treaty' },
       { key: 'eventType', label: 'Event Type', type: 'select', options: ['War', 'Discovery', 'Revolution', 'Collapse', 'Migration', 'Cataclysm'] },
@@ -47,8 +54,8 @@ const CATEGORY_CONFIG = {
   },
   rules: {
     title: 'Rules of the World',
-    subtitle: 'Natural, magical, technological, and cultural laws that constrain behavior.',
-    addLabel: '+ Add Rule Layer',
+    subtitle: 'Core laws and limitations of the world.',
+    addLabel: '+ Add Rule',
     fields: [
       { key: 'ruleName', label: 'Rule Name', type: 'text', placeholder: 'e.g., Memory costs for high-level magic' },
       { key: 'ruleDomain', label: 'Domain', type: 'select', options: ['Natural Law', 'Magic Rule', 'Technology Rule', 'Cultural Rule'] },
@@ -65,8 +72,8 @@ const CATEGORY_CONFIG = {
   },
   economy: {
     title: 'Economy & Resources',
-    subtitle: 'Trade, scarcity, resource control, and strategic dependencies.',
-    addLabel: '+ Add Economy Layer',
+    subtitle: 'Resources, scarcity, and who controls them.',
+    addLabel: '+ Add Resource',
     fields: [
       { key: 'resourceName', label: 'Resource / Asset', type: 'text', placeholder: 'e.g., Ember Quartz' },
       { key: 'resourceType', label: 'Resource Type', type: 'select', options: ['Natural', 'Magical', 'Technological', 'Financial', 'Strategic'] },
@@ -78,8 +85,8 @@ const CATEGORY_CONFIG = {
   },
   conflicts: {
     title: 'Conflicts & Tensions',
-    subtitle: 'Political, social, and artifact-driven confrontations across the world.',
-    addLabel: '+ Add Conflict Layer',
+    subtitle: 'Large tensions that pressure the world.',
+    addLabel: '+ Add Conflict',
     fields: [
       { key: 'conflictName', label: 'Conflict Name', type: 'text', placeholder: 'e.g., The Border Embargo Crisis' },
       { key: 'conflictType', label: 'Conflict Type', type: 'select', options: ['Political', 'Social', 'Cultural', 'Resource', 'Artifact', 'Ideological'] },
@@ -192,7 +199,7 @@ function deleteLayer(categoryKey, itemId) {
   const worldLayers = ensureWorldLayersState();
   if (!worldLayers || !Array.isArray(worldLayers[categoryKey])) return;
   worldLayers[categoryKey] = worldLayers[categoryKey].filter(item => item.id !== itemId);
-  renderWorldLayersView();
+  renderWorldLayersView(lastRenderOptions);
 }
 
 function addLayer(categoryKey) {
@@ -200,7 +207,7 @@ function addLayer(categoryKey) {
   const config = CATEGORY_CONFIG[categoryKey];
   if (!worldLayers || !config) return;
   worldLayers[categoryKey].push(getDefaultItem(config));
-  renderWorldLayersView();
+  renderWorldLayersView(lastRenderOptions);
 }
 
 function updateLayerField(categoryKey, itemId, fieldKey, value) {
@@ -245,6 +252,8 @@ export function renderWorldLayersView(options = {}) {
   const container = $(`#${containerId}`);
   if (!container) return;
 
+  lastRenderOptions = { containerId, showIntro, embedded, idPrefix };
+
   const worldLayers = ensureWorldLayersState();
   if (!worldLayers) return;
 
@@ -256,7 +265,8 @@ export function renderWorldLayersView(options = {}) {
     <div class="world-layers-layout${embedded ? ' embedded' : ''}">
       ${showIntro ? `<section class="world-layers-intro">
         <h2>World Layers</h2>
-        <p>Model social, historical, economic, and conflict systems that shape decisions, stakes, and long-term narrative pressure.</p>
+        <p>Use this page only for big world context: societies, history, resources, and large-scale tensions.</p>
+        <div class="world-layers-help">For simple laws of the setting, use World Rules. Use World Layers only when the detail affects the broader world.</div>
       </section>` : ''}
       <div class="world-layers-grid">
         ${cardsHtml}

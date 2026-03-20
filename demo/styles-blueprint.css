@@ -997,9 +997,108 @@
   border-top: 1px solid var(--bg-hover);
 }
 
+#subplot-editor-view .framework-layout {
+  gap: 1.2rem;
+}
+
+#subplot-editor-view .framework-page-header {
+  position: relative;
+  gap: 1rem;
+  padding: 1.35rem 0.35rem 1.15rem;
+  margin-bottom: 0.65rem;
+}
+
+#subplot-editor-view .framework-page-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+}
+
+#subplot-editor-view .framework-page-header h2 {
+  font-size: calc(var(--fs-xl) + 4px);
+  line-height: 1.08;
+  letter-spacing: 0.01em;
+}
+
+#subplot-editor-view .framework-page-header-divider {
+  width: 100%;
+  margin-top: 0.1rem;
+  background: linear-gradient(90deg, rgba(255, 209, 102, 0.34), rgba(108, 118, 178, 0.18) 68%, rgba(108, 118, 178, 0.06));
+}
+
+#subplot-editor-view .framework-page-header-subtitle {
+  width: 100%;
+  max-width: none;
+  padding-top: 0.2rem;
+}
+
+#subplot-editor-view .framework-page-header-subtitle p {
+  margin: 0;
+  color: #e5ebfa;
+  font-size: calc(var(--fs-lg) + 1px);
+  line-height: 1.82;
+}
+
+.subplot-editor-section {
+  border-left: 4px solid var(--accent-violet);
+}
+
+.subplot-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.subplot-editor-field-wide {
+  grid-column: 1 / -1;
+}
+
+.subplot-editor-characters {
+  margin-top: 0.95rem;
+}
+
+.subplot-editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.subplot-editor-actions-right {
+  display: flex;
+  gap: 0.7rem;
+  justify-content: flex-end;
+}
+
 @media (max-width: 860px) {
   .blueprint-focus-fields {
     grid-template-columns: 1fr;
+  }
+
+  #subplot-editor-view .framework-page-header-top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .subplot-editor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .subplot-editor-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .subplot-editor-actions-right {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .subplot-editor-actions-right .btn,
+  .subplot-editor-actions .btn.danger {
+    width: 100%;
   }
 
   .blueprint-content .arc-timeline .arc-beats {

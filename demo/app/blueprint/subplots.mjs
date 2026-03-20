@@ -6,7 +6,7 @@
 
 import state from '../state.mjs';
 import { upsertSubplot, removeSubplot } from '../state.mjs';
-import { generateId } from '../utils.mjs';
+import { $, generateId } from '../utils.mjs';
 import { getArc, getCurrentArcBeats } from './blueprint-state.mjs';
 
 // Subplot types as defined in documentation
@@ -22,6 +22,7 @@ const SUBPLOT_TYPES = {
 };
 
 let subplotsContainer = null;
+let activeSubplotId = null;
 
 /**
  * Initialize the subplots component
@@ -65,7 +66,7 @@ export function render() {
     </div>
     
     <div class="subplots-actions">
-      <button class="btn" id="btn-add-subplot">+ Add Subplot</button>
+      <button class="btn" id="btn-add-subplot">+ Add Plot</button>
     </div>
   `;
   
@@ -108,93 +109,44 @@ function renderSubplotCard(subplot, characters, beats) {
         </div>
       </div>
       <div class="subplot-card-actions">
-        <button class="btn btn-small btn-edit-subplot" data-id="${subplot.id}">Edit</button>
+        <button class="btn btn-small btn-edit-subplot" data-id="${subplot.id}">Edit Plot</button>
       </div>
     </div>
   `;
 }
 
-/**
- * Show subplot edit modal
- */
-function showSubplotModal(subplot = null) {
-  const isEdit = !!subplot;
-  const characters = state.project.libraries.characters || [];
-  const beats = getCurrentArcBeats();
-  
-  const modal = document.getElementById('entity-modal');
-  const titleEl = document.getElementById('modal-title');
-  const bodyEl = document.getElementById('modal-body');
-  const saveBtn = document.getElementById('btn-modal-save');
-  
-  if (!modal || !titleEl || !bodyEl) return;
-  
-  titleEl.textContent = isEdit ? 'Edit Subplot' : 'Add Subplot';
-  
-  const selectedCharIds = subplot?.characterIds || [];
-  
-  bodyEl.innerHTML = `
-    <div class="form-group">
-      <label class="form-label">Subplot Name</label>
-      <input type="text" class="form-input" id="subplot-name" 
-             value="${subplot?.name || ''}" placeholder="e.g., Anna's Romance">
-    </div>
-    
-    <div class="form-group">
-      <label class="form-label">Type</label>
-      <select class="form-select" id="subplot-type">
-        ${Object.entries(SUBPLOT_TYPES).map(([key, t]) => `
-          <option value="${key}" ${subplot?.type === key ? 'selected' : ''}>
-            ${t.label} - ${t.desc}
-          </option>
-        `).join('')}
-      </select>
-    </div>
-    
-    <div class="form-group">
-      <label class="form-label">Involved Characters</label>
-      <div class="checkbox-grid" id="subplot-characters">
-        ${characters.length === 0 ? `
-          <div class="subplot-char-empty">No characters available, add characters first in Cast.</div>
-        ` : characters.map(c => `
-          <label class="checkbox-item subplot-char-option ${selectedCharIds.includes(c.id) ? 'selected' : ''}">
-            <input class="subplot-char-checkbox" type="checkbox" value="${c.id}" 
-                   ${selectedCharIds.includes(c.id) ? 'checked' : ''}>
-            <span>${c.name} (${c.archetype || 'character'})</span>
-          </label>
-        `).join('')}
-      </div>
-    </div>
-    
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Starts at Beat</label>
-        <select class="form-select" id="subplot-start">
-          <option value="">-- Select beat --</option>
-          ${beats.map(b => `
-            <option value="${b.key}" ${subplot?.startBeat === b.key ? 'selected' : ''}>
-              ${b.label} (${Math.round(b.position * 100)}%)
-            </option>
-          `).join('')}
-        </select>
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Resolves at Beat</label>
-        <select class="form-select" id="subplot-resolve">
-          <option value="">-- Select beat --</option>
-          ${beats.map(b => `
-            <option value="${b.key}" ${subplot?.resolveBeat === b.key ? 'selected' : ''}>
-              ${b.label} (${Math.round(b.position * 100)}%)
-            </option>
-          `).join('')}
-        </select>
-      </div>
-    </div>
-  `;
+function getActiveSubplot() {
+  if (!activeSubplotId) return null;
+  return (state.project.blueprint.subplots || []).find(subplot => subplot.id === activeSubplotId) || null;
+}
 
-  // Keep selection visibly synced for character options.
-  document.querySelectorAll('#subplot-characters .subplot-char-checkbox').forEach((checkbox) => {
+function buildCharacterOptions(characters, selectedCharIds) {
+  if (!characters.length) {
+    return `<div class="subplot-char-empty">No characters available, add characters first in Cast.</div>`;
+  }
+
+  return characters.map(c => `
+    <label class="checkbox-item subplot-char-option ${selectedCharIds.includes(c.id) ? 'selected' : ''}">
+      <input class="subplot-char-checkbox" type="checkbox" value="${c.id}" 
+             ${selectedCharIds.includes(c.id) ? 'checked' : ''}>
+      <span>${c.name} (${c.archetype || 'character'})</span>
+    </label>
+  `).join('');
+}
+
+function buildBeatOptions(beats, selectedBeat) {
+  return `
+    <option value="">-- Select beat --</option>
+    ${beats.map(b => `
+      <option value="${b.key}" ${selectedBeat === b.key ? 'selected' : ''}>
+        ${b.label} (${Math.round(b.position * 100)}%)
+      </option>
+    `).join('')}
+  `;
+}
+
+function syncCharacterOptionStates(root = document) {
+  root.querySelectorAll('#subplot-characters .subplot-char-checkbox').forEach((checkbox) => {
     const syncSelectedState = () => {
       const row = checkbox.closest('.subplot-char-option');
       if (row) row.classList.toggle('selected', checkbox.checked);
@@ -202,66 +154,166 @@ function showSubplotModal(subplot = null) {
     checkbox.addEventListener('change', syncSelectedState);
     syncSelectedState();
   });
-  
-  saveBtn.onclick = () => {
-    const name = document.getElementById('subplot-name').value.trim();
-    const type = document.getElementById('subplot-type').value;
-    const startBeat = document.getElementById('subplot-start').value;
-    const resolveBeat = document.getElementById('subplot-resolve').value;
-    
-    const characterIds = [];
-    document.querySelectorAll('#subplot-characters .subplot-char-checkbox:checked').forEach(cb => {
-      characterIds.push(cb.value);
-    });
-    
-    const newSubplot = {
-      id: subplot?.id || generateId('subplot'),
-      name: name || 'Unnamed Subplot',
-      type,
-      characterIds,
-      startBeat: startBeat || null,
-      resolveBeat: resolveBeat || null,
-      touchpoints: subplot?.touchpoints || []
-    };
-    
-    upsertSubplot(newSubplot);
-    closeModal();
-    render();
-    
-    // Notify blueprint changed
-    document.dispatchEvent(new CustomEvent('blueprint-changed'));
-  };
-  
-  modal.classList.add('open');
 }
 
-/**
- * Close modal
- */
-function closeModal() {
-  const modal = document.getElementById('entity-modal');
-  if (modal) modal.classList.remove('open');
+export function renderSubplotEditorView() {
+  const container = $('#subplot-editor-view');
+  if (!container) return;
+
+  const subplot = getActiveSubplot();
+  const isEdit = !!subplot;
+  const characters = state.project.libraries.characters || [];
+  const beats = getCurrentArcBeats();
+  const selectedCharIds = subplot?.characterIds || [];
+
+  container.innerHTML = `
+    <div class="framework-view subplot-editor-shell">
+      <div class="framework-layout framework-redesign-layout">
+        <div class="framework-page-header">
+          <div class="framework-page-header-top">
+            <div class="framework-page-header-copy">
+              <h2>${isEdit ? 'Edit Plot' : 'Add Plot'}</h2>
+            </div>
+            <div class="framework-page-header-actions">
+              <button class="btn" type="button" id="btn-subplot-back">Back to Blueprint</button>
+            </div>
+          </div>
+          <div class="framework-page-header-divider"></div>
+          <div class="framework-page-header-subtitle">
+            <p>Define a subplot in a dedicated workspace, with involved characters and beat positions visible on one page.</p>
+          </div>
+        </div>
+
+        <section class="framework-section section-framework-new subplot-editor-section">
+          <div class="framework-section-header redesign">
+            <h3>Plot Setup</h3>
+            <p>Capture the subplot identity, assign the main characters, and place its beginning and resolution on the active arc.</p>
+          </div>
+
+          <div class="subplot-editor-grid">
+            <div class="form-group subplot-editor-field-wide">
+              <label class="form-label">Plot Name</label>
+              <input type="text" class="form-input" id="subplot-name" 
+                     value="${subplot?.name || ''}" placeholder="e.g., Anna's Romance">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Type</label>
+              <select class="form-select" id="subplot-type">
+                ${Object.entries(SUBPLOT_TYPES).map(([key, t]) => `
+                  <option value="${key}" ${subplot?.type === key ? 'selected' : ''}>
+                    ${t.label} - ${t.desc}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Starts at Beat</label>
+              <select class="form-select" id="subplot-start">
+                ${buildBeatOptions(beats, subplot?.startBeat)}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Resolves at Beat</label>
+              <select class="form-select" id="subplot-resolve">
+                ${buildBeatOptions(beats, subplot?.resolveBeat)}
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group subplot-editor-characters">
+            <label class="form-label">Involved Characters</label>
+            <div class="checkbox-grid" id="subplot-characters">
+              ${buildCharacterOptions(characters, selectedCharIds)}
+            </div>
+          </div>
+
+          <div class="subplot-editor-actions">
+            ${isEdit ? '<button class="btn danger" type="button" id="btn-delete-subplot-page">Delete Plot</button>' : '<span></span>'}
+            <div class="subplot-editor-actions-right">
+              <button class="btn" type="button" id="btn-cancel-subplot-page">Cancel</button>
+              <button class="btn primary" type="button" id="btn-save-subplot-page">Save Plot</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  `;
+
+  syncCharacterOptionStates(container);
+
+  $('#btn-subplot-back')?.addEventListener('click', () => openBlueprintView());
+  $('#btn-cancel-subplot-page')?.addEventListener('click', () => openBlueprintView());
+  $('#btn-save-subplot-page')?.addEventListener('click', saveSubplotFromEditor);
+  $('#btn-delete-subplot-page')?.addEventListener('click', () => {
+    if (!subplot?.id) return;
+    if (!confirm('Delete this plot?')) return;
+    removeSubplot(subplot.id);
+    activeSubplotId = null;
+    document.dispatchEvent(new CustomEvent('blueprint-changed'));
+    openBlueprintView();
+  });
+}
+
+function saveSubplotFromEditor() {
+  const subplot = getActiveSubplot();
+  const name = document.getElementById('subplot-name')?.value.trim() || '';
+  const type = document.getElementById('subplot-type')?.value || 'growth';
+  const startBeat = document.getElementById('subplot-start')?.value || '';
+  const resolveBeat = document.getElementById('subplot-resolve')?.value || '';
+
+  const characterIds = [];
+  document.querySelectorAll('#subplot-characters .subplot-char-checkbox:checked').forEach(cb => {
+    characterIds.push(cb.value);
+  });
+
+  upsertSubplot({
+    id: subplot?.id || generateId('subplot'),
+    name: name || 'Unnamed Subplot',
+    type,
+    characterIds,
+    startBeat: startBeat || null,
+    resolveBeat: resolveBeat || null,
+    touchpoints: subplot?.touchpoints || []
+  });
+
+  activeSubplotId = null;
+  document.dispatchEvent(new CustomEvent('blueprint-changed'));
+  openBlueprintView();
+}
+
+function openBlueprintView() {
+  activeSubplotId = null;
+  if (typeof window.switchToTab === 'function') {
+    window.switchToTab('blueprint');
+  }
+}
+
+export function openSubplotEditor(subplotId = null) {
+  activeSubplotId = subplotId || null;
+  if (typeof window.showStandaloneView === 'function') {
+    window.showStandaloneView('subplot-editor');
+  }
 }
 
 /**
  * Attach event listeners
  */
 function attachListeners() {
-  // Add subplot button
   document.getElementById('btn-add-subplot')?.addEventListener('click', () => {
-    showSubplotModal(null);
+    openSubplotEditor(null);
   });
-  
-  // Edit subplot buttons
+
   document.querySelectorAll('.btn-edit-subplot').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const id = e.target.dataset.id;
       const subplot = state.project.blueprint.subplots.find(s => s.id === id);
-      if (subplot) showSubplotModal(subplot);
+      if (subplot) openSubplotEditor(subplot.id);
     });
   });
-  
-  // Delete subplot buttons
+
   document.querySelectorAll('.btn-delete-subplot').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -278,5 +330,7 @@ function attachListeners() {
 export default {
   initSubplots,
   render,
+  renderSubplotEditorView,
+  openSubplotEditor,
   SUBPLOT_TYPES
 };

@@ -56,6 +56,20 @@ function ensureFrameworkProfileState() {
   return libraries.frameworkProfile;
 }
 
+function syncFrameworkThemeSelection(themeEntity) {
+  if (!themeEntity) return;
+  const profile = ensureFrameworkProfileState();
+  const guidance = getThemeGuidance(themeEntity.themeKey || '', themeEntity.name || humanize(themeEntity.themeKey || 'theme'));
+  profile.coreTheme.selectedThemeId = themeEntity.id || '';
+  profile.coreTheme.selectedThemeKey = themeEntity.themeKey || '';
+  profile.coreTheme.customThemeName = themeEntity.name || '';
+  profile.storyCore.theme = themeEntity.name || humanize(themeEntity.themeKey || '');
+  profile.storyCore.wisdom = themeEntity.wisdom || guidance.wisdom || '';
+  profile.coreTheme.ideologicalConflict = themeEntity.ideologicalConflict || guidance.ideologicalConflict || '';
+  profile.coreTheme.moralQuestion = themeEntity.moralQuestion || guidance.moralQuestion || '';
+  profile.coreTheme.transformationAxis = themeEntity.transformationAxis || guidance.transformationAxis || '';
+}
+
 function ensureLibraryUXState() {
   const libraries = state.project.libraries || (state.project.libraries = {});
   const ux = libraries.libraryUx || {};
@@ -387,7 +401,6 @@ export function applyThemePreset(key, target = { targetType: 'book', targetId: '
   const theme = VOCAB.THEMES?.[key];
   if (!theme) return;
   const existing = (state.project.libraries.themes || []).find(item => item.themeKey === key);
-  const profile = ensureFrameworkProfileState();
   let themeId = '';
 
   if (existing) {
@@ -398,7 +411,7 @@ export function applyThemePreset(key, target = { targetType: 'book', targetId: '
       existing.transformationAxis = existing.transformationAxis || guidance.transformationAxis;
       existing.wisdom = existing.wisdom || guidance.wisdom;
     }
-    profile.coreTheme.selectedThemeId = existing.id;
+    syncFrameworkThemeSelection(existing);
     themeId = existing.id;
   } else {
     const guidance = getThemeGuidance(key, theme.label);
@@ -413,7 +426,7 @@ export function applyThemePreset(key, target = { targetType: 'book', targetId: '
       annotations: []
     };
     state.project.libraries.themes.push(created);
-    profile.coreTheme.selectedThemeId = created.id;
+    syncFrameworkThemeSelection(created);
     themeId = created.id;
     renderEntityGrid('themes');
     generateCNL();
@@ -434,8 +447,7 @@ export function applyThemePreset(key, target = { targetType: 'book', targetId: '
 export function applySavedTheme(themeId, target = { targetType: 'book', targetId: '' }) {
   const theme = (state.project.libraries.themes || []).find(item => item.id === themeId);
   if (!theme) return;
-  const profile = ensureFrameworkProfileState();
-  profile.coreTheme.selectedThemeId = theme.id;
+  syncFrameworkThemeSelection(theme);
 
   recordApplication({
     kind: 'theme-saved',

@@ -704,9 +704,16 @@ function renderTransformationSection(profile) {
   `;
 }
 
-function renderFrameworkShell({ pageTitle, pageDescription, helperMarkup = '', bodyMarkup, showHeaderActions = true }) {
+function renderFrameworkShell({
+  pageTitle,
+  pageDescription,
+  helperMarkup = '',
+  bodyMarkup,
+  showHeaderActions = true,
+  shellClass = ''
+}) {
   return `
-    <div class="framework-layout framework-redesign-layout">
+    <div class="framework-layout framework-redesign-layout ${esc(shellClass)}">
       <div class="framework-page-header">
         <div class="framework-page-header-top">
           <div class="framework-page-header-copy">
@@ -740,7 +747,8 @@ function renderFrameworkPage(containerId, pageTitle, pageDescription, sectionRen
     pageDescription,
     helperMarkup,
     bodyMarkup: sectionRenderer(profile),
-    showHeaderActions: options.showHeaderActions !== false
+    showHeaderActions: options.showHeaderActions !== false,
+    shellClass: options.shellClass || ''
   });
 }
 
@@ -803,7 +811,12 @@ export function renderCharacterTransformationView() {
     '#character-transformation-view',
     'Character Transformation',
     'Capture the protagonist arc, the beliefs that break, and the cost of transformation.',
-    renderTransformationSection
+    renderTransformationSection,
+    '',
+    {
+      shellClass: 'narrative-redesign-shell',
+      showHeaderActions: false
+    }
   );
 }
 

@@ -314,6 +314,11 @@ function getCardsForSelection(selection) {
   return { title: 'Library', subtitle: 'No category selected', cards: [] };
 }
 
+function getSelectionParts(selection) {
+  const [group = 'wisdom', key = 'tradition'] = String(selection || '').split(':');
+  return { group, key };
+}
+
 function getLibraryChapterNodes() {
   const structureChapters = getOrderedChapters(state.project.structure);
   if (structureChapters.length) return structureChapters;
@@ -474,6 +479,13 @@ function openApplyTargetModal(card, chapters, scenes) {
       if (targetType === 'chapter') uiState.chapterTargetId = targetId;
       applyCard(card, targetType, targetId, button.querySelector('span')?.textContent || '');
       closeModal('select-modal');
+      const returnContext = window.libraryReturnContext;
+      if ((card.kind === 'theme-preset' || card.kind === 'theme-saved') && returnContext?.view === 'core-theme') {
+        window.libraryReturnContext = null;
+        window.switchToTab?.('core-theme');
+        window.renderCoreThemeView?.();
+        return;
+      }
       renderLibraryView();
     });
   });
@@ -543,24 +555,45 @@ export function renderLibraryView() {
   if (!container) return;
 
   const data = getCardsForSelection(uiState.selection);
+  const selection = getSelectionParts(uiState.selection);
   const cards = data.cards || [];
   const chapterNodes = getLibraryChapterNodes();
   const chapters = chapterOptions(chapterNodes);
   const scenes = sceneOptions(chapterNodes);
+  const isThemesView = selection.group === 'themes';
+  const headerHelpText = isThemesView
+    ? 'Choose a theme to inspect its ideological conflict, moral question, and transformation axis before applying it to the book, a chapter, or a scene.'
+    : '';
 
   container.innerHTML = `
-    <div class="library-layout">
+    <div class="library-layout ${isThemesView ? 'library-layout-themes framework-view' : ''}">
       <div class="library-column">
-        <div class="library-page-header">
-          <h2>${esc(data.title)}</h2>
-          <p>${esc(data.subtitle)}</p>
+        <div class="library-page-header ${isThemesView ? 'library-page-header-redesign' : ''}">
+          <div class="library-page-header-top">
+            <div class="library-page-header-copy">
+              <h2>${esc(data.title)}</h2>
+            </div>
+          </div>
+          <div class="library-page-header-divider"></div>
+          <div class="library-page-header-subtitle">
+            <p>${esc(data.subtitle)}</p>
+            ${headerHelpText ? `<div class="library-page-header-help">${esc(headerHelpText)}</div>` : ''}
+          </div>
         </div>
 
-        <div class="library-cards">
-          ${cards.length
-            ? cards.map(card => renderCard(card)).join('')
-            : '<div class="library-empty">No items in this category.</div>'}
-        </div>
+        <section class="library-section ${isThemesView ? 'library-themes-grid-section' : ''}">
+          ${isThemesView ? `
+            <div class="library-section-header redesign">
+              <h3>Theme Library</h3>
+              <p>Choose a theme card to inspect its ideological conflict, moral question, and transformation axis before applying it.</p>
+            </div>
+          ` : ''}
+          <div class="library-cards ${isThemesView ? 'library-cards-themes' : ''}">
+            ${cards.length
+              ? cards.map(card => renderCard(card)).join('')
+              : '<div class="library-empty">No items in this category.</div>'}
+          </div>
+        </section>
       </div>
     </div>
   `;

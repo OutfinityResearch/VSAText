@@ -8,7 +8,7 @@ import { state } from './state.mjs';
 import { $, $$, genId, openModal, closeModal, pick } from './utils.mjs';
 import { addChild, findNode, renderTree, getUsedBlocks } from './tree.mjs';
 import { generateCNL } from './cnl.mjs';
-import { renderRelationshipsView } from './views.mjs';
+import { renderRelationshipsView, renderEmotionalArcView } from './views.mjs';
 import { renderWorldLayersView } from './world-layers.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
 import { parseAnnotationLines, annotationsToEditorText } from './cnl-annotations.mjs';
@@ -68,6 +68,28 @@ const OBJECT_TEMPLATE_OPTIONS = Object.entries(VOCAB.OBJECT_TYPES || {}).map(([k
   icon: value?.icon || ''
 }));
 
+function renderRedesignShell({ title, description, bodyMarkup, actionMarkup = '', shellClass = 'entity-redesign-shell' }) {
+  return `
+    <div class="framework-view ${shellClass}">
+      <div class="framework-layout framework-redesign-layout">
+        <div class="framework-page-header">
+          <div class="framework-page-header-top">
+            <div class="framework-page-header-copy">
+              <h2>${escapeHtml(title)}</h2>
+            </div>
+            ${actionMarkup ? `<div class="framework-page-header-actions">${actionMarkup}</div>` : ''}
+          </div>
+          <div class="framework-page-header-divider"></div>
+          <div class="framework-page-header-subtitle">
+            <p>${escapeHtml(description)}</p>
+          </div>
+        </div>
+        ${bodyMarkup}
+      </div>
+    </div>
+  `;
+}
+
 // ==================== ENTITY GRIDS ====================
 export function renderEntityGrid(type, containerIdOrOptions = null, maybeOptions = null) {
   let containerId = `${type}-grid`;
@@ -86,13 +108,13 @@ export function renderEntityGrid(type, containerIdOrOptions = null, maybeOptions
 
   const c = $(`#${containerId}`);
   if (!c) return;
-  const { includeAddCard = true } = options;
+  const { includeAddCard = true, showHeader = true } = options;
   const list = state.project.libraries[type];
   const desc = ENTITY_DESCRIPTIONS[type];
   
   // Build description header
   let descHtml = '';
-  if (desc) {
+  if (desc && showHeader) {
     descHtml = `<div class="entity-grid-header">
       <div class="entity-grid-header-top">
         <div class="entity-grid-title">${desc.title}</div>
@@ -165,17 +187,18 @@ export function renderBackdropView() {
 
   const worldSpec = getWorldSpecValuesFromProject();
 
-  container.innerHTML = `
-    <div class="view-description-header">
-      <div class="view-description-title">World</div>
-      <div class="view-description-text">
-        Define the setting, important places, key objects, and the rules that shape your story world.
-      </div>
-    </div>
-    <div class="backdrop-layout">
-      <details class="spec-card" open>
-        <summary class="spec-card-summary"><span>World Setup</span><span class="spec-card-hint" aria-hidden="true"></span></summary>
-        <div class="spec-card-content">
+  container.innerHTML = renderRedesignShell({
+    title: 'World',
+    description: 'Define the setting, important places, key objects, and the rules that shape your story world.',
+    shellClass: 'entity-redesign-shell',
+    bodyMarkup: `
+    <div class="backdrop-layout entity-redesign-page world-redesign-layout">
+      <section class="framework-section section-framework-new world-redesign-section">
+        <div class="framework-section-header redesign">
+          <h3>World Setup</h3>
+          <p>Set the geography, time period, object focus, and story importance before detailing the world itself.</p>
+        </div>
+        <div class="spec-card-content world-redesign-setup">
           <div class="spec-grid-4 spec-world-grid">
             <div class="form-group">
               <label class="form-label">Geography</label>
@@ -215,19 +238,19 @@ export function renderBackdropView() {
             </div>
           </div>
         </div>
-      </details>
-      <section class="backdrop-section">
-        <div class="backdrop-section-header">
+      </section>
+      <section class="framework-section section-framework-new world-redesign-section">
+        <div class="backdrop-section-header world-redesign-header">
           <h3>Locations (Place & Time)</h3>
           <div class="backdrop-section-actions">
-            <button class="btn small" type="button" onclick="window.openWorldTemplateModal('locations')">Add from Library</button>
             <button class="btn small" type="button" onclick="window.addEntity('locations')">+ Add Location</button>
+            <button class="btn small" type="button" onclick="window.openWorldTemplateModal('locations')">Add from Library</button>
           </div>
         </div>
         <div class="entity-grid" id="backdrop-locations-grid"></div>
       </section>
-      <section class="backdrop-section">
-        <div class="backdrop-section-header">
+      <section class="framework-section section-framework-new world-redesign-section">
+        <div class="backdrop-section-header world-redesign-header">
           <h3>Story Objects</h3>
           <div class="backdrop-section-actions">
             <button class="btn small" type="button" onclick="window.openWorldTemplateModal('objects')">Add from Library</button>
@@ -236,24 +259,25 @@ export function renderBackdropView() {
         </div>
         <div class="entity-grid" id="backdrop-objects-grid"></div>
       </section>
-      <section class="backdrop-section">
-        <div class="backdrop-section-header">
+      <section class="framework-section section-framework-new world-redesign-section">
+        <div class="backdrop-section-header world-redesign-header">
           <h3>World Rules</h3>
           <button class="btn small" type="button" onclick="window.addWorldRule()">+ Add World Rule</button>
         </div>
         <div class="rules-grid-cards" id="backdrop-worldrules-grid"></div>
       </section>
-      <section class="backdrop-section">
-        <div class="backdrop-section-header">
+      <section class="framework-section section-framework-new world-redesign-section">
+        <div class="backdrop-section-header world-redesign-header">
           <h3>World Layers</h3>
         </div>
         <div id="backdrop-worldlayers-view"></div>
       </section>
     </div>
-  `;
+  `
+  });
 
-  renderEntityGrid('locations', 'backdrop-locations-grid', { includeAddCard: false });
-  renderEntityGrid('objects', 'backdrop-objects-grid', { includeAddCard: false });
+  renderEntityGrid('locations', 'backdrop-locations-grid', { includeAddCard: false, showHeader: false });
+  renderEntityGrid('objects', 'backdrop-objects-grid', { includeAddCard: false, showHeader: false });
   renderBackdropWorldRules();
   renderWorldLayersView({
     containerId: 'backdrop-worldlayers-view',
@@ -317,6 +341,161 @@ export function renderThemeEditorPage() {
       </section>
     </div>
   `;
+}
+
+export function renderMoodEditorPage() {
+  const container = $('#mood-editor-view');
+  if (!container) return;
+
+  const mood = state.editingEntity
+    ? (state.project.libraries.moods || []).find(item => item.id === state.editingEntity) || null
+    : null;
+  const isEdit = !!mood;
+
+  container.innerHTML = `
+    <div class="framework-view entity-redesign-shell">
+      <div class="framework-layout framework-redesign-layout">
+        <div class="framework-page-header">
+          <div class="framework-page-header-top">
+            <div class="framework-page-header-copy">
+              <h2>${isEdit ? 'Edit Mood' : 'Add Mood'}</h2>
+            </div>
+            <div class="framework-page-header-actions">
+              <button class="btn small" type="button" onclick="window.switchToTab?.('moods')">Back to Tone & Style</button>
+            </div>
+          </div>
+          <div class="framework-page-header-divider"></div>
+          <div class="framework-page-header-subtitle">
+            <p>Build a mood in a dedicated editor, choose emotional intensity, and save it to the tone library.</p>
+          </div>
+        </div>
+
+        <section class="framework-section section-framework-new tone-redesign-section">
+          <div class="framework-section-header redesign">
+            <h3>Mood Builder</h3>
+            <p>Combine emotions, adjust intensity, and use presets when you want a faster starting point.</p>
+          </div>
+          ${renderMoodBuilder(mood)}
+          <div class="form-group" style="margin-top: 0.95rem;">
+            <label class="form-label">CNL Annotations</label>
+            <textarea class="form-textarea" id="e-annotations" rows="4" placeholder="#hint: Keep the feeling restrained&#10;#sensory: Use damp air and dim light">${annotationsToEditorText(mood?.annotations || [])}</textarea>
+            <div class="form-hint">One annotation per line. Supported types: hint, style, avoid, voice, subtext, sensory, pacing, reference, context, contrast, reveal, example.</div>
+          </div>
+          <div class="subplot-editor-actions">
+            ${isEdit ? '<button class="btn danger" type="button" id="btn-delete-mood-page">Delete Mood</button>' : '<span></span>'}
+            <div class="subplot-editor-actions-right">
+              <button class="btn" type="button" id="btn-cancel-mood-page">Cancel</button>
+              <button class="btn primary" type="button" id="btn-save-mood-page">Save Mood</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  `;
+
+  updateMoodPreview();
+  $('#btn-cancel-mood-page')?.addEventListener('click', () => {
+    state.editingEntity = null;
+    window.switchToTab?.('moods');
+  });
+  $('#btn-save-mood-page')?.addEventListener('click', saveMoodFromPage);
+  $('#btn-delete-mood-page')?.addEventListener('click', () => {
+    if (!mood?.id || !confirm(`Delete "${mood.name}"?`)) return;
+    state.project.libraries.moods = (state.project.libraries.moods || []).filter(item => item.id !== mood.id);
+    removeEntityRefs(state.project.structure, mood.id);
+    state.editingEntity = null;
+    renderToneStyleView();
+    renderTree();
+    generateCNL();
+    window.switchToTab?.('moods');
+  });
+}
+
+export function renderLocationEditorPage() {
+  const container = $('#location-editor-view');
+  if (!container) return;
+
+  const location = state.editingEntity
+    ? (state.project.libraries.locations || []).find(item => item.id === state.editingEntity) || null
+    : null;
+  const isEdit = !!location;
+
+  container.innerHTML = `
+    <div class="framework-view entity-redesign-shell">
+      <div class="framework-layout framework-redesign-layout">
+        <div class="framework-page-header">
+          <div class="framework-page-header-top">
+            <div class="framework-page-header-copy">
+              <h2>${isEdit ? 'Edit Location' : 'Add Location'}</h2>
+            </div>
+            <div class="framework-page-header-actions">
+              <button class="btn small" type="button" onclick="window.switchToTab?.('backdrop')">Back to World</button>
+            </div>
+          </div>
+          <div class="framework-page-header-divider"></div>
+          <div class="framework-page-header-subtitle">
+            <p>Define the place, time period, and core characteristics of the location in a dedicated editor.</p>
+          </div>
+        </div>
+
+        <section class="framework-section section-framework-new world-redesign-section">
+          <div class="framework-section-header redesign">
+            <h3>Location Setup</h3>
+            <p>Set the world context first, then enrich the location with distinctive characteristics for later use in scenes.</p>
+          </div>
+          <div class="spec-card-content theme-editor-fields theme-editor-grid">
+            <div class="form-group theme-editor-field theme-editor-field-wide">
+              <label class="form-label">Name</label>
+              <input class="form-input" id="e-name" value="${escapeHtml(location?.name || pick(VOCAB.NAMES.locations))}" placeholder="Ex: Thornwood Forest">
+            </div>
+            <div class="form-group theme-editor-field">
+              <label class="form-label">Geography</label>
+              <select class="form-select" id="e-geography">
+                ${Object.entries(VOCAB.LOCATION_GEOGRAPHY).map(([k, v]) => `<option value="${k}" ${location?.geography === k ? 'selected' : ''}>${v.label}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group theme-editor-field">
+              <label class="form-label">Era / Time Period</label>
+              <select class="form-select" id="e-time">
+                ${Object.entries(VOCAB.LOCATION_TIME).map(([k, v]) => `<option value="${k}" ${location?.time === k ? 'selected' : ''}>${v.label}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group theme-editor-field theme-editor-field-wide">
+              <label class="form-label">Characteristics</label>
+              <div class="chip-select" id="e-chars">${renderLocationChips(location?.characteristics || [])}</div>
+            </div>
+            <div class="form-group theme-editor-field theme-editor-field-wide">
+              <label class="form-label">CNL Annotations</label>
+              <textarea class="form-textarea" id="e-annotations" rows="4" placeholder="#hint: Keep it isolated&#10;#sensory: Emphasize cold air and wet stone">${annotationsToEditorText(location?.annotations || [])}</textarea>
+              <div class="form-hint">One annotation per line. Supported types: hint, style, avoid, voice, subtext, sensory, pacing, reference, context, contrast, reveal, example.</div>
+            </div>
+          </div>
+          <div class="subplot-editor-actions">
+            ${isEdit ? '<button class="btn danger" type="button" id="btn-delete-location-page">Delete Location</button>' : '<span></span>'}
+            <div class="subplot-editor-actions-right">
+              <button class="btn" type="button" id="btn-cancel-location-page">Cancel</button>
+              <button class="btn primary" type="button" id="btn-save-location-page">Save Location</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  `;
+
+  $('#btn-cancel-location-page')?.addEventListener('click', () => {
+    state.editingEntity = null;
+    window.switchToTab?.('backdrop');
+  });
+  $('#btn-save-location-page')?.addEventListener('click', saveLocationFromPage);
+  $('#btn-delete-location-page')?.addEventListener('click', () => {
+    if (!location?.id || !confirm(`Delete "${location.name}"?`)) return;
+    state.project.libraries.locations = (state.project.libraries.locations || []).filter(item => item.id !== location.id);
+    removeEntityRefs(state.project.structure, location.id);
+    state.editingEntity = null;
+    window.renderBackdropView?.();
+    renderTree();
+    window.switchToTab?.('backdrop');
+  });
 }
 
 function getWorldSpecValuesFromProject() {
@@ -988,8 +1167,13 @@ function renderCharactersSpecBlock() {
   const antagonist = (state.project.libraries.characters || []).find(c => inferCharacterRole(c) === 'antagonist');
 
   return `
-    <div class="cast-spec-rows">
-      <div class="spec-characters-grid">
+    <section class="framework-section section-framework-new cast-redesign-section">
+      <div class="framework-section-header redesign">
+        <h3>Cast Structure</h3>
+        <p>Define the core roles, supporting characters, and relationship dynamics that drive the story.</p>
+      </div>
+      <div class="cast-spec-rows cast-redesign-rows">
+      <div class="spec-characters-grid cast-redesign-grid">
         <div class="spec-subcard">
           <div class="spec-subcard-header">
             <h4 class="spec-subcard-title">Protagonist</h4>
@@ -1016,7 +1200,7 @@ function renderCharactersSpecBlock() {
         </div>
       </div>
 
-      <div class="spec-characters-grid">
+      <div class="spec-characters-grid cast-redesign-grid">
         <div class="spec-subcard">
           <div class="spec-subcard-header">
             <h4 class="spec-subcard-title">Antagonist</h4>
@@ -1043,7 +1227,7 @@ function renderCharactersSpecBlock() {
         </div>
       </div>
 
-      <div class="spec-characters-grid">
+      <div class="spec-characters-grid cast-redesign-grid">
         <div class="spec-subcard spec-subcard-secondary">
           <div class="spec-subcard-header">
             <h4 class="spec-subcard-title">Secondary Characters</h4>
@@ -1054,9 +1238,11 @@ function renderCharactersSpecBlock() {
         </div>
       </div>
 
-      <div class="spec-characters-grid">
+      <div class="spec-characters-grid cast-redesign-grid">
         <div class="spec-subcard spec-subcard-relationships">
-          <h4 class="spec-subcard-title">Relationships</h4>
+          <div class="spec-subcard-header">
+            <h4 class="spec-subcard-title">Relationships</h4>
+          </div>
           <div class="spec-secondary-fields spec-relationship-controls">
             <div class="form-group">
               <label class="form-label">Relationship Type</label>
@@ -1075,7 +1261,8 @@ function renderCharactersSpecBlock() {
           <button class="btn small" id="cast-btn-add-relationship" type="button">+ Add Relationship</button>
         </div>
       </div>
-    </div>
+      </div>
+    </section>
   `;
 }
 
@@ -1085,16 +1272,53 @@ export function renderCharactersCastView() {
   const container = $('#characters-grid');
   if (!container) return;
 
-  container.innerHTML = `
-    <div class="view-description-header">
-      <div class="view-description-title">Cast</div>
-      <div class="view-description-text">
-        Configure your story cast in one place: protagonist, antagonist, secondary characters, and relationships.
-      </div>
-    </div>
-    ${renderCharactersSpecBlock()}
-  `;
+  container.innerHTML = renderRedesignShell({
+    title: 'Cast',
+    description: 'Configure your story cast in one place: protagonist, antagonist, secondary characters, and relationships.',
+    bodyMarkup: renderCharactersSpecBlock(),
+    shellClass: 'narrative-redesign-shell entity-redesign-shell'
+  });
   bindCastSpecEvents();
+}
+
+export function renderToneStyleView() {
+  const container = $('#moods-grid');
+  if (!container) return;
+
+  container.innerHTML = renderRedesignShell({
+    title: 'Tone & Style',
+    description: 'Shape the emotional atmosphere of the story, define scene moods, and align the emotional arc with the prose voice.',
+    shellClass: 'entity-redesign-shell',
+    bodyMarkup: `
+      <div class="entity-redesign-page tone-redesign-layout">
+      <section class="framework-section section-framework-new tone-redesign-section">
+        <div class="framework-section-header redesign">
+          <h3>Tone Direction</h3>
+          <p>Build the emotional palette of the story and keep mood choices aligned with the intended prose voice.</p>
+        </div>
+        <div class="backdrop-section-header tone-redesign-header">
+          <h3>Mood Library</h3>
+          <div class="backdrop-section-actions">
+            <button class="btn small" type="button" onclick="window.addEntity('moods')">+ Add Mood</button>
+          </div>
+        </div>
+        <div class="entity-grid" id="tone-style-moods-grid"></div>
+      </section>
+      <section class="framework-section section-framework-new tone-redesign-section">
+        <div class="backdrop-section-header tone-redesign-header">
+          <h3>Emotional Arc</h3>
+          <div class="backdrop-section-actions">
+            <span class="form-hint">Assign scene-level emotional progression across the main beats.</span>
+          </div>
+        </div>
+        <div id="tone-style-arc-grid"></div>
+      </section>
+      </div>
+    `
+  });
+
+  renderEntityGrid('moods', 'tone-style-moods-grid', { includeAddCard: false });
+  renderEmotionalArcView({ containerId: 'tone-style-arc-grid' });
 }
 
 function renderBackdropWorldRules() {
@@ -1102,12 +1326,13 @@ function renderBackdropWorldRules() {
   if (!container) return;
 
   const rules = state.project.libraries.worldRules || [];
+  const selectedRuleId = state.project.libraries?.worldRulesUi?.selectedRuleId || '';
   let cardsHtml = '';
 
   if (rules.length > 0) {
     rules.forEach(r => {
       cardsHtml += `
-        <div class="rule-card" onclick="window.editWorldRule('${r.id}')">
+        <div class="rule-card ${r.id === selectedRuleId ? 'active' : ''}" onclick="window.editWorldRule('${r.id}')">
           <div class="rule-category">${r.category}</div>
           <div class="rule-name">${r.name}</div>
           <div class="rule-desc">${r.description}</div>
@@ -1144,6 +1369,16 @@ window.addEntity = type => {
     window.openThemeEditorPage?.();
     return;
   }
+  if (type === 'moods') {
+    state.editingEntity = null;
+    window.showStandaloneView?.('mood-editor');
+    return;
+  }
+  if (type === 'locations') {
+    state.editingEntity = null;
+    window.showStandaloneView?.('location-editor');
+    return;
+  }
   if (type === 'characters') pendingCharacterRole = 'secondary';
   state.editingEntity = null; 
   showEntityForm(type, null); 
@@ -1165,6 +1400,16 @@ window.addCharacterWithRole = (role) => {
 };
 
 window.editEntity = (type, id) => { 
+  if (type === 'moods') {
+    state.editingEntity = id;
+    window.showStandaloneView?.('mood-editor');
+    return;
+  }
+  if (type === 'locations') {
+    state.editingEntity = id;
+    window.showStandaloneView?.('location-editor');
+    return;
+  }
   state.editingEntity = id; 
   showEntityForm(type, state.project.libraries[type].find(e => e.id === id)); 
 };
@@ -1374,6 +1619,54 @@ function saveEntity(type) {
   if (type === 'themes' || type === 'moods') window.renderFrameworkView?.();
   if (type === 'characters') renderRelationshipsView();
   generateCNL();
+}
+
+function saveLocationFromPage() {
+  const locations = state.project.libraries.locations || (state.project.libraries.locations = []);
+  const location = state.editingEntity
+    ? locations.find(item => item.id === state.editingEntity)
+    : { id: genId() };
+
+  if (!location) return;
+
+  location.name = $('#e-name')?.value || 'Location';
+  location.geography = $('#e-geography')?.value || 'forest';
+  location.time = $('#e-time')?.value || 'medieval';
+  location.characteristics = [...$$('#e-chars .chip.selected')].map(c => c.dataset.key);
+  location.annotations = parseAnnotationLines($('#e-annotations')?.value || '');
+
+  if (!state.editingEntity) locations.push(location);
+
+  state.editingEntity = null;
+  window.renderBackdropView?.();
+  renderTree();
+  generateCNL();
+  window.switchToTab?.('backdrop');
+}
+
+function saveMoodFromPage() {
+  const moods = state.project.libraries.moods || (state.project.libraries.moods = []);
+  const mood = state.editingEntity
+    ? moods.find(item => item.id === state.editingEntity)
+    : { id: genId() };
+
+  if (!mood) return;
+
+  mood.name = $('#e-mood-name')?.value || 'Mood';
+  mood.emotions = {};
+  $$('.emotion-chip').forEach(chip => {
+    const intensity = parseInt(chip.dataset.intensity || '0', 10);
+    if (intensity > 0) mood.emotions[chip.dataset.emotion] = intensity;
+  });
+  mood.annotations = parseAnnotationLines($('#e-annotations')?.value || '');
+
+  if (!state.editingEntity) moods.push(mood);
+
+  state.editingEntity = null;
+  renderToneStyleView();
+  renderTree();
+  generateCNL();
+  window.switchToTab?.('moods');
 }
 
 // ==================== TRAIT/LOCATION CHIPS ====================

@@ -7,8 +7,8 @@
 import { state } from './state.mjs';
 import { $, $$, genId, openModal } from './utils.mjs';
 import { renderTree, findNode, addChild, selectNode } from './tree.mjs';
-import { renderEntityGrid, renderBackdropView, renderCharactersCastView, renderThemeEditorPage, showSelectModal, showBlockModal, showActionModal } from './entities.mjs';
-import { renderRelationshipsView, renderBlocksView, renderWorldRulesView } from './views.mjs';
+import { renderEntityGrid, renderBackdropView, renderCharactersCastView, renderToneStyleView, renderThemeEditorPage, renderLocationEditorPage, renderMoodEditorPage, showSelectModal, showBlockModal, showActionModal } from './entities.mjs';
+import { renderRelationshipsView, renderBlocksView, renderWorldRulesView, renderWorldRuleEditorPage } from './views.mjs';
 import { evaluateMetrics, renderEmptyMetrics, initMetrics, renderFullEvaluationReport } from './metrics.mjs';
 import { exportCNL, importCNL, toggleEditMode, setCNLViewMode, generateCNL } from './cnl.mjs';
 import { loadProjectsList, initPersistence } from './persistence.mjs';
@@ -19,6 +19,7 @@ import { getThemeCatalogByCategory } from './library-data.mjs';
 import { loadBlueprintData } from './blueprint/blueprint-state.mjs';
 import { initTimeline, render as renderTimeline } from './blueprint/timeline.mjs';
 import { initTemplates } from './blueprint/templates.mjs';
+import { renderSubplotEditorView } from './blueprint/subplots.mjs';
 
 // Dialogue imports
 import { initDialogueEditor } from './dialogue/dialogue-editor.mjs';
@@ -156,7 +157,9 @@ function renderViewSpecificContent(viewName) {
   if (viewName === 'relationships') renderRelationshipsView();
   if (viewName === 'blocks') renderBlocksView();
   if (viewName === 'worldrules') renderWorldRulesView();
+  if (viewName === 'world-rule-editor') renderWorldRuleEditorPage();
   if (viewName === 'blueprint') initBlueprintView();
+  if (viewName === 'subplot-editor') renderSubplotEditorView();
   if (viewName === 'templates') initTemplatesView();
   if (viewName === 'dialogues') initDialogueEditor($('#dialogues-container'));
   if (viewName === 'wisdom') renderWisdomView();
@@ -170,9 +173,11 @@ function renderViewSpecificContent(viewName) {
   if (viewName === 'worldlayers') renderWorldLayersView();
   if (viewName === 'openinghook') renderHooksView('opening');
   if (viewName === 'midhooks') renderHooksView('mid');
-  if (viewName === 'moods') renderEntityGrid('moods');
+  if (viewName === 'moods') renderToneStyleView();
   if (viewName === 'themes') renderEntityGrid('themes');
   if (viewName === 'theme-editor') renderThemeEditorPage();
+  if (viewName === 'location-editor') renderLocationEditorPage();
+  if (viewName === 'mood-editor') renderMoodEditorPage();
   if (viewName === 'characters') renderCharactersCastView();
   if (viewName === 'library') renderLibraryView();
   if (viewName === 'narrative-design') renderNarrativeDesignMacroView();
@@ -1040,6 +1045,7 @@ export function switchToTab(viewName) {
 
 // Make switchToTab available globally for tree navigation
 window.switchToTab = switchToTab;
+window.showStandaloneView = showStandaloneView;
 window.openManuscriptNode = (chapterId = null, sceneId = null) => {
   manuscriptNavigatorOpenChapterId = chapterId || null;
   setManuscriptSelection(chapterId || null, sceneId || null);
@@ -1073,6 +1079,7 @@ window.applyLibraryWisdomToStoryFundamentals = (value) => {
   window.renderStoryFundamentalsView?.();
 };
 window.openLibraryThemes = () => {
+  window.libraryReturnContext = { view: 'core-theme' };
   const firstThemeCategory = getThemeCatalogByCategory()[0]?.key || 'personal-transformation';
   const firstSelection = `themes:cat_${firstThemeCategory}`;
   renderLibraryNavigatorPanel();

@@ -9,6 +9,7 @@ import { state, createSnapshot } from '../state.mjs';
 import { showNotification } from '../utils.mjs';
 import { 
   refreshAllViews,
+  finalizeGeneratedProjectState,
   showGenerationStatus,
   updateGenerationStatus,
   hideGenerationStatus
@@ -98,6 +99,7 @@ export async function generateAdvanced(options, control = {}) {
     };
 
     applyGenerationAnnotations(state.project, { strategy: 'advanced', options });
+    finalizeGeneratedProjectState();
     
     updateGenerationStatus(
       statusEl, 

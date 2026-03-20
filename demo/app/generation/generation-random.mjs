@@ -9,7 +9,8 @@ import { state, createSnapshot } from '../state.mjs';
 import { generateRandomStory } from '/src/generation/random-generator.mjs';
 import { 
   resetProjectState, 
-  refreshAllViews
+  refreshAllViews,
+  finalizeGeneratedProjectState
 } from './generation-utils.mjs';
 import { updateGenerateButton } from './generation-improve.mjs';
 import { applyGenerationAnnotations } from './generation-annotations.mjs';
@@ -66,6 +67,7 @@ export function generateRandom(options) {
   };
 
   applyGenerationAnnotations(state.project, { strategy: 'random', options });
+  finalizeGeneratedProjectState();
   
   // Finalize UI state
   createSnapshot();

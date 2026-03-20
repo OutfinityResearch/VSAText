@@ -11,6 +11,7 @@ import { $, showNotification } from './utils.mjs';
 import { parseMarkdown, escapeHtml } from '../../src/utils/markdown.mjs';
 import { openBookPreview, closeBookPreview, resetBookPreview } from './book-preview.mjs';
 import { getChaptersForManuscript, getScenesForManuscriptChapter } from './writing-studio-manuscript.mjs';
+import { finalizeGeneratedProjectState } from './generation/generation-utils.mjs';
 import {
   loadStoryVersions,
   onVersionSelect,
@@ -248,6 +249,8 @@ export async function generateNLStory() {
   showNLLoadingState();
   
   try {
+    finalizeGeneratedProjectState();
+
     // Get current CNL
     const cnl = generateCNL();
     
@@ -269,16 +272,10 @@ export async function generateNLStory() {
       }
     }
     
-    // Check if we have chapters for streaming
-    const chapters = extractChaptersFromProject();
-    
-    if (chapters.length > 1) {
-      // Use streaming generation for multi-chapter stories
-      await generateNLStoryStreaming(cnl, options, chapters, session.controller.signal);
-    } else {
-      // Use regular generation for single chapter or no structure
-      await generateNLStorySingle(cnl, options, session.controller.signal);
-    }
+    // Prefer full-story generation for stability and completeness.
+    // Chapter/scene streaming remains available in lower-level code, but it is
+    // more prone to partial drafts and failed sections in the current demo flow.
+    await generateNLStorySingle(cnl, options, session.controller.signal);
     
   } catch (err) {
     if (session.cancelledByUser || isAbortError(err)) {
@@ -328,6 +325,8 @@ async function generateNLStorySingle(cnl, options, signal) {
   if (!result.story) {
     throw new Error('No story generated. Check API configuration.');
   }
+
+  result.story = normalizeStoryChapterHeadings(result.story);
   
   updateNLLoadingState('Saving story version...', 85);
   
@@ -915,8 +914,33 @@ function enablePreviewButton() {
   }
 }
 
-function injectChapterHeadingsFromManuscript(story) {
+function sanitizeChapterHeadingTail(tail) {
+  const rawTail = String(tail || '').trim();
+  return rawTail
+    .replace(/^\s*(chapter|capitol(?:ul)?)\s+\d+\b\s*[:\-.]?\s*/i, '')
+    .replace(/^\s*(chapter|capitol(?:ul)?)\b\s*[:\-.]?\s*/i, '')
+    .replace(/^#{1,6}\s*/g, '')
+    .replace(/^\s*(scene|scena)\s+\d+(?:\.\d+)?\b\s*[:\-.]?\s*/i, '')
+    .trim();
+}
+
+function normalizeStoryChapterHeadings(story) {
   const text = String(story || '');
+  if (!text.trim()) return text;
+
+  return text.replace(
+    /^(\s{0,3}(?:#{1,6}\s*)?)(chapter|capitol(?:ul)?)\s+(\d+)\b\s*[:\-.]?\s*(.*)$/gim,
+    (_match, prefix, _label, number, tail) => {
+      const cleanedTail = sanitizeChapterHeadingTail(tail);
+      return cleanedTail
+        ? `${prefix}Chapter ${number}: ${cleanedTail}`
+        : `${prefix}Chapter ${number}`;
+    }
+  );
+}
+
+function injectChapterHeadingsFromManuscript(story) {
+  const text = normalizeStoryChapterHeadings(story);
   if (!text.trim()) return text;
   if (/^\s*##\s+(chapter|capitol(?:ul)?)\b/im.test(text)) return text;
 
@@ -943,7 +967,10 @@ function injectChapterHeadingsFromManuscript(story) {
     if (scenePointer >= sceneHeadingIndexes.length) break;
 
     const chapterTitle = String(chapter.title || chapter.name || `Chapter ${chapterIndex + 1}`).trim();
-    output.push(`## Chapter ${chapterIndex + 1}: ${chapterTitle.replace(/^\s*(chapter|capitol(?:ul)?)\s+\d+\s*[:\-.]?\s*/i, '').trim() || `Chapter ${chapterIndex + 1}`}`);
+    const cleanedChapterTitle = sanitizeChapterHeadingTail(chapterTitle);
+    output.push(cleanedChapterTitle
+      ? `## Chapter ${chapterIndex + 1}: ${cleanedChapterTitle}`
+      : `## Chapter ${chapterIndex + 1}`);
 
     const startLine = sceneHeadingIndexes[scenePointer];
     const nextScenePointer = Math.min(sceneHeadingIndexes.length, scenePointer + sceneCount);

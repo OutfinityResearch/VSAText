@@ -24,6 +24,7 @@ import {
   normalizeSpecsProject,
   parseLLMJson
 } from './llm-specs-json.mjs';
+import { parseCNL } from '../../src/cnl-parser/cnl-parser.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -279,6 +280,67 @@ export function getAvailableModels() {
   }
 }
 
+function countExpectedChapters(cnl) {
+  try {
+    const result = parseCNL(String(cnl || ''));
+    const groups = result?.ast?.groups || [];
+    if (!groups.length) return 0;
+
+    const root = groups.length === 1 ? groups[0] : { children: groups };
+    return Array.isArray(root.children) ? root.children.length : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function countGeneratedChapters(story) {
+  const matches = String(story || '').match(/^\s{0,3}(?:#{1,6}\s*)?(chapter|capitol(?:ul)?)\s+\d+\b/gim);
+  return matches ? matches.length : 0;
+}
+
+function storyLooksIncomplete(story, expectedChapters = 0) {
+  const text = String(story || '').trim();
+  if (!text) return 'Empty story';
+
+  if (/(continuarea urmează|to be continued|va urma|continued next|continues\.\.\.)/i.test(text)) {
+    return 'Story contains unfinished placeholder text';
+  }
+
+  if (expectedChapters > 1) {
+    const generatedChapters = countGeneratedChapters(text);
+    if (generatedChapters < expectedChapters) {
+      return `Story contains only ${generatedChapters}/${expectedChapters} chapters`;
+    }
+
+    const parts = text.split(/^\s{0,3}(?:#{1,6}\s*)?(?:chapter|capitol(?:ul)?)\s+\d+\b.*$/gim).filter(Boolean);
+    const lastPart = String(parts[parts.length - 1] || '').trim();
+    if (lastPart.length < 220) {
+      return 'Last chapter appears incomplete';
+    }
+  }
+
+  return null;
+}
+
+function buildFullStoryValidator(cnl) {
+  const expectedChapters = countExpectedChapters(cnl);
+
+  return (text) => {
+    const base = validateContent(text, 500);
+    if (!base?.valid) {
+      if (base?.truncated) return base;
+      return { ...base, truncated: true };
+    }
+
+    const incompleteReason = storyLooksIncomplete(text, expectedChapters);
+    if (incompleteReason) {
+      return { valid: false, error: incompleteReason, truncated: true };
+    }
+
+    return { valid: true };
+  };
+}
+
 /**
  * Generate full story from CNL (single call, no streaming)
  */
@@ -287,16 +349,43 @@ export async function generateNLFromCNL(cnl, storyName, options = {}) {
     throw new Error('LLM not available. Configure API keys.');
   }
 
+  try {
+    const { sliceCnlToScenes } = await import('../../src/generation/cnl-scene-slicer.mjs');
+    const sliced = sliceCnlToScenes(cnl);
+    if (sliced?.scenes?.length) {
+      const sceneResult = await generateStoryByScenes({
+        cnl,
+        storyName,
+        options: {
+          ...options,
+          enforceSceneRoster: true,
+          maxAdherenceRepairs: Number.isInteger(options.maxAdherenceRepairs)
+            ? options.maxAdherenceRepairs
+            : 1
+        },
+        scenes: sliced.scenes
+      }, {}, llmProvider);
+
+      if (sceneResult?.fullStory?.trim()) {
+        return { story: sceneResult.fullStory.trim() };
+      }
+    }
+  } catch (err) {
+    console.warn('[LLM Provider] Scene-based full generation fallback failed:', err?.message || err);
+  }
+
   const prompt = buildFullStoryPrompt(cnl, storyName, options);
+  const validateFullStory = buildFullStoryValidator(cnl);
 
   const content = await generateTextWithContinuation({
     llmProvider,
     prompt,
-    llmCallOptions: { maxTokens: 8000, timeout: 120000, model: options.model },
-    continuationCallOptions: { maxTokens: 2400, timeout: 60000, model: options.model },
-    validate: (text) => validateContent(text, 500),
+    llmCallOptions: { maxTokens: 9000, timeout: 120000, model: options.model },
+    continuationCallOptions: { maxTokens: 3200, timeout: 90000, model: options.model },
+    validate: validateFullStory,
     sectionLabel: `Full story "${storyName}"`,
-    maxContinuations: 4,
+    maxContinuations: 8,
+    allowStructuralHeadings: true,
     options
   });
 

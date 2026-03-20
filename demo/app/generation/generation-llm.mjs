@@ -11,6 +11,7 @@ import {
   resetProjectState,
   loadProjectData,
   loadCNLIntoState,
+  finalizeGeneratedProjectState,
   showGenerationStatus,
   updateGenerationStatus,
   hideGenerationStatus
@@ -123,6 +124,7 @@ export async function generateLLM(options, control = {}) {
       options,
       llmAnnotations: result?.annotations || []
     });
+    finalizeGeneratedProjectState();
     
     emitPhase(control, statusEl, 'complete', 'Complete!', 100);
     

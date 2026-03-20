@@ -5,7 +5,7 @@
  */
 
 import { state } from './state.mjs';
-import { $ } from './utils.mjs';
+import { $, showNotification } from './utils.mjs';
 import { getThemeGuidance } from './theme-guidance.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
 
@@ -167,6 +167,105 @@ function ensureFrameworkProfileState() {
   };
 
   return libraries.frameworkProfile;
+}
+
+function countSceneNodes(node) {
+  if (!node || typeof node !== 'object') return 0;
+  let total = node.type === 'scene' ? 1 : 0;
+  for (const child of node.children || []) {
+    total += countSceneNodes(child);
+  }
+  return total;
+}
+
+function countActionNodes(node) {
+  if (!node || typeof node !== 'object') return 0;
+  let total = node.type === 'action' ? 1 : 0;
+  for (const child of node.children || []) {
+    total += countActionNodes(child);
+  }
+  return total;
+}
+
+function hasMeaningfulSpecs(project) {
+  const libraries = project?.libraries || {};
+  const sceneCount = countSceneNodes(project?.structure);
+  const actionCount = countActionNodes(project?.structure);
+  const characterCount = Array.isArray(libraries.characters) ? libraries.characters.length : 0;
+  const locationCount = Array.isArray(libraries.locations) ? libraries.locations.length : 0;
+  const objectCount = Array.isArray(libraries.objects) ? libraries.objects.length : 0;
+  const ruleCount = Array.isArray(libraries.worldRules) ? libraries.worldRules.length : 0;
+  const dialogueCount = Array.isArray(libraries.dialogues) ? libraries.dialogues.length : 0;
+  const beatCount = Array.isArray(project?.blueprint?.beatMappings) ? project.blueprint.beatMappings.length : 0;
+
+  return sceneCount > 0
+    && actionCount > 0
+    && characterCount > 0
+    && locationCount > 0
+    && (objectCount > 0 || ruleCount > 0 || dialogueCount > 0 || beatCount > 0);
+}
+
+function buildShortcutGenerationOptions(profile) {
+  const storyCore = profile?.storyCore || {};
+  const coreTheme = profile?.coreTheme || {};
+  const dramaticModel = profile?.dramaticModel || {};
+  const transformation = profile?.transformation || {};
+
+  const transformationSummary = [
+    transformation.characterArcBefore && transformation.characterArcAfter
+      ? `${transformation.characterArcBefore} -> ${transformation.characterArcAfter}`
+      : '',
+    transformation.valueShiftBefore && transformation.valueShiftAfter
+      ? `${transformation.valueShiftBefore} -> ${transformation.valueShiftAfter}`
+      : '',
+    transformation.changeCostAfter || ''
+  ].filter(Boolean).join(' | ');
+
+  const customPrompt = [
+    storyCore.theme ? `Theme focus: ${storyCore.theme}.` : '',
+    storyCore.wisdom ? `Wisdom: ${storyCore.wisdom}.` : '',
+    coreTheme.ideologicalConflict ? `Ideological conflict: ${coreTheme.ideologicalConflict}.` : '',
+    coreTheme.moralQuestion ? `Moral question: ${coreTheme.moralQuestion}.` : '',
+    coreTheme.transformationAxis ? `Transformation axis: ${coreTheme.transformationAxis}.` : '',
+    dramaticModel.conflictType ? `Conflict type: ${dramaticModel.conflictType}.` : '',
+    dramaticModel.conflictEngine ? `Conflict engine: ${dramaticModel.conflictEngine}.` : '',
+    dramaticModel.resolutionPath ? `Resolution path: ${dramaticModel.resolutionPath}.` : '',
+    dramaticModel.escalationPattern ? `Escalation pattern: ${dramaticModel.escalationPattern}.` : '',
+    dramaticModel.thematicDirection ? `Thematic direction: ${dramaticModel.thematicDirection}.` : '',
+    transformationSummary ? `Character transformation: ${transformationSummary}.` : ''
+  ].filter(Boolean).join(' ');
+
+  return {
+    genre: storyCore.genre || 'fantasy',
+    tone: storyCore.tone || 'dark',
+    complexity: storyCore.complexity || 'moderate',
+    length: storyCore.length || 'medium',
+    chars: storyCore.chars || 'medium',
+    rules: storyCore.rules || 'few',
+    theme: storyCore.theme || coreTheme.customThemeName || '',
+    wisdom: storyCore.wisdom || '',
+    customPrompt
+  };
+}
+
+async function ensureSpecsBeforeStoryGeneration() {
+  if (hasMeaningfulSpecs(state.project)) return true;
+
+  const profile = ensureFrameworkProfileState();
+  const options = buildShortcutGenerationOptions(profile);
+  const generator = options.complexity === 'simple' ? 'random' : 'advanced';
+
+  showNotification('Building story specs before prose generation...', 'info');
+
+  if (generator === 'advanced') {
+    const { generateAdvanced } = await import('./generation/generation-advanced.mjs');
+    await generateAdvanced(options);
+  } else {
+    const { generateRandom } = await import('./generation/generation-random.mjs');
+    generateRandom(options);
+  }
+
+  return hasMeaningfulSpecs(state.project);
 }
 
 function renderStoryCoreSection(profile) {
@@ -645,11 +744,21 @@ function renderFrameworkPage(containerId, pageTitle, pageDescription, sectionRen
   });
 }
 
-function openStoryGenerationShortcut() {
-  window.switchToTab?.('nl');
-  window.requestAnimationFrame?.(() => {
-    document.getElementById('btn-nl-generate')?.click();
-  });
+async function openStoryGenerationShortcut() {
+  try {
+    const ready = await ensureSpecsBeforeStoryGeneration();
+    if (!ready) {
+      showNotification('Could not build a complete CNL specification for story generation.', 'error');
+      return;
+    }
+    window.switchToTab?.('nl');
+    window.requestAnimationFrame?.(() => {
+      document.getElementById('btn-nl-generate')?.click();
+    });
+  } catch (err) {
+    console.error('Create Story shortcut failed:', err);
+    showNotification(`Create Story failed: ${err.message}`, 'error');
+  }
 }
 
 export function renderFrameworkView() {

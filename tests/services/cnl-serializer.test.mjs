@@ -304,3 +304,79 @@ export function testSerializeThemes() {
     throw new Error('Expected secondary theme');
   }
 }
+
+// Test: sparse projects are expanded into useful CNL scaffolding
+export function testSerializeRepairsSparseProjectIntoRichCNL() {
+  const project = {
+    name: 'Sparse Story',
+    selectedArc: 'heros_journey',
+    blueprint: { arc: 'heros_journey', beatMappings: [], tensionCurve: [], subplots: [] },
+    libraries: {
+      characters: [
+        { id: 'c1', name: 'Olivia', archetype: 'hero', traits: [] }
+      ],
+      locations: [],
+      objects: [],
+      moods: [],
+      emotionalArc: [],
+      themes: [],
+      relationships: [],
+      worldRules: [],
+      dialogues: [],
+      wisdom: [],
+      patterns: []
+    },
+    structure: {
+      id: 'book_1',
+      type: 'book',
+      name: 'Book',
+      title: 'Sparse Story',
+      children: [
+        {
+          id: 'ch_1',
+          type: 'chapter',
+          name: 'Ch1',
+          title: '',
+          children: [
+            {
+              id: 'sc_1',
+              type: 'scene',
+              name: 'Sc1.1',
+              title: '',
+              children: [
+                { id: 'ref_1', type: 'character-ref', name: 'Olivia', refId: 'c1' }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  };
+
+  const cnl = serializeToCNL(project);
+
+  if (!cnl.includes('// Characters')) {
+    throw new Error('Expected characters section for sparse project');
+  }
+  if (!cnl.includes('// Locations')) {
+    throw new Error('Expected locations section for sparse project');
+  }
+  if (!cnl.includes('// Objects')) {
+    throw new Error('Expected objects section for sparse project');
+  }
+  if (!cnl.includes('// Scene Moods')) {
+    throw new Error('Expected moods section for sparse project');
+  }
+  if (!cnl.includes('// === DIALOGUES ===')) {
+    throw new Error('Expected dialogues section for sparse project');
+  }
+  if (!cnl.includes('Sc1.1 includes character Olivia')) {
+    throw new Error('Expected scene to include the existing character');
+  }
+  if (!cnl.includes('Sc1.1 includes location')) {
+    throw new Error('Expected scene to include an auto-generated location');
+  }
+  if (!cnl.match(/Olivia (discovers|confronts)/)) {
+    throw new Error('Expected scene to include an auto-generated action');
+  }
+}

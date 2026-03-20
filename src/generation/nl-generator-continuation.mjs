@@ -31,7 +31,7 @@ function joinText(base, extra) {
   return base + (needsSpaceBetween(base, extra) ? ' ' : '') + extra;
 }
 
-function buildContinuationPrompt({ sectionLabel, options = {}, existingTextTail }) {
+function buildContinuationPrompt({ sectionLabel, options = {}, existingTextTail, allowStructuralHeadings = false }) {
   const langCode = options.language || 'en';
   const languageLine = langCode && langCode !== 'en'
     ? `\nLANGUAGE: ${langCode} (continue in this language)`
@@ -48,7 +48,9 @@ SECTION: ${sectionLabel}${languageLine}
 TASK:
 - Continue exactly from where the text ends.
 - Do NOT repeat any existing text.
-- Do NOT add a new title or chapter/scene header.
+- ${allowStructuralHeadings
+    ? 'You MAY add the next required chapter/scene header if the story structure needs it.'
+    : 'Do NOT add a new title or chapter/scene header.'}
 - Keep the same voice, tense, and formatting.
 - Finish with a complete ending sentence.
 ${customLine}
@@ -81,7 +83,8 @@ export async function generateTextWithContinuation({
   validate,
   sectionLabel,
   options,
-  maxContinuations = 2
+  maxContinuations = 2,
+  allowStructuralHeadings = false
 }) {
   const baseText = await llmProvider.generateText(prompt, llmCallOptions);
   let combined = (baseText || '').trimEnd();
@@ -95,7 +98,8 @@ export async function generateTextWithContinuation({
     const continuationPrompt = buildContinuationPrompt({
       sectionLabel,
       options,
-      existingTextTail: tail
+      existingTextTail: tail,
+      allowStructuralHeadings
     });
 
     const extra = await llmProvider.generateText(continuationPrompt, continuationCallOptions);

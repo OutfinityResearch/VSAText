@@ -65,8 +65,30 @@ function splitGeneratedTextToScenes(text) {
   return blocks.slice(0, 6);
 }
 
+function sanitizeChapterHeadingTail(tail) {
+  const rawTail = String(tail || '').trim();
+  return rawTail
+    .replace(/^\s*(chapter|capitol(?:ul)?)\s+\d+\b\s*[:\-.]?\s*/i, '')
+    .replace(/^\s*(chapter|capitol(?:ul)?)\b\s*[:\-.]?\s*/i, '')
+    .replace(/^#{1,6}\s*/g, '')
+    .replace(/^\s*(scene|scena)\s+\d+(?:\.\d+)?\b\s*[:\-.]?\s*/i, '')
+    .trim();
+}
+
+function normalizeChapterHeadingText(text) {
+  return String(text || '').replace(
+    /^(\s{0,3}(?:#{1,6}\s*)?)(chapter|capitol(?:ul)?)\s+(\d+)\b\s*[:\-.]?\s*(.*)$/gim,
+    (_match, prefix, _label, number, tail) => {
+      const cleanedTail = sanitizeChapterHeadingTail(tail);
+      return cleanedTail
+        ? `${prefix}Chapter ${number}: ${cleanedTail}`
+        : `${prefix}Chapter ${number}`;
+    }
+  );
+}
+
 function extractGeneratedStoryChapters() {
-  const story = String(state.generation?.generatedStory || '').trim();
+  const story = normalizeChapterHeadingText(state.generation?.generatedStory || '').trim();
   if (!story) return [];
   const draft = ensureManuscriptDraft();
   const generatedDrafts = draft.generatedChapters || {};
@@ -80,7 +102,7 @@ function extractGeneratedStoryChapters() {
     const m = line.match(headingRegex);
     if (!m) return;
     const number = m[2];
-    const tail = String(m[3] || '').trim();
+    const tail = sanitizeChapterHeadingTail(m[3] || '');
     const title = tail ? `Chapter ${number}: ${tail}` : `Chapter ${number}`;
     matches.push({ index, title });
   });

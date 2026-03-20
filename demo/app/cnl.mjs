@@ -6,7 +6,7 @@
  */
 
 import { state } from './state.mjs';
-import { $ } from './utils.mjs';
+import { $, genId } from './utils.mjs';
 import { serializeToCNL } from '../../src/services/cnl-serializer.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
 import { refreshAllViews, loadCNLIntoState } from './generation/generation-utils.mjs';
@@ -15,6 +15,106 @@ import { updateGenerateButton } from './generation/generation-improve.mjs';
 
 let isEditMode = false;
 let cnlViewMode = 'formatted';
+
+function ensureLibraryArrays(project) {
+  const libraries = project.libraries || (project.libraries = {});
+  const keys = ['characters', 'locations', 'objects', 'moods', 'themes', 'relationships', 'worldRules', 'dialogues', 'emotionalArc', 'wisdom', 'patterns'];
+  for (const key of keys) {
+    if (!Array.isArray(libraries[key])) libraries[key] = [];
+  }
+  return libraries;
+}
+
+function syncLibrariesFromStructure(project) {
+  const libraries = ensureLibraryArrays(project);
+  const byId = {
+    characters: new Map((libraries.characters || []).map(item => [item.id, item])),
+    locations: new Map((libraries.locations || []).map(item => [item.id, item])),
+    objects: new Map((libraries.objects || []).map(item => [item.id, item])),
+    moods: new Map((libraries.moods || []).map(item => [item.id, item])),
+    dialogues: new Map((libraries.dialogues || []).map(item => [item.id, item]))
+  };
+  const byName = {
+    characters: new Map((libraries.characters || []).map(item => [String(item.name || '').trim().toLowerCase(), item])),
+    locations: new Map((libraries.locations || []).map(item => [String(item.name || '').trim().toLowerCase(), item])),
+    objects: new Map((libraries.objects || []).map(item => [String(item.name || '').trim().toLowerCase(), item])),
+    moods: new Map((libraries.moods || []).map(item => [String(item.name || '').trim().toLowerCase(), item])),
+    dialogues: new Map((libraries.dialogues || []).map(item => [String(item.id || '').trim().toLowerCase(), item]))
+  };
+
+  function ensureEntity(type, node, factory) {
+    const refId = String(node?.refId || '').trim();
+    const name = String(node?.name || '').trim();
+    const nameKey = name.toLowerCase();
+    const bucket = libraries[type];
+    const idMap = byId[type];
+    const nameMap = byName[type];
+
+    if (refId && idMap.has(refId)) return;
+    if (nameKey && nameMap.has(nameKey)) {
+      if (!node.refId) node.refId = nameMap.get(nameKey).id;
+      return;
+    }
+
+    const entity = factory(refId || genId(type.slice(0, -1)));
+    bucket.push(entity);
+    idMap.set(entity.id, entity);
+    if (nameKey) nameMap.set(nameKey, entity);
+    node.refId = entity.id;
+  }
+
+  function walk(node) {
+    if (!node || typeof node !== 'object') return;
+    for (const child of node.children || []) {
+      if (child?.type === 'character-ref') {
+        ensureEntity('characters', child, (id) => ({
+          id,
+          name: child.name || 'Character',
+          archetype: 'character',
+          traits: []
+        }));
+      } else if (child?.type === 'location-ref') {
+        ensureEntity('locations', child, (id) => ({
+          id,
+          name: child.name || 'Location',
+          geography: 'place',
+          time: 'present',
+          characteristics: []
+        }));
+      } else if (child?.type === 'object-ref') {
+        ensureEntity('objects', child, (id) => ({
+          id,
+          name: child.name || 'Object',
+          objectType: 'object',
+          significance: 'important'
+        }));
+      } else if (child?.type === 'mood-ref') {
+        ensureEntity('moods', child, (id) => ({
+          id,
+          name: child.name || 'Mood',
+          emotions: {}
+        }));
+      } else if (child?.type === 'dialogue-ref') {
+        const dialogueId = String(child.refId || child.name || '').trim();
+        if (dialogueId && !byId.dialogues.has(dialogueId)) {
+          const dialogue = {
+            id: dialogueId,
+            purpose: 'dialogue',
+            participants: [],
+            tone: 'neutral',
+            tension: 3,
+            exchanges: []
+          };
+          libraries.dialogues.push(dialogue);
+          byId.dialogues.set(dialogue.id, dialogue);
+        }
+      }
+      walk(child);
+    }
+  }
+
+  walk(project.structure);
+}
 
 function esc(value) {
   return String(value ?? '')
@@ -571,6 +671,7 @@ export function getEditMode() {
  * @returns {string} Generated CNL
  */
 export function generateCNL() {
+  syncLibrariesFromStructure(state.project);
   const cnl = serializeToCNL(state.project);
 
   const cnlOutput = $('#cnl-output');

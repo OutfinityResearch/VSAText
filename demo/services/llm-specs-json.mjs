@@ -10,6 +10,7 @@
  */
 
 import { loadProject } from '../../src/models/project.mjs';
+import { prepareProjectForCNL } from '../../src/services/cnl-project-normalizer.mjs';
 
 const SPECS_PROMPT_PRESETS = {
   strict_project_json: {
@@ -357,7 +358,7 @@ export function normalizeSpecsProject(rawValue, storyName) {
 
   ensureNodeIds(project.structure);
 
-  return project;
+  return prepareProjectForCNL(project);
 }
 
 function buildCommonSpecsLines(options) {
@@ -454,4 +455,3 @@ Input parameters:
 ${buildCommonSpecsLines(options)}
 `;
 }
-

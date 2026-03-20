@@ -8,6 +8,7 @@
  */
 
 import { formatId } from '../utils/format.mjs';
+import { prepareProjectForCNL } from './cnl-project-normalizer.mjs';
 
 const ANNOTATION_TYPES = new Set([
   'example', 'hint', 'style', 'avoid', 'voice', 'subtext',
@@ -68,6 +69,7 @@ function shouldSerializeNodeTitle(node) {
  */
 export function serializeToCNL(project) {
   if (!project) return '';
+  project = prepareProjectForCNL(project);
   
   const lines = [];
   

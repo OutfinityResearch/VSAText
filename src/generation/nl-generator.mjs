@@ -229,7 +229,9 @@ IMPORTANT - USE ALL STORY ELEMENTS:
 1. DIALOGUES: Include meaningful dialogue exchanges in each chapter.
 2. MOODS: Establish and transition between moods as specified.
 3. THEMES: Weave themes into the narrative through character choices.
-4. WORLD RULES: Demonstrate them naturally through the story.${languageInstruction}${customInstructions}
+4. WORLD RULES: Demonstrate them naturally through the story.
+5. COMPLETE ALL CHAPTERS: Do not stop early, do not summarize unwritten sections, and do not use placeholders like "to be continued" or "continuarea urmează".
+6. ENDING: Finish the full story with a real conclusion, not a partial draft.${languageInstruction}${customInstructions}
 
 OUTPUT FORMAT (Markdown):
 - Use "# ${storyName}" as the main title at the beginning
@@ -277,6 +279,15 @@ export function validateContent(content, minLength = 100) {
   }
   
   return { valid: true };
+}
+
+function normalizeChapterHeading(chapterNumber, chapterTitle) {
+  const raw = String(chapterTitle || '').trim();
+  const cleaned = raw
+    .replace(/^\s*(chapter|capitol(?:ul)?)\s+\d+\s*[:\-.]?\s*/i, '')
+    .replace(/^\s*(chapter|capitol(?:ul)?)\s*[:\-.]?\s*/i, '')
+    .trim();
+  return cleaned ? `## Chapter ${chapterNumber}: ${cleaned}` : `## Chapter ${chapterNumber}`;
 }
 
 // ============================================
@@ -471,7 +482,7 @@ export async function generateStoryByScenes(params, callbacks, llmProvider) {
     if (success) {
       result.stats.completed++;
       const chapterHeading = scene.chapterNumber !== lastChapterNumber
-        ? `## Chapter ${scene.chapterNumber}: ${scene.chapterTitle || `Chapter ${scene.chapterNumber}`}`
+        ? normalizeChapterHeading(scene.chapterNumber, scene.chapterTitle)
         : '';
       const storyParts = [chapterHeading, section.content].filter(Boolean);
       result.fullStory += (result.fullStory ? '\n\n' : '') + storyParts.join('\n\n');
@@ -493,7 +504,7 @@ export async function generateStoryByScenes(params, callbacks, llmProvider) {
       
       // Add placeholder with CNL reference
       const chapterHeading = scene.chapterNumber !== lastChapterNumber
-        ? `## Chapter ${scene.chapterNumber}: ${scene.chapterTitle || `Chapter ${scene.chapterNumber}`}`
+        ? normalizeChapterHeading(scene.chapterNumber, scene.chapterTitle)
         : '';
       const failurePlaceholder = `### ${scene.title}\n\n[Generation failed: ${section.error}]\n\n<!-- CNL for retry:\n${scene.cnl}\n-->`;
       const storyParts = [chapterHeading, failurePlaceholder].filter(Boolean);

@@ -2,7 +2,7 @@
  * SCRIPTA Demo - Library View (Cards + Context Apply)
  */
 
-import { $, openModal, closeModal } from './utils.mjs';
+import { $ } from './utils.mjs';
 import { state } from './state.mjs';
 import {
   getWisdomCatalog,
@@ -27,7 +27,8 @@ import VOCAB from '/src/vocabularies/vocabularies.mjs';
 
 const uiState = {
   selection: 'wisdom:tradition',
-  chapterTargetId: ''
+  chapterTargetId: '',
+  applyContext: null
 };
 
 function esc(value) {
@@ -47,6 +48,7 @@ function notify(message, level = 'info') {
 
 export function setLibrarySelection(selection) {
   uiState.selection = selection || 'wisdom:tradition';
+  uiState.applyContext = null;
   renderLibraryView();
 }
 
@@ -56,6 +58,37 @@ export function getLibrarySelection() {
 
 function getCardsForSelection(selection) {
   const [group = 'wisdom', key = 'tradition'] = String(selection || '').split(':');
+  const THEME_GROUPS = [
+    {
+      key: 'identity-experience',
+      label: 'Identity & Human Experience',
+      categoryKeys: ['personal-transformation', 'human-bonds']
+    },
+    {
+      key: 'power-society',
+      label: 'Power & Society',
+      categoryKeys: ['power-conflict', 'society-world']
+    },
+    {
+      key: 'survival-meaning',
+      label: 'Survival & Meaning',
+      categoryKeys: ['survival-existence']
+    }
+  ];
+  const toThemeCard = (theme) => ({
+    kind: 'theme-preset',
+    key: theme.key,
+    type: '',
+    id: '',
+    title: theme.label,
+    description: theme.detail,
+    meta: theme.blocks.map(humanize),
+    themeGuidance: {
+      ideologicalConflict: theme.ideologicalConflict,
+      moralQuestion: theme.moralQuestion,
+      transformationAxis: theme.transformationAxis
+    }
+  });
 
   if (group === 'wisdom') {
     const section = getWisdomCatalog().find(item => item.key === key);
@@ -78,6 +111,7 @@ function getCardsForSelection(selection) {
   if (group === 'themes') {
     const themeCategories = getThemeCatalogByCategory();
     const presets = themeCategories.flatMap(category => category.items);
+    const themeCategoryMap = new Map(themeCategories.map(category => [category.key, category]));
     if (key.startsWith('cat_')) {
       const categoryKey = key.replace(/^cat_/, '');
       const category = themeCategories.find(item => item.key === categoryKey);
@@ -85,20 +119,19 @@ function getCardsForSelection(selection) {
         return {
           title: 'Themes',
           subtitle: category.label,
-          cards: category.items.map(theme => ({
-            kind: 'theme-preset',
-            key: theme.key,
-            type: '',
-            id: '',
-            title: theme.label,
-            description: theme.detail,
-            meta: theme.blocks.map(humanize),
-            themeGuidance: {
-              ideologicalConflict: theme.ideologicalConflict,
-              moralQuestion: theme.moralQuestion,
-              transformationAxis: theme.transformationAxis
-            }
-          }))
+          cards: category.items.map(toThemeCard)
+        };
+      }
+    }
+    if (key.startsWith('grp_')) {
+      const groupKey = key.replace(/^grp_/, '');
+      const themeGroup = THEME_GROUPS.find(item => item.key === groupKey);
+      if (themeGroup) {
+        const items = themeGroup.categoryKeys.flatMap(categoryKey => themeCategoryMap.get(categoryKey)?.items || []);
+        return {
+          title: 'Themes',
+          subtitle: themeGroup.label,
+          cards: items.map(toThemeCard)
         };
       }
     }
@@ -106,20 +139,7 @@ function getCardsForSelection(selection) {
       return {
         title: 'Themes',
         subtitle: 'All Themes',
-        cards: presets.map(theme => ({
-          kind: 'theme-preset',
-          key: theme.key,
-          type: '',
-          id: '',
-          title: theme.label,
-          description: theme.detail,
-          meta: theme.blocks.map(humanize),
-          themeGuidance: {
-            ideologicalConflict: theme.ideologicalConflict,
-            moralQuestion: theme.moralQuestion,
-            transformationAxis: theme.transformationAxis
-          }
-        }))
+        cards: presets.map(toThemeCard)
       };
     }
     if (key && key !== 'saved') {
@@ -128,20 +148,7 @@ function getCardsForSelection(selection) {
         return {
           title: 'Themes',
           subtitle: theme.label,
-          cards: [{
-            kind: 'theme-preset',
-            key: theme.key,
-            type: '',
-            id: '',
-            title: theme.label,
-            description: theme.detail,
-            meta: theme.blocks.map(humanize),
-            themeGuidance: {
-              ideologicalConflict: theme.ideologicalConflict,
-              moralQuestion: theme.moralQuestion,
-              transformationAxis: theme.transformationAxis
-            }
-          }]
+          cards: [theme].map(toThemeCard)
         };
       }
     }
@@ -325,21 +332,42 @@ function getLibraryChapterNodes() {
   return getChaptersForManuscript();
 }
 
+function normalizeChapterOptionTitle(value, index) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const genericChapter = new RegExp(`^chapter\\s+${index + 1}\\b[:\\-.\\s]*$`, 'i');
+  return genericChapter.test(raw) ? '' : raw;
+}
+
+function normalizeSceneOptionTitle(value, index) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const genericScene = /^scene\s+\d+(?:\.\d+)?\b[:\-.\s]*$/i;
+  return genericScene.test(raw) ? '' : raw;
+}
+
 function chapterOptions(chapters = getLibraryChapterNodes()) {
-  return chapters.map((chapter, index) => ({
+  return chapters.map((chapter, index) => {
+    const title = normalizeChapterOptionTitle(chapter.title || chapter.name || '', index);
+    return {
     id: chapter.id,
-    label: `Chapter ${index + 1}: ${chapter.title || chapter.name || 'Untitled'}`
-  }));
+    label: title ? `Chapter ${index + 1} - ${title}` : `Chapter ${index + 1}`
+    };
+  });
 }
 
 function sceneOptions(chapters) {
   return chapters.flatMap((chapter, chapterIndex) =>
-    (chapter?.source === 'generated-story' ? getScenesForManuscriptChapter(chapter) : getChapterScenes(chapter)).map((scene, sceneIndex) => ({
-      id: scene.id,
-      chapterId: chapter.id,
-      label: `Scene ${sceneIndex + 1}: ${scene.title || scene.name || 'Untitled'}`,
-      chapterLabel: `Chapter ${chapterIndex + 1}: ${chapter.title || chapter.name || 'Untitled'}`
-    }))
+    (chapter?.source === 'generated-story' ? getScenesForManuscriptChapter(chapter) : getChapterScenes(chapter)).map((scene, sceneIndex) => {
+      const title = normalizeSceneOptionTitle(scene.title || scene.name || '', sceneIndex);
+      const chapterTitle = normalizeChapterOptionTitle(chapter.title || chapter.name || '', chapterIndex);
+      return {
+        id: scene.id,
+        chapterId: chapter.id,
+        label: title ? `Scene ${sceneIndex + 1} - ${title}` : `Scene ${sceneIndex + 1}`,
+        chapterLabel: chapterTitle ? `Chapter ${chapterIndex + 1} - ${chapterTitle}` : `Chapter ${chapterIndex + 1}`
+      };
+    })
   );
 }
 
@@ -384,6 +412,7 @@ function getAllowedTargets(card, chapters, scenes) {
   const sceneTargets = scenes.map(scene => ({
     targetType: 'scene',
     targetId: scene.id,
+    chapterId: scene.chapterId,
     label: scene.label,
     parentLabel: scene.chapterLabel
   }));
@@ -391,7 +420,8 @@ function getAllowedTargets(card, chapters, scenes) {
   if (card.kind === 'template-builtin' || card.kind === 'template-custom') {
     return [
       { targetType: 'book', targetId: '', label: 'Book' },
-      ...chapterTargets
+      ...chapterTargets,
+      ...sceneTargets
     ];
   }
 
@@ -402,7 +432,7 @@ function getAllowedTargets(card, chapters, scenes) {
     ];
   }
 
-  if (card.kind === 'theme-preset' || card.kind === 'theme-saved' || card.kind === 'wisdom') {
+  if (card.kind === 'theme-preset' || card.kind === 'theme-saved') {
     return [
       { targetType: 'book', targetId: '', label: 'Book' },
       ...chapterTargets,
@@ -410,15 +440,23 @@ function getAllowedTargets(card, chapters, scenes) {
     ];
   }
 
+  if (card.kind === 'wisdom') {
+    return [
+      { targetType: 'book', targetId: '', label: 'Book' },
+    ];
+  }
+
   if (card.kind === 'pattern') {
     return [
       { targetType: 'book', targetId: '', label: 'Book' },
-      ...chapterTargets
+      ...chapterTargets,
+      ...sceneTargets
     ];
   }
 
   if (card.kind === 'block') {
     return [
+      { targetType: 'book', targetId: '', label: 'Book' },
       ...chapterTargets,
       ...sceneTargets
     ];
@@ -431,66 +469,151 @@ function getAllowedTargets(card, chapters, scenes) {
   ];
 }
 
-function renderApplyTargetGroup(title, targets = []) {
-  if (!targets.length) return '';
-  return `
-    <div class="library-apply-group">
-      <div class="library-apply-group-title">${esc(title)}</div>
-      <div class="library-apply-targets">
-        ${targets.map(target => `
-          <button
-            class="library-apply-target"
-            type="button"
-            data-target-type="${esc(target.targetType)}"
-            data-target-id="${esc(target.targetId)}">
-            <span>${esc(target.label)}</span>
-            ${target.parentLabel ? `<small>${esc(target.parentLabel)}</small>` : ''}
-          </button>
-        `).join('')}
-      </div>
-    </div>
-  `;
+function renderApplyTargetOptions(targets = []) {
+  const books = targets.filter(target => target.targetType === 'book');
+  const chapters = targets.filter(target => target.targetType === 'chapter');
+  const scenes = targets.filter(target => target.targetType === 'scene');
+  const options = [];
+
+  books.forEach((target) => {
+    options.push(`
+      <option
+        value="${esc(`${target.targetType}::${target.targetId || ''}`)}"
+        data-target-type="${esc(target.targetType)}"
+        data-target-id="${esc(target.targetId || '')}">
+        ${esc('Entire Book')}
+      </option>
+    `);
+  });
+
+  chapters.forEach((chapter) => {
+    options.push(`
+      <option
+        value="${esc(`${chapter.targetType}::${chapter.targetId || ''}`)}"
+        data-target-type="${esc(chapter.targetType)}"
+        data-target-id="${esc(chapter.targetId || '')}">
+        ${esc(`CHAPTER ${chapter.label.replace(/^Chapter\s+/i, '')}`)}
+      </option>
+    `);
+
+    scenes
+      .filter(scene => String(scene.chapterId || '') === String(chapter.targetId || ''))
+      .forEach((scene) => {
+        options.push(`
+          <option
+            value="${esc(`${scene.targetType}::${scene.targetId || ''}`)}"
+            data-target-type="${esc(scene.targetType)}"
+            data-target-id="${esc(scene.targetId || '')}">
+            ${esc(`- ${scene.label}`)}
+          </option>
+        `);
+      });
+  });
+
+  scenes
+    .filter(scene => !chapters.some(chapter => String(chapter.targetId || '') === String(scene.chapterId || '')))
+    .forEach((scene) => {
+      options.push(`
+        <option
+          value="${esc(`${scene.targetType}::${scene.targetId || ''}`)}"
+          data-target-type="${esc(scene.targetType)}"
+          data-target-id="${esc(scene.targetId || '')}">
+          ${esc(scene.label)}
+        </option>
+      `);
+    });
+
+  return options.join('');
 }
 
-function openApplyTargetModal(card, chapters, scenes) {
+function openApplyTargetPage(card, chapters, scenes) {
   const targets = getAllowedTargets(card, chapters, scenes);
   if (!targets.length) return;
+  uiState.applyContext = {
+    card,
+    chapters,
+    scenes,
+    targets
+  };
+  renderLibraryView();
+}
+
+function clearApplyContext() {
+  uiState.applyContext = null;
+}
+
+function applyCardToTargetFromPage(targetType, targetId = '', targetLabel = '') {
+  const card = uiState.applyContext?.card;
+  if (!card) return;
+
+  if (targetType === 'chapter') uiState.chapterTargetId = targetId;
+  applyCard(card, targetType, targetId, targetLabel);
+
+  const returnContext = window.libraryReturnContext;
+  if ((card.kind === 'theme-preset' || card.kind === 'theme-saved') && returnContext?.view === 'core-theme') {
+    clearApplyContext();
+    window.libraryReturnContext = null;
+    window.switchToTab?.('core-theme');
+    window.renderCoreThemeView?.();
+    return;
+  }
+
+  clearApplyContext();
+  renderLibraryView();
+}
+
+function renderApplyTargetPage(applyContext) {
+  const { card, targets } = applyContext;
   const bookTargets = targets.filter(target => target.targetType === 'book');
   const chapterTargets = targets.filter(target => target.targetType === 'chapter');
   const sceneTargets = targets.filter(target => target.targetType === 'scene');
+  const hasScopedTargets = chapterTargets.length > 0 || sceneTargets.length > 0;
+  const allTargets = [...bookTargets, ...chapterTargets, ...sceneTargets];
 
-  $('#select-modal-title').textContent = 'Apply Template';
-  $('#select-modal-body').innerHTML = `
-    <div class="library-apply-modal">
-      <div class="library-apply-modal-head">
-        <div class="library-apply-modal-title">Where do you want to apply this item?</div>
-        <div class="library-apply-modal-item">${esc(card.title)}</div>
+  return `
+    <div class="library-layout">
+      <div class="library-column">
+        <div class="library-page-header library-page-header-redesign library-apply-page-header">
+          <div class="library-page-header-top library-apply-page-top">
+            <div class="library-page-header-copy">
+              <h2>Apply Template</h2>
+            </div>
+            <button class="btn" type="button" id="library-apply-back">Back to Library</button>
+          </div>
+          <div class="library-page-header-divider"></div>
+          <div class="library-page-header-subtitle">
+            <p>Choose where to apply this item in your project.</p>
+            <div class="library-page-header-help">Selected item: ${esc(card.title)}</div>
+          </div>
+        </div>
+
+        <section class="library-section library-apply-page-section">
+          <div class="library-apply-modal library-apply-page">
+            <div class="library-apply-modal-head">
+              <div class="library-apply-modal-title">Where do you want to apply this item?</div>
+              <div class="library-apply-modal-item">${esc(card.title)}</div>
+            </div>
+            ${hasScopedTargets ? '' : `
+              <div class="library-apply-empty-note">
+                This project does not have any chapters or scenes yet, so this item can only be applied to the whole book for now.
+              </div>
+            `}
+            <div class="library-apply-form">
+              <label class="library-apply-label" for="library-apply-select">Apply to</label>
+              <div class="library-apply-select-wrap">
+                <select class="library-apply-select" id="library-apply-select">
+                  ${renderApplyTargetOptions(allTargets)}
+                </select>
+              </div>
+              <div class="library-apply-actions">
+                <button class="btn primary" type="button" id="library-apply-confirm">Apply</button>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
-      ${renderApplyTargetGroup('Book', bookTargets)}
-      ${renderApplyTargetGroup('Chapters', chapterTargets)}
-      ${renderApplyTargetGroup('Scenes', sceneTargets)}
     </div>
   `;
-
-  $('#select-modal-body').querySelectorAll('.library-apply-target').forEach(button => {
-    button.addEventListener('click', () => {
-      const targetType = button.getAttribute('data-target-type') || 'book';
-      const targetId = button.getAttribute('data-target-id') || '';
-      if (targetType === 'chapter') uiState.chapterTargetId = targetId;
-      applyCard(card, targetType, targetId, button.querySelector('span')?.textContent || '');
-      closeModal('select-modal');
-      const returnContext = window.libraryReturnContext;
-      if ((card.kind === 'theme-preset' || card.kind === 'theme-saved') && returnContext?.view === 'core-theme') {
-        window.libraryReturnContext = null;
-        window.switchToTab?.('core-theme');
-        window.renderCoreThemeView?.();
-        return;
-      }
-      renderLibraryView();
-    });
-  });
-
-  openModal('select-modal');
 }
 
 function renderCard(card) {
@@ -545,7 +668,7 @@ function bindEvents(container, cards, chapters, scenes) {
         applyWisdomToStoryFundamentals(card);
         return;
       }
-      openApplyTargetModal(card, chapters, scenes);
+      openApplyTargetPage(card, chapters, scenes);
     });
   });
 }
@@ -553,6 +676,22 @@ function bindEvents(container, cards, chapters, scenes) {
 export function renderLibraryView() {
   const container = $('#library-view');
   if (!container) return;
+
+  if (uiState.applyContext) {
+    container.innerHTML = renderApplyTargetPage(uiState.applyContext);
+    container.querySelector('#library-apply-back')?.addEventListener('click', () => {
+      clearApplyContext();
+      renderLibraryView();
+    });
+    container.querySelector('#library-apply-confirm')?.addEventListener('click', () => {
+      const select = container.querySelector('#library-apply-select');
+      const value = String(select?.value || 'book::');
+      const [targetType = 'book', targetId = ''] = value.split('::');
+      const label = select?.selectedOptions?.[0]?.textContent?.trim() || 'Entire Book';
+      applyCardToTargetFromPage(targetType, targetId, label);
+    });
+    return;
+  }
 
   const data = getCardsForSelection(uiState.selection);
   const selection = getSelectionParts(uiState.selection);

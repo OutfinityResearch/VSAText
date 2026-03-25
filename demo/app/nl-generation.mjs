@@ -924,6 +924,32 @@ function sanitizeChapterHeadingTail(tail) {
     .trim();
 }
 
+function looksLikeChapterProse(text) {
+  const value = String(text || '').trim();
+  if (!value) return false;
+  if (value.length > 110) return true;
+  if (/[.!?]\s+[A-ZĂÂÎȘȚ]/.test(value)) return true;
+  if (/[,;:]\s+[a-zăâîșț]/.test(value)) return true;
+  return false;
+}
+
+function splitChapterTail(tail) {
+  const cleaned = sanitizeChapterHeadingTail(tail);
+  if (!cleaned) return { title: '', remainder: '' };
+  if (!looksLikeChapterProse(cleaned)) return { title: cleaned, remainder: '' };
+
+  const separatorMatch = cleaned.match(/^(.{1,90}?)(?:\s+[—-]\s+|\s*:\s+)(.+)$/);
+  if (separatorMatch) {
+    const candidateTitle = sanitizeChapterHeadingTail(separatorMatch[1]);
+    const candidateRemainder = String(separatorMatch[2] || '').trim();
+    if (candidateTitle && !looksLikeChapterProse(candidateTitle) && candidateRemainder) {
+      return { title: candidateTitle, remainder: candidateRemainder };
+    }
+  }
+
+  return { title: '', remainder: cleaned };
+}
+
 function normalizeStoryChapterHeadings(story) {
   const text = String(story || '');
   if (!text.trim()) return text;
@@ -931,10 +957,11 @@ function normalizeStoryChapterHeadings(story) {
   return text.replace(
     /^(\s{0,3}(?:#{1,6}\s*)?)(chapter|capitol(?:ul)?)\s+(\d+)\b\s*[:\-.]?\s*(.*)$/gim,
     (_match, prefix, _label, number, tail) => {
-      const cleanedTail = sanitizeChapterHeadingTail(tail);
-      return cleanedTail
-        ? `${prefix}Chapter ${number}: ${cleanedTail}`
+      const { title, remainder } = splitChapterTail(tail);
+      const heading = title
+        ? `${prefix}Chapter ${number}: ${title}`
         : `${prefix}Chapter ${number}`;
+      return remainder ? `${heading}\n\n${remainder}` : heading;
     }
   );
 }

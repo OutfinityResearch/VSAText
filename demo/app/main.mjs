@@ -327,57 +327,76 @@ function renderLibraryNavigatorPanel() {
   const navigatorContent = $('#navigator-content');
   if (!navigatorContent) return;
   const themeCategories = getThemeCatalogByCategory();
-  const themeSections = themeCategories.map((category, index) => {
-    if (category.key === 'personal-transformation') {
-      return `
-        <button class="navigator-item" data-target-view="library" data-library-select="themes:cat_${category.key}">
-          ${esc(category.label)}
-        </button>
-      `;
-    }
+  const renderLibraryLeaf = (label, selection, extraClass = '') => `
+    <button
+      class="${['navigator-item', 'navigator-library-leaf', extraClass].filter(Boolean).join(' ')}"
+      data-target-view="library"
+      data-library-select="${esc(selection)}">
+      ${esc(label)}
+    </button>
+  `;
 
+  const categoryMap = new Map(themeCategories.map(category => [category.key, category]));
+  const themeGroups = [
+    {
+      key: 'identity-experience',
+      label: 'Identity & Human Experience',
+      categoryKeys: ['personal-transformation', 'human-bonds']
+    },
+    {
+      key: 'power-society',
+      label: 'Power & Society',
+      categoryKeys: ['power-conflict', 'society-world']
+    },
+    {
+      key: 'survival-meaning',
+      label: 'Survival & Meaning',
+      categoryKeys: ['survival-existence']
+    }
+  ];
+
+  const themeSections = themeGroups.map((group, index) => {
+    const items = group.categoryKeys.flatMap(categoryKey => categoryMap.get(categoryKey)?.items || []);
     return `
-      <details class="navigator-subgroup" ${index === 0 ? 'open' : ''}>
-        <summary data-target-view="library" data-library-select="themes:cat_${category.key}">${esc(category.label)}</summary>
-        <div class="navigator-items">
-          <button class="navigator-item" data-target-view="library" data-library-select="themes:cat_${category.key}">
-            All ${esc(category.label)}
-          </button>
-          ${category.items.map(theme => `
-            <button class="navigator-item" data-target-view="library" data-library-select="themes:${theme.key}">
-              ${esc(theme.label)}
-            </button>
-          `).join('')}
-        </div>
-      </details>
-    `;
+    <details class="navigator-subgroup navigator-library-subgroup" ${index === 0 ? 'open' : ''}>
+      <summary data-target-view="library" data-library-select="themes:grp_${group.key}">${esc(group.label)}</summary>
+      <div class="navigator-items">
+        ${items.map(theme => renderLibraryLeaf(theme.label, `themes:${theme.key}`)).join('')}
+      </div>
+    </details>
+  `;
   }).join('');
 
   navigatorContent.innerHTML = `
-    <details class="navigator-group" open>
+    <details class="navigator-group navigator-library-group" open>
       <summary>Wisdom</summary>
       <div class="navigator-items">
-        <button class="navigator-item" data-target-view="library" data-library-select="wisdom:tradition">Philosophical Traditions</button>
-        <button class="navigator-item" data-target-view="library" data-library-select="wisdom:moral">Moral Insights</button>
-        <button class="navigator-item" data-target-view="library" data-library-select="wisdom:psychological">Psychological Insights</button>
-        <button class="navigator-item" data-target-view="library" data-library-select="wisdom:scientific">Scientific Insights</button>
-        <button class="navigator-item" data-target-view="library" data-library-select="wisdom:humanist">Humanist Principles</button>
-        <button class="navigator-item" data-target-view="library" data-library-select="wisdom:lesson">Life Lessons</button>
+        <div class="navigator-subtree navigator-library-tree">
+          ${renderLibraryLeaf('Philosophical Traditions', 'wisdom:tradition')}
+          ${renderLibraryLeaf('Moral Insights', 'wisdom:moral')}
+          ${renderLibraryLeaf('Psychological Insights', 'wisdom:psychological')}
+          ${renderLibraryLeaf('Scientific Insights', 'wisdom:scientific')}
+          ${renderLibraryLeaf('Humanist Principles', 'wisdom:humanist')}
+          ${renderLibraryLeaf('Life Lessons', 'wisdom:lesson')}
+        </div>
       </div>
     </details>
-    <details class="navigator-group" open>
+    <details class="navigator-group navigator-library-group" open>
       <summary>Themes</summary>
-      <div class="navigator-items" style="padding:0;">
-        ${themeSections}
-        <button class="navigator-item" data-target-view="library" data-library-select="themes:saved">Saved Themes</button>
+      <div class="navigator-items navigator-library-items-flat">
+        <div class="navigator-subtree navigator-library-tree">
+          ${themeSections}
+        </div>
       </div>
     </details>
-    <details class="navigator-group" open>
+    <details class="navigator-group navigator-library-group" open>
       <summary>Narrative Design</summary>
       <div class="navigator-items">
-        <button class="navigator-item" data-target-view="library" data-library-select="narrative:patterns">Patterns</button>
-        <button class="navigator-item" data-target-view="library" data-library-select="narrative:templates">Templates</button>
-        <button class="navigator-item" data-target-view="library" data-library-select="narrative:blocks">Blocks</button>
+        <div class="navigator-subtree navigator-library-tree">
+          ${renderLibraryLeaf('Patterns', 'narrative:patterns')}
+          ${renderLibraryLeaf('Templates', 'narrative:templates')}
+          ${renderLibraryLeaf('Blocks', 'narrative:blocks')}
+        </div>
       </div>
     </details>
   `;
@@ -867,6 +886,9 @@ function bindNavigatorPanel() {
     if (librarySummary) {
       const targetView = librarySummary.dataset.targetView || 'library';
       const librarySelect = librarySummary.dataset.librarySelect || '';
+      if (targetView === 'library' && librarySelect === getLibrarySelection()) {
+        return;
+      }
       if (targetView === 'library' && librarySelect) {
         setLibrarySelection(librarySelect);
         showStandaloneView('library');

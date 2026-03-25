@@ -88,7 +88,7 @@ body::before {
 /* ============================================ */
 .app {
   display: grid;
-  grid-template-columns: 340px 1fr 320px;
+  grid-template-columns: minmax(240px, 340px) minmax(0, 1fr) minmax(240px, 320px);
   grid-template-rows: 62px 1fr 36px;
   height: 100vh;
 }

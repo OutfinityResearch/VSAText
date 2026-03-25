@@ -141,6 +141,45 @@ function resolveTargetNode(target = {}) {
   return null;
 }
 
+function ensureNodeTemplateAssignments(node) {
+  if (!node || typeof node !== 'object') return [];
+  if (!Array.isArray(node.templateAssignments)) {
+    node.templateAssignments = [];
+  }
+  return node.templateAssignments;
+}
+
+function assignTemplateToChapterNode(node, templateEntry) {
+  if (!node || node.type !== 'chapter') return false;
+
+  const assignments = ensureNodeTemplateAssignments(node);
+  const existingIndex = assignments.findIndex(item =>
+    item?.source === templateEntry.source &&
+    String(item.key || '') === String(templateEntry.key || '')
+  );
+
+  const payload = {
+    source: templateEntry.source || 'builtin',
+    key: String(templateEntry.key || ''),
+    label: String(templateEntry.label || templateEntry.title || 'Template'),
+    description: String(templateEntry.description || ''),
+    arc: String(templateEntry.arc || ''),
+    chapters: Number(templateEntry.chapters || 0) || 0,
+    appliedAt: new Date().toISOString()
+  };
+
+  if (existingIndex >= 0) {
+    assignments[existingIndex] = payload;
+  } else {
+    assignments.unshift(payload);
+  }
+
+  node.selectedTemplate = payload.key;
+  node.selectedTemplateLabel = payload.label;
+  document.dispatchEvent(new CustomEvent('structure-changed'));
+  return true;
+}
+
 export function getWisdomCatalog() {
   return WISDOM_SECTIONS.map(section => {
     const items = Object.entries(section.items).map(([itemKey, item]) => ({
@@ -493,10 +532,29 @@ export function applyPattern(key, target = { targetType: 'book', targetId: '' })
 export function applyBuiltInTemplate(key, target = { targetType: 'book', targetId: '' }) {
   const template = getTemplate(key);
   if (!template) return;
-  const ok = applyTemplate(key);
-  if (!ok) return;
-  state.project.blueprint.selectedTemplate = key;
-  document.dispatchEvent(new CustomEvent('blueprint-changed'));
+
+  if (target.targetType === 'chapter') {
+    const chapterNode = resolveTargetNode(target);
+    if (!chapterNode || chapterNode.type !== 'chapter') {
+      notify('Select a valid chapter before applying this template', 'error');
+      return;
+    }
+
+    const ok = assignTemplateToChapterNode(chapterNode, {
+      source: 'builtin',
+      key,
+      label: template.label,
+      description: template.description || '',
+      arc: template.arc || '',
+      chapters: template.chapters || 0
+    });
+    if (!ok) return;
+  } else {
+    const ok = applyTemplate(key);
+    if (!ok) return;
+    state.project.blueprint.selectedTemplate = key;
+    document.dispatchEvent(new CustomEvent('blueprint-changed'));
+  }
 
   recordApplication({
     kind: 'template-builtin',
@@ -513,15 +571,33 @@ export function applyCustomTemplate(templateId, target = { targetType: 'book', t
   const template = (state.project.libraries.customTemplates || []).find(item => item.id === templateId);
   if (!template) return;
 
-  if (template.arc) {
-    state.project.blueprint.arc = template.arc;
-    state.project.selectedArc = template.arc;
+  if (target.targetType === 'chapter') {
+    const chapterNode = resolveTargetNode(target);
+    if (!chapterNode || chapterNode.type !== 'chapter') {
+      notify('Select a valid chapter before applying this template', 'error');
+      return;
+    }
+
+    const ok = assignTemplateToChapterNode(chapterNode, {
+      source: 'custom',
+      key: template.id,
+      label: template.label || 'Custom Template',
+      description: template.description || '',
+      arc: template.arc || '',
+      chapters: template.chapters || 0
+    });
+    if (!ok) return;
+  } else {
+    if (template.arc) {
+      state.project.blueprint.arc = template.arc;
+      state.project.selectedArc = template.arc;
+    }
+    if (Array.isArray(template.tensionPreset) && template.tensionPreset.length > 0) {
+      state.project.blueprint.tensionCurve = template.tensionPreset;
+    }
+    state.project.blueprint.selectedTemplate = `custom_${template.id}`;
+    document.dispatchEvent(new CustomEvent('blueprint-changed'));
   }
-  if (Array.isArray(template.tensionPreset) && template.tensionPreset.length > 0) {
-    state.project.blueprint.tensionCurve = template.tensionPreset;
-  }
-  state.project.blueprint.selectedTemplate = `custom_${template.id}`;
-  document.dispatchEvent(new CustomEvent('blueprint-changed'));
 
   recordApplication({
     kind: 'template-custom',

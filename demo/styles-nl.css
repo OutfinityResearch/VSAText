@@ -11,6 +11,8 @@
   display: flex;
   flex-direction: column;
   gap: 1.05rem;
+  min-height: 0;
+  min-width: 0;
 }
 
 .nl-page-heading {
@@ -221,6 +223,8 @@
 .nl-content {
   flex: 1;
   overflow-y: auto;
+  min-height: 0;
+  min-width: 0;
   padding: 0.9rem 1.05rem;
   background: var(--bg-surface);
   border-radius: 10px;
@@ -496,7 +500,7 @@
 }
 
 .nl-story-content {
-  width: min(1180px, calc(100% - 1.5rem));
+  width: min(1180px, 100%);
   margin: 0 auto;
 }
 
@@ -521,6 +525,7 @@
 
 .nl-story-body {
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .nl-paragraph {
@@ -549,6 +554,7 @@
   margin: 0.75rem 0 1rem 0;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--bg-elevated);
+  overflow-wrap: anywhere;
 }
 
 .nl-markdown-content h2 {
@@ -557,6 +563,7 @@
   color: var(--accent-emerald);
   margin: 1.25rem 0 0.5rem 0;
   text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .nl-markdown-content h3 {
@@ -565,6 +572,7 @@
   color: var(--accent-sky);
   margin: 1rem 0 0.5rem 0;
   font-style: italic;
+  overflow-wrap: anywhere;
 }
 
 .nl-markdown-content p {
@@ -572,6 +580,7 @@
   text-indent: 1.25em;
   text-align: justify;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .nl-markdown-content p:first-of-type,

@@ -5,7 +5,7 @@
  */
 
 import { state } from './state.mjs';
-import { $, $$, genId, openModal } from './utils.mjs';
+import { $, $$, genId, openModal, showNotification } from './utils.mjs';
 import { renderTree, findNode, addChild, selectNode } from './tree.mjs';
 import { renderEntityGrid, renderBackdropView, renderCharactersCastView, renderToneStyleView, renderThemeEditorPage, renderLocationEditorPage, renderMoodEditorPage, showSelectModal, showBlockModal, showActionModal } from './entities.mjs';
 import { renderRelationshipsView, renderBlocksView, renderWorldRulesView, renderWorldRuleEditorPage } from './views.mjs';
@@ -62,6 +62,7 @@ import { generateNLStory, resetNLState, initNLGeneration, updateNLGenerateButton
 // Wizard
 import { openWizard } from './wizard.mjs';
 import { openNewProjectWizard } from './new-project-wizard.mjs';
+import { isNLStoryLocked, getNLStoryLockMessage, renderNewProjectFlowView } from './new-project-flow.mjs';
 
 // Eval runner
 import { initEvalRunner } from './eval-runner.mjs';
@@ -120,6 +121,7 @@ const TAB_GROUPS = [
   {
     key: 'results',
     views: [
+      { key: 'newproject', label: 'Foundation' },
       { key: 'cnl', label: 'CNL' },
       { key: 'nl', label: 'NL' }
     ]
@@ -175,6 +177,7 @@ function renderViewSpecificContent(viewName) {
   if (viewName === 'midhooks') renderHooksView('mid');
   if (viewName === 'moods') renderToneStyleView();
   if (viewName === 'themes') renderEntityGrid('themes');
+  if (viewName === 'newproject') renderNewProjectFlowView();
   if (viewName === 'theme-editor') renderThemeEditorPage();
   if (viewName === 'location-editor') renderLocationEditorPage();
   if (viewName === 'mood-editor') renderMoodEditorPage();
@@ -192,12 +195,14 @@ function setActiveNavigatorItem(viewName, action = '', librarySelect = '') {
   if (!items.length) return;
   items.forEach(item => item.classList.remove('active'));
 
+  const navigatorView = viewName === 'newproject' ? 'blueprint' : viewName;
+
   let activeItem = null;
   if (action) {
     activeItem = document.querySelector(`.navigator-item[data-action="${action}"]`);
   }
   if (!activeItem) {
-    activeItem = document.querySelector(`.navigator-item[data-target-view="${viewName}"]`);
+    activeItem = document.querySelector(`.navigator-item[data-target-view="${navigatorView}"]`);
   }
   if (librarySelect) {
     activeItem = document.querySelector(`.navigator-item[data-library-select="${librarySelect}"]`);
@@ -405,6 +410,11 @@ function renderLibraryNavigatorPanel() {
 }
 
 function showStandaloneView(viewName) {
+  if (viewName === 'nl' && isNLStoryLocked()) {
+    showNotification(getNLStoryLockMessage(), 'info');
+    viewName = 'newproject';
+  }
+
   if (viewName === 'library') {
     renderLibraryNavigatorPanel();
   } else if (navigatorMode !== 'project') {
@@ -423,6 +433,12 @@ function showStandaloneView(viewName) {
 }
 
 function showLeafView(viewName, groupKey = activeGroupKey) {
+  if (viewName === 'nl' && isNLStoryLocked()) {
+    showNotification(getNLStoryLockMessage(), 'info');
+    viewName = 'newproject';
+    groupKey = 'results';
+  }
+
   if (navigatorMode !== 'project') {
     renderProjectNavigatorPanel();
   }
@@ -1012,6 +1028,15 @@ async function init() {
     setActiveHeaderAction(activeViewKey);
   });
 
+  document.addEventListener('new-project-flow-updated', () => {
+    if (activeViewKey === 'newproject') {
+      renderNewProjectFlowView();
+    }
+    if (activeViewKey === 'nl' && isNLStoryLocked()) {
+      switchToGroup('results', 'newproject');
+    }
+  });
+
   document.addEventListener('metrics-evaluated', () => {
     if (activeViewKey === 'evaluation-report') {
       renderFullEvaluationReport();
@@ -1060,6 +1085,10 @@ function initTemplatesView() {
  * @param {string} viewName - The data-view value of the tab to switch to
  */
 export function switchToTab(viewName) {
+  if (viewName === 'nl' && isNLStoryLocked()) {
+    switchToGroup('results', 'newproject');
+    return;
+  }
   const groupKey = VIEW_TO_GROUP.get(viewName);
   if (!groupKey) return;
   switchToGroup(groupKey, viewName);

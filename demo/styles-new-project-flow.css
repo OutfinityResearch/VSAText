@@ -1,0 +1,182 @@
+/**
+ * New project foundation flow
+ */
+
+.new-project-view {
+  min-height: 100%;
+}
+
+.foundation-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px;
+  min-height: 100%;
+  color: var(--text-main);
+}
+
+.foundation-hero {
+  padding: 24px 26px;
+  border: 1px solid rgba(196, 155, 92, 0.26);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top left, rgba(196, 155, 92, 0.18), transparent 48%),
+    linear-gradient(135deg, rgba(33, 27, 22, 0.96), rgba(20, 17, 14, 0.98));
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.18);
+}
+
+.foundation-kicker {
+  margin-bottom: 10px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+}
+
+.foundation-hero h2 {
+  margin: 0 0 10px;
+  font-size: 2rem;
+}
+
+.foundation-hero p {
+  margin: 0;
+  max-width: 760px;
+  color: var(--text-soft);
+  line-height: 1.6;
+}
+
+.foundation-processing-card,
+.foundation-cnl-preview,
+.foundation-card {
+  border: 1px solid rgba(196, 155, 92, 0.18);
+  border-radius: 18px;
+  background: rgba(23, 20, 17, 0.92);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+.foundation-processing-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+}
+
+.foundation-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(196, 155, 92, 0.2);
+  border-top-color: var(--accent-gold);
+  border-radius: 50%;
+  animation: foundation-spin 0.9s linear infinite;
+}
+
+.foundation-processing-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.foundation-processing-copy strong {
+  font-size: 1rem;
+}
+
+.foundation-processing-copy span {
+  color: var(--text-soft);
+}
+
+.foundation-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.foundation-card {
+  padding: 18px 18px 16px;
+  min-height: 124px;
+}
+
+.foundation-card-title {
+  margin-bottom: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.foundation-card p {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+
+.foundation-cnl-preview {
+  overflow: hidden;
+}
+
+.foundation-cnl-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(196, 155, 92, 0.14);
+}
+
+.foundation-cnl-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.foundation-cnl-head span {
+  color: var(--text-faded);
+  font-size: 0.9rem;
+}
+
+.foundation-cnl-preview pre {
+  margin: 0;
+  padding: 20px;
+  max-height: 420px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #f3eee6;
+  background: rgba(12, 11, 10, 0.88);
+}
+
+.foundation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@keyframes foundation-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .foundation-flow {
+    padding: 18px;
+  }
+
+  .foundation-hero {
+    padding: 20px;
+  }
+
+  .foundation-hero h2 {
+    font-size: 1.6rem;
+  }
+
+  .foundation-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .foundation-grid {
+    grid-template-columns: 1fr;
+  }
+}

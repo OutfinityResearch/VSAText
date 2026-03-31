@@ -23,6 +23,12 @@ export const state = {
   editingEntity: null,
   blocksFilter: 'all',
   blueprintView: 'timeline',  // Current blueprint view mode
+  newProjectFlow: {
+    phase: 'accepted',
+    wizardData: null,
+    status: '',
+    error: ''
+  },
   
   // Generation tracking
   generation: {
@@ -42,6 +48,7 @@ export function resetProject() {
   state.selectedNode = null;
   state.editingEntity = null;
   state.blueprintView = 'timeline';
+  resetNewProjectFlow();
   state.generation = {
     hasGenerated: false,
     snapshot: null,
@@ -52,6 +59,7 @@ export function resetProject() {
 
 export function loadProjectState(project) {
   state.project = loadProjectModel(project);
+  resetNewProjectFlow();
   
   // Ensure dialogues array exists for older projects
   if (!state.project.libraries.dialogues) {
@@ -198,6 +206,32 @@ export function setGeneratedStory(text) {
  */
 export function getGeneratedStory() {
   return state.generation.generatedStory;
+}
+
+function emitNewProjectFlowUpdate() {
+  if (typeof document !== 'undefined' && typeof document.dispatchEvent === 'function') {
+    document.dispatchEvent(new CustomEvent('new-project-flow-updated', {
+      detail: { ...state.newProjectFlow }
+    }));
+  }
+}
+
+export function resetNewProjectFlow() {
+  state.newProjectFlow = {
+    phase: 'accepted',
+    wizardData: null,
+    status: '',
+    error: ''
+  };
+  emitNewProjectFlowUpdate();
+}
+
+export function updateNewProjectFlow(patch = {}) {
+  state.newProjectFlow = {
+    ...state.newProjectFlow,
+    ...patch
+  };
+  emitNewProjectFlowUpdate();
 }
 
 export default state;

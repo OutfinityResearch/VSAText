@@ -303,6 +303,9 @@ function renderCNLVisual(cnlText) {
   const worldLayers = libraries.worldLayers || {};
   const dialogues = libraries.dialogues || [];
   const hooks = blueprint.hooks || {};
+  const dialogueDisplayIds = new Map(
+    dialogues.map((dialogue, index) => [dialogue.id, `D${index + 1}`])
+  );
 
   const charactersById = createIdMap(characters);
   const locationsById = createIdMap(locations);
@@ -407,9 +410,10 @@ function renderCNLVisual(cnlText) {
   const dialogueRows = dialogues.map(dialogue => {
     const speaker = (dialogue.participants || []).find(p => p.role === 'speaker');
     const listener = (dialogue.participants || []).find(p => p.role === 'listener');
+    const displayId = dialogueDisplayIds.get(dialogue.id) || dialogue.id || '-';
 
     return `<tr>
-      <td>${esc(dialogue.id || '-')}</td>
+      <td>${esc(displayId)}</td>
       <td>${esc(humanizeKey(dialogue.beatKey || '-'))}</td>
       <td>${esc(humanizeKey(dialogue.purpose || '-'))}</td>
       <td>${esc(humanizeKey(dialogue.tone || '-'))}</td>
@@ -456,7 +460,9 @@ function renderCNLVisual(cnlText) {
           .filter(d => d.location?.sceneId === scene.id)
           .map(d => d.id)
       ]);
-      const keyDialogues = dialogueIds.join(', ') || '-';
+      const keyDialogues = dialogueIds
+        .map(id => dialogueDisplayIds.get(id) || id)
+        .join(', ') || '-';
 
       const characterIds = refs.characters;
       const relationshipsInScene = relationships

@@ -12,6 +12,7 @@ import { parseMarkdown, escapeHtml } from '../../src/utils/markdown.mjs';
 import { openBookPreview, closeBookPreview, resetBookPreview } from './book-preview.mjs';
 import { getChaptersForManuscript, getScenesForManuscriptChapter } from './writing-studio-manuscript.mjs';
 import { finalizeGeneratedProjectState } from './generation/generation-utils.mjs';
+import { getNLStoryLockMessage, isNLStoryLocked } from './new-project-flow.mjs';
 import {
   loadStoryVersions,
   onVersionSelect,
@@ -239,6 +240,12 @@ function extractChaptersFromProject() {
  * If improving, includes previous version text for LLM reference
  */
 export async function generateNLStory() {
+  if (isNLStoryLocked()) {
+    showNotification(getNLStoryLockMessage(), 'info');
+    window.switchToTab?.('newproject');
+    return;
+  }
+
   if (isGenerating) {
     cancelNLGeneration(true);
     return;
@@ -1079,13 +1086,22 @@ export function updateNLGenerateButton() {
   const btn = $('#btn-nl-generate');
   if (!btn) return;
 
+  if (isNLStoryLocked()) {
+    btn.textContent = 'Accept CNL First';
+    btn.classList.remove('danger');
+    btn.setAttribute('disabled', 'disabled');
+    return;
+  }
+
   if (isGenerating) {
     btn.textContent = 'Stop Story';
     btn.classList.add('danger');
+    btn.removeAttribute('disabled');
     return;
   }
 
   btn.classList.remove('danger');
+  btn.removeAttribute('disabled');
   if (needsStoryRegeneration()) {
     btn.textContent = 'Regenerate Story';
     return;
@@ -1100,6 +1116,19 @@ export function updateNLGenerateButton() {
 function resetNLContent() {
   const content = $('#nl-content');
   if (content) {
+    if (isNLStoryLocked()) {
+      content.innerHTML = `
+        <div class="nl-empty-state">
+          <div class="icon">Lock</div>
+          <div>Story generator is locked</div>
+          <div style="font-size: 0.9rem; color: var(--text-faded);">
+            ${escapeHtml(getNLStoryLockMessage())}
+          </div>
+        </div>
+      `;
+      return;
+    }
+
     content.innerHTML = `
       <div class="nl-empty-state">
         <div class="icon">Book</div>

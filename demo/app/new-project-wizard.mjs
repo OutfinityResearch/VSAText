@@ -2,7 +2,7 @@
  * New Project Wizard (overlay)
  */
 
-import { createProjectFromWizard } from './persistence.mjs';
+import { startNewProjectFlow } from './new-project-flow.mjs';
 import { showNotification } from './utils.mjs';
 
 const DRAFT_KEY = 'scripta-new-project-wizard';
@@ -458,11 +458,13 @@ function closeOverlay() {
 async function finish() {
   if (!ensureRequiredFields()) return;
 
-  await createProjectFromWizard(state.data.projectName.trim());
+  await startNewProjectFlow({
+    ...state.data,
+    projectName: state.data.projectName.trim()
+  });
   applyWizardNLSelections();
   saveDraft();
   closeOverlay();
-  window.switchToTab?.('nl');
 }
 
 function openOverlay() {

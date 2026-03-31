@@ -9,11 +9,11 @@ import { state, setGeneratedStory, getGeneratedStory } from './state.mjs';
 import { $, showNotification } from './utils.mjs';
 import { parseMarkdown } from '../../src/utils/markdown.mjs';
 
-const DEFAULT_STORY_MODEL = 'copilot-gpt-4o';
+const DEFAULT_STORY_MODEL = 'write';
 
 function isPreferredModel(value, label = '') {
   const text = `${value || ''} ${label || ''}`.toLowerCase();
-  return text.includes(DEFAULT_STORY_MODEL) && !text.includes('mini');
+  return text === 'write' || text.includes('write (auto');
 }
 
 // Current loaded version info
@@ -341,62 +341,60 @@ export async function saveStoryVersion(content, language, model) {
 }
 
 /**
- * Load available models from server and auto-select first deep model
+ * Load available models from server — tiers first, then writing-relevant models
  */
 export async function loadAvailableModels() {
   try {
     const response = await fetch('/v1/models');
     if (!response.ok) return;
-    
+
     const data = await response.json();
     const modelSelect = $('#nl-model');
     if (!modelSelect) return;
-    
-    // Clear existing options
+
     modelSelect.innerHTML = '';
-    
-    let firstDeepModelValue = null;
-    
-    // Add deep models first (preferred for creative writing)
-    if (data.models?.deep?.length) {
-      const deepGroup = document.createElement('optgroup');
-      deepGroup.label = 'Deep (Creative)';
-      data.models.deep.forEach((model, idx) => {
+
+    let firstValue = null;
+
+    // Tiers (recommended auto-select options)
+    if (data.tiers?.length) {
+      const tierGroup = document.createElement('optgroup');
+      tierGroup.label = 'Recommended';
+      data.tiers.forEach((tier, idx) => {
         const option = document.createElement('option');
-        option.value = model.qualifiedName || model.name;
-        option.textContent = `${model.name} (${model.provider})`;
-        deepGroup.appendChild(option);
-        // Remember first deep model
-        if (idx === 0) {
-          firstDeepModelValue = option.value;
-        }
+        option.value = tier.name;
+        option.textContent = tier.displayName || tier.name;
+        tierGroup.appendChild(option);
+        if (idx === 0) firstValue = option.value;
       });
-      modelSelect.appendChild(deepGroup);
+      modelSelect.appendChild(tierGroup);
     }
-    
-    // Add fast models
-    if (data.models?.fast?.length) {
-      const fastGroup = document.createElement('optgroup');
-      fastGroup.label = 'Fast';
-      data.models.fast.forEach(model => {
+
+    // Individual models filtered by writing-relevant tags
+    if (data.models?.length) {
+      const modelsGroup = document.createElement('optgroup');
+      modelsGroup.label = 'Models';
+      data.models.forEach(model => {
         const option = document.createElement('option');
-        option.value = model.qualifiedName || model.name;
-        option.textContent = `${model.name} (${model.provider})`;
-        fastGroup.appendChild(option);
+        option.value = model.name;
+        const freeLabel = model.isFree ? ' (Free)' : '';
+        option.textContent = `${model.displayName || model.name}${freeLabel}`;
+        modelsGroup.appendChild(option);
+        if (!firstValue) firstValue = option.value;
       });
-      modelSelect.appendChild(fastGroup);
+      modelSelect.appendChild(modelsGroup);
     }
-    
-    // Prefer configured default model (exact or qualified), fallback to first deep model.
+
+    // Auto-select: prefer 'write' tier, then first available option
     const preferredOption = Array.from(modelSelect.options).find(option =>
       option.value === DEFAULT_STORY_MODEL || isPreferredModel(option.value, option.textContent)
     );
     if (preferredOption) {
       modelSelect.value = preferredOption.value;
-    } else if (firstDeepModelValue) {
-      modelSelect.value = firstDeepModelValue;
+    } else if (firstValue) {
+      modelSelect.value = firstValue;
     }
-    
+
   } catch (err) {
     console.log('[NL Generation] Could not load models:', err.message);
   }

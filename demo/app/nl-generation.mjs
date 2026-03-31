@@ -30,7 +30,7 @@ let activeGeneration = null;
 let isRetryingFailedSections = false;
 let retryController = null;
 let lastGeneratedStructureSignature = null;
-const DEFAULT_STORY_MODEL = 'copilot-gpt-4o';
+const DEFAULT_STORY_MODEL = 'write';
 
 function makeAbortError(message = 'Generation cancelled') {
   const err = new Error(message);

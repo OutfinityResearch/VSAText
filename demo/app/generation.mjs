@@ -21,11 +21,11 @@ import {
 } from './generation/generation-session.mjs';
 
 let selectedQuickTemplateKey = null;
-const DEFAULT_STORY_MODEL = 'copilot-gpt-4o';
+const DEFAULT_STORY_MODEL = 'write';
 
 function isPreferredModel(value, label = '') {
-  const text = `${value} ${label}`.toLowerCase();
-  return text.includes('copilot-gpt-4o') && !text.includes('mini');
+  const text = `${value || ''} ${label || ''}`.toLowerCase();
+  return text === 'write' || text.includes('write (auto');
 }
 
 function isAbortError(err) {
@@ -352,7 +352,7 @@ async function loadLLMModelsForSpecs() {
     if (!modelSelect) return;
 
     modelSelect.disabled = true;
-    modelSelect.innerHTML = `<option value="${DEFAULT_STORY_MODEL}">${DEFAULT_STORY_MODEL} (default)</option>`;
+    modelSelect.innerHTML = `<option value="${DEFAULT_STORY_MODEL}">Write (Auto-select)</option>`;
     if (hintEl) hintEl.textContent = 'Loading models from server...';
 
     try {
@@ -366,43 +366,43 @@ async function loadLLMModelsForSpecs() {
         return;
       }
 
-      let firstDeepModelValue = null;
+      let firstValue = null;
       let preferredModelValue = null;
 
-      if (data.models?.deep?.length) {
-        const deepGroup = document.createElement('optgroup');
-        deepGroup.label = 'Deep (Creative)';
-        data.models.deep.forEach((model, idx) => {
+      if (data.tiers?.length) {
+        const tierGroup = document.createElement('optgroup');
+        tierGroup.label = 'Recommended';
+        data.tiers.forEach((tier, idx) => {
           const option = document.createElement('option');
-          option.value = model.qualifiedName || model.name;
-          const freeLabel = model.free ? ' (Free)' : '';
-          option.textContent = `${model.name}${freeLabel}`;
-          deepGroup.appendChild(option);
-          if (idx === 0) firstDeepModelValue = option.value;
+          option.value = tier.name;
+          option.textContent = tier.displayName || tier.name;
+          tierGroup.appendChild(option);
+          if (idx === 0) firstValue = option.value;
           if (option.value === DEFAULT_STORY_MODEL || isPreferredModel(option.value, option.textContent)) {
             preferredModelValue = option.value;
           }
         });
-        modelSelect.appendChild(deepGroup);
+        modelSelect.appendChild(tierGroup);
       }
 
-      if (data.models?.fast?.length) {
-        const fastGroup = document.createElement('optgroup');
-        fastGroup.label = 'Fast';
-        data.models.fast.forEach(model => {
+      if (data.models?.length) {
+        const modelsGroup = document.createElement('optgroup');
+        modelsGroup.label = 'Models';
+        data.models.forEach(model => {
           const option = document.createElement('option');
-          option.value = model.qualifiedName || model.name;
-          const freeLabel = model.free ? ' (Free)' : '';
-          option.textContent = `${model.name}${freeLabel}`;
-          fastGroup.appendChild(option);
+          option.value = model.name;
+          const freeLabel = model.isFree ? ' (Free)' : '';
+          option.textContent = `${model.displayName || model.name}${freeLabel}`;
+          modelsGroup.appendChild(option);
+          if (!firstValue) firstValue = option.value;
           if (option.value === DEFAULT_STORY_MODEL || isPreferredModel(option.value, option.textContent)) {
             preferredModelValue = option.value;
           }
         });
-        modelSelect.appendChild(fastGroup);
+        modelSelect.appendChild(modelsGroup);
       }
 
-      modelSelect.value = preferredModelValue || DEFAULT_STORY_MODEL;
+      modelSelect.value = preferredModelValue || firstValue || DEFAULT_STORY_MODEL;
       llmModelsLoaded = true;
       if (hintEl) hintEl.textContent = 'Models loaded.';
       modelSelect.disabled = false;

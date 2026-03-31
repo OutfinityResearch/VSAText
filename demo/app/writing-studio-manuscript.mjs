@@ -403,7 +403,7 @@ function parseRegeneratedScene(content) {
 
 async function regenerateSceneWithLLM(chapter, scene, chapterIndex, sceneIndex) {
   const cnl = generateCNL();
-  const model = document.querySelector('#nl-model')?.value || 'copilot-gpt-4o';
+  const model = document.querySelector('#nl-model')?.value || 'write';
   const prompt = [
     'Rewrite exactly one scene from the manuscript.',
     `Chapter: ${formatChapterHeading(chapter, chapterIndex)}`,

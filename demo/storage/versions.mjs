@@ -70,7 +70,11 @@ export function saveStoryVersion(projectId, content, language, model) {
   }
   
   const versionNum = getNextVersionNumber(projectId);
-  const safeModel = sanitizeFilename(model) || 'default';
+  // Strip 'axl/' prefix and replace '/' with '--' for readable filenames
+  let modelSlug = String(model || '');
+  if (modelSlug.startsWith('axl/')) modelSlug = modelSlug.slice(4);
+  modelSlug = modelSlug.replace(/\//g, '--');
+  const safeModel = sanitizeFilename(modelSlug) || 'default';
   const filename = `v${String(versionNum).padStart(3, '0')}_${language}_${safeModel}.md`;
   const filePath = path.join(storiesDir, filename);
   
@@ -79,7 +83,7 @@ export function saveStoryVersion(projectId, content, language, model) {
   return {
     version: versionNum,
     language,
-    model: safeModel,
+    model: model || safeModel,
     filename,
     created_at: new Date().toISOString()
   };

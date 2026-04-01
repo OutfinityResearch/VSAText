@@ -7,7 +7,7 @@ import { showNotification } from './utils.mjs';
 
 const DRAFT_KEY = 'scripta-new-project-wizard';
 const TOTAL_STEPS = 4;
-const DEFAULT_STORY_MODEL = 'copilot-gpt-4o';
+const DEFAULT_STORY_MODEL = 'write';
 
 
 const defaultData = {
@@ -69,8 +69,8 @@ const languages = [
 
 let modelsLoaded = false;
 let modelOptions = {
-  deep: [],
-  fast: []
+  tiers: [],
+  models: []
 };
 
 const overlay = document.createElement('div');
@@ -107,8 +107,8 @@ overlay.innerHTML = `
 document.body.appendChild(overlay);
 
 function isPreferredModel(value, label = '') {
-  const text = `${value} ${label}`.toLowerCase();
-  return text.includes('copilot-gpt-4o') && !text.includes('mini');
+  const text = `${value || ''} ${label || ''}`.toLowerCase();
+  return text === 'write' || text.includes('write (auto');
 }
 
 const wizardBody = overlay.querySelector('#wizard-body');
@@ -285,7 +285,7 @@ function renderCreateStoryNL() {
     });
   }
 
-  const hasLoadedModels = modelOptions.deep.length > 0 || modelOptions.fast.length > 0;
+  const hasLoadedModels = modelOptions.tiers.length > 0 || modelOptions.models.length > 0;
   const currentValue = state.data.model || '';
 
   return `
@@ -306,13 +306,13 @@ function renderCreateStoryNL() {
         <label class="wizard-field">
           <span>Model</span>
           <select id="wizard-model">
-            <option value="${DEFAULT_STORY_MODEL}" ${currentValue === DEFAULT_STORY_MODEL ? 'selected' : ''}>${DEFAULT_STORY_MODEL} (default)</option>
+            <option value="${DEFAULT_STORY_MODEL}" ${currentValue === DEFAULT_STORY_MODEL ? 'selected' : ''}>Write (Auto-select)</option>
             ${hasLoadedModels ? `
-              <optgroup label="Deep">
-                ${modelOptions.deep.map(model => `<option value="${esc(model.value)}" ${currentValue === model.value ? 'selected' : ''}>${esc(model.label)}</option>`).join('')}
+              <optgroup label="Recommended">
+                ${modelOptions.tiers.map(t => `<option value="${esc(t.value)}" ${currentValue === t.value ? 'selected' : ''}>${esc(t.label)}</option>`).join('')}
               </optgroup>
-              <optgroup label="Fast">
-                ${modelOptions.fast.map(model => `<option value="${esc(model.value)}" ${currentValue === model.value ? 'selected' : ''}>${esc(model.label)}</option>`).join('')}
+              <optgroup label="Models">
+                ${modelOptions.models.map(m => `<option value="${esc(m.value)}" ${currentValue === m.value ? 'selected' : ''}>${esc(m.label)}</option>`).join('')}
               </optgroup>
             ` : '<option value="" disabled>Loading models...</option>'}
           </select>
@@ -424,23 +424,23 @@ async function loadModelOptions() {
     const response = await fetch('/v1/models');
     if (!response.ok) return;
     const data = await response.json();
-    const deep = Array.isArray(data?.models?.deep) ? data.models.deep : [];
-    const fast = Array.isArray(data?.models?.fast) ? data.models.fast : [];
+    const tiers = Array.isArray(data?.tiers) ? data.tiers : [];
+    const models = Array.isArray(data?.models) ? data.models : [];
 
     modelOptions = {
-      deep: deep.map(model => ({
-        value: model.qualifiedName || model.name || '',
-        label: `${model.name || 'Model'} (${model.provider || 'provider'})`
-      })).filter(model => model.value),
-      fast: fast.map(model => ({
-        value: model.qualifiedName || model.name || '',
-        label: `${model.name || 'Model'} (${model.provider || 'provider'})`
-      })).filter(model => model.value)
+      tiers: tiers.map(t => ({
+        value: t.name || '',
+        label: t.displayName || t.name || 'Tier'
+      })).filter(t => t.value),
+      models: models.map(m => ({
+        value: m.name || '',
+        label: `${m.displayName || m.name || 'Model'}${m.isFree ? ' (Free)' : ''}`
+      })).filter(m => m.value)
     };
-    const preferredDeep = modelOptions.deep.find(model => model.value === DEFAULT_STORY_MODEL || isPreferredModel(model.value, model.label));
-    const preferredFast = modelOptions.fast.find(model => model.value === DEFAULT_STORY_MODEL || isPreferredModel(model.value, model.label));
-    if (preferredDeep || preferredFast) {
-      state.data.model = (preferredDeep || preferredFast).value;
+    const preferredTier = modelOptions.tiers.find(t => t.value === DEFAULT_STORY_MODEL || isPreferredModel(t.value, t.label));
+    const preferredModel = modelOptions.models.find(m => m.value === DEFAULT_STORY_MODEL || isPreferredModel(m.value, m.label));
+    if (preferredTier || preferredModel) {
+      state.data.model = (preferredTier || preferredModel).value;
     }
     if (!state.data.model) {
       state.data.model = DEFAULT_STORY_MODEL;

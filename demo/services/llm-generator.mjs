@@ -244,39 +244,86 @@ export function getSupportedLanguages() {
 /**
  * Get available LLM models
  */
+// Tags relevant to a writing/creative tool
+const WRITING_TAGS = new Set([
+  'creative', 'writing', 'reasoning', 'chat', 'long-context', 'thinking',
+]);
+
+// Tiers worth surfacing in a writing UI (skip internal/code-only tiers)
+const WRITING_TIERS = new Set([
+  'write', 'deep', 'fast', 'plan', 'ultra',
+]);
+
+const TIER_DISPLAY_NAMES = {
+  write: 'Write (Auto-select)',
+  deep: 'Deep (Creative)',
+  fast: 'Fast',
+  plan: 'Plan',
+  ultra: 'Ultra',
+};
+
+function formatModelDisplayName(name) {
+  if (!name || !name.startsWith('axl/')) return name;
+  const stripped = name.slice(4); // remove 'axl/'
+  const slashIdx = stripped.indexOf('/');
+  if (slashIdx < 0) return stripped;
+  const provider = stripped.slice(0, slashIdx);
+  const model = stripped.slice(slashIdx + 1);
+  return `${model} (${provider})`;
+}
+
 export function getAvailableModels() {
   if (!agentAvailable || !listModelsFromCache) {
-    return { fast: [], deep: [], available: false };
+    return { tiers: [], models: [], available: false };
   }
 
   try {
-    const models = listModelsFromCache();
-    const ALLOWED_PROVIDER = 'soul_gateway';
-    const HIDDEN_MODELS = new Set([
-      'kImi-k2.5', 'kimi-k2.5',
-      'openrouter-gemini-3.1-pro', 'openrouter-gpt-5.3-codex',
-      'copilot-opus-4.6',
-    ]);
-    // Copilot models included in Pro+ that don't consume premium requests
-    const FREE_MODELS = new Set([
-      'copilot-gpt-4o', 'copilot-gpt-4.1', 'copilot-gpt-5-mini',
-    ]);
-    const filterProvider = list => list
-      .filter(m => m.providerKey === ALLOWED_PROVIDER && !HIDDEN_MODELS.has(m.name))
-      .map(m => ({
-        name: m.name,
-        provider: m.providerKey,
-        qualifiedName: m.qualifiedName || `${m.providerKey}/${m.name}`,
-        free: FREE_MODELS.has(m.name),
-      }));
-    return {
-      fast: filterProvider(models.fast),
-      deep: filterProvider(models.deep),
-      available: true
-    };
+    const cached = listModelsFromCache();
+    const allRecords = [...cached.fast, ...cached.deep]
+      .filter(m => m.providerKey === 'soul_gateway');
+
+    // Separate tiers (short names like 'write', 'deep') from individual models ('axl/...')
+    const tiers = [];
+    const models = [];
+
+    for (const m of allRecords) {
+      const isTier = !m.name.includes('/');
+      if (isTier) {
+        if (!WRITING_TIERS.has(m.name)) continue;
+        tiers.push({
+          name: m.name,
+          displayName: TIER_DISPLAY_NAMES[m.name] || m.name,
+          qualifiedName: m.qualifiedName || `${m.providerKey}/${m.name}`,
+          isFree: m.isFree || false,
+          billingType: m.billingType || 'api_key',
+          sortOrder: m.sortOrder ?? 100,
+        });
+      } else {
+        // Include models with writing-relevant tags; untagged models pass through
+        // so newly added gateway models aren't hidden before tags are assigned.
+        const tags = m.tags || [];
+        const hasRelevantTag = tags.some(t => WRITING_TAGS.has(t));
+        if (!hasRelevantTag && tags.length > 0) continue;
+
+        models.push({
+          name: m.name,
+          displayName: formatModelDisplayName(m.name),
+          qualifiedName: m.qualifiedName || `${m.providerKey}/${m.name}`,
+          isFree: m.isFree || false,
+          billingType: m.billingType || 'api_key',
+          tags,
+          sortOrder: m.sortOrder ?? 100,
+        });
+      }
+    }
+
+    tiers.sort((a, b) => a.sortOrder - b.sortOrder);
+    models.sort((a, b) => a.sortOrder - b.sortOrder);
+
+    return { tiers, models, available: true };
   } catch (err) {
     console.error('[LLM Provider] Error getting models:', err.message);
-    return { fast: [], deep: [], available: false };
+    return { tiers: [], models: [], available: false };
   }
 }
 

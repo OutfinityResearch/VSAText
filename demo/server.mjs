@@ -404,12 +404,12 @@ async function handleLLMRoutes(method, p, req, res) {
       const llmGenerator = await import('./services/llm-generator.mjs');
       const models = llmGenerator.getAvailableModels();
       const languages = llmGenerator.getSupportedLanguages();
-      return jsonResponse(res, 200, { 
-        models, languages, llmAvailable: llmGenerator.isLLMAvailable()
+      return jsonResponse(res, 200, {
+        ...models, languages, llmAvailable: llmGenerator.isLLMAvailable()
       });
     } catch {
-      return jsonResponse(res, 200, { 
-        models: { fast: [], deep: [], available: false }, languages: {}, llmAvailable: false
+      return jsonResponse(res, 200, {
+        tiers: [], models: [], available: false, languages: {}, llmAvailable: false
       });
     }
   }

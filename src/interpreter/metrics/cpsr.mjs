@@ -1,5 +1,5 @@
 /**
- * DS20 - CNL Parse Success Rate (CPSR)
+ * DS19 - CNL Parse Success Rate (CPSR)
  *
  * Interpreter form: a single artifact contributes 1 attempt.
  * - value = 1 if parse+semantic are valid (and in strict mode, no warnings)
@@ -38,4 +38,3 @@ export const metricCPSR = {
 };
 
 export default metricCPSR;
-

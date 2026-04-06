@@ -1,4 +1,4 @@
-# DS21 — Metric Specification: Constraint Satisfaction Accuracy (CSA)
+# DS20 — Metric Specification: Constraint Satisfaction Accuracy (CSA)
 
 ## 1. Purpose
 
@@ -77,6 +77,5 @@ Acceptance threshold: **CSA >= 98%**
 ## 8. Related Documents
 
 - DS03 — metric intent and threshold
-- DS11 — SVO constraints syntax
+- DS04 — CNL constraints syntax
 - DS12 — interpreter scope model
-

@@ -1,23 +1,39 @@
 <h1>Blueprint Tab</h1>
 
-<p>The Blueprint tab is the planning workspace for narrative structure and pacing. It unifies arc planning, beat mapping, emotional progression, and tension shaping in one flow.</p>
+<p>The Blueprint tab is the primary planning workspace for narrative structure and pacing. It defines how the story will unfold before that structure is formalized in CNL and used by NL Story.</p>
 
 <div class="info-box">
   <div class="info-box-title">When to Use This Tab</div>
-  <p>Use Blueprint early to choose your narrative arc, define the key event and primary conflict, inspect beat positions, shape pacing, and map beats to chapters/scenes.</p>
+  <p>Use Blueprint immediately after project creation and before reviewing CNL. This is where you choose the narrative arc, shape pacing, map beats to scenes, and establish the structural plan that the rest of the workflow depends on.</p>
 </div>
 
 <h2>What This Tab Does</h2>
 
 <ul>
-  <li>Narrative Arc selection (7 work-level arc options)</li>
+  <li>Narrative Arc selection (7 supported arc options)</li>
   <li>Focus fields: <strong>Key Event</strong> and <strong>Primary Conflict</strong></li>
   <li>Visual Story Beats timeline with beat positions on 0% to 100%</li>
   <li>Emotional Progression editor (beat to mood preset)</li>
   <li>Tension Curve editor with <strong>Add Point</strong> and <strong>Reset</strong></li>
-  <li>Beat Mapping from beats to chapters/scenes with optional tension inputs</li>
+  <li>Beat Mapping from beats to chapters/scenes with tension values</li>
   <li>Subplots planning for secondary narrative threads</li>
+  <li>Automatic synchronization of arc-dependent data when the arc changes</li>
 </ul>
+
+<h2>Workflow Position</h2>
+
+<pre><code>New Project
+    |
+    v
+Blueprint  &lt;-- define the story plan
+    |
+    v
+CNL        &lt;-- review the formal structure
+    |
+    v
+NL Story   &lt;-- generate prose from the approved plan</code></pre>
+
+<p>In the current product flow, Blueprint comes before CNL. Users first define the structural story plan here, then inspect that plan in formal CNL form, and only after that continue to prose generation.</p>
 
 <h2>Blueprint Structure (Logical Order)</h2>
 
@@ -97,6 +113,19 @@
 <h3>6. Subplots</h3>
 <p>Define subplot type, characters, start and resolve beats, and key touchpoints.</p>
 
+<h2>Arc Synchronization</h2>
+
+<p>Changing the narrative arc is a structural decision, not a cosmetic label change. When you switch the arc, SCRIPTA rebuilds the arc-dependent planning layer so the project remains internally coherent.</p>
+
+<ul>
+  <li><strong>Beat mappings</strong> are rebuilt for the selected arc.</li>
+  <li><strong>Tension curve</strong> is refreshed to match the new beat progression.</li>
+  <li><strong>Scene and chapter titles</strong> are updated when they are still auto-generated.</li>
+  <li><strong>Dialogues and hooks</strong> are synchronized so their beat references continue to point to valid story beats.</li>
+</ul>
+
+<p>This is why Blueprint should be considered the authoritative structural layer of the story. CNL exposes the result, but Blueprint is where the structure is decided.</p>
+
 <h2>CNL Output</h2>
 
 <pre><code>// Arc selection
@@ -130,21 +159,24 @@ S1 resolves at beat return_elixir</code></pre>
   <li><strong>EAP</strong>: beat mood progression and pacing consistency</li>
   <li><strong>Pacing Score</strong>: tension distribution quality</li>
   <li><strong>Subplot Integration</strong>: depth and coherence of secondary threads</li>
+  <li><strong>CNL Consistency</strong>: Blueprint changes propagate into the formal specification used for validation and generation</li>
 </ul>
 
 <h2>Best Practices</h2>
 
 <ol>
-  <li>Select the narrative arc before mapping chapters.</li>
+  <li>Select the narrative arc before mapping chapters and scenes in detail.</li>
   <li>Lock key beats first (inciting event, midpoint, climax, resolution).</li>
   <li>Use Emotional Progression to avoid flat tone.</li>
   <li>Shape the tension curve before detailed scene writing.</li>
+  <li>After major Blueprint changes, review the CNL page to confirm the formal structure is still what you want.</li>
   <li>Keep subplots synchronized with main-arc turns.</li>
 </ol>
 
 <h2>Related Documentation</h2>
 
 <ul>
+  <li><a href="#tab-cnl" data-page="tab-cnl">CNL Editor</a> - Review the formal specification generated from Blueprint</li>
   <li><a href="#narrative-theory" data-page="narrative-theory">Narrative Structure Theory</a></li>
   <li><a href="#tab-patterns" data-page="tab-patterns">Patterns Tab</a></li>
   <li><a href="#tab-framework" data-page="tab-framework">Story Core</a></li>

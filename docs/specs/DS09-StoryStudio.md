@@ -2,199 +2,93 @@
 
 ## Overview
 
-Story Studio is SCRIPTA's visual interface for composing stories and evaluating quality. This document describes the high-level UI concepts and user workflows. For detailed implementation specifications, see DS10 (Visual Story Composer).
+Story Studio is SCRIPTA's visual interface for planning, drafting, refinement, and evaluation. This document describes the high-level UI concepts and the way authors move through the studio once a project has been created.
+
+Story Studio is the working environment where the author and System Agents - AI collaborate across structure, specification, prose generation, manuscript refinement, and metrics.
 
 ## Design Philosophy
 
-**Visual-First Authoring**: Authors work with visual elements (trees, cards, graphs) rather than writing code. The system generates CNL automatically from the visual structure.
-
-**Guided Feedback**: Authors move through planning, generation, and explicit evaluation steps. Metrics are surfaced through the evaluation workflow rather than assumed to update continuously in every editing context.
-
-**Browser-First**: All processing happens client-side. The server only handles persistence.
+Story Studio is based on three principles. The first is visual-first authoring, where authors work through guided planning surfaces rather than writing raw formal language. The second is guided feedback, where planning, generation, and evaluation are explicit steps in the workflow. The third is browser-first execution, where most processing happens client-side and the server primarily handles persistence and optional research/demo processing.
 
 ## Main Layout
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────────┐
-│  Header: Project Name                           [New] [Save]        │
-├──────────────┬────────────────────────────────┬─────────────────────┤
-│              │                                │                     │
-│   Structure  │         Main Canvas            │    Metrics Panel    │
-│   Tree       │                                │                     │
-│              │   (Tabbed entity editors)      │    (Quality scores) │
-│ [Hierarchy]  │                                │                     │
-│              │                                │                     │
-├──────────────┴────────────────────────────────┴─────────────────────┤
-│  Footer: Stats                                         Version      │
-└─────────────────────────────────────────────────────────────────────┘
+│  Header: Project Name                           [New] [Save]       │
+├──────────────┬────────────────────────────────┬────────────────────┤
+│              │                                │                    │
+│ Structure    │ Main Canvas                    │ Metrics Panel      │
+│ Tree         │                                │                    │
+│              │ Focused planning and drafting  │ Quality signals    │
+│ Hierarchy    │ surfaces                        │ and diagnostics    │
+│              │                                │                    │
+├──────────────┴────────────────────────────────┴────────────────────┤
+│ Footer: Stats                                         Version      │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Core Workflows
 
-### 1. Start New Story
+### Start New Story
 
-**From scratch:**
-1. Click "New" to open the project wizard
-2. Enter title, format, length, and seed ideas
-3. Continue in Book Settings to shape the story foundation
-4. Refine thematic direction and transformation in Story Core
-5. Define conflict and macro structure in Narrative Design
-6. Build the main arc in Blueprint
-7. Organize chapters and scenes in Story Map
-8. Review and refine the CNL in CNL Editor
-9. Generate prose in NL Story
-10. Continue drafting in Manuscript
+The standard workflow starts in the `New Project` wizard, where the author defines the initial project direction. After the project is created, Story Studio becomes the main working environment for planning, specification review, prose generation, and revision.
 
-**From random generation:**
-1. Click "Random" to generate complete story
-2. Review generated elements
-3. Refine Story Core, Narrative Design, cast, and world details
-4. Adjust Blueprint and Story Map
-5. Generate, evaluate, and refine
+The author then continues through `Processing`, `Blueprint`, `CNL Editor`, and `NL Story`. When a draft exists, the author can continue editing in `Manuscript` and review quality signals in `Metrics`.
 
-### 2. Book Settings Foundation
+### Build Story Foundation
 
-Book Settings is the editorial planning layer. It includes:
+Story Studio exposes the editorial planning layers needed to build a coherent story foundation. `Story Core` supports theme, wisdom, story fundamentals, and character transformation. `Narrative Design` supports conflict, macro structure, escalation logic, and constraints. `Cast` supports protagonist, antagonist, secondary characters, and relationship logic. `World` supports locations, objects, world rules, and world layers. `Tone & Style` supports language direction for generation and revision.
 
-- **Story Core**: story fundamentals, themes, wisdom, and character transformation
-- **Narrative Design**: core conflict, macro structure, escalation logic, and constraints
-- **Cast**: protagonist, antagonist, secondary characters, relationship type, and relationship dynamic
-- **World**: locations, objects, world rules, world layers, and direct template shortcuts from Library
-- **Tone & Style**: language direction for generation
+### Build Story Structure
 
-### 3. Build Story Structure
+The structure view helps authors move from macro planning to editable narrative units. Authors work with chapters, scenes, references, moods, blocks, and actions through a hierarchy that supports both planning and later manuscript work.
 
-Authors work with a hierarchy that moves from macro structure to editable manuscript:
+When a narrative arc has been selected in `Blueprint`, the structure tree should reflect the progression of that arc rather than remaining only a flat list of scenes. This helps the navigation layer communicate story progression directly.
 
-```
-Book
-├── Chapter 1
-│   ├── Scene 1
-│   │   ├── [character references]
-│   │   ├── [location references]
-│   │   ├── [mood references]
-│   │   ├── [narrative blocks]
-│   │   └── [actions]
-│   └── Scene 2
-└── Chapter 2
-```
+### Manage Entities
 
-Right-click context menu provides actions appropriate to each node type.
+Story Studio exposes focused editing surfaces for the core project entities. Authors can define and refine cast members, locations, objects, world rules, themes, and structural elements through dedicated pages instead of one overloaded editor.
 
-### 4. Manage Entities
+### Define Relationships
 
-Core planning pages expose focused entity editing surfaces:
-- Grid of entity cards
-- "+" card to add new entities
-- Click card to edit
-- Delete option in edit modal
+Relationship work is handled primarily through the cast and planning surfaces. Authors can define relationship pairs, relationship type, and relationship dynamic, then refine how those relationships influence the project foundation and later drafting.
 
-Primary entity areas:
-- **Cast**: protagonist, antagonist, secondary characters, archetypes, traits, and relationship dynamics
-- **World**: locations, objects, world rules, and world layers
-- **Themes and wisdom**: selected and refined through Story Core and related planning pages
-- **Structural elements**: chapters, scenes, beats, and turning points through Blueprint and Story Map
+### Plan Blueprint and Story Map
 
-### 5. Define Relationships
+`Blueprint` is the main planning surface for arc selection, beat progression, tension, pacing, and story progression. Story mapping surfaces help connect chapters, scenes, turning points, and structural roles across the project.
 
-Relationships are defined inside the **Cast** page, where authors can:
-- assign relationship pairs
-- select a **Relationship Type**
-- select a **Relationship Dynamic**
-- refine how relationships appear in the story foundation
+Blueprint should influence not only internal planning logic but also how the resulting story becomes readable in the structure tree and other navigation layers.
 
-Relationships can include both a **Relationship Type** and a **Relationship Dynamic** for more dramatic specificity.
+### Add World Rules
 
-### 6. Plan Blueprint and Story Map
+World rules define special logic that governs the narrative world, such as magic systems, technology constraints, physical laws, or social structures. These rules become part of the project foundation and may influence both specification and generation.
 
-**Arc Selection**: Choose the narrative arc template in Blueprint.
+### Evaluate Quality
 
-**Beat Assignment**: Define beat progression, key event, tension, and pacing in Blueprint.
+Story Studio provides quality review through the `Metrics` surface. The primary product-facing signals are Coverage, Coherence, and NQS, supported by additional diagnostics such as CAD, CAR, CSA, emotional arc, relationship signals, and structure diagnostics.
 
-**Story Map**: Map chapters, scenes, turning points, and structural roles across the book.
+Evaluation should help the author understand what to improve next rather than acting as a passive score display.
 
-### 7. Add World Rules
+### Export
 
-Define special rules that govern the story world:
-- Magic systems
-- Physical laws
-- Social structures
-- Technology constraints
-
-These become part of the generated CNL and influence content generation.
-
-### 8. Evaluate Quality
-
-Evaluation focuses on the primary product metrics and supporting diagnostics:
-
-| Category | Metrics |
-|----------|---------|
-| Summary | Coverage, Coherence, NQS |
-| Detailed | CAD, CAR, CSA, Emotional Arc, relationship and structure diagnostics |
-| Structure | Counts of chapters, scenes, blocks, actions, refs |
-
-Green = passes threshold, Yellow = warning, Red = fails
-
-### 9. Export
-
-**Export CNL**: Download the auto-generated CNL as a `.cnl` file for use with other tools or for archival.
+Story Studio should support export of formal and narrative artifacts such as CNL and story text so authors can archive, reuse, or continue work in other environments.
 
 ## Library Apply Workflow
 
-Library is no longer only a preview surface. Authors can:
+The Library workflow may begin inside Story Studio or from the Library entry point itself. The author selects a reusable asset, reviews it, applies it at `Book`, `Chapter`, or `Scene` scope when supported, and continues refinement in the destination page.
 
-1. Open Library
-2. Browse a reusable item
-3. Click **Apply**
-4. Choose a valid destination such as **Book**, **Chapter**, or **Scene** depending on category
-5. Continue refinement in the destination page
-
-Examples:
-- Narrative Arc Templates support macro planning
-- Character Templates accelerate Cast setup
-- Locations and Objects can be applied into World, chapters, or scenes when available
-
-## Entity Libraries
-
-| Library | Scope | Purpose |
-|---------|-------|---------|
-| Characters | Project | Named characters with archetypes and traits |
-| Locations | Project | Places with geography and atmosphere |
-| Objects | Project | Significant items with types and ownership |
-| Themes | Project | Abstract narrative themes |
-| Relationships | Project | Connections between characters |
-| World Rules | Project | Special rules governing the story world |
-| Emotional Arc | Project | Mood assignments for arc beats |
-
-## Vocabulary Resources
-
-The UI draws from rich vocabularies (see `src/vocabularies/`):
-
-- **Character Archetypes**: Hero, Mentor, Shadow, Ally, Trickster, Herald, etc.
-- **Character Traits**: Organized by category (core, social, intellectual, emotional)
-- **Relationship Types**: Organized by category (familial, social, romantic, antagonistic, power)
-- **Location Geography**: Forest, mountain, ocean, desert, urban, village, etc.
-- **Location Time Periods**: Ancient, medieval, renaissance, industrial, modern, future
-- **Emotions**: Positive, negative, mixed with color coding
-- **Mood Presets**: Tense, Romantic, Triumphant, Melancholic, Peaceful, etc.
-- **Narrative Arcs**: Hero's Journey, Three Act, Save the Cat, Story Circle, etc.
-- **Narrative Blocks**: Organized by phase (opening, transition, confrontation, resolution, micro)
-- **Themes**: Redemption, Sacrifice, Identity, Power, Freedom, etc.
+Story Studio treats Library application as an acceleration mechanism, not as a locked template system. Once applied, Library content becomes part of the editable project state.
 
 ## Data Flow
 
-```
-User Action → State Update → CNL Generation → Metric Calculation → UI Refresh
-     │
-     └──────────→ [Save] ──→ Server (/v1/projects)
+```text
+User Action -> State Update -> CNL Generation -> Metric Calculation -> UI Refresh
+     |
+     -> Save -> Server (/v1/projects)
 ```
 
-All computation is client-side. Server is only for persistence.
+Most computation is client-side. The server handles persistence and may support optional processing endpoints in research/demo environments.
 
 ## Success Criteria
 
-1. New user can create a complete story structure in under 30 minutes
-2. Random generation produces coherent starting point
-3. Metrics provide actionable feedback through evaluation
-4. CNL export works correctly
-5. UI is responsive and intuitive
+Story Studio is successful when a new user can create a coherent story foundation quickly, navigate the planning and drafting surfaces without confusion, generate a useful draft from the current specification, understand quality feedback through the metrics workflow, and export usable artifacts without breaking the authoring flow.

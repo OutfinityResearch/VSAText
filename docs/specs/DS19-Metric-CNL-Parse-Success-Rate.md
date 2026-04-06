@@ -1,4 +1,4 @@
-# DS20 — Metric Specification: CNL Parse Success Rate (CPSR)
+# DS19 — Metric Specification: CNL Parse Success Rate (CPSR)
 
 ## 1. Purpose
 
@@ -51,6 +51,5 @@ Acceptance threshold: **CPSR >= 95%**
 ## 7. Related Documents
 
 - DS03 — metric intent and threshold
-- DS11 — SVO CNL unification
+- DS04 — CNL specification and syntax reference
 - DS12 — parser/validator integration
-

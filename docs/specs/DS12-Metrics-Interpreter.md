@@ -31,7 +31,7 @@ This DS defines the **metric runtime** and **evaluation protocol**, not the UI.
 
 ### 2.2 Assumptions
 
-- The canonical language is **SVO CNL** (see `docs/specs/DS04-CNL-Specification.md` and `docs/specs/DS11-CNL-Unification.md`).
+- The canonical language is **SVO CNL** (see `docs/specs/DS04-CNL-Specification.md`).
 - A CNL document may contain:
   - specification (entities, constraints, structure)
   - artifact content (scene descriptions and/or events)
@@ -61,8 +61,8 @@ The interpreter consumes:
     - `retrieval_queries` (array): query set with ground truth for `RQ` (DS18). Recommended entry format:
       - `{ "id": "q1", "query": "scenes with Anna in danger", "relevant": ["Sc3", "Sc7"], "topK": 5 }`
   - `human` (object): optional human-evaluation inputs for human-rated metrics:
-    - `overall_ratings` (number[]): 1–5 overall ratings for `NQS` (DS23).
-    - `xai_sessions` (array): session ratings for `XAI` (DS22), each:
+    - `overall_ratings` (number[]): 1–5 overall ratings for `NQS` (DS22).
+    - `xai_sessions` (array): session ratings for `XAI` (DS21), each:
       - `{ "clarity": 1..5, "evidence": 1..5, "actionability": 1..5, "trust": 1..5 }`
   - `strict` (boolean): treat semantic warnings as failures for CPSR if true.
   - `includeTimestamps` (boolean): if true, add `computed_at` timestamps to reports (default false for strict determinism).
@@ -70,7 +70,7 @@ The interpreter consumes:
 ### 3.2 Outputs
 
 The interpreter produces:
-- `ast` (optional): parsed AST from the CNL parser (structure as per DS11). Implementations MAY omit it from the top-level report for size, but MUST make it available to metric plugins as `ctx.ast`.
+- `ast` (optional): parsed AST from the CNL parser (structure as per DS04). Implementations MAY omit it from the top-level report for size, but MUST make it available to metric plugins as `ctx.ast`.
 - `diagnostics`: parse and semantic diagnostics.
 - `world`: derived world state **summary** (entities, scenes, events, constraints, text). Implementations MAY include an expanded world model for debugging/host use.
 - `metrics`: computed metric results (per-metric details + aggregate summary).
@@ -119,7 +119,7 @@ The interpreter produces:
 
 ### 4.1 Parsing
 
-The interpreter MUST parse the CNL with the unified SVO parser (DS11) and produce:
+The interpreter MUST parse the CNL with the unified SVO parser (DS04) and produce:
 - groups (hierarchy)
 - statements (SVO)
 - extracted entities, relationships, ownership, references, constraints
@@ -176,7 +176,7 @@ Many metrics require text. The interpreter MUST construct a canonical text repre
 ### 5.1 Metric codes
 
 Primary metric codes:
-- `NQS` (hybrid, DS23), `NQS_AUTO` (automated, DS25)
+- `NQS` (hybrid, DS22), `NQS_AUTO` (automated, DS24)
 - `CS`, `CAD`, `CAR`, `OI`, `EAP`, `XAI`, `RQ`, `CPSR`, `CSA`
 
 ### 5.2 Metric plugin interface (normative)
@@ -315,12 +315,12 @@ The suite MUST apply these thresholds:
 - `RQ MRR > 0.6`
 - `CPSR >= 0.95`
 - `CSA >= 0.98`
-- `NQS` must improve by `>= 25%` vs Variant A (see DS23 for formula).
+- `NQS` must improve by `>= 25%` vs Variant A (see DS22 for formula).
 
 ## 10. Related Documents
 
 - DS03 — Research Framework and Evaluation Methodology
 - DS04 — CNL Specification
 - DS05 — VSA/HDC Specification
-- DS11 — CNL Unification and Migration Guide
-- DS13..DS18, DS20..DS23 — Metric definitions
+- DS04 — CNL Specification
+- DS13..DS18, DS19..DS22 — Metric definitions

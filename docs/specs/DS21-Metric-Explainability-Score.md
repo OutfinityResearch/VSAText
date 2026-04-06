@@ -1,4 +1,4 @@
-# DS22 — Metric Specification: Explainability Score (XAI)
+# DS21 — Metric Specification: Explainability Score (XAI)
 
 ## 1. Purpose
 

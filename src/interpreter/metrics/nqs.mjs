@@ -1,5 +1,5 @@
 /**
- * DS23 - Narrative Quality Score (NQS, hybrid)
+ * DS22 - Narrative Quality Score (NQS, hybrid)
  *
  * NQS = 0.5 * CS + 0.5 * H
  * where H is the normalized human overall rating (1..5 -> 0..1).
@@ -78,4 +78,3 @@ export const metricNQS = {
 };
 
 export default metricNQS;
-

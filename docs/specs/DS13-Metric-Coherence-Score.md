@@ -173,5 +173,4 @@ Book group end
 
 - DS03 — metric intent and thresholds
 - DS12 — interpreter context and reporting
-- DS21 — CSA (constraint violations contribute to LVP)
-
+- DS20 — CSA (constraint violations contribute to LVP)

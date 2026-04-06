@@ -69,6 +69,76 @@ Hierarchical story structure with drag-and-drop reordering:
 - On Scene: Add Character, Add Location, Add Object, Add Mood, Add Narrative Block, Add Action
 - On any: Edit, Delete
 
+## Arc-Driven Story Structuring
+
+When a story is generated from the project foundation, the left-side story structure should not remain a generic list of chapters and scenes. Instead, the generated structure should reflect the narrative arc selected in `Blueprint`.
+
+This means the selected arc becomes the structural source for how the generated story is organized and displayed. The tree should help the user read the story as a progression of narrative phases, not just as a flat manuscript outline.
+
+In practical terms, the top visible grouping of the generated story should be derived from the selected arc. The system should organize chapters and scenes under arc-relevant sections so that the user immediately understands where the story begins, where it escalates, and how it resolves.
+
+For example, a classical dramatic structure may produce high-level groups such as `Setup`, `Rising Action`, `Climax`, `Falling Action`, and `Resolution`. A `Hero's Journey` structure may produce groups such as `Ordinary World`, `Call to Adventure`, `Tests`, `Ordeal`, and `Return`. A `Kishotenketsu` structure should produce the corresponding four-part progression `Ki`, `Sho`, `Ten`, and `Ketsu`.
+
+The purpose of this behavior is not decorative labeling. It is meant to make the generated story easier to understand. A user should be able to open the structure tree and immediately see the logic of the narrative arc in the organization of the story itself.
+
+### Structural Rule
+
+The narrative arc chosen in `Blueprint` should determine the primary grouping of the generated story.
+
+At the top level of the generated tree, the system should show arc-phase groups. Inside each arc-phase group, the system should place the generated chapters and scenes that belong to that phase.
+
+This creates a hierarchy of the form:
+
+```text
+Narrative Arc Phase
+  -> Chapter
+    -> Scene
+```
+
+or, where appropriate:
+
+```text
+Narrative Arc Phase
+  -> Scene
+```
+
+The exact depth may vary depending on the project structure, but the arc-phase grouping should remain the first visible organizational principle for generated stories.
+
+### Arc-Specific Mapping
+
+Each supported arc should define its own grouping vocabulary.
+
+Examples:
+
+- `Hero's Journey` should use Hero's Journey phase names or grouped beat clusters.
+- `Three Act Structure` and similar dramatic structures may use higher-level dramatic phases such as `Setup`, `Rising Action`, `Climax`, `Falling Action`, and `Resolution`.
+- `Kishotenketsu` should use `Ki`, `Sho`, `Ten`, and `Ketsu`.
+- `Seven Point Structure` should use the corresponding structural turns of that model.
+
+The generated grouping labels should therefore be arc-aware rather than generic.
+
+### Relationship to Beat Mapping
+
+This grouping should be derived from `Blueprint.beatMappings`, not invented independently by the tree. The structure tree should reflect the actual structural plan already defined in `Blueprint`.
+
+If a scene is mapped to a beat, and that beat belongs to a given arc phase, the scene should appear under the corresponding phase group in the generated story structure.
+
+This ensures that the tree is not merely a UI convenience. It becomes a readable projection of the planning model already present in the project.
+
+### Behavior on Arc Change
+
+Changing the narrative arc in `Blueprint` should trigger a structural reorganization of the generated story tree.
+
+The system should rebuild the high-level grouping so that the generated story is displayed according to the newly selected arc. Where possible, existing chapters, scenes, and generated content should be preserved, but the visible organization of the story should follow the new structural logic.
+
+This behavior is important because changing the arc is a structural decision. The interface should reflect that decision clearly and immediately.
+
+### UX Goal
+
+The tree should help the user understand the story at a glance. Instead of seeing a list of scenes with weak narrative orientation, the user should see the unfolding shape of the story in the navigation itself.
+
+That makes the product feel more editorial, more guided, and more intentional. It also strengthens the role of `Blueprint` as the source of truth for story structure rather than treating it as a detached planning screen.
+
 ## Center Panel Tabs
 
 ### CNL Editor
@@ -256,6 +326,8 @@ Quick generation using randomized templates and vocabularies:
 7. **2 Themes** from vocabulary
 8. **1-2 World Rules** (e.g., "Magic requires sacrifice")
 9. **Complete Structure** with chapters, scenes, character/location refs, blocks, and actions
+
+The generated structure should be organized according to the selected narrative arc, so that the resulting story tree reflects the planned progression rather than a generic chapter list.
 
 ### With LLM
 AI generates a complete CNL specification:

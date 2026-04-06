@@ -1,5 +1,5 @@
 /**
- * DS21 - Constraint Satisfaction Accuracy (CSA)
+ * DS20 - Constraint Satisfaction Accuracy (CSA)
  *
  * Checks AST constraints over their resolved scope (scene/chapter/global).
  */
@@ -217,4 +217,3 @@ export const metricCSA = {
 };
 
 export default metricCSA;
-

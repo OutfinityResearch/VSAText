@@ -1,4 +1,4 @@
-# DS25 — Metric Specification: Coherence Analysis
+# DS24 — Metric Specification: Coherence Analysis
 
 ## 1. Purpose
 
@@ -184,7 +184,7 @@ dialogueQuality = sum(scores) / totalDialogues
 
 ## 3. Integration with NQS
 
-**Important:** DS23 defines `NQS` as a **hybrid (human + machine)** metric.
+**Important:** DS22 defines `NQS` as a **hybrid (human + machine)** metric.
 
 This document defines an **automated proxy score** used for fast feedback, called `NQS_AUTO`.
 
@@ -267,4 +267,4 @@ When evaluating, the browser console shows:
 - DS03 — Research goals and evaluation methodology
 - DS12 — Metrics interpreter overview
 - DS13 — Coherence Score (CS) definition
-- DS23 — Narrative Quality Score (NQS) specification
+- DS22 — Narrative Quality Score (NQS) specification

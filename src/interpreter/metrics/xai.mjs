@@ -1,5 +1,5 @@
 /**
- * DS22 - Explainability Score (XAI)
+ * DS21 - Explainability Score (XAI)
  *
  * Human-rated metric. Deterministic if the rating dataset is provided as input.
  */
@@ -83,4 +83,3 @@ export const metricXAI = {
 };
 
 export default metricXAI;
-

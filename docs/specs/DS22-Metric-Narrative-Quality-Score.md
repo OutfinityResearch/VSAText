@@ -1,4 +1,4 @@
-# DS23 — Metric Specification: Narrative Quality Score (NQS)
+# DS22 — Metric Specification: Narrative Quality Score (NQS)
 
 ## 1. Purpose
 
@@ -8,7 +8,7 @@
 
 **Scope note (normative)**
 - This DS defines the **hybrid, human-in-the-loop** `NQS` metric.
-- For a fully automated proxy score used for rapid UI feedback, see **DS25** (`NQS_AUTO`).
+- For a fully automated proxy score used for rapid UI feedback, see **DS24** (`NQS_AUTO`).
 
 ## 2. Why NQS Combines Human + Machine
 

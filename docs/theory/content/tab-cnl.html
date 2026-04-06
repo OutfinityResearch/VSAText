@@ -1,24 +1,40 @@
 <h1>CNL Editor</h1>
 
-<p>The CNL Editor displays and edits the generated specification code for your story. This is the machine-readable format that powers analysis, generation, and verification.</p>
+<p>The CNL Editor displays and edits the generated formal specification for your story. It sits between Blueprint and NL Story and exposes the machine-readable structure that powers analysis, generation, and verification.</p>
 
 <div class="info-box">
   <div class="info-box-title">When to Use This Page</div>
-  <p>Use CNL Editor after Book Settings, Blueprint, and Story Map to review the specification, export it, or make direct corrections.</p>
+  <p>Use CNL Editor after Blueprint. Review it when you want to confirm that the story plan has been translated correctly into formal structure, export the specification, or make precise corrections.</p>
 </div>
 
 <h2>What This Tab Does</h2>
 
-<p>The CNL Editor shows the CNL generated from your visual editor inputs. Every character, location, relationship, chapter, scene, and constraint defined through the UI is converted into CNL syntax.</p>
+<p>The CNL Editor shows the CNL generated from your visual editor inputs. Every character, location, relationship, chapter, scene, beat mapping, hook, dialogue, and constraint defined through the UI is converted into CNL syntax.</p>
 
 <h3>Key Features</h3>
 
 <ul>
-  <li><strong>CNL View</strong>: visual formatted mode for reading the current specification</li>
+  <li><strong>CNL View</strong>: visual formatted mode for reading the current specification in structured sections</li>
   <li><strong>Edit</strong>: direct text editing when precise fixes are needed</li>
   <li><strong>Import / Export</strong>: move CNL in and out of the project</li>
   <li><strong>Debugging Surface</strong>: inspect how UI decisions map into formal specification</li>
+  <li><strong>Readable IDs</strong>: dialogue entries are displayed with simple labels such as <code>D1</code>, <code>D2</code>, <code>D3</code> in the visual view for easier review</li>
 </ul>
+
+<h2>Workflow Position</h2>
+
+<pre><code>New Project
+    |
+    v
+Blueprint  - defines the story plan
+    |
+    v
+CNL        - exposes the formal structure
+    |
+    v
+NL Story   - executes the text</code></pre>
+
+<p>In the current workflow, CNL is not the first planning step. Blueprint establishes the structural logic first, and CNL lets you inspect that logic in formal, portable form before prose generation begins.</p>
 
 <h2>Understanding the CNL Structure</h2>
 
@@ -72,7 +88,7 @@ Entity1 relates to Entity2 as relationship_type
   </tr>
   <tr>
     <td>Blueprint</td>
-    <td>Arc, beats, tension curve</td>
+    <td>Arc, beats, tension curve, hooks, and structural mapping</td>
     <td>Blueprint tab</td>
   </tr>
   <tr>
@@ -85,25 +101,38 @@ Entity1 relates to Entity2 as relationship_type
     <td>Reusable story patterns (Revelation, Confrontation, Sacrifice, etc.)</td>
     <td>Blocks tab</td>
   </tr>
+  <tr>
+    <td>Dialogues</td>
+    <td>Dialogue entries, beat links, tone, tension, speaker, and listener data</td>
+    <td>Blueprint and scene structure</td>
+  </tr>
 </table>
 
-<h2>Workflow Position</h2>
+<h2>What to Review Here</h2>
 
-<pre><code>Book Settings + Blueprint + Story Map
-                 |
-                 v
-          CNL Editor  &lt;-- You are here
-                 |
-                 v
-           Parser / SDK
-                 |
-                 v
-         Metrics + NL Story</code></pre>
+<ul>
+  <li><strong>Beat Mappings</strong>: verify that the selected arc and beat names match the intended structure.</li>
+  <li><strong>Dialogues</strong>: confirm that each dialogue is attached to the correct beat, purpose, tone, and participants.</li>
+  <li><strong>Hooks</strong>: verify that opening and mid-story hooks point to valid target scenes and beats.</li>
+  <li><strong>Book Structure</strong>: confirm that chapters, scenes, relationships, and key dialogues reflect the current Blueprint.</li>
+</ul>
+
+<h2>Blueprint Synchronization</h2>
+
+<p>CNL is derived from the project state. When Blueprint changes, the CNL view should change too.</p>
+
+<ul>
+  <li>Changing the narrative arc updates beat mappings in CNL.</li>
+  <li>Arc changes also propagate to related dialogue beat references and hook targets.</li>
+  <li>Scene and chapter titles may change when they are still auto-generated from structural beats.</li>
+</ul>
+
+<p>If the CNL no longer matches your intended story logic, the first place to inspect is usually Blueprint rather than the raw CNL text.</p>
 
 <h2>Common Use Cases</h2>
 
 <h3>1. Debugging</h3>
-<p>When metrics show unexpected values, check the CNL to verify that your elements are correctly defined.</p>
+<p>When metrics show unexpected values, check the CNL to verify that beats, dialogues, hooks, characters, and scenes are correctly defined.</p>
 
 <h3>2. Backup</h3>
 <p>Export CNL regularly to have a text-based backup of your story specification.</p>
@@ -116,11 +145,12 @@ Entity1 relates to Entity2 as relationship_type
 
 <h2>Metrics Impact</h2>
 
-<p>The CNL Editor itself doesn't change metrics directly, but examining the specification helps explain why certain scores appear.</p>
+<p>The CNL Editor itself does not calculate metrics, but the specification shown here is exactly what validation and generation depend on. Reviewing it helps explain why coherence, coverage, and structural metrics behave the way they do.</p>
 
 <h2>Related Documentation</h2>
 
 <ul>
+  <li><a href="#tab-blueprint" data-page="tab-blueprint">Blueprint Tab</a> - The structural planning layer that feeds CNL</li>
   <li><a href="#cnl-language" data-page="cnl-language">CNL Language Reference</a> - Full syntax documentation</li>
   <li><a href="#conceptual-model" data-page="conceptual-model">Conceptual Model</a> - Understanding the data model</li>
   <li><a href="#end-to-end" data-page="end-to-end">End-to-End Example</a> - Complete workflow demonstration</li>

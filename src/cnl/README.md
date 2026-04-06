@@ -77,4 +77,4 @@ Types: `protagonist`, `character`, `antagonist`, `mentor`, `ally`, `location`, `
 <name> group end
 ```
 
-See DS04 and DS11 for complete syntax specification.
+See DS04 for the complete syntax specification.

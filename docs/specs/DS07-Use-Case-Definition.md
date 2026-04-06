@@ -1,182 +1,144 @@
 # DS07 — Use Cases and Workflows
 
-## The Problem
+## Purpose
 
-Current AI writing tools often reduce story creation to one-shot prompting. Authors lack reusable narrative building blocks, guided planning, structured specification layers, and quality feedback that supports iteration.
+This document defines the main user-facing workflows and use cases supported by SCRIPTA. Its role is to describe how authors move through the product, what they are trying to achieve at each stage, and what outcomes the system is expected to produce.
 
-SCRIPTA addresses this by combining project setup, story planning, formal specification, prose generation, manuscript editing, and metric-guided refinement in one workflow.
+SCRIPTA combines guided planning, formal specification, prose generation, revision, and evaluation in one structured authoring environment.
 
 ## Actors
 
-**Author** - The human creative director who creates projects, defines story elements, generates drafts, and iterates on the result.
+The primary human actor is the Author, who defines story direction, reviews structure, generates drafts, and iterates on the result.
 
-**System Agents** - AI and system components that organize planning data, generate and validate CNL, generate prose, evaluate quality, and verify constraints.
+The supporting system actor is System Agents - AI, which prepare project state, generate and validate CNL, produce prose drafts, evaluate quality, and support iterative refinement.
 
-## Primary Workflow
+## Primary Workflows
 
-SCRIPTA supports a recommended full planning workflow and a shortcut workflow for rapid draft creation.
+SCRIPTA supports two main product workflows.
 
 ### Recommended Workflow
 
-`New Project -> Book Settings -> Story Core -> Narrative Design -> Blueprint -> Story Map -> CNL Editor -> NL Story -> Manuscript -> Metrics`
+`New Project -> Processing -> Blueprint -> CNL Editor -> NL Story -> Manuscript -> Metrics`
 
-### Shortcut Workflow
+This is the full guided workflow. It is intended for authors who want stronger structural control, iterative refinement, and quality feedback across the whole story lifecycle.
 
-`New Project -> Story Core -> Create Story -> NL Story`
+### Accelerated Workflow
 
-### Workflow Description
+`New Project -> Processing -> Blueprint -> CNL Editor -> NL Story`
 
-**New Project**  
-The author creates a new project with title, format, length, and seed ideas. The system initializes the project foundation.
+This is a shorter path intended for faster draft generation. It is useful when the author wants to validate an idea quickly before investing in deeper editing and review.
 
-**Book Settings**  
-The author defines the narrative foundation of the book:
-- `Story Core` for fundamentals, wisdom, and character transformation
-- `Narrative Design` for conflict, macro structure, escalation, and constraints
-- `Cast` for protagonist, antagonist, secondary characters, and relationship dynamics
-- `World` for locations, objects, rules, and setting logic
-- `Tone & Style` for prose direction
+### Workflow Stages
 
-**Blueprint**  
-The author defines arc logic, beats, pacing, and tension.
+`New Project` initializes the project and captures the initial story direction.
 
-**Story Map**  
-The author maps chapters and scenes and turns structure into navigable story flow.
+`Processing` prepares the internal project foundation and the planning state needed for structural authoring.
 
-**CNL Editor**  
-The system exposes the formal Controlled Natural Language specification. The author can review, edit, validate, import, or export it.
+`Blueprint` allows the author to shape arcs, beats, pacing, tension, and story progression.
 
-**NL Story**  
-The author generates prose from the project foundation and current specification. The same page supports first draft generation, improvement, regeneration, and stop controls.
+`CNL Editor` exposes the formal story specification for review, editing, validation, import, and export.
 
-**Manuscript**  
-The author refines the generated draft at chapter and scene level and continues editorial development.
+`NL Story` generates prose from the project foundation and current specification.
 
-**Metrics**  
-The author evaluates the result using Coverage, Coherence, NQS, and supporting diagnostics, then iterates when needed.
+`Manuscript` supports chapter-level and scene-level revision of the generated draft.
+
+`Metrics` evaluates the result and helps the author decide what to improve next.
+
+## Alternative Workflows
+
+### Quick Start
+
+This workflow supports rapid ideation. The author creates a project, moves through the guided structural flow, and generates a draft without spending much time in the full studio.
+
+### Library-First Apply
+
+This workflow begins in Library rather than in project planning. The author selects a reusable asset, applies it at `Book`, `Chapter`, or `Scene` scope when supported, and continues editing in the destination workflow.
+
+### Reverse Engineering
+
+This workflow starts from existing text rather than from an empty project. The system extracts usable story elements, and the author continues planning, refinement, and generation from that recovered structure.
+
+### Comparison Mode
+
+This workflow supports exploration through alternatives. The author generates or compares multiple variants and selects the preferred direction before continuing revision.
 
 ## Major Use Cases
 
 ### Use Case 1: Story Planning
 
-**Goal**  
-Build a coherent story foundation before prose generation.
+| Field | Value |
+|-------|-------|
+| Goal | Build a coherent story foundation before prose generation. |
+| Primary Actor | Author |
+| Supporting Actor | System Agents - AI |
+| Inputs | Project idea, initial story direction, constraints, and planning choices. |
 
-**Primary Actor**  
-Author
+**Main Flow**  
+1. The author creates a project in the `New Project` wizard.
+2. System Agents - AI prepare the internal project foundation.
+3. The author reviews and refines the story structure in `Blueprint`.
+4. System Agents - AI prepare the formal specification.
+5. The author reviews or adjusts the specification in `CNL Editor`.
 
-**Main Flow**
-1. The author creates a project in `New Project`.
-2. The author defines cast, world, and tone in `Book Settings`.
-3. The author refines theme, wisdom, and transformation in `Story Core`.
-4. The author defines conflict and macro structure in `Narrative Design`.
-5. The author plans arcs, beats, pacing, and tension in `Blueprint`.
-6. The author maps chapters and scenes in `Story Map`.
-7. The system prepares the formal CNL specification.
+**Outputs**  
+Project foundation, structural plan, and formal CNL specification.
 
 **Outcome**  
-The project contains a structured narrative foundation ready for formal review and generation.
+The project contains a structured narrative foundation ready for generation.
 
 ### Use Case 2: Story Generation
 
-**Goal**  
-Generate a prose draft from the current story foundation and specification.
+| Field | Value |
+|-------|-------|
+| Goal | Generate a prose draft from the current story foundation and specification. |
+| Primary Actor | Author |
+| Supporting Actor | System Agents - AI |
+| Inputs | Project foundation, current CNL specification, and selected generation strategy. |
 
-**Primary Actor**  
-Author
+**Main Flow**  
+1. The author completes structural review.
+2. The author opens `NL Story`.
+3. The author selects a generation strategy.
+4. System Agents - AI read the current project foundation and specification.
+5. System Agents - AI generate a prose draft.
+6. The author reviews the result and decides whether to continue, improve, or regenerate.
 
-**Main Flow**
-1. The author opens `NL Story` or uses `Create Story` from `Story Core`.
-2. The author chooses a generation strategy.
-3. The system reads the current project foundation and CNL specification.
-4. The system generates a prose draft.
-5. The author reviews the result.
-6. The author may improve, regenerate, or continue editing.
-
-**Supported Strategies**
-- `Random` - instant generation for exploration
-- `LLM` - slower but richer draft generation
-- `Advanced` - optimized generation for stronger quality
+**Outputs**  
+Generated prose draft aligned with the current narrative plan.
 
 **Outcome**  
-The project contains a draft aligned with the current narrative plan.
+The project contains a first draft that can be reviewed and refined.
 
 ### Use Case 3: Story Refinement and Evaluation
 
-**Goal**  
-Improve the story through formal review, editing, metrics, and iteration.
+| Field | Value |
+|-------|-------|
+| Goal | Improve the story through editing, formal review, and metric-guided iteration. |
+| Primary Actor | Author |
+| Supporting Actor | System Agents - AI |
+| Inputs | Current draft, current specification, and evaluation signals. |
 
-**Primary Actor**  
-Author
-
-**Main Flow**
-1. The author reviews or adjusts the specification in `CNL Editor`.
+**Main Flow**  
+1. The author reviews or adjusts the specification.
 2. The author edits content in `Manuscript`.
 3. The author runs evaluation.
-4. The system reports Coverage, Coherence, NQS, and supporting diagnostics.
-5. The author identifies weak areas.
-6. The author returns to planning pages, CNL Editor, or Manuscript.
-7. The author regenerates or revises as needed.
-8. The author exports final assets.
+4. System Agents - AI report quality and coherence signals.
+5. The author identifies weak areas and revises the story.
+6. The author returns to planning, specification, or manuscript editing as needed.
+7. The author exports final assets when satisfied.
+
+**Outputs**  
+Revised draft, updated specification, evaluation results, and exportable assets.
 
 **Outcome**  
 The story becomes more coherent, complete, and production-ready.
 
-## Alternative Workflows
+## Outputs and Outcomes
 
-**Quick Start**  
-Create a project, use `Create Story`, and generate a draft without completing every planning step.
+The workflow is successful when it produces a usable story foundation, a formal specification that can support generation, a prose draft aligned with the intended narrative direction, and a revision path supported by evaluation signals.
 
-**Library-First Apply**  
-Open Library, choose a reusable item, click `Apply`, select `Book`, `Chapter`, or `Scene` when supported, then continue editing in the destination page.
-
-**Reverse Engineering**  
-Start from existing text, extract usable story elements, then continue planning and refinement inside SCRIPTA.
-
-**Comparison Mode**  
-Generate or compare multiple variants and choose the preferred direction.
-
-## Element Libraries
-
-### Character Archetypes
-
-| Archetype | Description |
-|-----------|-------------|
-| Hero | Protagonist who grows through challenges |
-| Mentor | Guide providing wisdom |
-| Shadow | Antagonist or dark reflection |
-| Trickster | Agent of chaos and humor |
-| Herald | Brings the call to adventure |
-
-### Story Patterns
-
-| Pattern | Structure |
-|---------|-----------|
-| Three-Act | Setup -> Confrontation -> Resolution |
-| Hero's Journey | 12-17 stage monomyth |
-| Five-Act | Shakespearean structure |
-| Save the Cat | Blake Snyder's 15 beats |
-
-### Location Types
-
-| Type | Use |
-|------|-----|
-| Safe Haven | Character origin, return |
-| Dangerous Terrain | Trials, growth |
-| Threshold | Decision points |
-| Innermost Cave | Climax, revelation |
-
-## Metrics
-
-| Metric | Target |
-|--------|--------|
-| Coverage | > 0.8 |
-| NQS (quality) | > 0.7 |
-| Coherence | > 0.8 |
-| CAD (character drift) | < 0.15 |
-| Readability | Grade 8-12 |
-| Originality | > 0.6 |
-
-## Export Formats
-
-Plain Text, Markdown, Fountain (screenplay), JSON.
+The expected product outcomes are:
+- authors can move from idea to structured story plan
+- authors can generate a draft from the current specification
+- authors can improve drafts through editing and evaluation
+- projects remain exportable and reusable across iteration cycles

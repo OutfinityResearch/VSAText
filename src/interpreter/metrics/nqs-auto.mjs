@@ -2,7 +2,7 @@
  * NQS_AUTO (Automated)
  *
  * This is the automated composite score used for fast feedback in the UI.
- * It aligns with DS25's "Integration with NQS" formula, but is computed
+ * It aligns with DS24's "Integration with NQS" formula, but is computed
  * purely from interpreter-derived signals and other deterministic metrics.
  */
 
@@ -274,4 +274,3 @@ export const metricNqsAuto = {
 };
 
 export default metricNqsAuto;
-

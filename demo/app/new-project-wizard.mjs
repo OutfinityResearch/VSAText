@@ -20,7 +20,9 @@ const defaultData = {
   thematicPathway: '',
   strategy: 'random',
   language: 'en',
-  model: DEFAULT_STORY_MODEL
+  model: DEFAULT_STORY_MODEL,
+  narrativeStyle: 'ai-choice',
+  storyMood: 'ai-choice'
 };
 
 const strategies = [
@@ -66,6 +68,33 @@ const languages = [
   { key: 'es', label: 'Spanish' },
   { key: 'de', label: 'German' }
 ];
+
+const advancedStoryOptions = {
+  narrativeStyles: [
+    'AI Choice',
+    'Cinematic',
+    'Literary',
+    'Minimalist',
+    'Lyrical',
+    'Immersive',
+    'Fast-Paced',
+    'Reflective',
+    'Mythic',
+    'Dialog-Driven'
+  ],
+  moods: [
+    'AI Choice',
+    'Mysterious',
+    'Tense',
+    'Warm',
+    'Somber',
+    'Dreamlike',
+    'Energetic',
+    'Intimate',
+    'Uneasy',
+    'Uplifting'
+  ]
+};
 
 let modelsLoaded = false;
 let modelOptions = {
@@ -287,6 +316,10 @@ function renderCreateStoryNL() {
 
   const hasLoadedModels = modelOptions.tiers.length > 0 || modelOptions.models.length > 0;
   const currentValue = state.data.model || '';
+  const renderAdvancedOptions = (options, current) => options.map(option => {
+    const value = option.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return `<option value="${esc(value)}" ${current === value ? 'selected' : ''}>${esc(option)}</option>`;
+  }).join('');
 
   return `
     <div class="wizard-step-section">
@@ -318,6 +351,29 @@ function renderCreateStoryNL() {
           </select>
         </label>
       </div>
+
+      <details class="wizard-advanced-panel">
+        <summary class="wizard-advanced-summary">
+          <span>Advanced Story Options</span>
+          <small>Optional guidance for the AI</small>
+        </summary>
+
+        <div class="wizard-grid wizard-grid-small wizard-advanced-grid">
+          <label class="wizard-field">
+            <span>Narrative Style</span>
+            <select id="wizard-narrative-style">
+              ${renderAdvancedOptions(advancedStoryOptions.narrativeStyles, state.data.narrativeStyle)}
+            </select>
+          </label>
+
+          <label class="wizard-field">
+            <span>Mood</span>
+            <select id="wizard-story-mood">
+              ${renderAdvancedOptions(advancedStoryOptions.moods, state.data.storyMood)}
+            </select>
+          </label>
+        </div>
+      </details>
 
       <div class="wizard-launch-card">
         <div class="wizard-launch-copy">
@@ -388,6 +444,8 @@ function updateField(el) {
   if (id === 'wizard-thematic-pathway') state.data.thematicPathway = value;
   if (id === 'wizard-language') state.data.language = value;
   if (id === 'wizard-model') state.data.model = value;
+  if (id === 'wizard-narrative-style') state.data.narrativeStyle = value;
+  if (id === 'wizard-story-mood') state.data.storyMood = value;
 
   saveDraft();
 }

@@ -1,13 +1,13 @@
-<!-- {"achilles-ide-document":{"id":"L1ZTQVRleHQvZG9jcy9zcGVjcy9EUzA0LUNOTC1TcGVjaWZpY2F0aW9uLm1k","title":"DS04-CNL-Specification","version":1,"updatedAt":"2026-04-06T13:30:36.403Z"}} -->
+<!-- {"achilles-ide-document":{"id":"L1ZTQVRleHQvZG9jcy9zcGVjcy9EUzA0LUNOTC1TcGVjaWZpY2F0aW9uLm1k","title":"DS04-CNL-Specification","version":1,"updatedAt":"2026-04-06T13:36:37.153Z"}} -->
 <!-- {"achilles-ide-chapter":{"id":"chapter-afa6d6a2-e261-47bd-8954-b59e4dcb716d","title":"DS04 — CNL Specification","anchorId":"chapter-chapter-afa6d6a2-e261-47bd-8954-b59e4dcb716d"}} -->
 <a id="chapter-chapter-afa6d6a2-e261-47bd-8954-b59e4dcb716d"></a>
 # DS04 — CNL Specification
 <!-- {"achilles-ide-paragraph":{"id":"paragraph-e21955db-fa72-4509-ace6-d0f6edd191a9","type":"markdown","title":"Paragraph 1"}} -->
 
 
-<!-- {"achilles-ide-chapter":{"id":"chapter-484b8bab-4eb5-4d66-8a0a-57704f717b73","title":"What is CNL??????","anchorId":"chapter-chapter-484b8bab-4eb5-4d66-8a0a-57704f717b73"}} -->
+<!-- {"achilles-ide-chapter":{"id":"chapter-484b8bab-4eb5-4d66-8a0a-57704f717b73","title":"What is CNL?","anchorId":"chapter-chapter-484b8bab-4eb5-4d66-8a0a-57704f717b73"}} -->
 <a id="chapter-chapter-484b8bab-4eb5-4d66-8a0a-57704f717b73"></a>
-## What is CNL??????
+## What is CNL?
 <!-- {"achilles-ide-paragraph":{"id":"paragraph-0665ebe6-f28b-4275-9a32-ec486b84a6ad","type":"markdown","title":"Paragraph 1"}} -->
 CNL (Controlled Natural Language) is SCRIPTA's formal narrative specification language. It is human-readable, machine-parseable, and designed to sit between story planning and prose generation.
 

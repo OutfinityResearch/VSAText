@@ -1,13 +1,13 @@
-<!-- {"achilles-ide-document":{"id":"L1ZTQVRleHQvZG9jcy9zcGVjcy9EUzAxLVZpc2lvbi5tZA==","title":"DS01-Vision","version":1,"updatedAt":"2026-04-06T12:33:59.708Z"}} -->
+<!-- {"achilles-ide-document":{"id":"L1ZTQVRleHQvZG9jcy9zcGVjcy9EUzAxLVZpc2lvbi5tZA==","title":"DS01-Vision","version":1,"updatedAt":"2026-04-06T12:34:49.548Z"}} -->
 <!-- {"achilles-ide-chapter":{"id":"chapter-68884631-0479-44de-8bdb-81c63d5739b9","title":"DS01 — SCRIPTA Vision","anchorId":"chapter-chapter-68884631-0479-44de-8bdb-81c63d5739b9"}} -->
 <a id="chapter-chapter-68884631-0479-44de-8bdb-81c63d5739b9"></a>
 # DS01 — SCRIPTA Vision
 <!-- {"achilles-ide-paragraph":{"id":"paragraph-1140c0a5-8ba1-43dd-bcff-be9be19cee4e","type":"markdown","title":"Paragraph 1"}} -->
 
 
-<!-- {"achilles-ide-chapter":{"id":"chapter-01844ede-0604-4557-97d1-d3afc7be5a76","title":"What is SCRIPTA???","anchorId":"chapter-chapter-01844ede-0604-4557-97d1-d3afc7be5a76"}} -->
+<!-- {"achilles-ide-chapter":{"id":"chapter-01844ede-0604-4557-97d1-d3afc7be5a76","title":"What is SCRIPTA?","anchorId":"chapter-chapter-01844ede-0604-4557-97d1-d3afc7be5a76"}} -->
 <a id="chapter-chapter-01844ede-0604-4557-97d1-d3afc7be5a76"></a>
-## What is SCRIPTA???
+## What is SCRIPTA?
 <!-- {"achilles-ide-paragraph":{"id":"paragraph-e634c18d-ced4-4992-8349-b75a4fcf5e2e","type":"markdown","title":"Paragraph 1"}} -->
 SCRIPTA (Structured Creative Writing Intelligent Platform for Textual Authoring) is a guided story development environment that helps authors move from project setup to formal specification, prose generation, and manuscript refinement.
 

@@ -1,4 +1,4 @@
-<!-- {"achilles-ide-document":{"id":"L1ZTQVRleHQvZG9jcy9zcGVjcy9EUzA2LU5ldyBQcm9qZWN0Lm1k","title":"DS06-New Project","version":1,"updatedAt":"2026-04-07T06:49:25.128Z"}} -->
+<!-- {"achilles-ide-document":{"id":"L1ZTQVRleHQvZG9jcy9zcGVjcy9EUzA2LU5ld1Byb2plY3QubWQ=","title":"DS06-NewProject","version":1,"updatedAt":"2026-04-07T07:05:20.650Z"}} -->
 <!-- {"achilles-ide-chapter":{"id":"chapter-060fa77f-3bc1-4cd2-af35-3c81c7dee22c","title":"DS06 — New Project","anchorId":"chapter-chapter-060fa77f-3bc1-4cd2-af35-3c81c7dee22c"}} -->
 <a id="chapter-chapter-060fa77f-3bc1-4cd2-af35-3c81c7dee22c"></a>
 # DS06 — New Project
@@ -14,9 +14,9 @@
 This document defines what `New Project` is supposed to do, what kind of information it collects, and how it should guide the user into the rest of the workflow.
 
 
-<!-- {"achilles-ide-chapter":{"id":"chapter-8f487542-9861-4a28-b48a-a5ca2eaceee8","title":"Product Role????????","anchorId":"chapter-chapter-8f487542-9861-4a28-b48a-a5ca2eaceee8"}} -->
+<!-- {"achilles-ide-chapter":{"id":"chapter-8f487542-9861-4a28-b48a-a5ca2eaceee8","title":"Product Role","anchorId":"chapter-chapter-8f487542-9861-4a28-b48a-a5ca2eaceee8"}} -->
 <a id="chapter-chapter-8f487542-9861-4a28-b48a-a5ca2eaceee8"></a>
-## Product Role????????
+## Product Role
 <!-- {"achilles-ide-paragraph":{"id":"paragraph-4fc7920a-b347-477d-927b-c0c2212772a9","type":"markdown","title":"Paragraph 1"}} -->
 The purpose of `New Project` is to make the beginning of the story process feel guided rather than technical. A user starting a story should not need to understand the entire product model before they can begin. Instead, the product should ask for a small number of meaningful inputs, interpret those inputs intelligently, and prepare the project so that the next steps already feel coherent.
 

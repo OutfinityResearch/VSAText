@@ -1,4 +1,4 @@
-<!-- {"achilles-ide-document":{"id":"L1ZTQVRleHQvZG9jcy9zcGVjcy9EUzAxLVZpc2lvbi5tZA==","title":"DS01-Vision","version":1,"updatedAt":"2026-04-07T06:02:36.876Z"}} -->
+<!-- {"achilles-ide-document":{"id":"L1ZTQVRleHQvZG9jcy9zcGVjcy9EUzAxLVZpc2lvbi5tZA==","title":"DS01-Vision","version":1,"updatedAt":"2026-04-07T07:39:29.140Z"}} -->
 <!-- {"achilles-ide-chapter":{"id":"chapter-68884631-0479-44de-8bdb-81c63d5739b9","title":"DS01 — SCRIPTA Vision","anchorId":"chapter-chapter-68884631-0479-44de-8bdb-81c63d5739b9"}} -->
 <a id="chapter-chapter-68884631-0479-44de-8bdb-81c63d5739b9"></a>
 # DS01 — SCRIPTA Vision
@@ -31,36 +31,19 @@ SCRIPTA combines five layers of work. The first layer is project foundation, whe
 <a id="chapter-chapter-e699eae4-3a30-48eb-97bf-2459c391e67d"></a>
 ## Product Workflow
 <!-- {"achilles-ide-paragraph":{"id":"paragraph-87f950a8-af27-4a47-86c2-99cb8810550d","type":"markdown","title":"Paragraph 1"}} -->
-SCRIPTA supports two authoring paths after a project is created in the `New Project` wizard.
-
-
-<!-- {"achilles-ide-chapter":{"id":"chapter-274d9eda-2649-41d9-84a9-983a3edf263f","title":"Recommended Full Workflow","anchorId":"chapter-chapter-274d9eda-2649-41d9-84a9-983a3edf263f"}} -->
-<a id="chapter-chapter-274d9eda-2649-41d9-84a9-983a3edf263f"></a>
-### Recommended Full Workflow
-<!-- {"achilles-ide-paragraph":{"id":"paragraph-b5af4ed3-cdbb-43fd-a884-0f537b180bfb","type":"markdown","title":"Paragraph 1"}} -->
-`New Project -> Processing -> Blueprint -> CNL Editor -> NL Story -> Manuscript -> Metrics`
-
-This is the full guided workflow. It is intended for authors who want stronger structural control, iterative refinement, and explicit quality feedback.
+SCRIPTA provides a single, complete, and flexible workflow for authors, available immediately after creating a project in the New Project wizard. The workflow is designed to give structural control, iterative refinement, and quality evaluation, while also allowing rapid text generation when needed.
 
 The workflow begins in `New Project`, where the project container and initial story premise are created. `Processing` prepares the internal project foundation and the planning state. `Blueprint` translates intent into narrative structure. `CNL Editor` exposes the formal specification for review and validation. `NL Story` generates prose from the current foundation and specification. `Manuscript` supports chapter-level and scene-level revision. `Metrics` evaluates quality and helps authors decide what to improve next.
 
+New Project → Processing → Blueprint → CNL Editor → NL Story → Manuscript → Metrics
 
-<!-- {"achilles-ide-chapter":{"id":"chapter-747bfa13-7a5a-416a-a4a0-2eb638f82fbd","title":"Accelerated Workflow","anchorId":"chapter-chapter-747bfa13-7a5a-416a-a4a0-2eb638f82fbd"}} -->
-<a id="chapter-chapter-747bfa13-7a5a-416a-a4a0-2eb638f82fbd"></a>
-### Accelerated Workflow
-<!-- {"achilles-ide-paragraph":{"id":"paragraph-27dd5f1d-8b09-46cd-a55f-aeed5945dfa7","type":"markdown","title":"Paragraph 1"}} -->
-`New Project -> Processing -> Blueprint -> CNL Editor -> NL Story`
-
-This shorter workflow supports rapid draft generation. It is useful when the author wants to validate a story direction quickly before investing in deeper review and revision.
-
-The accelerated workflow does not replace the full planning flow. It shortens the distance to prose generation, but authors can still return to `Blueprint`, `CNL Editor`, `Manuscript`, and `Metrics` when they want stronger control and higher quality.
-
-
-<!-- {"achilles-ide-chapter":{"id":"chapter-73db9dad-863f-4e4e-888e-972f09d9ddb0","title":"New Project and Story Planning","anchorId":"chapter-chapter-73db9dad-863f-4e4e-888e-972f09d9ddb0"}} -->
-<a id="chapter-chapter-73db9dad-863f-4e4e-888e-972f09d9ddb0"></a>
-## New Project and Story Planning
-<!-- {"achilles-ide-paragraph":{"id":"paragraph-5720cb2b-ecd1-4b3f-a816-5af06813f603","type":"markdown","title":"Paragraph 1"}} -->
-The planning workflow is distributed across focused pages rather than one overloaded editor.
+New Project: creates the project container and initial story premise.
+Processing: prepares the internal project foundation and planning state.
+Blueprint: translates intent into narrative structure.
+CNL Editor: exposes the formal specification for review and validation.
+NL Story: generates prose based on the current foundation and specification.
+Manuscript: supports chapter- and scene-level revision.
+Metrics: evaluates quality and provides suggestions for improvement.
 
 
 <!-- {"achilles-ide-chapter":{"id":"chapter-2c1614ed-171b-4e54-85e1-85dfe69319c5","title":"New Project","anchorId":"chapter-chapter-2c1614ed-171b-4e54-85e1-85dfe69319c5"}} -->

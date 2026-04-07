@@ -158,9 +158,16 @@ body {
   font-size: 1.15rem;
 }
 
-/* Hide anchor tags used for linking */
-.docs-content a[id] {
-  display: none;
+/* Hide anchor tags used for linking - aggressive approach */
+.docs-content a[id^="chapter-"], 
+.docs-content a[name^="chapter-"],
+a[id*="chapter-"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
 }
 
 .docs-content .lead {

@@ -1,4 +1,4 @@
-<!-- {"achilles-ide-document":{"id":"L1ZTQVRleHQvZG9jcy9zcGVjcy9EUzA2LU5ld1Byb2plY3QubWQ=","title":"DS06-NewProject","version":1,"updatedAt":"2026-04-07T07:05:20.650Z"}} -->
+<!-- {"achilles-ide-document":{"id":"L1ZTQVRleHQvZG9jcy9zcGVjcy9EUzA2LU5ld1Byb2plY3QubWQ=","title":"DS06-NewProject","version":1,"updatedAt":"2026-04-07T07:47:57.702Z"}} -->
 <!-- {"achilles-ide-chapter":{"id":"chapter-060fa77f-3bc1-4cd2-af35-3c81c7dee22c","title":"DS06 — New Project","anchorId":"chapter-chapter-060fa77f-3bc1-4cd2-af35-3c81c7dee22c"}} -->
 <a id="chapter-chapter-060fa77f-3bc1-4cd2-af35-3c81c7dee22c"></a>
 # DS06 — New Project
@@ -70,9 +70,9 @@ From the user's perspective, this should feel like the system is building the st
 This is why a processing stage belongs naturally to the `New Project` experience. It acknowledges that creation in SCRIPTA is not instant in the shallow sense. The product is preparing something more structured than an empty document.
 
 
-<!-- {"achilles-ide-chapter":{"id":"chapter-ee1e015d-462c-4136-94d3-2f481fd71242","title":"Relationship to Hidden Specification","anchorId":"chapter-chapter-ee1e015d-462c-4136-94d3-2f481fd71242"}} -->
+<!-- {"achilles-ide-chapter":{"id":"chapter-ee1e015d-462c-4136-94d3-2f481fd71242","title":"Background Specification","anchorId":"chapter-chapter-ee1e015d-462c-4136-94d3-2f481fd71242"}} -->
 <a id="chapter-chapter-ee1e015d-462c-4136-94d3-2f481fd71242"></a>
-## Relationship to Hidden Specification
+## Background Specification
 <!-- {"achilles-ide-paragraph":{"id":"paragraph-243a6642-2c64-4c7f-9443-192e5308171d","type":"markdown","title":"Paragraph 1"}} -->
 `New Project` may create an internal specification layer as part of project initialization, but that layer should remain in the background. The user does not need to see a separate low-level specification screen at this point, especially if that screen would appear empty, overly technical, or disconnected from the user's intent.
 
@@ -81,9 +81,9 @@ The system needs the internal foundation, but the user needs clarity. For that r
 This distinction is important. A product can be structurally sophisticated without forcing that structure to appear as raw complexity in the first-run experience.
 
 
-<!-- {"achilles-ide-chapter":{"id":"chapter-70eb2573-1434-4c36-b3e3-3217b7e38406","title":"Transition Into Planning","anchorId":"chapter-chapter-70eb2573-1434-4c36-b3e3-3217b7e38406"}} -->
+<!-- {"achilles-ide-chapter":{"id":"chapter-70eb2573-1434-4c36-b3e3-3217b7e38406","title":"Structural Planning","anchorId":"chapter-chapter-70eb2573-1434-4c36-b3e3-3217b7e38406"}} -->
 <a id="chapter-chapter-70eb2573-1434-4c36-b3e3-3217b7e38406"></a>
-## Transition Into Planning
+## Structural Planning
 <!-- {"achilles-ide-paragraph":{"id":"paragraph-95086445-3ce4-46ba-9367-d63c164028ae","type":"markdown","title":"Paragraph 1"}} -->
 After project creation, the correct next destination is not the full studio and not prose generation. The correct next destination is the structural planning flow.
 
@@ -109,15 +109,6 @@ The first impression of `New Project` should be that the product understands how
 If the wizard works well, the user should never feel that they have merely opened a blank technical workspace. Instead, they should feel that the application has taken their intent seriously and transformed it into a prepared story foundation.
 
 This is the moment when SCRIPTA starts to differentiate itself from a general-purpose writing interface. It is not just opening a document. It is beginning a structured story process.
-
-
-<!-- {"achilles-ide-chapter":{"id":"chapter-c00ec8d9-3be3-472e-b7db-7ae9a2fdeb76","title":"Relationship to Other Specifications","anchorId":"chapter-chapter-c00ec8d9-3be3-472e-b7db-7ae9a2fdeb76"}} -->
-<a id="chapter-chapter-c00ec8d9-3be3-472e-b7db-7ae9a2fdeb76"></a>
-## Relationship to Other Specifications
-<!-- {"achilles-ide-paragraph":{"id":"paragraph-1739f892-f01f-4e1f-8f70-e3b6d72a363a","type":"markdown","title":"Paragraph 1"}} -->
-`DS06` defines the start of the workflow. It connects directly to `DS25`, which defines the guided transition from project creation to first story generation, and to `DS04`, which defines the formal CNL layer that emerges from the initialized project state.
-
-Together, these specifications describe how the user moves from intention, to structure, to formal representation, and finally to prose.
 
 
 <!-- {"achilles-ide-chapter":{"id":"chapter-520a59cf-92f0-4a91-8de4-94f6696e5d3e","title":"Success Criteria","anchorId":"chapter-chapter-520a59cf-92f0-4a91-8de4-94f6696e5d3e"}} -->

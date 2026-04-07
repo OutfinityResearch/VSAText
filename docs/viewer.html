@@ -4,54 +4,29 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SCRIPTA Docs Viewer</title>
+  <link rel="stylesheet" href="theory/doc-styles.css">
   <style>
-    :root {
-      --ink: #1f2a30;
-      --muted: #50616b;
-      --paper: #fbf7ef;
-      --accent: #1b6a73;
-      --accent-2: #b85c38;
-      --border: #d6cfc2;
-    }
-    * { box-sizing: border-box; }
+    /* Override some doc-styles.css to fit the viewer layout if needed */
     body {
-      margin: 0;
-      color: var(--ink);
       background: linear-gradient(180deg, #f7efe3 0%, #f3f7f6 100%);
-      font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+      color: var(--ink, #1f2a30);
     }
-    header {
-      padding: 28px 20px 14px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255,255,255,0.75);
-      backdrop-filter: blur(6px);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    header h1 { margin: 0 0 6px; font-size: 26px; }
-    header .meta { color: var(--muted); font-size: 14px; }
     main {
-      max-width: 980px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 24px 20px 60px;
       display: grid;
       grid-template-columns: 1fr;
       gap: 24px;
     }
-    .toc {
-      padding: 16px;
-      background: #fffaf0;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-    }
     .doc {
-      padding: 24px;
+      padding: 4rem 5rem;
       background: #ffffff;
-      border: 1px solid var(--border);
+      border: 1px solid var(--border, #d6cfc2);
       border-radius: 12px;
       box-shadow: 0 6px 18px rgba(0,0,0,0.05);
     }
+    /* ... keep other viewer specific styles ... */
     .doc img { max-width: 100%; height: auto; }
     .doc pre {
       background: #f3f0e8;
@@ -352,6 +327,11 @@
         const line = lines[i];
         const trimmed = line.trim();
         
+        // Skip chapter anchor tags completely
+        if (trimmed.includes('<a id="chapter-chapter-') || trimmed.includes('<a name="chapter-')) {
+          continue;
+        }
+
         // Code blocks
         if (trimmed.startsWith('```')) {
           if (!inCode) {

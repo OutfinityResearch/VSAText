@@ -413,6 +413,12 @@
           html += `<h${level} id="${id}">${inline(text, baseUrl)}</h${level}>`;
           continue;
         }
+
+        // HTML Comments (ignore them)
+        if (trimmed.startsWith('<!--') && trimmed.endsWith('-->')) {
+          flushParagraph();
+          continue;
+        }
         
         // List items
         if (/^[-*]\s+/.test(trimmed)) {

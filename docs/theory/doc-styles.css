@@ -216,36 +216,54 @@ table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  margin: 2.5rem 0;
+  margin: 3rem 0;
   font-size: 0.95rem;
+  background: #ffffff;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid var(--bg-elevated);
-}
-
-th, td {
-  padding: 1rem 1.25rem;
-  text-align: left;
-  border-bottom: 1px solid var(--bg-elevated);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
 }
 
 th {
-  background: #1e293b;
-  color: var(--accent-gold);
+  background: #f8fafc;
+  color: #0f172a;
   font-family: 'Cinzel', serif;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 2px solid #f1f5f9;
+  text-align: left;
 }
 
-td { 
-  color: #cbd5e1;
-  background: rgba(30, 41, 59, 0.5);
+td {
+  padding: 1.15rem 1.5rem;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  line-height: 1.6;
+  vertical-align: top;
 }
 
 tr:last-child td {
   border-bottom: none;
+}
+
+tr:nth-child(even) {
+  background: #fdfdfd;
+}
+
+tr:hover td {
+  background: #f8fafc;
+  color: #000000;
+}
+
+/* Specific styling for the first column if it contains labels/titles */
+td:first-child strong {
+  color: #1e293b;
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
 }
 
 blockquote {

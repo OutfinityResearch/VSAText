@@ -421,7 +421,7 @@
         }
 
         // HTML Tags on their own line (like <a id="..."></a>)
-        if (/^<[a-z1-6\/][^>]*>$/i.test(trimmed)) {
+        if (/^(<[^>]+>)+$/i.test(trimmed)) {
           flushParagraph();
           flushList();
           flushTable();

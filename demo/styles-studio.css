@@ -65,6 +65,21 @@
   margin-top: 0.6rem;
 }
 
+.studio-nav-phase-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+}
+
+.studio-nav-phase-title {
+  font-family: var(--font-title);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffe7b8;
+  padding: 0.1rem 0.1rem 0.18rem;
+}
+
 .studio-nav-chapter {
   border: 1px solid var(--bg-hover);
   border-radius: 6px;
@@ -493,6 +508,20 @@
 .storymap-flow {
   display: grid;
   gap: 0.45rem;
+}
+
+.storymap-phase-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
+}
+
+.storymap-phase-title {
+  font-family: var(--font-title);
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffe7b8;
 }
 
 .storymap-flow-item {

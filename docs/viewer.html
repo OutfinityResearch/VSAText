@@ -7,24 +7,24 @@
   <link rel="stylesheet" href="theory/doc-styles.css">
   <style>
     :root {
-      --viewer-bg: #f4f6fb;
-      --viewer-surface: rgba(255, 255, 255, 0.88);
-      --viewer-surface-strong: #ffffff;
-      --viewer-border: rgba(117, 134, 172, 0.18);
-      --viewer-border-strong: rgba(88, 108, 150, 0.2);
-      --viewer-ink: #18284b;
-      --viewer-copy: #495a78;
-      --viewer-muted: #74829b;
-      --viewer-accent: #274f9d;
-      --viewer-accent-soft: rgba(39, 79, 157, 0.1);
-      --viewer-shadow: 0 24px 80px rgba(22, 33, 66, 0.08);
+      --viewer-bg: #f3ede2;
+      --viewer-surface: rgba(255, 251, 245, 0.9);
+      --viewer-surface-strong: #fffdf8;
+      --viewer-border: rgba(122, 119, 99, 0.16);
+      --viewer-border-strong: rgba(73, 122, 120, 0.18);
+      --viewer-ink: #263434;
+      --viewer-copy: #5d6a66;
+      --viewer-muted: #8f816c;
+      --viewer-accent: #497a78;
+      --viewer-accent-soft: rgba(73, 122, 120, 0.1);
+      --viewer-shadow: 0 24px 80px rgba(64, 55, 35, 0.08);
     }
 
     body {
       margin: 0;
       background:
-        radial-gradient(circle at top left, rgba(209, 221, 248, 0.58), transparent 28%),
-        linear-gradient(180deg, #f8faff 0%, #eef2f8 100%);
+        radial-gradient(circle at top left, rgba(232, 223, 204, 0.84), transparent 28%),
+        linear-gradient(180deg, #f7f2e8 0%, #efe7d9 100%);
       color: var(--viewer-ink);
       font-family: Inter, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
@@ -32,8 +32,8 @@
 
     header {
       padding: 40px 32px 24px;
-      border-bottom: 1px solid rgba(111, 129, 171, 0.12);
-      background: rgba(248, 250, 255, 0.74);
+      border-bottom: 1px solid rgba(122, 119, 99, 0.12);
+      background: rgba(249, 244, 236, 0.82);
       backdrop-filter: blur(16px);
     }
 
@@ -48,9 +48,9 @@
       gap: 0.55rem;
       padding: 0.42rem 0.82rem;
       border-radius: 999px;
-      border: 1px solid rgba(92, 112, 158, 0.18);
-      background: rgba(255, 255, 255, 0.72);
-      color: var(--viewer-accent);
+      border: 1px solid rgba(124, 124, 104, 0.18);
+      background: rgba(255, 253, 248, 0.78);
+      color: #9b8155;
       font-size: 0.76rem;
       font-weight: 700;
       letter-spacing: 0.08em;
@@ -62,8 +62,8 @@
       width: 0.5rem;
       height: 0.5rem;
       border-radius: 999px;
-      background: linear-gradient(135deg, #4c78d1, #9ec0ff);
-      box-shadow: 0 0 0 0.22rem rgba(76, 120, 209, 0.12);
+      background: linear-gradient(135deg, #d9c6a7, #f1e7d3);
+      box-shadow: 0 0 0 0.22rem rgba(185, 161, 119, 0.14);
     }
 
     header h1 {
@@ -125,7 +125,7 @@
       flex-direction: column;
       gap: 0.18rem;
       padding-top: 0.2rem;
-      border-top: 1px solid rgba(117, 134, 172, 0.14);
+      border-top: 1px solid rgba(122, 119, 99, 0.14);
     }
 
     #toc-list > div {
@@ -144,7 +144,7 @@
     }
 
     .toc a:hover {
-      background: rgba(39, 79, 157, 0.06);
+      background: rgba(73, 122, 120, 0.09);
       color: var(--viewer-accent);
       transform: translateX(2px);
       text-decoration: none;
@@ -178,7 +178,7 @@
       font-size: clamp(2.2rem, 4.6vw, 3.4rem);
       line-height: 1.06;
       padding-bottom: 1.15rem;
-      border-bottom: 1px solid rgba(117, 134, 172, 0.14);
+      border-bottom: 1px solid rgba(122, 119, 99, 0.14);
     }
 
     .doc h2 {
@@ -215,19 +215,19 @@
     }
 
     .doc pre {
-      background: #eff4ff;
+      background: #f5efe3;
       padding: 1rem 1.1rem;
       border-radius: 18px;
-      border: 1px solid rgba(96, 118, 165, 0.14);
+      border: 1px solid rgba(122, 119, 99, 0.12);
       overflow-x: auto;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
     }
 
     .doc code {
       font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
-      color: #294784;
-      background: rgba(39, 79, 157, 0.08);
-      border: 1px solid rgba(39, 79, 157, 0.08);
+      color: #7f6d49;
+      background: rgba(217, 198, 167, 0.16);
+      border: 1px solid rgba(217, 198, 167, 0.16);
       border-radius: 8px;
       padding: 0.16rem 0.4rem;
     }
@@ -244,7 +244,7 @@
     .links {
       margin-top: 1.1rem;
       padding-top: 1rem;
-      border-top: 1px solid rgba(117, 134, 172, 0.14);
+      border-top: 1px solid rgba(122, 119, 99, 0.14);
       display: flex;
       flex-direction: column;
       gap: 0.45rem;
@@ -255,13 +255,13 @@
       display: block;
       padding: 0.68rem 0.8rem;
       border-radius: 12px;
-      background: rgba(39, 79, 157, 0.05);
+      background: rgba(73, 122, 120, 0.1);
       color: var(--viewer-accent);
       font-weight: 600;
     }
 
     .links a:hover {
-      background: rgba(39, 79, 157, 0.08);
+      background: rgba(73, 122, 120, 0.16);
       text-decoration: none;
     }
 
@@ -271,7 +271,7 @@
       border-collapse: separate;
       border-spacing: 0;
       overflow: hidden;
-      border: 1px solid rgba(117, 134, 172, 0.14);
+      border: 1px solid rgba(122, 119, 99, 0.14);
       border-radius: 18px;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
     }
@@ -280,14 +280,14 @@
     .doc td {
       padding: 0.95rem 1rem;
       text-align: left;
-      border-bottom: 1px solid rgba(117, 134, 172, 0.1);
+      border-bottom: 1px solid rgba(122, 119, 99, 0.1);
       color: var(--viewer-copy);
       font-size: 0.96rem;
       line-height: 1.55;
     }
 
     .doc th {
-      background: #eef3ff;
+      background: #ece4d5;
       color: var(--viewer-ink);
       font-weight: 700;
     }

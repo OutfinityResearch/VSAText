@@ -35,6 +35,43 @@ const TONES = [
   'threatening', 'vulnerable', 'diplomatic', 'excited'
 ];
 
+function getAllScenes() {
+  const chapters = state.project?.structure?.children || [];
+  const scenes = [];
+  chapters.forEach(chapter => {
+    (chapter?.children || []).forEach(scene => {
+      if (scene?.type === 'scene') {
+        scenes.push({ chapter, scene });
+      }
+    });
+  });
+  return scenes;
+}
+
+function getSceneContext(dialogue) {
+  const sceneId = dialogue?.location?.sceneId;
+  if (!sceneId) return null;
+  const pair = getAllScenes().find(item => item.scene.id === sceneId);
+  if (!pair) return null;
+  return {
+    sceneId,
+    sceneName: pair.scene.name || pair.scene.title || sceneId,
+    chapterName: pair.chapter?.name || pair.chapter?.title || pair.chapter?.id || 'Chapter',
+    beatKey: dialogue?.beatKey || pair.scene?.beatKey || null
+  };
+}
+
+function getDialogueSummary(dialogue, characters) {
+  const participants = (dialogue.participants || [])
+    .map(p => characters.find(c => c.id === p.characterId)?.name)
+    .filter(Boolean);
+  return {
+    lineCount: (dialogue.exchanges || []).length,
+    participantCount: participants.length,
+    participantsLabel: participants.join(', ') || 'No participants yet'
+  };
+}
+
 /**
  * Initialize the dialogue editor
  * @param {HTMLElement} container 
@@ -113,12 +150,52 @@ function renderDialogueForm(dialogue) {
   if (!dialogue) return '<div class="error">Dialogue not found</div>';
   
   const characters = state.project.libraries.characters;
+  const summary = getDialogueSummary(dialogue, characters);
+  const sceneContext = getSceneContext(dialogue);
   
   return `
     <div class="dialogue-form">
       <div class="dialogue-form-header">
-        <h3>Edit Dialogue</h3>
+        <div>
+          <div class="dialogue-eyebrow">Dialogue Workspace</div>
+          <h3>${escapeHtml(PURPOSES[dialogue.purpose]?.label || 'Dialogue')}</h3>
+        </div>
         <button id="close-dialogue-top" class="dialogue-close-btn" title="Close">×</button>
+      </div>
+
+      <div class="dialogue-hero">
+        <div class="dialogue-hero-main">
+          <div class="dialogue-hero-label">Participants</div>
+          <div class="dialogue-hero-value">${escapeHtml(summary.participantsLabel)}</div>
+          <div class="dialogue-hero-meta">
+            <span>${summary.participantCount} participant${summary.participantCount === 1 ? '' : 's'}</span>
+            <span>${summary.lineCount} line${summary.lineCount === 1 ? '' : 's'}</span>
+            <span>${escapeHtml(dialogue.tone || 'tone not set')}</span>
+          </div>
+        </div>
+        <div class="dialogue-hero-side">
+          <div class="dialogue-stat">
+            <span class="dialogue-stat-label">Purpose</span>
+            <strong>${escapeHtml(PURPOSES[dialogue.purpose]?.label || dialogue.purpose || 'Dialogue')}</strong>
+          </div>
+          <div class="dialogue-stat">
+            <span class="dialogue-stat-label">Tension</span>
+            <strong>${escapeHtml(String(dialogue.tension || 3))}/5</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="dialogue-context-grid">
+        <div class="dialogue-context-card">
+          <span class="dialogue-context-label">Scene</span>
+          <strong>${escapeHtml(sceneContext?.sceneName || 'Not attached to a scene')}</strong>
+          <span class="dialogue-context-detail">${escapeHtml(sceneContext ? `${sceneContext.chapterName}${sceneContext.beatKey ? ` • ${sceneContext.beatKey}` : ''}` : 'Dialog remains editable before scene assignment.')}</span>
+        </div>
+        <div class="dialogue-context-card">
+          <span class="dialogue-context-label">Editing Mode</span>
+          <strong>Speaker-aware blocks</strong>
+          <span class="dialogue-context-detail">Primary focus stays on ordered lines and speaker ownership.</span>
+        </div>
       </div>
       
       <div class="form-section">
@@ -151,7 +228,7 @@ function renderDialogueForm(dialogue) {
       </div>
 
       <div class="form-section">
-        <label>Dialogue Text</label>
+        <label>Dialogue Summary</label>
         <textarea id="dialogue-text" rows="4" placeholder="Write or edit the dialogue text...">${escapeHtml(dialogue.text || '')}</textarea>
       </div>
 
@@ -182,12 +259,12 @@ function renderDialogueForm(dialogue) {
       </div>
       
       <div class="form-section">
-        <label>Dialogue Outline (Exchanges)</label>
+        <label>Dialog Lines</label>
         <div class="exchanges-list" id="exchanges-list">
           ${renderExchanges(dialogue.exchanges || [], characters)}
         </div>
         <div class="form-actions-inline">
-          <button id="add-exchange" class="btn-small">+ Add Exchange</button>
+          <button id="add-exchange" class="btn-small">+ Add Line</button>
         </div>
       </div>
       
@@ -204,19 +281,31 @@ function renderDialogueForm(dialogue) {
  */
 function renderExchanges(exchanges, characters) {
   if (!exchanges || exchanges.length === 0) {
-    return '<p class="empty-state">No exchanges yet. Add dialogue lines below.</p>';
+    return '<p class="empty-state">No dialog lines yet. Add the first exchange below.</p>';
   }
   
   return exchanges.map((ex, idx) => `
     <div class="exchange-row" data-index="${idx}">
       <div class="exchange-header">
-        <select class="exchange-speaker">
-          <option value="">-- Speaker --</option>
-          ${characters.map(c => `<option value="${c.id}" ${ex.speakerId === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
-        </select>
-        <button class="btn-remove-exchange" data-index="${idx}">×</button>
+        <div class="exchange-header-main">
+          <span class="exchange-index">Line ${idx + 1}</span>
+          <select class="exchange-speaker">
+            <option value="">-- Speaker --</option>
+            ${characters.map(c => `<option value="${c.id}" ${ex.speakerId === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="exchange-tools">
+          <button class="btn-move-exchange" data-index="${idx}" data-direction="-1" title="Move up">↑</button>
+          <button class="btn-move-exchange" data-index="${idx}" data-direction="1" title="Move down">↓</button>
+          <button class="btn-remove-exchange" data-index="${idx}" title="Remove line">×</button>
+        </div>
+      </div>
+      <div class="field exchange-primary-field">
+        <label>Spoken Line</label>
+        <textarea class="exchange-sketch" rows="3" placeholder="Write the spoken line or outline the exchange...">${escapeHtml(ex.sketch || '')}</textarea>
       </div>
       <div class="exchange-fields">
+        <div class="exchange-secondary-grid">
         <div class="field">
           <label>Intent</label>
           <input type="text" class="exchange-intent" value="${escapeHtml(ex.intent || '')}" placeholder="What they want to convey...">
@@ -257,9 +346,6 @@ function renderExchanges(exchanges, characters) {
           <label>Reader Perception</label>
           <input type="text" class="exchange-reader-perception" value="${escapeHtml(ex.readerPerception || '')}" placeholder="How reader interpretation changes">
         </div>
-        <div class="field">
-          <label>Sketch (placeholder line)</label>
-          <textarea class="exchange-sketch" rows="2" placeholder="[Schematic replica...]">${escapeHtml(ex.sketch || '')}</textarea>
         </div>
       </div>
     </div>
@@ -457,8 +543,11 @@ function attachListeners() {
     const dialogue = getDialogueById(selectedDialogueId);
     if (dialogue) {
       dialogue.exchanges = dialogue.exchanges || [];
+      const fallbackSpeakerId = dialogue.participants?.find(p => p.role === 'speaker' && p.characterId)?.characterId
+        || dialogue.participants?.[0]?.characterId
+        || '';
       dialogue.exchanges.push({
-        speakerId: '',
+        speakerId: fallbackSpeakerId,
         intent: '',
         conflictType: '',
         emotion: '',
@@ -474,6 +563,24 @@ function attachListeners() {
       upsertDialogue(dialogue);
       render();
     }
+  });
+
+  document.querySelectorAll('.btn-move-exchange').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const index = parseInt(btn.dataset.index, 10);
+      const direction = parseInt(btn.dataset.direction, 10);
+      const dialogue = getDialogueById(selectedDialogueId);
+      if (!dialogue || Number.isNaN(index) || Number.isNaN(direction)) return;
+      const exchanges = [...(dialogue.exchanges || [])];
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= exchanges.length) return;
+      const [item] = exchanges.splice(index, 1);
+      exchanges.splice(targetIndex, 0, item);
+      dialogue.exchanges = exchanges;
+      upsertDialogue(dialogue);
+      render();
+    });
   });
 
   // Remove exchange
@@ -496,7 +603,7 @@ function attachListeners() {
       if (!validateParticipantRoles(dialogue)) return;
       upsertDialogue(dialogue);
       document.dispatchEvent(new CustomEvent('dialogue-changed'));
-      alert('Dialogue saved!');
+      window.showNotification?.('Dialogue saved.', 'success');
     }
   });
   

@@ -69,6 +69,10 @@ Hierarchical story structure with drag-and-drop reordering:
 - On Scene: Add Character, Add Location, Add Object, Add Mood, Add Narrative Block, Add Action
 - On any: Edit, Delete
 
+For `Add Character` on a scene, the implemented behavior is:
+- If the project already has characters, the user selects an existing character from a modal and the system inserts a `character-ref` under the scene.
+- If the project has no characters yet, the flow should route into the dedicated character editor so the user creates a project-level character first.
+
 ## Arc-Driven Story Structuring
 
 When a story is generated from the project foundation, the left-side story structure should not remain a generic list of chapters and scenes. Instead, the generated structure should reflect the narrative arc selected in `Blueprint`.

@@ -6,137 +6,245 @@
   <title>SCRIPTA Documentation Index</title>
   <style>
     :root {
-      --ink: #1f2a30;
-      --muted: #51616c;
-      --paper: #fbf7ef;
-      --accent: #1b6a73;
-      --accent-2: #b85c38;
-      --border: #d6cfc2;
+      --ink: #18284b;
+      --copy: #52627e;
+      --muted: #7a889f;
+      --accent: #274f9d;
+      --accent-soft: rgba(39, 79, 157, 0.08);
+      --border: rgba(110, 128, 167, 0.18);
+      --surface: rgba(255, 255, 255, 0.88);
+      --surface-strong: #ffffff;
+      --shadow: 0 24px 80px rgba(22, 33, 66, 0.08);
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       color: var(--ink);
-      background: linear-gradient(180deg, #f7efe3 0%, #f2f6f5 100%);
-      font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+      background:
+        radial-gradient(circle at top left, rgba(209, 221, 248, 0.52), transparent 28%),
+        linear-gradient(180deg, #f8faff 0%, #eef2f8 100%);
+      font-family: Inter, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
+
     header {
-      padding: 36px 20px 18px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255,255,255,0.85);
-      backdrop-filter: blur(6px);
+      padding: 44px 24px 26px;
+      border-bottom: 1px solid rgba(110, 128, 167, 0.12);
+      background: rgba(248, 250, 255, 0.74);
+      backdrop-filter: blur(16px);
     }
-    header h1 { margin: 0 0 8px; font-size: 30px; }
-    header p { margin: 0; color: var(--muted); }
-    main { max-width: 980px; margin: 0 auto; padding: 24px 20px 60px; }
-    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+    .hero {
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.42rem 0.82rem;
+      border-radius: 999px;
+      border: 1px solid rgba(92, 112, 158, 0.18);
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hero-kicker::before {
+      content: '';
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #4c78d1, #9ec0ff);
+      box-shadow: 0 0 0 0.22rem rgba(76, 120, 209, 0.12);
+    }
+
+    header h1 {
+      margin: 1.1rem 0 0.7rem;
+      font-size: clamp(2.7rem, 5vw, 4.6rem);
+      line-height: 1.02;
+      letter-spacing: -0.05em;
+      max-width: 980px;
+    }
+
+    header p {
+      margin: 0;
+      max-width: 920px;
+      color: var(--copy);
+      font-size: 1.06rem;
+      line-height: 1.75;
+    }
+
+    main {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 30px 24px 72px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
     .card {
-      background: #ffffff;
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+      border-radius: 24px;
+      padding: 20px 20px 18px;
+      box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
+      min-height: 220px;
     }
-    .card { position: relative; transition: box-shadow 0.2s; }
-    .card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-    .card h3 { margin: 0 0 6px; }
-    .card p { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
-    .card-link { display: block; text-decoration: none; color: inherit; }
+
+    .card {
+      position: relative;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(95, 124, 182, 0.28), rgba(95, 124, 182, 0.02));
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 30px 90px rgba(22, 33, 66, 0.11);
+      border-color: rgba(95, 124, 182, 0.26);
+    }
+
+    .card h3 {
+      margin: 0 0 0.6rem;
+      font-size: 1.25rem;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+    }
+
+    .card p {
+      margin: 0 0 1rem;
+      color: var(--copy);
+      font-size: 0.96rem;
+      line-height: 1.65;
+    }
+
+    .card-link {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+    }
+
     .card-link:hover { text-decoration: none; }
     .card-link:hover h3 { color: var(--accent); }
+
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
-    .links { margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border); }
-    .links a { margin-right: 10px; font-size: 13px; }
+
+    .links {
+      margin-top: auto;
+      padding-top: 0.9rem;
+      border-top: 1px solid rgba(110, 128, 167, 0.12);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.56rem 0.78rem;
+      border-radius: 12px;
+      background: var(--accent-soft);
+      font-size: 0.84rem;
+      font-weight: 600;
+    }
+
+    .links a:hover {
+      background: rgba(39, 79, 157, 0.12);
+      text-decoration: none;
+    }
+
     .footer {
       margin-top: 32px;
-      padding: 20px;
+      padding: 22px;
       text-align: center;
       color: var(--muted);
-      font-size: 14px;
-      border-top: 1px solid var(--border);
+      font-size: 0.92rem;
+      border-top: 1px solid rgba(110, 128, 167, 0.12);
     }
-    
-    /* Mobile responsive styles */
+
     @media (max-width: 600px) {
       header {
-        padding: 24px 16px 14px;
-        text-align: center;
+        padding: 24px 16px 18px;
       }
+
       header h1 {
-        font-size: 24px;
-        line-height: 1.2;
+        font-size: 2.2rem;
+        line-height: 1.04;
       }
+
       header p {
-        font-size: 14px;
+        font-size: 0.98rem;
+        line-height: 1.65;
       }
+
       main {
-        padding: 16px 12px 40px;
+        padding: 16px 14px 46px;
       }
+
       .grid {
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 14px;
       }
+
       .card {
-        padding: 14px;
-        border-radius: 10px;
+        min-height: 0;
+        padding: 16px;
+        border-radius: 20px;
       }
+
       .card h3 {
-        font-size: 16px;
-        line-height: 1.3;
+        font-size: 1.05rem;
+        line-height: 1.2;
       }
+
       .card p {
-        font-size: 13px;
-        line-height: 1.4;
+        font-size: 0.92rem;
+        line-height: 1.55;
       }
-      .links {
-        padding-top: 10px;
-      }
-      .links a {
-        font-size: 14px;
-        padding: 4px 0;
-        display: inline-block;
-      }
+
       .footer {
-        font-size: 13px;
+        font-size: 0.84rem;
         padding: 16px 12px;
-        margin-top: 20px;
+        margin-top: 22px;
       }
     }
-    
-    /* Medium screens (tablets) */
+
     @media (min-width: 601px) and (max-width: 900px) {
       .grid {
         grid-template-columns: repeat(2, 1fr);
-      }
-      header h1 {
-        font-size: 26px;
-      }
-    }
-    
-    /* Touch-friendly improvements */
-    @media (hover: none) and (pointer: coarse) {
-      .card {
-        -webkit-tap-highlight-color: rgba(27, 106, 115, 0.1);
-      }
-      .card-link {
-        min-height: 44px;
-      }
-      .links a {
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
-        padding: 8px 4px;
       }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>SCRIPTA Documentation</h1>
-    <p>Design specifications and research plans for the ACHILLES SCRIPTA use case.</p>
+    <div class="hero">
+      <div class="hero-kicker">Documentation Hub</div>
+      <h1>SCRIPTA Design Specifications</h1>
+      <p>Design specifications, product behavior, and research plans for the ACHILLES SCRIPTA use case, presented in a cleaner reading experience for GitHub Pages.</p>
+    </div>
   </header>
   <main>
     <div class="grid">

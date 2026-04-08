@@ -15,6 +15,17 @@ import { getCurrentArcBeats } from './blueprint/blueprint-state.mjs';
 
 let lastEvaluationResult = null;
 
+function setMetricsPanelVisible(visible) {
+  const app = document.querySelector('.app');
+  if (app) {
+    app.classList.toggle('metrics-collapsed', !visible);
+  }
+}
+
+export function closeMetricsPanel() {
+  setMetricsPanelVisible(false);
+}
+
 const QUICK_METRICS = [
   { key: 'completeness', name: 'Completeness', description: 'Required story elements are present.' },
   { key: 'coherence', name: 'Coherence', description: 'References and structure stay consistent.' },
@@ -704,6 +715,7 @@ export function updateStats() {
  */
 export async function evaluateMetrics() {
   const metricsContent = $('#metrics-content');
+  setMetricsPanelVisible(true);
 
   metricsContent.innerHTML = `
     <div class="metrics-loading">
@@ -755,6 +767,7 @@ export async function evaluateMetrics() {
 }
 
 function renderServerMetrics(result) {
+  setMetricsPanelVisible(true);
   $('#metrics-content').innerHTML = renderQuickSummary(result);
   bindMetricsEvents();
 }
@@ -796,6 +809,7 @@ export function openFullEvaluationReport() {
  */
 export function renderEmptyMetrics(message = null) {
   lastEvaluationResult = null;
+  setMetricsPanelVisible(false);
   $('#metrics-content').innerHTML = `
     <div class="empty-state" style="padding:1.5rem;">
       <div class="empty-state-icon">Scale</div>

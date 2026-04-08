@@ -6,153 +6,379 @@
   <title>SCRIPTA Docs Viewer</title>
   <link rel="stylesheet" href="theory/doc-styles.css">
   <style>
-    /* Override some doc-styles.css to fit the viewer layout if needed */
+    :root {
+      --viewer-bg: #f4f6fb;
+      --viewer-surface: rgba(255, 255, 255, 0.88);
+      --viewer-surface-strong: #ffffff;
+      --viewer-border: rgba(117, 134, 172, 0.18);
+      --viewer-border-strong: rgba(88, 108, 150, 0.2);
+      --viewer-ink: #18284b;
+      --viewer-copy: #495a78;
+      --viewer-muted: #74829b;
+      --viewer-accent: #274f9d;
+      --viewer-accent-soft: rgba(39, 79, 157, 0.1);
+      --viewer-shadow: 0 24px 80px rgba(22, 33, 66, 0.08);
+    }
+
     body {
-      background: linear-gradient(180deg, #f7efe3 0%, #f3f7f6 100%);
-      color: var(--ink, #1f2a30);
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(209, 221, 248, 0.58), transparent 28%),
+        linear-gradient(180deg, #f8faff 0%, #eef2f8 100%);
+      color: var(--viewer-ink);
+      font-family: Inter, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
-    main {
-      max-width: 1200px;
+
+    header {
+      padding: 40px 32px 24px;
+      border-bottom: 1px solid rgba(111, 129, 171, 0.12);
+      background: rgba(248, 250, 255, 0.74);
+      backdrop-filter: blur(16px);
+    }
+
+    .viewer-header-inner {
+      max-width: 1380px;
       margin: 0 auto;
-      padding: 24px 20px 60px;
+    }
+
+    .viewer-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.42rem 0.82rem;
+      border-radius: 999px;
+      border: 1px solid rgba(92, 112, 158, 0.18);
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--viewer-accent);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .viewer-kicker::before {
+      content: '';
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #4c78d1, #9ec0ff);
+      box-shadow: 0 0 0 0.22rem rgba(76, 120, 209, 0.12);
+    }
+
+    header h1 {
+      margin: 1.15rem 0 0.72rem;
+      font-size: clamp(2.6rem, 5vw, 4.4rem);
+      line-height: 1.02;
+      letter-spacing: -0.045em;
+      color: var(--viewer-ink);
+      max-width: 980px;
+    }
+
+    header .meta {
+      max-width: 960px;
+      color: var(--viewer-copy);
+      font-size: 1.04rem;
+      line-height: 1.7;
+    }
+
+    main {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 28px 32px 64px;
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 24px;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 30px;
+      align-items: start;
     }
+
+    .toc {
+      position: sticky;
+      top: 28px;
+      align-self: start;
+      padding: 1.4rem 1.25rem 1.2rem;
+      border-radius: 24px;
+      background: var(--viewer-surface);
+      border: 1px solid var(--viewer-border);
+      box-shadow: var(--viewer-shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .toc-title {
+      margin: 0 0 0.32rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--viewer-muted);
+    }
+
+    .toc-caption {
+      margin: 0 0 1.1rem;
+      color: var(--viewer-copy);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+
+    #toc-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.18rem;
+      padding-top: 0.2rem;
+      border-top: 1px solid rgba(117, 134, 172, 0.14);
+    }
+
+    #toc-list > div {
+      margin-left: 0 !important;
+    }
+
+    .toc a {
+      display: block;
+      padding: 0.62rem 0.78rem;
+      border-radius: 14px;
+      color: var(--viewer-copy);
+      font-size: 0.94rem;
+      line-height: 1.4;
+      text-decoration: none;
+      transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    }
+
+    .toc a:hover {
+      background: rgba(39, 79, 157, 0.06);
+      color: var(--viewer-accent);
+      transform: translateX(2px);
+      text-decoration: none;
+    }
+
     .doc {
-      padding: 4rem 5rem;
-      background: #ffffff;
-      border: 1px solid var(--border, #d6cfc2);
-      border-radius: 12px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+      padding: clamp(2rem, 5vw, 4.3rem);
+      background: var(--viewer-surface-strong);
+      border: 1px solid var(--viewer-border);
+      border-radius: 30px;
+      box-shadow: var(--viewer-shadow);
+      min-width: 0;
     }
-    /* ... keep other viewer specific styles ... */
-    .doc img { max-width: 100%; height: auto; }
+
+    .doc img { max-width: 100%; height: auto; border-radius: 18px; }
+
+    .doc h1,
+    .doc h2,
+    .doc h3,
+    .doc h4,
+    .doc h5,
+    .doc h6 {
+      font-family: Inter, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      color: var(--viewer-ink);
+      letter-spacing: -0.03em;
+      font-weight: 800;
+    }
+
+    .doc h1 {
+      margin: 0 0 1.6rem;
+      font-size: clamp(2.2rem, 4.6vw, 3.4rem);
+      line-height: 1.06;
+      padding-bottom: 1.15rem;
+      border-bottom: 1px solid rgba(117, 134, 172, 0.14);
+    }
+
+    .doc h2 {
+      margin: 3rem 0 1rem;
+      font-size: clamp(1.5rem, 3vw, 2.05rem);
+      line-height: 1.14;
+    }
+
+    .doc h3 {
+      margin: 2rem 0 0.78rem;
+      font-size: 1.18rem;
+      line-height: 1.2;
+    }
+
+    .doc p,
+    .doc li {
+      color: var(--viewer-copy);
+      font-size: 1.05rem;
+      line-height: 1.86;
+    }
+
+    .doc p {
+      margin: 0 0 1.25rem;
+    }
+
+    .doc ul,
+    .doc ol {
+      margin: 1.1rem 0 1.5rem 1.3rem;
+    }
+
+    .doc li {
+      margin-bottom: 0.65rem;
+      padding-left: 0.2rem;
+    }
+
     .doc pre {
-      background: #f3f0e8;
-      padding: 12px;
-      border-radius: 8px;
+      background: #eff4ff;
+      padding: 1rem 1.1rem;
+      border-radius: 18px;
+      border: 1px solid rgba(96, 118, 165, 0.14);
       overflow-x: auto;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
     }
-    .doc code { font-family: "Courier New", Courier, monospace; }
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .links { margin-top: 8px; font-size: 14px; }
-    .links a { margin-right: 12px; }
-    
-    /* Let doc-styles.css handle the tables for a better consistent experience */
+
+    .doc code {
+      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
+      color: #294784;
+      background: rgba(39, 79, 157, 0.08);
+      border: 1px solid rgba(39, 79, 157, 0.08);
+      border-radius: 8px;
+      padding: 0.16rem 0.4rem;
+    }
+
+    a {
+      color: var(--viewer-accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .links {
+      margin-top: 1.1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(117, 134, 172, 0.14);
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      font-size: 0.92rem;
+    }
+
+    .links a {
+      display: block;
+      padding: 0.68rem 0.8rem;
+      border-radius: 12px;
+      background: rgba(39, 79, 157, 0.05);
+      color: var(--viewer-accent);
+      font-weight: 600;
+    }
+
+    .links a:hover {
+      background: rgba(39, 79, 157, 0.08);
+      text-decoration: none;
+    }
+
     .doc table {
       width: 100%;
-      margin: 2.5em 0;
+      margin: 2.2rem 0;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+      border: 1px solid rgba(117, 134, 172, 0.14);
+      border-radius: 18px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
     }
-    
-    @media (min-width: 900px) {
-      main { grid-template-columns: 280px 1fr; }
-      .toc { position: sticky; top: 90px; align-self: start; }
+
+    .doc th,
+    .doc td {
+      padding: 0.95rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(117, 134, 172, 0.1);
+      color: var(--viewer-copy);
+      font-size: 0.96rem;
+      line-height: 1.55;
     }
-    
-    /* Mobile responsive styles */
+
+    .doc th {
+      background: #eef3ff;
+      color: var(--viewer-ink);
+      font-weight: 700;
+    }
+
+    .doc tr:last-child td {
+      border-bottom: none;
+    }
+
     @media (max-width: 600px) {
       header {
-        padding: 16px 12px 10px;
+        padding: 22px 16px 16px;
       }
+
+      .viewer-kicker {
+        font-size: 0.68rem;
+        letter-spacing: 0.06em;
+      }
+
       header h1 {
-        font-size: 18px;
-        line-height: 1.3;
-        word-break: break-word;
+        margin-top: 0.9rem;
+        font-size: 2.1rem;
+        line-height: 1.06;
       }
-      header .meta {
-        font-size: 12px;
-        word-break: break-all;
-      }
+
       main {
-        padding: 12px 10px 40px;
-        gap: 12px;
+        padding: 14px 14px 40px;
+        grid-template-columns: 1fr;
+        gap: 14px;
       }
+
       .toc {
-        padding: 12px;
-        font-size: 14px;
+        position: static;
+        padding: 1rem;
+        border-radius: 20px;
       }
-      .toc a {
-        display: block;
-        padding: 6px 0;
-      }
+
       .doc {
-        padding: 16px 14px;
-        border-radius: 10px;
+        padding: 1.2rem 1rem;
+        border-radius: 22px;
       }
-      .doc h1 { font-size: 22px; }
-      .doc h2 { font-size: 18px; }
-      .doc h3 { font-size: 16px; }
+
+      .doc h1 { font-size: 1.9rem; }
+      .doc h2 { font-size: 1.42rem; }
+      .doc h3 { font-size: 1.08rem; }
+
       .doc p, .doc li { 
-        font-size: 15px; 
-        line-height: 1.5;
+        font-size: 0.98rem; 
+        line-height: 1.74;
       }
+
       .doc pre {
-        padding: 10px;
-        font-size: 12px;
-        border-radius: 6px;
+        padding: 0.9rem;
+        font-size: 0.82rem;
+        border-radius: 14px;
       }
-      .doc code {
-        font-size: 13px;
-      }
-      /* Responsive tables on mobile */
+
       .doc table {
-        font-size: 13px;
         display: block;
         overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
       }
+
       .doc th, .doc td {
-        padding: 8px 10px;
+        padding: 0.72rem 0.78rem;
         min-width: 100px;
       }
-      .links {
-        font-size: 13px;
-      }
-      .links a {
-        display: inline-block;
-        padding: 6px 0;
-        min-height: 44px;
-        line-height: 32px;
-      }
     }
-    
-    /* Medium screens (tablets) */
-    @media (min-width: 601px) and (max-width: 899px) {
-      header h1 {
-        font-size: 22px;
+
+    @media (min-width: 601px) and (max-width: 1040px) {
+      main {
+        grid-template-columns: 1fr;
       }
-      .doc {
-        padding: 20px;
-      }
-    }
-    
-    /* Touch-friendly improvements */
-    @media (hover: none) and (pointer: coarse) {
-      .toc a {
-        min-height: 44px;
-        display: flex;
-        align-items: center;
-      }
-      .links a {
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
-        padding: 8px 4px;
+
+      .toc {
+        position: static;
       }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1 id="doc-title">SCRIPTA Docs Viewer</h1>
-    <div class="meta" id="doc-meta">Load a document with ?doc=specs/DS01-Vision.md</div>
+    <div class="viewer-header-inner">
+      <div class="viewer-kicker">SCRIPTA Specifications</div>
+      <h1 id="doc-title">SCRIPTA Docs Viewer</h1>
+      <div class="meta" id="doc-meta">Load a document with ?doc=specs/DS01-Vision.md</div>
+    </div>
   </header>
 
   <main>
     <aside class="toc" id="toc">
-      <strong>Contents</strong>
+      <div class="toc-title">On This Page</div>
+      <p class="toc-caption">Navigate the current specification quickly and jump between its major sections.</p>
       <div id="toc-list"></div>
       <div class="links" id="doc-links"></div>
     </aside>

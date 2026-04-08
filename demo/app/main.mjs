@@ -7,9 +7,9 @@
 import { state } from './state.mjs';
 import { $, $$, genId, openModal, showNotification } from './utils.mjs';
 import { renderTree, findNode, addChild, selectNode } from './tree.mjs';
-import { renderEntityGrid, renderBackdropView, renderCharactersCastView, renderToneStyleView, renderThemeEditorPage, renderLocationEditorPage, renderMoodEditorPage, showSelectModal, showBlockModal, showActionModal } from './entities.mjs';
+import { renderEntityGrid, renderBackdropView, renderCharactersCastView, renderToneStyleView, renderThemeEditorPage, renderCharacterEditorPage, renderLocationEditorPage, renderMoodEditorPage, showSelectModal, showBlockModal, showActionModal } from './entities.mjs';
 import { renderRelationshipsView, renderBlocksView, renderWorldRulesView, renderWorldRuleEditorPage } from './views.mjs';
-import { evaluateMetrics, renderEmptyMetrics, initMetrics, renderFullEvaluationReport } from './metrics.mjs';
+import { evaluateMetrics, renderEmptyMetrics, initMetrics, renderFullEvaluationReport, closeMetricsPanel } from './metrics.mjs';
 import { exportCNL, importCNL, toggleEditMode, setCNLViewMode, generateCNL } from './cnl.mjs';
 import { loadProjectsList, initPersistence } from './persistence.mjs';
 import { setupContextMenu } from './context-menu.mjs';
@@ -41,6 +41,7 @@ import { renderNarrativeDesignMacroView } from './narrative-design.mjs';
 import { renderManuscriptStudioView, renderStoryMapView } from './writing-studio.mjs';
 import {
   getChaptersForManuscript,
+  getArcStructuredManuscript,
   getScenesForManuscriptChapter,
   getManuscriptSelection,
   manuscriptUsesGeneratedStory,
@@ -179,6 +180,7 @@ function renderViewSpecificContent(viewName) {
   if (viewName === 'themes') renderEntityGrid('themes');
   if (viewName === 'newproject') renderNewProjectFlowView();
   if (viewName === 'theme-editor') renderThemeEditorPage();
+  if (viewName === 'character-editor') renderCharacterEditorPage();
   if (viewName === 'location-editor') renderLocationEditorPage();
   if (viewName === 'mood-editor') renderMoodEditorPage();
   if (viewName === 'characters') renderCharactersCastView();
@@ -530,6 +532,7 @@ function bindCoreButtons() {
     showStandaloneView('library');
   };
   $('#btn-evaluate').onclick = evaluateMetrics;
+  $('#btn-close-metrics')?.addEventListener('click', closeMetricsPanel);
   document.addEventListener('open-evaluation-report', () => showStandaloneView('evaluation-report'));
   document.addEventListener('close-evaluation-report', () => showStandaloneView('nl'));
   $('#btn-docs')?.addEventListener('click', () => window.open('/docs/theory/index.html', '_blank'));
@@ -729,49 +732,55 @@ function renderManuscriptNavigatorDetails() {
 
   const book = state.project.structure;
   const chapters = getChapterNodes();
+  const arcStructured = getArcStructuredManuscript();
   const { chapterId: selectedChapterId, sceneId: selectedSceneId } = getManuscriptSelection();
 
   const chapterRows = !chapters.length
     ? ''
     : `
       <div class="navigator-subtree">
-        ${chapters.map((chapter, index) => {
-          const scenes = getSceneNodes(chapter);
-          const isOpen = chapter.id === manuscriptNavigatorOpenChapterId;
-          const isChapterSelected = selectedChapterId === chapter.id && !selectedSceneId;
-          return `
-            <details class="navigator-subgroup navigator-chapter-group" ${isOpen ? 'open' : ''}>
-              <summary
-                class="navigator-chapter-summary ${isChapterSelected ? 'is-selected' : ''}"
-                data-target-view="manuscript"
-                data-manuscript-chapter-id="${chapter.id}">
-                <span class="navigator-chapter-summary-label">${esc(chapterLabelText(chapter, index))}</span>
-                <button
-                  class="navigator-inline-action navigator-inline-delete"
-                  type="button"
-                  data-delete-chapter-id="${chapter.id}"
-                  aria-label="Delete chapter"
-                  title="Delete chapter">×</button>
-              </summary>
-              <div class="navigator-items">
-                ${scenes.map((scene, sceneIndex) => `
-                  <div class="navigator-item-row">
-                    <button class="navigator-item navigator-item-scene ${selectedSceneId === scene.id ? 'active is-selected' : ''}" data-target-view="manuscript" data-chapter-id="${chapter.id}" data-scene-id="${scene.id}">
-                      ${esc(sceneLabelText(scene, sceneIndex))}
-                    </button>
+        ${arcStructured.phases.map(group => `
+          <div class="navigator-phase-group">
+            <div class="navigator-phase-title">${esc(group.label)}</div>
+            ${group.chapters.map(({ chapter, index }) => {
+              const scenes = getSceneNodes(chapter);
+              const isOpen = chapter.id === manuscriptNavigatorOpenChapterId;
+              const isChapterSelected = selectedChapterId === chapter.id && !selectedSceneId;
+              return `
+                <details class="navigator-subgroup navigator-chapter-group" ${isOpen ? 'open' : ''}>
+                  <summary
+                    class="navigator-chapter-summary ${isChapterSelected ? 'is-selected' : ''}"
+                    data-target-view="manuscript"
+                    data-manuscript-chapter-id="${chapter.id}">
+                    <span class="navigator-chapter-summary-label">${esc(chapterLabelText(chapter, index))}</span>
                     <button
-                      class="navigator-inline-action navigator-inline-delete navigator-scene-delete"
+                      class="navigator-inline-action navigator-inline-delete"
                       type="button"
-                      data-delete-scene-id="${scene.id}"
-                      data-delete-scene-chapter-id="${chapter.id}"
-                      aria-label="Delete scene"
-                      title="Delete scene">×</button>
+                      data-delete-chapter-id="${chapter.id}"
+                      aria-label="Delete chapter"
+                      title="Delete chapter">×</button>
+                  </summary>
+                  <div class="navigator-items">
+                    ${scenes.map((scene, sceneIndex) => `
+                      <div class="navigator-item-row">
+                        <button class="navigator-item navigator-item-scene ${selectedSceneId === scene.id ? 'active is-selected' : ''}" data-target-view="manuscript" data-chapter-id="${chapter.id}" data-scene-id="${scene.id}">
+                          ${esc(sceneLabelText(scene, sceneIndex))}
+                        </button>
+                        <button
+                          class="navigator-inline-action navigator-inline-delete navigator-scene-delete"
+                          type="button"
+                          data-delete-scene-id="${scene.id}"
+                          data-delete-scene-chapter-id="${chapter.id}"
+                          aria-label="Delete scene"
+                          title="Delete scene">×</button>
+                      </div>
+                    `).join('')}
                   </div>
-                `).join('')}
-              </div>
-            </details>
-          `;
-        }).join('')}
+                </details>
+              `;
+            }).join('')}
+          </div>
+        `).join('')}
       </div>
     `;
 
@@ -1265,7 +1274,7 @@ function handleAddMenuAction(action) {
   if (action === 'add-scene') {
     addChild(selectedNode, { type: 'scene', name: `Sc${(selectedNode.children?.length || 0) + 1}`, title: '', children: [] });
   }
-  if (action === 'add-char') showSelectModal('characters', selectedNode);
+  if (action === 'add-char') window.openCharacterEditorForSceneTarget?.({ kind: 'structure', sceneId: selectedNode.id });
   if (action === 'add-loc') showSelectModal('locations', selectedNode);
   if (action === 'add-obj') showSelectModal('objects', selectedNode);
   if (action === 'add-mood') showSelectModal('moods', selectedNode);

@@ -10,6 +10,7 @@ import { addChild, findNode, renderTree, getUsedBlocks } from './tree.mjs';
 import { generateCNL } from './cnl.mjs';
 import { renderRelationshipsView, renderEmotionalArcView } from './views.mjs';
 import { renderWorldLayersView } from './world-layers.mjs';
+import { appendCharacterToManuscriptScene } from './writing-studio-manuscript.mjs';
 import VOCAB from '/src/vocabularies/vocabularies.mjs';
 import { parseAnnotationLines, annotationsToEditorText } from './cnl-annotations.mjs';
 import { getThemeGuidance } from './theme-guidance.mjs';
@@ -347,7 +348,7 @@ export function renderMoodEditorPage() {
   const container = $('#mood-editor-view');
   if (!container) return;
 
-  const mood = state.editingEntity
+  const mood = !isCreatingMood && state.editingEntity
     ? (state.project.libraries.moods || []).find(item => item.id === state.editingEntity) || null
     : null;
   const isEdit = !!mood;
@@ -395,6 +396,7 @@ export function renderMoodEditorPage() {
 
   updateMoodPreview();
   $('#btn-cancel-mood-page')?.addEventListener('click', () => {
+    isCreatingMood = false;
     state.editingEntity = null;
     window.switchToTab?.('moods');
   });
@@ -403,6 +405,7 @@ export function renderMoodEditorPage() {
     if (!mood?.id || !confirm(`Delete "${mood.name}"?`)) return;
     state.project.libraries.moods = (state.project.libraries.moods || []).filter(item => item.id !== mood.id);
     removeEntityRefs(state.project.structure, mood.id);
+    isCreatingMood = false;
     state.editingEntity = null;
     renderToneStyleView();
     renderTree();
@@ -415,86 +418,391 @@ export function renderLocationEditorPage() {
   const container = $('#location-editor-view');
   if (!container) return;
 
-  const location = state.editingEntity
-    ? (state.project.libraries.locations || []).find(item => item.id === state.editingEntity) || null
-    : null;
-  const isEdit = !!location;
+  const locations = state.project.libraries.locations || (state.project.libraries.locations = []);
+  const selectedId = isCreatingLocation ? null : (state.editingEntity || locations[0]?.id || null);
+  const existing = selectedId ? locations.find(item => item.id === selectedId) : null;
+  const draft = existing || {
+    id: null,
+    name: pick(VOCAB.NAMES.locations),
+    geography: 'forest',
+    time: 'medieval',
+    characteristics: [],
+    annotations: []
+  };
+
+  state.editingEntity = selectedId;
 
   container.innerHTML = `
-    <div class="framework-view entity-redesign-shell">
+    <div class="framework-view entity-redesign-shell character-editor-shell location-editor-shell">
       <div class="framework-layout framework-redesign-layout">
         <div class="framework-page-header">
           <div class="framework-page-header-top">
             <div class="framework-page-header-copy">
-              <h2>${isEdit ? 'Edit Location' : 'Add Location'}</h2>
+              <h2>${draft.id ? 'Edit Location' : 'Add Location'}</h2>
             </div>
             <div class="framework-page-header-actions">
-              <button class="btn small" type="button" onclick="window.switchToTab?.('backdrop')">Back to World</button>
+              <button class="btn small" type="button" id="btn-location-editor-back">Back to World</button>
             </div>
           </div>
           <div class="framework-page-header-divider"></div>
           <div class="framework-page-header-subtitle">
-            <p>Define the place, time period, and core characteristics of the location in a dedicated editor.</p>
+            <p>Define the place, time period, and core characteristics in a full-page workspace with the location list visible at all times.</p>
           </div>
         </div>
 
-        <section class="framework-section section-framework-new world-redesign-section">
-          <div class="framework-section-header redesign">
-            <h3>Location Setup</h3>
-            <p>Set the world context first, then enrich the location with distinctive characteristics for later use in scenes.</p>
-          </div>
-          <div class="spec-card-content theme-editor-fields theme-editor-grid">
-            <div class="form-group theme-editor-field theme-editor-field-wide">
-              <label class="form-label">Name</label>
-              <input class="form-input" id="e-name" value="${escapeHtml(location?.name || pick(VOCAB.NAMES.locations))}" placeholder="Ex: Thornwood Forest">
+        <div class="character-editor-layout">
+          <aside class="character-editor-nav">
+            <div class="character-editor-nav-header">
+              <h3>Location List</h3>
             </div>
-            <div class="form-group theme-editor-field">
-              <label class="form-label">Geography</label>
-              <select class="form-select" id="e-geography">
-                ${Object.entries(VOCAB.LOCATION_GEOGRAPHY).map(([k, v]) => `<option value="${k}" ${location?.geography === k ? 'selected' : ''}>${v.label}</option>`).join('')}
-              </select>
+            <button class="btn small character-editor-add-btn" type="button" id="btn-location-editor-add">+ Add Location</button>
+            <div class="character-editor-nav-list">
+              ${locations.length ? locations.map(item => renderLocationSidebarItem(item, selectedId)).join('') : '<div class="character-editor-empty">No locations yet. Create the first one here.</div>'}
             </div>
-            <div class="form-group theme-editor-field">
-              <label class="form-label">Era / Time Period</label>
-              <select class="form-select" id="e-time">
-                ${Object.entries(VOCAB.LOCATION_TIME).map(([k, v]) => `<option value="${k}" ${location?.time === k ? 'selected' : ''}>${v.label}</option>`).join('')}
-              </select>
-            </div>
-            <div class="form-group theme-editor-field theme-editor-field-wide">
-              <label class="form-label">Characteristics</label>
-              <div class="chip-select" id="e-chars">${renderLocationChips(location?.characteristics || [])}</div>
-            </div>
-            <div class="form-group theme-editor-field theme-editor-field-wide">
-              <label class="form-label">CNL Annotations</label>
-              <textarea class="form-textarea" id="e-annotations" rows="4" placeholder="#hint: Keep it isolated&#10;#sensory: Emphasize cold air and wet stone">${annotationsToEditorText(location?.annotations || [])}</textarea>
-              <div class="form-hint">One annotation per line. Supported types: hint, style, avoid, voice, subtext, sensory, pacing, reference, context, contrast, reveal, example.</div>
-            </div>
-          </div>
-          <div class="subplot-editor-actions">
-            ${isEdit ? '<button class="btn danger" type="button" id="btn-delete-location-page">Delete Location</button>' : '<span></span>'}
-            <div class="subplot-editor-actions-right">
-              <button class="btn" type="button" id="btn-cancel-location-page">Cancel</button>
-              <button class="btn primary" type="button" id="btn-save-location-page">Save Location</button>
+          </aside>
+
+          <div class="character-editor-main">
+            <section class="framework-section section-framework-new character-editor-hero">
+              <div class="character-editor-hero-copy">
+                <h3>${escapeHtml(draft.name || 'Untitled Location')}</h3>
+                <p>Keep the selected place in focus while you refine geography, time, and scene-ready details.</p>
+              </div>
+            </section>
+
+            ${renderLocationEditorForm(draft)}
+
+            <section class="framework-section section-framework-new character-editor-side-section">
+              <div class="framework-section-header redesign compact">
+                <h3>Impact</h3>
+                <p>Location edits update project state and CNL immediately. Existing prose remains unchanged until rewrite or regeneration.</p>
+              </div>
+            </section>
+
+            <div class="subplot-editor-actions">
+              ${draft.id ? '<button class="btn danger" type="button" id="btn-delete-location-page">Delete Location</button>' : '<span></span>'}
+              <div class="subplot-editor-actions-right">
+                <button class="btn" type="button" id="btn-cancel-location-page">Cancel</button>
+                <button class="btn primary" type="button" id="btn-save-location-page">Save Location</button>
+              </div>
             </div>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   `;
 
+  $('#btn-location-editor-back')?.addEventListener('click', () => {
+    isCreatingLocation = false;
+    state.editingEntity = null;
+    window.switchToTab?.('backdrop');
+  });
+  $('#btn-location-editor-add')?.addEventListener('click', () => {
+    isCreatingLocation = true;
+    state.editingEntity = null;
+    renderLocationEditorPage();
+  });
   $('#btn-cancel-location-page')?.addEventListener('click', () => {
+    isCreatingLocation = false;
     state.editingEntity = null;
     window.switchToTab?.('backdrop');
   });
   $('#btn-save-location-page')?.addEventListener('click', saveLocationFromPage);
   $('#btn-delete-location-page')?.addEventListener('click', () => {
-    if (!location?.id || !confirm(`Delete "${location.name}"?`)) return;
-    state.project.libraries.locations = (state.project.libraries.locations || []).filter(item => item.id !== location.id);
-    removeEntityRefs(state.project.structure, location.id);
-    state.editingEntity = null;
-    window.renderBackdropView?.();
+    if (!draft?.id || !confirm(`Delete "${draft.name}"?`)) return;
+    state.project.libraries.locations = (state.project.libraries.locations || []).filter(item => item.id !== draft.id);
+    removeEntityRefs(state.project.structure, draft.id);
+    isCreatingLocation = false;
+    state.editingEntity = state.project.libraries.locations[0]?.id || null;
     renderTree();
-    window.switchToTab?.('backdrop');
+    generateCNL();
+    renderLocationEditorPage();
+  });
+}
+
+function collectSceneRefsForCharacter(characterId, node = state.project?.structure, chapterContext = null, acc = []) {
+  if (!node) return acc;
+  const nextChapter = node?.type === 'chapter' ? node : chapterContext;
+  if (node?.type === 'scene') {
+    const refs = (node.children || []).filter(child => child?.type === 'character-ref' && child?.refId === characterId);
+    if (refs.length) {
+      acc.push({
+        sceneId: node.id,
+        sceneName: node.name || node.title || node.id,
+        chapterName: nextChapter?.name || nextChapter?.title || nextChapter?.id || 'Chapter'
+      });
+    }
+  }
+  (node.children || []).forEach(child => collectSceneRefsForCharacter(characterId, child, nextChapter, acc));
+  return acc;
+}
+
+function getRelationshipsForCharacter(characterId) {
+  const charactersById = new Map((state.project.libraries.characters || []).map(item => [item.id, item]));
+  return (state.project.libraries.relationships || [])
+    .filter(rel => rel?.fromId === characterId || rel?.toId === characterId)
+    .map(rel => {
+      const otherId = rel.fromId === characterId ? rel.toId : rel.fromId;
+      const other = charactersById.get(otherId);
+      return {
+        id: rel.id,
+        otherName: other?.name || otherId || 'Unknown',
+        type: rel.type || 'relationship',
+        dynamic: rel.dynamic || ''
+      };
+    });
+}
+
+function renderCharacterSidebarItem(character, selectedId) {
+  const role = inferCharacterRole(character);
+  const active = character.id === selectedId ? ' active' : '';
+  const traitsCount = Array.isArray(character?.traits) ? character.traits.length : 0;
+  return `
+    <button class="character-editor-nav-item${active}" type="button" onclick="window.openCharacterEditorPage('${character.id}')">
+      <span class="character-editor-nav-name">${escapeHtml(character.name || 'Character')}</span>
+      <span class="character-editor-nav-meta">${escapeHtml(humanizeLabel(role))}${traitsCount ? ` • ${traitsCount} traits` : ''}</span>
+    </button>
+  `;
+}
+
+function renderLocationSidebarItem(location, selectedId) {
+  const active = location.id === selectedId ? ' active' : '';
+  const geography = location?.geography ? humanizeLabel(location.geography) : 'Location';
+  const time = location?.time ? humanizeLabel(location.time) : '';
+  const characteristicsCount = Array.isArray(location?.characteristics) ? location.characteristics.length : 0;
+  return `
+    <button class="character-editor-nav-item location-editor-nav-item${active}" type="button" onclick="window.openLocationEditorPage('${location.id}')">
+      <span class="character-editor-nav-name">${escapeHtml(location.name || 'Location')}</span>
+      <span class="character-editor-nav-meta">${escapeHtml([geography, time].filter(Boolean).join(' • '))}${characteristicsCount ? ` • ${characteristicsCount} traits` : ''}</span>
+    </button>
+  `;
+}
+
+function renderCharacterEditorForm(character) {
+  return `
+    <section class="framework-section section-framework-new character-editor-section">
+      <div class="framework-section-header redesign">
+        <h3>Character Definition</h3>
+        <p>Refine identity, role, traits, motivation, and backstory inside a dedicated editing workspace.</p>
+      </div>
+      <div class="character-editor-form-grid">
+        <div class="form-group theme-editor-field theme-editor-field-wide">
+          <label class="form-label">Name</label>
+          <input class="form-input" id="e-name" value="${escapeHtml(character?.name || pick(VOCAB.NAMES.characters))}" placeholder="Character name">
+        </div>
+        <div class="form-group theme-editor-field">
+          <label class="form-label">Narrative Role</label>
+          <select class="form-select" id="e-role">
+            <option value="protagonist" ${inferCharacterRole(character) === 'protagonist' ? 'selected' : ''}>Protagonist</option>
+            <option value="antagonist" ${inferCharacterRole(character) === 'antagonist' ? 'selected' : ''}>Antagonist</option>
+            <option value="secondary" ${inferCharacterRole(character) === 'secondary' ? 'selected' : ''}>Secondary</option>
+          </select>
+        </div>
+        <div class="form-group theme-editor-field">
+          <label class="form-label">Archetype</label>
+          <select class="form-select" id="e-archetype">
+            ${Object.entries(VOCAB.CHARACTER_ARCHETYPES).map(([k, v]) => `<option value="${k}" ${character?.archetype === k ? 'selected' : ''}>${escapeHtml(v.label)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group theme-editor-field">
+          <label class="form-label">Arc Type</label>
+          <select class="form-select" id="e-arcType">
+            <option value="positive" ${character?.arcType === 'positive' ? 'selected' : ''}>Positive</option>
+            <option value="negative" ${character?.arcType === 'negative' ? 'selected' : ''}>Negative</option>
+            <option value="flat" ${character?.arcType === 'flat' ? 'selected' : ''}>Flat</option>
+          </select>
+        </div>
+        <div class="form-group theme-editor-field theme-editor-field-wide character-editor-traits-field">
+          <label class="form-label">Traits</label>
+          <div class="chip-select character-editor-traits-grid" id="e-traits">${renderTraitChips(character?.traits || [])}</div>
+        </div>
+        <div class="form-group theme-editor-field theme-editor-field-wide">
+          <label class="form-label">Physical Description</label>
+          <textarea class="form-textarea" id="e-description" rows="3" placeholder="Describe the appearance and immediate impression...">${escapeHtml(character?.description || '')}</textarea>
+        </div>
+        <div class="form-group theme-editor-field">
+          <label class="form-label">Motivation</label>
+          <textarea class="form-textarea" id="e-motivation" rows="3" placeholder="What does this character want most right now?">${escapeHtml(character?.motivation || '')}</textarea>
+        </div>
+        <div class="form-group theme-editor-field theme-editor-field-wide">
+          <label class="form-label">Short Backstory</label>
+          <textarea class="form-textarea" id="e-backstory" rows="4" placeholder="Capture only the history that materially shapes the story.">${escapeHtml(character?.backstory || '')}</textarea>
+        </div>
+        <div class="form-group theme-editor-field theme-editor-field-wide">
+          <label class="form-label">CNL Annotations</label>
+          <textarea class="form-textarea" id="e-annotations" rows="4" placeholder="#voice: clipped, indirect&#10;#subtext: fear masked as control">${annotationsToEditorText(character?.annotations || [])}</textarea>
+          <div class="form-hint">One annotation per line. Supported types: hint, style, avoid, voice, subtext, sensory, pacing, reference, context, contrast, reveal, example.</div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderLocationEditorForm(location) {
+  return `
+    <section class="framework-section section-framework-new character-editor-section">
+      <div class="framework-section-header redesign">
+        <h3>Location Setup</h3>
+        <p>Set the world context first, then enrich the location with distinctive characteristics for later use in scenes.</p>
+      </div>
+      <div class="spec-card-content theme-editor-fields theme-editor-grid">
+        <div class="form-group theme-editor-field theme-editor-field-wide">
+          <label class="form-label">Name</label>
+          <input class="form-input" id="e-name" value="${escapeHtml(location?.name || pick(VOCAB.NAMES.locations))}" placeholder="Ex: Thornwood Forest">
+        </div>
+        <div class="form-group theme-editor-field">
+          <label class="form-label">Geography</label>
+          <select class="form-select" id="e-geography">
+            ${Object.entries(VOCAB.LOCATION_GEOGRAPHY).map(([k, v]) => `<option value="${k}" ${location?.geography === k ? 'selected' : ''}>${v.label}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group theme-editor-field">
+          <label class="form-label">Era / Time Period</label>
+          <select class="form-select" id="e-time">
+            ${Object.entries(VOCAB.LOCATION_TIME).map(([k, v]) => `<option value="${k}" ${location?.time === k ? 'selected' : ''}>${v.label}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group theme-editor-field theme-editor-field-wide">
+          <label class="form-label">Characteristics</label>
+          <div class="chip-select" id="e-chars">${renderLocationChips(location?.characteristics || [])}</div>
+        </div>
+        <div class="form-group theme-editor-field theme-editor-field-wide">
+          <label class="form-label">CNL Annotations</label>
+          <textarea class="form-textarea" id="e-annotations" rows="4" placeholder="#hint: Keep it isolated&#10;#sensory: Emphasize cold air and wet stone">${annotationsToEditorText(location?.annotations || [])}</textarea>
+          <div class="form-hint">One annotation per line. Supported types: hint, style, avoid, voice, subtext, sensory, pacing, reference, context, contrast, reveal, example.</div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+export function renderCharacterEditorPage() {
+  const container = $('#character-editor-view');
+  if (!container) return;
+
+  const characters = state.project.libraries.characters || (state.project.libraries.characters = []);
+  const selectedId = isCreatingCharacter ? null : (state.editingEntity || characters[0]?.id || null);
+  const existing = selectedId ? characters.find(item => item.id === selectedId) : null;
+  const role = existing ? inferCharacterRole(existing) : pendingCharacterRole || 'secondary';
+  const defaultCharacterName = existing?.name || pick(VOCAB.NAMES.characters);
+  const draft = existing || {
+    id: null,
+    name: defaultCharacterName,
+    role,
+    archetype: role === 'antagonist' ? 'shadow' : role === 'secondary' ? 'ally' : 'hero',
+    arcType: role === 'antagonist' ? 'negative' : role === 'secondary' ? 'flat' : 'positive',
+    traits: [],
+    description: '',
+    motivation: '',
+    voice: '',
+    backstory: '',
+    annotations: []
+  };
+  const relationships = draft.id ? getRelationshipsForCharacter(draft.id) : [];
+
+  state.editingEntity = selectedId;
+
+  container.innerHTML = `
+    <div class="framework-view entity-redesign-shell character-editor-shell">
+      <div class="framework-layout framework-redesign-layout">
+        <div class="framework-page-header">
+          <div class="framework-page-header-top">
+            <div class="framework-page-header-copy">
+              <h2>${draft.id ? 'Edit Character' : 'Add Character'}</h2>
+            </div>
+            <div class="framework-page-header-actions">
+              <button class="btn small" type="button" id="btn-character-editor-back">Back to Cast</button>
+            </div>
+          </div>
+          <div class="framework-page-header-divider"></div>
+          <div class="framework-page-header-subtitle">
+            <p>Edit the character in a full-page workspace so identity, role, scene presence, and downstream impact stay visible together.</p>
+          </div>
+        </div>
+
+        <div class="character-editor-layout">
+          <aside class="character-editor-nav">
+            <div class="character-editor-nav-header">
+              <h3>Character List</h3>
+            </div>
+            <button class="btn small character-editor-add-btn" type="button" id="btn-character-editor-add">+ Add Character</button>
+            <div class="character-editor-nav-list">
+              ${characters.length ? characters.map(item => renderCharacterSidebarItem(item, selectedId)).join('') : '<div class="character-editor-empty">No characters yet. Create the first one here.</div>'}
+            </div>
+          </aside>
+
+          <div class="character-editor-main">
+            <section class="framework-section section-framework-new character-editor-hero">
+              <div class="character-editor-hero-copy">
+                <h3>${escapeHtml(draft.name || 'Untitled Character')}</h3>
+                <p>Refine identity, voice, motivation, and narrative presence in one focused workspace.</p>
+              </div>
+            </section>
+
+            ${renderCharacterEditorForm(draft)}
+
+            <section class="framework-section section-framework-new character-editor-side-section">
+              <div class="framework-section-header redesign compact">
+                <h3>Relationships</h3>
+                <p>Connections already defined in project state.</p>
+              </div>
+              <div class="character-editor-usage-list">
+                ${relationships.length
+                  ? relationships.map(rel => `<div class="character-editor-usage-item"><strong>${escapeHtml(rel.otherName)}</strong><span>${escapeHtml(humanizeLabel(rel.type))}${rel.dynamic ? ` • ${escapeHtml(humanizeLabel(rel.dynamic))}` : ''}</span></div>`).join('')
+                  : '<div class="character-editor-empty">No relationships defined yet.</div>'}
+              </div>
+            </section>
+
+            <section class="framework-section section-framework-new character-editor-side-section">
+              <div class="framework-section-header redesign compact">
+                <h3>Impact</h3>
+                <p>Character edits update project state and CNL immediately. Existing prose remains unchanged until rewrite or regeneration.</p>
+              </div>
+            </section>
+
+            <div class="subplot-editor-actions">
+              ${draft.id ? '<button class="btn danger" type="button" id="btn-delete-character-page">Delete Character</button>' : '<span></span>'}
+              <div class="subplot-editor-actions-right">
+                <button class="btn" type="button" id="btn-cancel-character-page">Cancel</button>
+                <button class="btn primary" type="button" id="btn-save-character-page">Save Character</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  $('#btn-character-editor-back')?.addEventListener('click', () => {
+    clearPendingCharacterSceneTarget();
+    isCreatingCharacter = false;
+    state.editingEntity = null;
+    window.switchToTab?.('characters');
+  });
+  $('#btn-character-editor-add')?.addEventListener('click', () => {
+    pendingCharacterRole = 'secondary';
+    isCreatingCharacter = true;
+    state.editingEntity = null;
+    renderCharacterEditorPage();
+  });
+  $('#btn-cancel-character-page')?.addEventListener('click', () => {
+    clearPendingCharacterSceneTarget();
+    isCreatingCharacter = false;
+    state.editingEntity = null;
+    window.switchToTab?.('characters');
+  });
+  $('#btn-save-character-page')?.addEventListener('click', saveCharacterFromPage);
+  $('#btn-delete-character-page')?.addEventListener('click', () => {
+    if (!draft?.id || !confirm(`Delete "${draft.name}"?`)) return;
+    state.project.libraries.characters = (state.project.libraries.characters || []).filter(item => item.id !== draft.id);
+    removeEntityRefs(state.project.structure, draft.id);
+    state.project.libraries.relationships = (state.project.libraries.relationships || []).filter(rel => rel.fromId !== draft.id && rel.toId !== draft.id);
+    clearPendingCharacterSceneTarget();
+    isCreatingCharacter = false;
+    state.editingEntity = null;
+    renderTree();
+    generateCNL();
+    renderCharactersCastView();
+    window.switchToTab?.('characters');
   });
 }
 
@@ -889,6 +1197,12 @@ function getAllowedTraitsForRole(role) {
   return SECONDARY_TRAITS.map(item => item.value);
 }
 
+function mergePreservedTraits(existingTraits, selectedTraits, role) {
+  const allowed = new Set(getAllowedTraitsForRole(role));
+  const preserved = (Array.isArray(existingTraits) ? existingTraits : []).filter(trait => !allowed.has(trait));
+  return [...new Set([...(Array.isArray(selectedTraits) ? selectedTraits : []), ...preserved])];
+}
+
 function normalizeTemplateArchetype(role, templateKey) {
   const allowed = getAllowedArchetypesForRole(role);
   if (allowed.includes(templateKey)) return templateKey;
@@ -939,7 +1253,7 @@ function upsertPrimaryCharacter(role, fallbackName, defaultArchetype, nameId, ar
   character.name = name;
   character.role = role;
   character.archetype = archetype;
-  character.traits = traits;
+  character.traits = mergePreservedTraits(character.traits, traits, role);
   if (!character.arcType) {
     character.arcType = role === 'antagonist' ? 'negative' : 'positive';
   }
@@ -1001,7 +1315,7 @@ function syncSecondaryCharactersFromUI() {
     character.name = name;
     character.role = 'secondary';
     character.archetype = archetype;
-    character.traits = traits;
+    character.traits = mergePreservedTraits(character.traits, traits, 'secondary');
     character.arcType = character.arcType || 'flat';
     saved.push(character);
   });
@@ -1177,7 +1491,10 @@ function renderCharactersSpecBlock() {
         <div class="spec-subcard">
           <div class="spec-subcard-header">
             <h4 class="spec-subcard-title">Protagonist</h4>
-            <button class="btn small" type="button" onclick="window.openCharacterTemplateModal('protagonist')">Use Template</button>
+            <div class="spec-subcard-actions">
+              ${protagonist?.id ? `<button class="btn small" type="button" onclick="window.openCharacterEditorPage('${protagonist.id}')">Open Editor</button>` : ''}
+              <button class="btn small" type="button" onclick="window.openCharacterTemplateModal('protagonist')">Use Template</button>
+            </div>
           </div>
           <div class="spec-secondary-fields protagonist-fields">
             <div class="form-group">
@@ -1204,7 +1521,10 @@ function renderCharactersSpecBlock() {
         <div class="spec-subcard">
           <div class="spec-subcard-header">
             <h4 class="spec-subcard-title">Antagonist</h4>
-            <button class="btn small" type="button" onclick="window.openCharacterTemplateModal('antagonist')">Use Template</button>
+            <div class="spec-subcard-actions">
+              ${antagonist?.id ? `<button class="btn small" type="button" onclick="window.openCharacterEditorPage('${antagonist.id}')">Open Editor</button>` : ''}
+              <button class="btn small" type="button" onclick="window.openCharacterTemplateModal('antagonist')">Use Template</button>
+            </div>
           </div>
           <div class="spec-secondary-fields protagonist-fields">
             <div class="form-group">
@@ -1231,7 +1551,10 @@ function renderCharactersSpecBlock() {
         <div class="spec-subcard spec-subcard-secondary">
           <div class="spec-subcard-header">
             <h4 class="spec-subcard-title">Secondary Characters</h4>
-            <button class="btn small" id="cast-btn-add-secondary-template" type="button">Add from Templates</button>
+            <div class="spec-subcard-actions">
+              <button class="btn small" id="cast-btn-add-secondary-template" type="button">Add from Templates</button>
+              <button class="btn small" type="button" onclick="window.openCharacterEditorPage()">Open Editor</button>
+            </div>
           </div>
           <div class="spec-secondary-list" id="cast-secondary-characters"></div>
           <button class="btn small" id="cast-btn-add-secondary-character" type="button">+ Add Character</button>
@@ -1267,6 +1590,46 @@ function renderCharactersSpecBlock() {
 }
 
 let pendingCharacterRole = 'secondary';
+let isCreatingCharacter = false;
+let isCreatingLocation = false;
+let isCreatingMood = false;
+let pendingCharacterSceneTarget = null;
+
+function clearPendingCharacterSceneTarget() {
+  pendingCharacterSceneTarget = null;
+}
+
+function openCharacterEditorForSceneTarget(target = null) {
+  pendingCharacterRole = 'secondary';
+  isCreatingCharacter = true;
+  state.editingEntity = null;
+  pendingCharacterSceneTarget = target;
+  window.showStandaloneView?.('character-editor');
+}
+
+function attachCharacterToPendingTarget(character) {
+  if (!character?.id || !pendingCharacterSceneTarget) return false;
+
+  if (pendingCharacterSceneTarget.kind === 'structure') {
+    const scene = findNode(pendingCharacterSceneTarget.sceneId);
+    if (!scene) return false;
+    const alreadyAttached = (scene.children || []).some(child => child?.type === 'character-ref' && child?.refId === character.id);
+    if (!alreadyAttached) {
+      addChild(scene, { type: 'character-ref', name: character.name, refId: character.id });
+    }
+    return true;
+  }
+
+  if (pendingCharacterSceneTarget.kind === 'manuscript') {
+    return appendCharacterToManuscriptScene(
+      pendingCharacterSceneTarget.chapterId,
+      pendingCharacterSceneTarget.sceneId,
+      character.name
+    );
+  }
+
+  return false;
+}
 
 export function renderCharactersCastView() {
   const container = $('#characters-grid');
@@ -1370,16 +1733,24 @@ window.addEntity = type => {
     return;
   }
   if (type === 'moods') {
+    isCreatingMood = true;
     state.editingEntity = null;
     window.showStandaloneView?.('mood-editor');
     return;
   }
   if (type === 'locations') {
+    isCreatingLocation = true;
     state.editingEntity = null;
     window.showStandaloneView?.('location-editor');
     return;
   }
-  if (type === 'characters') pendingCharacterRole = 'secondary';
+  if (type === 'characters') {
+    pendingCharacterRole = 'secondary';
+    isCreatingCharacter = true;
+    state.editingEntity = null;
+    window.showStandaloneView?.('character-editor');
+    return;
+  }
   state.editingEntity = null; 
   showEntityForm(type, null); 
 };
@@ -1395,17 +1766,43 @@ window.addThemeFromLibrary = () => {
 
 window.addCharacterWithRole = (role) => {
   pendingCharacterRole = ['protagonist', 'antagonist', 'secondary'].includes(role) ? role : 'secondary';
+  isCreatingCharacter = true;
   state.editingEntity = null;
-  showEntityForm('characters', null);
+  window.showStandaloneView?.('character-editor');
+};
+
+window.openCharacterEditorPage = (id = '') => {
+  state.editingEntity = id || null;
+  if (!id) {
+    pendingCharacterRole = 'secondary';
+    isCreatingCharacter = true;
+  } else {
+    isCreatingCharacter = false;
+  }
+  window.showStandaloneView?.('character-editor');
+};
+
+window.openLocationEditorPage = (id = '') => {
+  isCreatingLocation = !id;
+  state.editingEntity = id || null;
+  window.showStandaloneView?.('location-editor');
 };
 
 window.editEntity = (type, id) => { 
+  if (type === 'characters') {
+    isCreatingCharacter = false;
+    state.editingEntity = id;
+    window.showStandaloneView?.('character-editor');
+    return;
+  }
   if (type === 'moods') {
+    isCreatingMood = false;
     state.editingEntity = id;
     window.showStandaloneView?.('mood-editor');
     return;
   }
   if (type === 'locations') {
+    isCreatingLocation = false;
     state.editingEntity = id;
     window.showStandaloneView?.('location-editor');
     return;
@@ -1621,9 +2018,47 @@ function saveEntity(type) {
   generateCNL();
 }
 
+function saveCharacterFromPage() {
+  const root = $('#character-editor-view');
+  const characters = state.project.libraries.characters || (state.project.libraries.characters = []);
+  const character = !isCreatingCharacter && state.editingEntity
+    ? characters.find(item => item.id === state.editingEntity)
+    : { id: genId(), source: 'user' };
+
+  if (!character || !root) return;
+
+  const getValue = selector => root.querySelector(selector)?.value || '';
+  const getTrimmedValue = selector => getValue(selector).trim();
+  const getSelectedChips = selector => [...root.querySelectorAll(`${selector} .chip.selected`)].map(chip => chip.dataset.key);
+
+  character.name = getTrimmedValue('#e-name') || 'Character';
+  character.role = getValue('#e-role') || pendingCharacterRole || 'secondary';
+  character.archetype = getValue('#e-archetype') || 'hero';
+  character.arcType = getValue('#e-arcType') || (character.role === 'antagonist' ? 'negative' : character.role === 'secondary' ? 'flat' : 'positive');
+  character.traits = getSelectedChips('#e-traits');
+  character.description = getTrimmedValue('#e-description');
+  character.motivation = getTrimmedValue('#e-motivation');
+  character.backstory = getTrimmedValue('#e-backstory');
+  character.annotations = parseAnnotationLines(getValue('#e-annotations'));
+
+  if (isCreatingCharacter || !state.editingEntity) characters.push(character);
+  const attachedToScene = attachCharacterToPendingTarget(character);
+
+  pendingCharacterRole = 'secondary';
+  isCreatingCharacter = false;
+  state.editingEntity = character.id;
+  clearPendingCharacterSceneTarget();
+  renderCharactersCastView();
+  renderRelationshipsView();
+  renderTree();
+  generateCNL();
+  window.showNotification?.(attachedToScene ? 'Character saved and attached to scene.' : 'Character saved.', 'success');
+  renderCharacterEditorPage();
+}
+
 function saveLocationFromPage() {
   const locations = state.project.libraries.locations || (state.project.libraries.locations = []);
-  const location = state.editingEntity
+  const location = !isCreatingLocation && state.editingEntity
     ? locations.find(item => item.id === state.editingEntity)
     : { id: genId() };
 
@@ -1635,18 +2070,19 @@ function saveLocationFromPage() {
   location.characteristics = [...$$('#e-chars .chip.selected')].map(c => c.dataset.key);
   location.annotations = parseAnnotationLines($('#e-annotations')?.value || '');
 
-  if (!state.editingEntity) locations.push(location);
+  if (isCreatingLocation || !state.editingEntity) locations.push(location);
 
-  state.editingEntity = null;
-  window.renderBackdropView?.();
+  isCreatingLocation = false;
+  state.editingEntity = location.id;
   renderTree();
   generateCNL();
-  window.switchToTab?.('backdrop');
+  window.showNotification?.('Location saved.', 'success');
+  renderLocationEditorPage();
 }
 
 function saveMoodFromPage() {
   const moods = state.project.libraries.moods || (state.project.libraries.moods = []);
-  const mood = state.editingEntity
+  const mood = !isCreatingMood && state.editingEntity
     ? moods.find(item => item.id === state.editingEntity)
     : { id: genId() };
 
@@ -1660,8 +2096,9 @@ function saveMoodFromPage() {
   });
   mood.annotations = parseAnnotationLines($('#e-annotations')?.value || '');
 
-  if (!state.editingEntity) moods.push(mood);
+  if (isCreatingMood || !state.editingEntity) moods.push(mood);
 
+  isCreatingMood = false;
   state.editingEntity = null;
   renderToneStyleView();
   renderTree();
@@ -1676,9 +2113,31 @@ function renderTraitChips(selected) {
     if (!cats[v.category]) cats[v.category] = [];
     cats[v.category].push({ k, ...v, sel: selected.includes(k) });
   });
-  return Object.entries(cats).map(([cat, traits]) => 
-    `<div class="chip-category">${cat}</div>` + traits.map(t => `<div class="chip ${t.sel ? 'selected' : ''}" data-key="${t.k}" onclick="toggleChip(this)" title="${t.desc}">${t.label}</div>`).join('')
-  ).join('');
+  const leftColumn = ['moral', 'intellectual', 'social'];
+  const rightColumn = ['moral-negative', 'emotional', 'physical'];
+  const renderGroup = cat => {
+    const traits = cats[cat] || [];
+    if (!traits.length) return '';
+    return `
+      <div class="character-editor-trait-group">
+        <div class="chip-category">${cat}</div>
+        <div class="character-editor-trait-items">
+          ${traits.map(t => `<div class="chip ${t.sel ? 'selected' : ''}" data-key="${t.k}" onclick="toggleChip(this)" title="${t.desc}">${t.label}</div>`).join('')}
+        </div>
+      </div>
+    `;
+  };
+
+  return `
+    <div class="character-editor-traits-columns">
+      <div class="character-editor-traits-column">
+        ${leftColumn.map(renderGroup).join('')}
+      </div>
+      <div class="character-editor-traits-column">
+        ${rightColumn.map(renderGroup).join('')}
+      </div>
+    </div>
+  `;
 }
 
 function renderLocationChips(selected) {
@@ -1962,6 +2421,10 @@ export function showSelectModal(type, parent) {
   const tabLabel = (type === 'locations' || type === 'objects') ? 'Backdrop' : type;
   $('#select-modal-title').textContent = 'Select ' + type.slice(0, -1);
   if (!list.length) {
+    if (type === 'characters') {
+      openCharacterEditorForSceneTarget(parent ? { kind: 'structure', sceneId: parent.id } : null);
+      return;
+    }
     $('#select-modal-body').innerHTML = `<div class="empty-state"><div class="empty-state-text">No ${type} yet</div><div class="empty-state-hint">Create some in the ${tabLabel} tab first</div></div>`;
   } else {
     $('#select-modal-body').innerHTML = list.map(e => `<div class="entity-card ${type.slice(0, -1)}" onclick="addRef('${type}','${e.id}','${parent.id}')" style="margin-bottom:0.5rem;">
@@ -1969,6 +2432,8 @@ export function showSelectModal(type, parent) {
   }
   openModal('select-modal');
 }
+
+window.openCharacterEditorForSceneTarget = openCharacterEditorForSceneTarget;
 
 window.addRef = (type, eid, pid) => {
   const e = state.project.libraries[type].find(x => x.id === eid);

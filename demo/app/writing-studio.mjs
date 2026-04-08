@@ -8,6 +8,7 @@ import { generateCNL } from './cnl.mjs';
 import {
   bindManuscriptEvents,
   computeChapterSummary,
+  getArcStructuredManuscript,
   getChaptersForManuscript,
   renderManuscriptStudio
 } from './writing-studio-manuscript.mjs';
@@ -65,13 +66,19 @@ function renderTensionCurve() {
 function renderChapterFlow() {
   const chapters = getChaptersForManuscript();
   if (!chapters.length) return '<div class="storymap-empty">No chapter flow yet.</div>';
+  const arcStructured = getArcStructuredManuscript();
   return `
     <div class="storymap-flow">
-      ${chapters.map((chapter, idx) => `
-        <div class="storymap-flow-item">
-          <div class="flow-title">Chapter ${idx + 1}: ${esc(chapter.title || chapter.name || 'Untitled')}</div>
-          <div class="flow-text">${esc(computeChapterSummary(chapter))}</div>
-        </div>
+      ${arcStructured.phases.map(group => `
+        <section class="storymap-phase-group">
+          <div class="storymap-phase-title">${esc(group.label)}</div>
+          ${group.chapters.map(({ chapter, index }) => `
+            <div class="storymap-flow-item">
+              <div class="flow-title">Chapter ${index + 1}: ${esc(chapter.title || chapter.name || 'Untitled')}</div>
+              <div class="flow-text">${esc(computeChapterSummary(chapter))}</div>
+            </div>
+          `).join('')}
+        </section>
       `).join('')}
     </div>
   `;

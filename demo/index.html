@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="app">
+  <div class="app metrics-collapsed">
     <header>
       <div class="logo"><h1>SCRIPTA Research Studio</h1></div>
       <div class="header-center">
@@ -65,6 +65,7 @@
         <div class="view" id="view-story-fundamentals"><div class="framework-view" id="story-fundamentals-view"></div></div>
         <div class="view" id="view-core-theme"><div class="framework-view" id="core-theme-view"></div></div>
         <div class="view" id="view-theme-editor"><div class="framework-view" id="theme-editor-view"></div></div>
+        <div class="view" id="view-character-editor"><div class="framework-view" id="character-editor-view"></div></div>
         <div class="view" id="view-location-editor"><div class="framework-view" id="location-editor-view"></div></div>
         <div class="view" id="view-mood-editor"><div class="framework-view" id="mood-editor-view"></div></div>
         <div class="view" id="view-dramatic-model"><div class="framework-view" id="dramatic-model-view"></div></div>
@@ -188,7 +189,10 @@
     </main>
 
     <aside class="metrics-panel">
-      <div class="panel-header"><span class="panel-title">Metrics</span></div>
+      <div class="panel-header">
+        <span class="panel-title">Metrics</span>
+        <button class="panel-close-btn" id="btn-close-metrics" type="button" aria-label="Close metrics panel">×</button>
+      </div>
       <div class="metrics-content" id="metrics-content"></div>
     </aside>
 

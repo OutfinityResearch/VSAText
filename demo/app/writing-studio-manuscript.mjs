@@ -5,10 +5,58 @@
 import { state } from './state.mjs';
 import { generateCNL } from './cnl.mjs';
 import { getOrderedChapters, getChapterScenes } from './structure-navigation.mjs';
+import VOCAB from '/src/vocabularies/vocabularies.mjs';
 
 const manuscriptUiState = {
   selectedChapterId: null,
   selectedSceneId: null
+};
+
+const ARC_PHASE_PRESETS = {
+  heros_journey: [
+    { key: 'departure', label: 'Departure', beats: ['ordinary_world', 'call_to_adventure', 'refusal', 'meeting_mentor', 'crossing_threshold'] },
+    { key: 'initiation', label: 'Initiation', beats: ['tests_allies_enemies', 'approach_cave'] },
+    { key: 'ordeal_reward', label: 'Ordeal and Reward', beats: ['ordeal', 'reward'] },
+    { key: 'return', label: 'Return', beats: ['road_back', 'resurrection', 'return_elixir'] }
+  ],
+  three_act: [
+    { key: 'setup', label: 'Setup', beats: ['hook', 'setup', 'inciting_incident'] },
+    { key: 'rising_action', label: 'Rising Action', beats: ['plot_point_1', 'rising_action', 'midpoint'] },
+    { key: 'climax', label: 'Climax', beats: ['plot_point_2', 'climax'] },
+    { key: 'resolution', label: 'Resolution', beats: ['resolution'] }
+  ],
+  save_the_cat: [
+    { key: 'setup', label: 'Setup', beats: ['opening_image', 'theme_stated', 'setup', 'catalyst', 'debate'] },
+    { key: 'promise', label: 'Promise of the Premise', beats: ['break_into_two', 'b_story', 'fun_and_games'] },
+    { key: 'pressure', label: 'Pressure and Collapse', beats: ['midpoint', 'bad_guys_close_in', 'all_is_lost', 'dark_night'] },
+    { key: 'finale', label: 'Finale', beats: ['break_into_three', 'finale', 'final_image'] }
+  ],
+  story_circle: [
+    { key: 'comfort_need', label: 'Comfort and Need', beats: ['you', 'need'] },
+    { key: 'entry_search', label: 'Entry and Search', beats: ['go', 'search'] },
+    { key: 'gain_cost', label: 'Gain and Cost', beats: ['find', 'take'] },
+    { key: 'return_change', label: 'Return and Change', beats: ['return', 'change'] }
+  ],
+  kishotenketsu: [
+    { key: 'ki', label: 'Ki', beats: ['ki'] },
+    { key: 'sho', label: 'Sho', beats: ['sho'] },
+    { key: 'ten', label: 'Ten', beats: ['ten'] },
+    { key: 'ketsu', label: 'Ketsu', beats: ['ketsu'] }
+  ],
+  five_act: [
+    { key: 'exposition', label: 'Exposition', beats: ['exposition'] },
+    { key: 'rising_action', label: 'Rising Action', beats: ['rising_action'] },
+    { key: 'climax', label: 'Climax', beats: ['climax'] },
+    { key: 'falling_action', label: 'Falling Action', beats: ['falling_action'] },
+    { key: 'denouement', label: 'Denouement', beats: ['denouement'] }
+  ],
+  seven_point: [
+    { key: 'opening', label: 'Opening', beats: ['hook', 'plot_turn_1'] },
+    { key: 'pressure', label: 'Pressure', beats: ['pinch_1'] },
+    { key: 'midpoint', label: 'Midpoint Shift', beats: ['midpoint'] },
+    { key: 'dark_push', label: 'Dark Push', beats: ['pinch_2', 'plot_turn_2'] },
+    { key: 'resolution', label: 'Resolution', beats: ['resolution'] }
+  ]
 };
 
 export function setManuscriptSelection(chapterId, sceneId = null) {
@@ -41,6 +89,104 @@ function getChapters() {
 }
 function getScenes(chapter) {
   return getChapterScenes(chapter);
+}
+
+function getArcKey() {
+  return state.project.blueprint?.arc || state.project.selectedArc || 'heros_journey';
+}
+
+function getArcDefinition() {
+  return VOCAB.NARRATIVE_ARCS?.[getArcKey()] || VOCAB.NARRATIVE_ARCS?.heros_journey || null;
+}
+
+function getArcPhaseDefinitions() {
+  const arcKey = getArcKey();
+  const arc = getArcDefinition();
+  const preset = ARC_PHASE_PRESETS[arcKey];
+  if (preset?.length) return preset;
+
+  const beats = Array.isArray(arc?.beats) ? arc.beats : [];
+  return beats.map(beat => ({
+    key: beat.key,
+    label: beat.label || beat.key,
+    beats: [beat.key]
+  }));
+}
+
+function getStructureChaptersForArcGrouping() {
+  return getChapters();
+}
+
+function getChapterBeatKeyMap() {
+  const mappings = Array.isArray(state.project.blueprint?.beatMappings) ? state.project.blueprint.beatMappings : [];
+  const byChapterId = new Map();
+  const beatsByKey = new Map((getArcDefinition()?.beats || []).map(beat => [beat.key, beat]));
+
+  for (const mapping of mappings) {
+    if (!mapping?.chapterId || !mapping?.beatKey) continue;
+    const beat = beatsByKey.get(mapping.beatKey);
+    const position = Number.isFinite(beat?.position) ? beat.position : 1;
+    const existing = byChapterId.get(mapping.chapterId);
+    if (!existing || position < existing.position) {
+      byChapterId.set(mapping.chapterId, { beatKey: mapping.beatKey, position });
+    }
+  }
+
+  return byChapterId;
+}
+
+function getPhaseForBeatKey(beatKey) {
+  const phases = getArcPhaseDefinitions();
+  return phases.find(phase => phase.beats.includes(beatKey)) || null;
+}
+
+function getPhaseForChapter(chapter, chapterIndex, manuscriptChapters) {
+  const structureChapters = getStructureChaptersForArcGrouping();
+  const chapterBeatMap = getChapterBeatKeyMap();
+
+  let structureChapter = null;
+  if (chapter?.source === 'generated-story') {
+    structureChapter = structureChapters[chapterIndex] || null;
+  } else {
+    structureChapter = structureChapters.find(item => item.id === chapter.id) || structureChapters[chapterIndex] || null;
+  }
+
+  const beatKey = structureChapter ? chapterBeatMap.get(structureChapter.id)?.beatKey || '' : '';
+  const phase = beatKey ? getPhaseForBeatKey(beatKey) : null;
+  if (phase) return phase;
+
+  return {
+    key: 'unmapped',
+    label: 'Unmapped',
+    beats: []
+  };
+}
+
+export function getArcStructuredManuscript() {
+  const chapters = getChaptersForManuscript();
+  const arc = getArcDefinition();
+  const phaseOrder = getArcPhaseDefinitions();
+  const groups = new Map();
+
+  phaseOrder.forEach(phase => {
+    groups.set(phase.key, { ...phase, chapters: [] });
+  });
+  groups.set('unmapped', { key: 'unmapped', label: 'Unmapped', beats: [], chapters: [] });
+
+  chapters.forEach((chapter, index) => {
+    const phase = getPhaseForChapter(chapter, index, chapters);
+    if (!groups.has(phase.key)) {
+      groups.set(phase.key, { ...phase, chapters: [] });
+    }
+    groups.get(phase.key).chapters.push({ chapter, index });
+  });
+
+  const ordered = [...groups.values()].filter(group => group.chapters.length > 0);
+  return {
+    arcKey: getArcKey(),
+    arcLabel: arc?.label || 'Narrative Arc',
+    phases: ordered
+  };
 }
 function ensureManuscriptDraft() {
   if (!state.project.blueprint) state.project.blueprint = {};
@@ -357,6 +503,22 @@ export function deleteGeneratedManuscriptScene(chapterId, sceneId) {
   return true;
 }
 
+export function appendCharacterToManuscriptScene(chapterId, sceneId, characterName) {
+  if (!chapterId || !sceneId || !String(characterName || '').trim()) return false;
+  const chapter = getChaptersForManuscript().find(item => item.id === chapterId);
+  if (!chapter) return false;
+  const scene = getEditableScenes(chapter).find(item => item.id === sceneId);
+  if (!scene) return false;
+
+  const nextCharacters = normalizeListValue([
+    String(scene.characters || '').trim(),
+    String(characterName || '').trim()
+  ].filter(Boolean).join(', '));
+
+  setSceneField(chapter, scene, 'characters', nextCharacters);
+  return true;
+}
+
 function setSceneField(chapter, scene, field, value) {
   const normalized = ['characters', 'locations', 'objects'].includes(field)
     ? normalizeListValue(value)
@@ -476,25 +638,32 @@ function parseDialogueLines(text) {
   });
 }
 
-function renderChapterNavigator(chapters, selectedChapter) {
-  return chapters.map((chapter, index) => {
-    const isSelected = selectedChapter && chapter.id === selectedChapter.id;
-    const scenes = getEditableScenes(chapter);
-    return `
-      <details class="studio-nav-chapter" ${isSelected ? 'open' : ''}>
-        <summary data-select-chapter="${esc(chapter.id)}">
-          <span class="studio-nav-title">${esc(formatChapterHeading(chapter, index))}</span>
-        </summary>
-        <div class="studio-scene-list">
-          ${scenes.length ? scenes.map((scene, sceneIndex) => `
-            <button class="studio-scene-item ${scene.id === manuscriptUiState.selectedSceneId ? 'active' : ''}" type="button" data-select-chapter="${esc(chapter.id)}" data-select-scene="${esc(scene.id)}">
-              ${esc(sceneLabel(scene, sceneIndex))}
-            </button>
-          `).join('') : `<div class="studio-scene-empty">No scenes yet.</div>`}
-        </div>
-      </details>
-    `;
-  }).join('');
+function renderChapterNavigator(groups, selectedChapter) {
+  return groups.map(group => `
+    <section class="studio-nav-phase-group">
+      <div class="studio-nav-phase-title">${esc(group.label)}</div>
+      <div class="studio-nav-phase-list">
+        ${group.chapters.map(({ chapter, index }) => {
+          const isSelected = selectedChapter && chapter.id === selectedChapter.id;
+          const scenes = getEditableScenes(chapter);
+          return `
+            <details class="studio-nav-chapter" ${isSelected ? 'open' : ''}>
+              <summary data-select-chapter="${esc(chapter.id)}">
+                <span class="studio-nav-title">${esc(formatChapterHeading(chapter, index))}</span>
+              </summary>
+              <div class="studio-scene-list">
+                ${scenes.length ? scenes.map((scene, sceneIndex) => `
+                  <button class="studio-scene-item ${scene.id === manuscriptUiState.selectedSceneId ? 'active' : ''}" type="button" data-select-chapter="${esc(chapter.id)}" data-select-scene="${esc(scene.id)}">
+                    ${esc(sceneLabel(scene, sceneIndex))}
+                  </button>
+                `).join('') : `<div class="studio-scene-empty">No scenes yet.</div>`}
+              </div>
+            </details>
+          `;
+        }).join('')}
+      </div>
+    </section>
+  `).join('');
 }
 
 export function computeChapterSummary(chapter) {
@@ -659,6 +828,7 @@ function renderManuscriptEmptyState() {
 export function renderManuscriptStudio() {
   const chapters = getChaptersForManuscript();
   if (!chapters.length) return renderManuscriptEmptyState();
+  const arcStructured = getArcStructuredManuscript();
   const selectedChapter = getSelectedChapter(chapters);
   const selectedIndex = Math.max(0, chapters.findIndex(ch => ch.id === selectedChapter?.id));
   const chapterScenes = getEditableScenes(selectedChapter);
@@ -670,10 +840,10 @@ export function renderManuscriptStudio() {
       <section class="studio-section studio-nav-panel">
         <div class="studio-section-head">
           <h3>Manuscript Navigator</h3>
-          <p>Chapter and scene structure with direct access to editable manuscript sections.</p>
+          <p>${esc(arcStructured.arcLabel)} groups the generated story into narrative phases with direct access to editable chapters and scenes.</p>
         </div>
         <div class="studio-nav-list">
-          ${renderChapterNavigator(chapters, selectedChapter)}
+          ${renderChapterNavigator(arcStructured.phases, selectedChapter)}
         </div>
       </section>
       ${renderChapterDetail(selectedChapter, selectedIndex, selectedScene, selectedSceneIndex)}
@@ -806,10 +976,12 @@ export function bindManuscriptEvents(container, rerender) {
           const updatedDialogue = [String(targetScene.dialogue || '').trim(), newDialogueLine].filter(Boolean).join('\n');
           setSceneField(chapter, targetScene, 'dialogue', updatedDialogue);
         } else {
-          const val = window.prompt('Add character name:', '');
-          if (!String(val || '').trim()) return;
-          const updatedCharacters = normalizeListValue([String(targetScene.characters || '').trim(), String(val).trim()].filter(Boolean).join(', '));
-          setSceneField(chapter, targetScene, 'characters', updatedCharacters);
+          window.openCharacterEditorForSceneTarget?.({
+            kind: 'manuscript',
+            chapterId: chapter.id,
+            sceneId: targetScene.id
+          });
+          return;
         }
         generateCNL();
         rerender();

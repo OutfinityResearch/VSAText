@@ -68,7 +68,7 @@ function handleContextAction(action, id) {
   if (action === 'add-scene') {
     addChild(n, { type: 'scene', name: `Sc${(n.children?.length || 0) + 1}`, title: '', children: [] });
   }
-  if (action === 'add-char') showSelectModal('characters', n);
+  if (action === 'add-char') window.openCharacterEditorForSceneTarget?.({ kind: 'structure', sceneId: n.id });
   if (action === 'add-loc') showSelectModal('locations', n);
   if (action === 'add-obj') showSelectModal('objects', n);
   if (action === 'add-mood') showSelectModal('moods', n);

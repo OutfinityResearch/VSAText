@@ -29,3 +29,7 @@ coverage/
 dist/
 build/
 package-lock.json
+# >>> ploinky default-skills >>>
+.claude/skills/
+.agents/skills/
+# <<< ploinky default-skills <<<
